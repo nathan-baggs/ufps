@@ -36,5 +36,5 @@ jobs:
       - name: Run all Windows test executables
         run: |
           cd win-test-exe
-          for %f in (*.exe) do %f
+          for %%f in (*.exe) do %%f
         shell: cmd
