@@ -1,0 +1,40 @@
+name: PR Build (Linux build, Windows test)
+
+on:
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-linux:
+    name: Build (Linux)
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/nathan-baggs/custom-mingw64:latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build (cross-compile for Windows)
+        run: |
+          cmake -B build -DCMAKE_TOOLCHAIN_FILE=mingw_toolchain.cmake -G "Ninja Multi-Config"
+          cmake --build build --config Debug
+      - name: Upload Windows test executables
+        uses: actions/upload-artifact@v4
+        with:
+          name: win-test-exe
+          path: build/tests/Debug/*.exe
+
+  test-windows:
+    name: Test (Windows)
+    runs-on: windows-latest
+    needs: build-linux
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download Windows test executables
+        uses: actions/download-artifact@v4
+        with:
+          name: win-test-exe
+          path: win-test-exe
+      - name: Run all Windows test executables
+        run: |
+          cd win-test-exe
+          for %f in (*.exe) do %f
+        shell: cmd
