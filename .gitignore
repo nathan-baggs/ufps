@@ -21,3 +21,5 @@ compile_commands.json
 assets/
 log
 Testing/*
+sysroot
+.clangd
