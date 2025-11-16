@@ -1,0 +1,48 @@
+name: Create Release
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/nathan-baggs/custom-mingw64:latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Allow safe Git directory
+        run: git config --global --add safe.directory $GITHUB_WORKSPACE
+
+      - name: Build and package
+        run: |
+          cmake -B build -DCMAKE_TOOLCHAIN_FILE=mingw_toolchain.cmake -G "Ninja Multi-Config"
+          cmake --build build --config Debug
+          cd build && cpack . -C Debug
+
+      - name: Locate package and extract version
+        id: version
+        run: |
+          pkg=$(ls build/ufps-*-win64.zip | head -n1)
+          echo "artifact=$pkg" >> $GITHUB_OUTPUT
+          version=$(basename "$pkg" | sed -E 's/^ufps-([0-9]+\.[0-9]+\.[0-9]+)-win64\.zip$/\1/')
+          echo "version=$version" >> $GITHUB_OUTPUT
+
+      - name: Gather changelog from last commit
+        id: changelog
+        run: |
+          git log -1 --pretty=%B > commit_msg.txt
+          echo "msg<<EOF" >> $GITHUB_OUTPUT
+          cat commit_msg.txt >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.version.outputs.version }}
+          name: Release ${{ steps.version.outputs.version }}
+          body: ${{ steps.changelog.outputs.msg }}
+          files: ${{ steps.version.outputs.artifact }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_PAT }}
