@@ -1,0 +1,19 @@
+#pragma once
+
+namespace ufps::version
+{
+// clang-format off
+static constexpr auto major = @ufps_VERSION_MAJOR@;
+static constexpr auto minor = @ufps_VERSION_MINOR@;
+static constexpr auto patch = @ufps_VERSION_PATCH@;
+// clang-format on
+}
+
+namespace ufps::config
+{
+// clang-format off
+static constexpr bool logging_enabled = true;
+static constexpr bool log_to_file = true;
+// clang-format on
+
+}
