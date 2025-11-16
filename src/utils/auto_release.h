@@ -1,9 +1,9 @@
 #pragma once
 
 #include <functional>
-#include <ranges>
+#include <utility>
 
-namespace game
+namespace ufps
 {
 
 template <class T, T Invalid = {}>
