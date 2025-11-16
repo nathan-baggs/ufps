@@ -5,7 +5,7 @@
 namespace
 {
 
-using AutoIntPtr = game::AutoRelease<int *, nullptr>;
+using AutoIntPtr = ufps::AutoRelease<int *, nullptr>;
 
 void deleter(int *value)
 {
