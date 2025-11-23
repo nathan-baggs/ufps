@@ -1,9 +1,9 @@
-# .github/workflows/version-bump.yml
-name: Post-PR Version Bump
+name: Post-merge Version Bump
 
 on:
   push:
-    branches: [main]
+    branches:
+      - main
 
 jobs:
   bump_version:
@@ -13,100 +13,106 @@ jobs:
       pull-requests: read
 
     steps:
-      - name: Checkout repo
+      - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      # Get the PR merged in this push (if any)
-      - name: Find merged PR
+      # Use the GitHub API to get the PR number associated with this commit
+      - name: Find merged PR for this commit
         id: findpr
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          # Find the most recent PR merged into main (within last commit or two)
-          PR_URL=$(gh pr list --state merged --base main --sort merged --limit 5 --json number,mergeCommit | \
-            jq -r --arg SHA "$GITHUB_SHA" '.[] | select(.mergeCommit.oid==$SHA) | .number' | head -n1)
-          if [ -z "$PR_URL" ]; then
-            echo "::error::No merged PR found for $GITHUB_SHA!"
-            exit 1
-          fi
-          echo "pr_number=$PR_URL" >> $GITHUB_OUTPUT
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const commit = context.sha;
+            const prs = await github.rest.repos.listPullRequestsAssociatedWithCommit({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              commit_sha: commit
+            });
+            if (!prs.data.length) {
+              core.setFailed(`No PR associated with commit ${commit}`);
+              return;
+            }
+            const mergedPr = prs.data.find(pr => pr.merged_at && pr.base.ref === 'main') || prs.data[0];
+            core.setOutput('pr_number', mergedPr.number);
 
-      # Fetch PR body
-      - name: Get PR body
+      # Get the PR body
+      - name: Get PR Body
         id: prbody
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          PR_NUMBER=${{ steps.findpr.outputs.pr_number }}
-          BODY=$(gh pr view "$PR_NUMBER" --json body -q '.body')
-          echo "body<<EOF" >> $GITHUB_OUTPUT
-          echo "$BODY" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const pr_number = ${{ steps.findpr.outputs.pr_number }};
+            const { data: pr } = await github.rest.pulls.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: pr_number
+            });
+            core.setOutput('body', pr.body);
 
-      # Parse version bump
+      # Parse which bump (major/minor/patch) is checked in PR
       - name: Determine version bump
         id: bump
         run: |
           body="${{ steps.prbody.outputs.body }}"
-          major=$(echo "$body" | grep -c '\[x\] *major')
-          minor=$(echo "$body" | grep -c '\[x\] *minor')
-          patch=$(echo "$body" | grep -c '\[x\] *patch')
-
-          # Compatibility: allow checked with space [x] or with X [X]
-          if [ "$major" -eq 0 ]; then major=$(echo "$body" | grep -c '\[[xX]\] *major'); fi
-          if [ "$minor" -eq 0 ]; then minor=$(echo "$body" | grep -c '\[[xX]\] *minor'); fi
-          if [ "$patch" -eq 0 ]; then patch=$(echo "$body" | grep -c '\[[xX]\] *patch'); fi
-
+          # Count checkboxes (robust: allow [x], [X], or [X])
+          major=$(echo "$body" | grep -Ei '^\s*-\s*\[[xX]\]\s*major' | wc -l)
+          minor=$(echo "$body" | grep -Ei '^\s*-\s*\[[xX]\]\s*minor' | wc -l)
+          patch=$(echo "$body" | grep -Ei '^\s*-\s*\[[xX]\]\s*patch' | wc -l)
           sum=$((major + minor + patch))
           if [ "$sum" -gt 1 ]; then
             echo "::error::More than one version bump selected!"
             exit 1
           fi
-
           if [ "$major" -eq 1 ]; then
             echo "bump=major" >> $GITHUB_OUTPUT
+            echo "major bump selected"
           elif [ "$minor" -eq 1 ]; then
             echo "bump=minor" >> $GITHUB_OUTPUT
+            echo "minor bump selected"
           else
             echo "bump=patch" >> $GITHUB_OUTPUT
+            echo "patch bump (default)"
           fi
 
-      # Set up Git for committing
-      - name: Set up git
+      - name: Set up Git User
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-      # Bump version in CMakeLists.txt
-      - name: Bump version
+      - name: Bump version in CMakeLists.txt
         id: version
         run: |
           cmkfile="CMakeLists.txt"
-          ver=$(grep -oP 'set\(PROJECT_VERSION "\K[0-9]+\.[0-9]+\.[0-9]+' $cmkfile)
+          # Get current version
+          ver=$(grep -oP 'set\(PROJECT_VERSION "\K[0-9]+\.[0-9]+\.[0-9]+' "$cmkfile")
           if [ -z "$ver" ]; then
-            echo "::error::Could not find version"
+            echo "::error::Could not find version in $cmkfile"
             exit 1
           fi
-
           IFS=. read -r major minor patch <<<"$ver"
           bumptype="${{ steps.bump.outputs.bump }}"
 
           if [ "$bumptype" = "major" ]; then
-            major=$((major + 1)); minor=0; patch=0
+            major=$((major + 1))
+            minor=0
+            patch=0
           elif [ "$bumptype" = "minor" ]; then
-            minor=$((minor + 1)); patch=0
+            minor=$((minor + 1))
+            patch=0
           else
             patch=$((patch + 1))
           fi
-          newver="${major}.${minor}.${patch}"
 
+          newver="${major}.${minor}.${patch}"
+          # Update the file
           sed -i -E "s/set\(PROJECT_VERSION \"[0-9]+\.[0-9]+\.[0-9]+\"/set(PROJECT_VERSION \"${newver}\"/" "$cmkfile"
           echo "newver=$newver" >> $GITHUB_OUTPUT
+          echo "version bumped, $ver -> $newver"
 
-      # Only commit and push if changed
+      # Commit and push the version change (if any)
       - name: Commit and push version change
         run: |
           git add CMakeLists.txt
-          git diff --staged --quiet && echo "No version change" || (git commit -m "ci: bump version to ${{ steps.version.outputs.newver }}" && git push)
+          git diff --cached --quiet && echo "No version change" || (git commit -m "ci: bump version to ${{ steps.version.outputs.newver }}" && git push)
