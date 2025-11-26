@@ -49,3 +49,13 @@ jobs:
           files: ${{ steps.version.outputs.artifact }}
         env:
           GITHUB_TOKEN: ${{ secrets.GH_PAT }}
+
+      - name: Send Discord message
+        uses: ./.github/actions/discord-notify
+        with:
+          webhook:         ${{ secrets.DISCORD_WEBHOOK }}
+          content:         "🚀 A new µfps release is live! <@&1390091546485063840>"
+          release_url:     ${{ github.event.release.html_url }}
+          author_name:     "Nathan Baggs"
+          author_icon_url: "https://media.discordapp.net/attachments/1287536930694893651/1287552216252547204/profile.jpg?format=webp"
+

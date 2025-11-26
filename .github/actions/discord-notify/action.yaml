@@ -1,0 +1,56 @@
+name: "Discord Alert Webhook"
+description: "Send an alert with a Discord webhook."
+inputs:
+  webhook:
+    description: "Discord webhook URL"
+    required: true
+  content:
+    description: "Main message text"
+    required: true
+  release_url:
+    description: "URL shown as the embed title"
+    required: true
+  author_name:
+    description: "Embed author name"
+    required: true
+  author_icon_url:
+    description: "URL for the author avatar"
+    required: true
+  color:
+    description: "Embed colour as an integer (default: 16742854 = #FF79C6 or pink)"
+    required: false
+    default: "16742854"
+
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      env:
+        WEBHOOK:          ${{ inputs.webhook }}
+        CONTENT:          ${{ inputs.content }}
+        RELEASE_URL:      ${{ inputs.release_url }}
+        AUTHOR_NAME:      ${{ inputs.author_name }}
+        AUTHOR_ICON_URL:  ${{ inputs.author_icon_url }}
+        COLOR:            ${{ inputs.color }}
+      run: |
+        set -euo pipefail
+
+        json=$(jq -n \
+          --arg content "$CONTENT" \
+          --arg url     "$RELEASE_URL" \
+          --arg name    "$AUTHOR_NAME" \
+          --arg icon    "$AUTHOR_ICON_URL" \
+          --argjson color "$COLOR" \
+          '{
+             content: $content,
+             embeds: [{
+               title: $url,
+               color: $color,
+               author: { name: $name, icon_url: $icon }
+             }],
+             components: []
+           }')
+
+        curl -sS -X POST -H "Content-Type: application/json" \
+             -d "$json" "$WEBHOOK"
+
