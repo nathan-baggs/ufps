@@ -2,6 +2,7 @@ add_library(ufpslib STATIC
   utils/hello.cpp
 )
 
+add_subdirectory(events)
 add_subdirectory(utils)
 
 add_executable(ufps
