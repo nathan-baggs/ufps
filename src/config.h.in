@@ -14,6 +14,7 @@ namespace ufps::config
 // clang-format off
 static constexpr bool logging_enabled = true;
 static constexpr bool log_to_file = true;
+static constexpr bool opengl_debug_enabled = true;
 // clang-format on
 
 }
