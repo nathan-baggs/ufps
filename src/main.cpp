@@ -9,7 +9,6 @@
 #include "graphics/shader.h"
 #include "graphics/window.h"
 #include "utils/formatter.h"
-#include "utils/hello.h"
 #include "utils/log.h"
 #include "utils/system_info.h"
 

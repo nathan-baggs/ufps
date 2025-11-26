@@ -1,5 +1,4 @@
 add_library(ufpslib STATIC
-  utils/hello.cpp
 )
 
 add_subdirectory(events)
