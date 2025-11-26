@@ -41,6 +41,7 @@ jobs:
           echo "EOF" >> $GITHUB_OUTPUT
 
       - name: Create Release
+        id: create_release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ steps.version.outputs.version }}
@@ -55,7 +56,7 @@ jobs:
         with:
           webhook:         ${{ secrets.DISCORD_WEBHOOK }}
           content:         "🚀 A new µfps release is live! <@&1390091546485063840>"
-          release_url:     ${{ github.event.release.html_url }}
+          release_url:     ${{ steps.create_release.outputs.url }}
           author_name:     "Nathan Baggs"
           author_icon_url: "https://media.discordapp.net/attachments/1287536930694893651/1287552216252547204/profile.jpg?format=webp"
 
