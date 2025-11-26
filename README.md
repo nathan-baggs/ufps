@@ -29,7 +29,7 @@ The build system is Dockerised and you can use the top level Makefile
 
 ```bash
 # build the docker image (one off)
-make docker-build
+make docker-image
 
 # configure the project
 make configure
