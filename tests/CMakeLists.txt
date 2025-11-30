@@ -8,6 +8,7 @@ add_executable(unit_tests
   auto_release_tests.cpp
   error_tests.cpp
   formatter_tests.cpp
+  vector3_tests.cpp
 )
 
 target_link_libraries(unit_tests gmock_main ufpslib)
