@@ -71,6 +71,7 @@
     DO(::PFNGLNAMEDFRAMEBUFFERREADBUFFERPROC, glNamedFramebufferReadBuffer)                                            \
     DO(::PFNGLNAMEDFRAMEBUFFERDRAWBUFFERPROC, glNamedFramebufferDrawBuffer)                                            \
     DO(::PFNGLOBJECTLABELPROC, glObjectLabel)                                                                          \
+    DO(::PFNGLVALIDATEPROGRAMPROC, glValidateProgram)                                                                  \
     DO(::PFNGLDRAWARRAYSEXTPROC, glDrawArraysEXT)
 
 #define DO_DEFINE(TYPE, NAME) inline TYPE NAME;
