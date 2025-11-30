@@ -57,6 +57,15 @@ void main()
     colour = vec4(0.0, 0.5, 1.0, 1.0);
 }
 )"sv;
+
+struct IndirectCommand
+{
+    std::uint32_t count;
+    std::uint32_t instance_count;
+    std::uint32_t first;
+    std::uint32_t base_instance;
+};
+
 }
 
 int main()
@@ -86,11 +95,22 @@ int main()
     const auto triangle_buffer = ufps::Buffer{sizeof(triangle)};
     triangle_buffer.write(triangle_view, 0zu);
 
+    const auto command_buffer = ufps::Buffer(sizeof(IndirectCommand));
+    const auto command = IndirectCommand{
+        .count = 3,
+        .instance_count = 1,
+        .first = 0,
+        .base_instance = 0,
+    };
+    const auto command_view = ufps::DataBufferView{reinterpret_cast<const std::byte *>(&command), sizeof(command)};
+    command_buffer.write(command_view, 0zu);
+
     auto dummy_vao = ufps::AutoRelease<::GLuint>{0u, [](auto e) { ::glDeleteVertexArrays(1, &e); }};
     ::glGenVertexArrays(1, &dummy_vao);
 
     ::glBindVertexArray(dummy_vao);
     ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, triangle_buffer.native_handle());
+    ::glBindBuffer(GL_DRAW_INDIRECT_BUFFER, command_buffer.native_handle());
     sample_prog.use();
 
     while (running)
@@ -116,7 +136,7 @@ int main()
             event = window.pump_event();
         }
 
-        ::glDrawArrays(GL_TRIANGLES, 0, 3);
+        ::glMultiDrawArraysIndirect(GL_TRIANGLES, nullptr, 1, 0);
 
         window.swap();
     }
