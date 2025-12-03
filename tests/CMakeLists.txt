@@ -8,6 +8,7 @@ add_executable(unit_tests
   auto_release_tests.cpp
   error_tests.cpp
   formatter_tests.cpp
+  multi_buffer_tests.cpp
   vector3_tests.cpp
 )
 
