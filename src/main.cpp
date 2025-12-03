@@ -8,7 +8,9 @@
 #include "events/key_event.h"
 #include "graphics/buffer.h"
 #include "graphics/colour.h"
+#include "graphics/multi_buffer.h"
 #include "graphics/opengl.h"
+#include "graphics/persistent_buffer.h"
 #include "graphics/program.h"
 #include "graphics/shader.h"
 #include "graphics/vertex_data.h"
@@ -86,6 +88,7 @@ struct IndirectCommand
 int main()
 {
     // Daz_Da_Cat: First stream done.
+    // Daz_Da_Cat: You can't handle the Daz!
     ::CoInitializeEx(nullptr, COINIT_MULTITHREADED);
 
     ufps::log::info("μfps version: {}.{}.{}", ufps::version::major, ufps::version::minor, ufps::version::patch);
@@ -107,10 +110,10 @@ int main()
 
     const auto triangle_view = ufps::DataBufferView{reinterpret_cast<const std::byte *>(triangle), sizeof(triangle)};
 
-    const auto triangle_buffer = ufps::Buffer{sizeof(triangle)};
+    auto triangle_buffer = ufps::MultiBuffer<ufps::PersistentBuffer>{sizeof(triangle), "triangle_buffer"};
     triangle_buffer.write(triangle_view, 0zu);
 
-    const auto command_buffer = ufps::Buffer(sizeof(IndirectCommand));
+    const auto command_buffer = ufps::Buffer(sizeof(IndirectCommand), "command_buffer");
     const auto command = IndirectCommand{
         .count = 3,
         .instance_count = 1,
@@ -124,7 +127,7 @@ int main()
     ::glGenVertexArrays(1, &dummy_vao);
 
     ::glBindVertexArray(dummy_vao);
-    ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, triangle_buffer.native_handle());
+    ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, triangle_buffer.buffer().native_handle());
     ::glBindBuffer(GL_DRAW_INDIRECT_BUFFER, command_buffer.native_handle());
     sample_prog.use();
 
@@ -151,6 +154,9 @@ int main()
             event = window.pump_event();
         }
 
+        ::glMultiDrawArraysIndirect(GL_TRIANGLES, nullptr, 1, 0);
+        triangle_buffer.advance();
+
         triangle[0].colour.r += 0.01f;
         if (triangle[0].colour.r >= 1.0f)
         {
@@ -158,8 +164,6 @@ int main()
         }
 
         triangle_buffer.write(triangle_view, 0zu);
-
-        ::glMultiDrawArraysIndirect(GL_TRIANGLES, nullptr, 1, 0);
 
         window.swap();
     }
