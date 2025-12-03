@@ -103,9 +103,13 @@ int main()
     const auto sample_prog = ufps::Program{sample_vert, sample_frag, "sample_prog"sv};
 
     ufps::VertexData triangle[] = {
-        {{0.0f, 0.5f, 0.0f}, ufps::colours::azure},
-        {{-0.5f, -0.5f, 0.0f}, ufps::Colour{0.6, 0.1, 0.0}},
-        {{0.5f, -0.5f, 0.0f}, ufps::Colour{0.42, 0.42, 0.42}},
+        {{0.0f, 0.0f, 0.0f}, ufps::colours::azure},
+        {{-0.5f, 0.0f, 0.0f}, ufps::Colour{0.6, 0.1, 0.0}},
+        {{-0.5f, 0.5f, 0.0f}, ufps::Colour{0.42, 0.42, 0.42}},
+
+        {{0.0f, 0.0f, 0.0f}, ufps::colours::azure},
+        {{-0.5f, 0.5f, 0.0f}, ufps::Colour{0.42, 0.42, 0.42}},
+        {{0.0f, 0.5f, 0.0f}, ufps::Colour{0.6, 0.1, 0.0}},
     };
 
     const auto triangle_view = ufps::DataBufferView{reinterpret_cast<const std::byte *>(triangle), sizeof(triangle)};
@@ -113,14 +117,22 @@ int main()
     auto triangle_buffer = ufps::MultiBuffer<ufps::PersistentBuffer>{sizeof(triangle), "triangle_buffer"};
     triangle_buffer.write(triangle_view, 0zu);
 
-    const auto command_buffer = ufps::Buffer(sizeof(IndirectCommand), "command_buffer");
-    const auto command = IndirectCommand{
-        .count = 3,
-        .instance_count = 1,
-        .first = 0,
-        .base_instance = 0,
+    const IndirectCommand commands[]{
+        {
+            .count = 3,
+            .instance_count = 1,
+            .first = 0,
+            .base_instance = 0,
+        },
+        {
+            .count = 3,
+            .instance_count = 1,
+            .first = 3,
+            .base_instance = 0,
+        },
     };
-    const auto command_view = ufps::DataBufferView{reinterpret_cast<const std::byte *>(&command), sizeof(command)};
+    const auto command_buffer = ufps::Buffer(sizeof(commands), "command_buffer");
+    const auto command_view = ufps::DataBufferView{reinterpret_cast<const std::byte *>(commands), sizeof(commands)};
     command_buffer.write(command_view, 0zu);
 
     auto dummy_vao = ufps::AutoRelease<::GLuint>{0u, [](auto e) { ::glDeleteVertexArrays(1, &e); }};
@@ -154,7 +166,7 @@ int main()
             event = window.pump_event();
         }
 
-        ::glMultiDrawArraysIndirect(GL_TRIANGLES, nullptr, 1, 0);
+        ::glMultiDrawArraysIndirect(GL_TRIANGLES, nullptr, 2, 0);
         triangle_buffer.advance();
 
         triangle[0].colour.r += 0.01f;
@@ -162,6 +174,7 @@ int main()
         {
             triangle[0].colour.r = 0.0f;
         }
+        triangle[3].colour = triangle[0].colour;
 
         triangle_buffer.write(triangle_view, 0zu);
 
