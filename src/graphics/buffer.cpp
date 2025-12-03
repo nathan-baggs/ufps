@@ -1,7 +1,7 @@
 #include "graphics/buffer.h"
 
 #include <cstddef>
-#include <cstdint>
+#include <string_view>
 
 #include "graphics/opengl.h"
 #include "utils/auto_release.h"
@@ -11,12 +11,13 @@
 namespace ufps
 {
 
-Buffer::Buffer(std::uint32_t size)
+Buffer::Buffer(std::size_t size, std::string_view name)
     : buffer_{0u, [](auto buffer) { ::glDeleteBuffers(1, &buffer); }}
     , size_{size}
 {
     ::glCreateBuffers(1, &buffer_);
     ::glNamedBufferStorage(buffer_, size, nullptr, GL_DYNAMIC_STORAGE_BIT);
+    ::glObjectLabel(GL_BUFFER, buffer_, name.length(), name.data());
 }
 
 auto Buffer::write(DataBufferView data, std::size_t offset) const -> void

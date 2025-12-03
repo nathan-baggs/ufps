@@ -1,8 +1,6 @@
 #pragma once
 
 #include <cstddef>
-#include <cstdint>
-#include <span>
 #include <string_view>
 
 #include "graphics/opengl.h"
@@ -12,10 +10,10 @@
 namespace ufps
 {
 
-class Buffer
+class PersistentBuffer
 {
   public:
-    Buffer(std::size_t size, std::string_view name);
+    PersistentBuffer(std::size_t size, std::string_view name);
 
     auto write(DataBufferView data, std::size_t offset) const -> void;
 
@@ -24,6 +22,7 @@ class Buffer
   private:
     AutoRelease<::GLuint> buffer_;
     std::size_t size_;
+    void *map_;
 };
 
 }
