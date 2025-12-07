@@ -8,13 +8,13 @@
 #include "events/key_event.h"
 #include "graphics/buffer.h"
 #include "graphics/colour.h"
+#include "graphics/command_buffer.h"
+#include "graphics/entity.h"
 #include "graphics/mesh_manager.h"
-#include "graphics/multi_buffer.h"
 #include "graphics/opengl.h"
-#include "graphics/persistent_buffer.h"
 #include "graphics/program.h"
+#include "graphics/scene.h"
 #include "graphics/shader.h"
-#include "graphics/vertex_data.h"
 #include "graphics/window.h"
 #include "utils/data_buffer.h"
 #include "utils/formatter.h"
@@ -76,14 +76,6 @@ void main()
 }
 )"sv;
 
-struct IndirectCommand
-{
-    std::uint32_t count;
-    std::uint32_t instance_count;
-    std::uint32_t first;
-    std::uint32_t base_instance;
-};
-
 }
 
 int main()
@@ -104,41 +96,27 @@ int main()
     const auto sample_prog = ufps::Program{sample_vert, sample_frag, "sample_prog"sv};
 
     auto mesh_manager = ufps::MeshManager{};
+    auto command_buffer = ufps::CommandBuffer{};
 
-    const auto tri1 = mesh_manager.load(
-        {{{0.0f, 0.0f, 0.0f}, ufps::colours::azure},
-         {{-0.5f, 0.0f, 0.0f}, ufps::Colour{0.6, 0.1, 0.0}},
-         {{-0.5f, 0.5f, 0.0f}, ufps::Colour{0.42, 0.42, 0.42}}});
+    auto scene = ufps::Scene{.entities = {}, .mesh_manager = mesh_manager};
 
-    const auto tri2 = mesh_manager.load(
-        {{{0.0f, 0.0f, 0.0f}, ufps::colours::azure},
-         {{-0.5f, 0.5f, 0.0f}, ufps::Colour{0.42, 0.42, 0.42}},
-         {{0.0f, 0.5f, 0.0f}, ufps::Colour{0.6, 0.1, 0.0}}});
+    scene.entities.push_back(
+        {.mesh_view = mesh_manager.load(
+             {{{0.0f, 0.0f, 0.0f}, ufps::colours::azure},
+              {{-0.5f, 0.0f, 0.0f}, ufps::Colour{0.6, 0.1, 0.0}},
+              {{-0.5f, 0.5f, 0.0f}, ufps::Colour{0.42, 0.42, 0.42}}})});
 
-    const IndirectCommand commands[]{
-        {
-            .count = tri1.count,
-            .instance_count = 1,
-            .first = tri1.offset,
-            .base_instance = 0,
-        },
-        {
-            .count = tri2.count,
-            .instance_count = 1,
-            .first = tri2.offset,
-            .base_instance = 0,
-        },
-    };
-    const auto command_buffer = ufps::Buffer(sizeof(commands), "command_buffer");
-    const auto command_view = ufps::DataBufferView{reinterpret_cast<const std::byte *>(commands), sizeof(commands)};
-    command_buffer.write(command_view, 0zu);
+    scene.entities.push_back(
+        {.mesh_view = mesh_manager.load(
+             {{{0.0f, 0.0f, 0.0f}, ufps::colours::azure},
+              {{-0.5f, 0.5f, 0.0f}, ufps::Colour{0.42, 0.42, 0.42}},
+              {{0.0f, 0.5f, 0.0f}, ufps::Colour{0.6, 0.1, 0.0}}})});
 
     auto dummy_vao = ufps::AutoRelease<::GLuint>{0u, [](auto e) { ::glDeleteVertexArrays(1, &e); }};
     ::glGenVertexArrays(1, &dummy_vao);
 
     ::glBindVertexArray(dummy_vao);
     ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, mesh_manager.native_handle());
-    ::glBindBuffer(GL_DRAW_INDIRECT_BUFFER, command_buffer.native_handle());
     sample_prog.use();
 
     while (running)
@@ -164,7 +142,13 @@ int main()
             event = window.pump_event();
         }
 
-        ::glMultiDrawArraysIndirect(GL_TRIANGLES, nullptr, 2, 0);
+        const auto command_count = command_buffer.build(scene);
+
+        ::glBindBuffer(GL_DRAW_INDIRECT_BUFFER, command_buffer.native_handle());
+
+        ::glMultiDrawArraysIndirect(GL_TRIANGLES, nullptr, command_count, 0);
+
+        command_buffer.advance();
 
         window.swap();
     }
