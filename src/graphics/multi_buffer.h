@@ -43,6 +43,11 @@ class MultiBuffer
         return buffer_;
     }
 
+    auto original_size() const -> std::size_t
+    {
+        return original_size_;
+    }
+
   private:
     Buffer buffer_;
     std::size_t original_size_;
