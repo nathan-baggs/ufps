@@ -8,6 +8,7 @@
 #include "events/key_event.h"
 #include "graphics/buffer.h"
 #include "graphics/colour.h"
+#include "graphics/mesh_manager.h"
 #include "graphics/multi_buffer.h"
 #include "graphics/opengl.h"
 #include "graphics/persistent_buffer.h"
@@ -102,32 +103,29 @@ int main()
         ufps::Shader{sample_fragment_shader, ufps::ShaderType::FRAGMENT, "sample_fragment_shader"sv};
     const auto sample_prog = ufps::Program{sample_vert, sample_frag, "sample_prog"sv};
 
-    ufps::VertexData triangle[] = {
-        {{0.0f, 0.0f, 0.0f}, ufps::colours::azure},
-        {{-0.5f, 0.0f, 0.0f}, ufps::Colour{0.6, 0.1, 0.0}},
-        {{-0.5f, 0.5f, 0.0f}, ufps::Colour{0.42, 0.42, 0.42}},
+    auto mesh_manager = ufps::MeshManager{};
 
-        {{0.0f, 0.0f, 0.0f}, ufps::colours::azure},
-        {{-0.5f, 0.5f, 0.0f}, ufps::Colour{0.42, 0.42, 0.42}},
-        {{0.0f, 0.5f, 0.0f}, ufps::Colour{0.6, 0.1, 0.0}},
-    };
+    const auto tri1 = mesh_manager.load(
+        {{{0.0f, 0.0f, 0.0f}, ufps::colours::azure},
+         {{-0.5f, 0.0f, 0.0f}, ufps::Colour{0.6, 0.1, 0.0}},
+         {{-0.5f, 0.5f, 0.0f}, ufps::Colour{0.42, 0.42, 0.42}}});
 
-    const auto triangle_view = ufps::DataBufferView{reinterpret_cast<const std::byte *>(triangle), sizeof(triangle)};
-
-    auto triangle_buffer = ufps::MultiBuffer<ufps::PersistentBuffer>{sizeof(triangle), "triangle_buffer"};
-    triangle_buffer.write(triangle_view, 0zu);
+    const auto tri2 = mesh_manager.load(
+        {{{0.0f, 0.0f, 0.0f}, ufps::colours::azure},
+         {{-0.5f, 0.5f, 0.0f}, ufps::Colour{0.42, 0.42, 0.42}},
+         {{0.0f, 0.5f, 0.0f}, ufps::Colour{0.6, 0.1, 0.0}}});
 
     const IndirectCommand commands[]{
         {
-            .count = 3,
+            .count = tri1.count,
             .instance_count = 1,
-            .first = 0,
+            .first = tri1.offset,
             .base_instance = 0,
         },
         {
-            .count = 3,
+            .count = tri2.count,
             .instance_count = 1,
-            .first = 3,
+            .first = tri2.offset,
             .base_instance = 0,
         },
     };
@@ -139,7 +137,7 @@ int main()
     ::glGenVertexArrays(1, &dummy_vao);
 
     ::glBindVertexArray(dummy_vao);
-    ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, triangle_buffer.buffer().native_handle());
+    ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, mesh_manager.native_handle());
     ::glBindBuffer(GL_DRAW_INDIRECT_BUFFER, command_buffer.native_handle());
     sample_prog.use();
 
@@ -167,16 +165,6 @@ int main()
         }
 
         ::glMultiDrawArraysIndirect(GL_TRIANGLES, nullptr, 2, 0);
-        triangle_buffer.advance();
-
-        triangle[0].colour.r += 0.01f;
-        if (triangle[0].colour.r >= 1.0f)
-        {
-            triangle[0].colour.r = 0.0f;
-        }
-        triangle[3].colour = triangle[0].colour;
-
-        triangle_buffer.write(triangle_view, 0zu);
 
         window.swap();
     }
