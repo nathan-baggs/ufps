@@ -41,12 +41,6 @@ int main()
               {{-0.5f, 0.0f, 0.0f}, ufps::Colour{0.6, 0.1, 0.0}},
               {{-0.5f, 0.5f, 0.0f}, ufps::Colour{0.42, 0.42, 0.42}}})});
 
-    scene.entities.push_back(
-        {.mesh_view = mesh_manager.load(
-             {{{0.0f, 0.0f, 0.0f}, ufps::colours::azure},
-              {{-0.5f, 0.5f, 0.0f}, ufps::Colour{0.42, 0.42, 0.42}},
-              {{0.0f, 0.5f, 0.0f}, ufps::Colour{0.6, 0.1, 0.0}}})});
-
     while (running)
     {
         ::glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -61,8 +55,24 @@ int main()
 
                     if constexpr (std::same_as<T, ufps::KeyEvent>)
                     {
-                        ufps::log::info("stopping");
-                        running = false;
+                        if (arg.key() == ufps::Key::T)
+                        {
+                            static auto once = false;
+                            if (!once)
+                            {
+                                scene.entities.push_back(
+                                    {.mesh_view = mesh_manager.load(
+                                         {{{0.0f, 0.0f, 0.0f}, ufps::colours::azure},
+                                          {{-0.5f, 0.5f, 0.0f}, ufps::Colour{0.42, 0.42, 0.42}},
+                                          {{0.0f, 0.5f, 0.0f}, ufps::Colour{0.6, 0.1, 0.0}}})});
+                                once = true;
+                            }
+                        }
+                        else
+                        {
+                            ufps::log::info("stopping");
+                            running = false;
+                        }
                     }
                 },
                 *event);
