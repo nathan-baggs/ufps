@@ -21,6 +21,8 @@ class Buffer
 
     auto native_handle() const -> ::GLuint;
 
+    auto size() const -> std::size_t;
+
   private:
     AutoRelease<::GLuint> buffer_;
     std::size_t size_;
