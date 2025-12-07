@@ -4,6 +4,7 @@ target_sources(ufpslib PUBLIC
   mesh_manager.cpp
   persistent_buffer.cpp
   program.cpp
+  renderer.cpp
   shader.cpp
   window.cpp
 )
