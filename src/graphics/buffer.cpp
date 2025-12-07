@@ -31,4 +31,9 @@ auto Buffer::native_handle() const -> ::GLuint
     return buffer_;
 }
 
+auto Buffer::size() const -> std::size_t
+{
+    return size_;
+}
+
 }
