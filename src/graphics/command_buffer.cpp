@@ -1,5 +1,6 @@
 #include "graphics/command_buffer.h"
 
+#include <cstddef>
 #include <cstdint>
 #include <format>
 #include <ranges>
@@ -75,6 +76,11 @@ auto CommandBuffer::native_handle() const -> ::GLuint
 auto CommandBuffer::advance() -> void
 {
     command_buffer_.advance();
+}
+
+auto CommandBuffer::offset_bytes() const -> std::size_t
+{
+    return command_buffer_.frame_offset_bytes();
 }
 
 auto CommandBuffer::to_string() const -> std::string

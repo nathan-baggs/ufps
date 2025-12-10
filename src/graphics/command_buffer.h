@@ -18,6 +18,7 @@ class CommandBuffer
     auto build(const Scene &scene) -> std::uint32_t;
     auto native_handle() const -> ::GLuint;
     auto advance() -> void;
+    auto offset_bytes() const -> std::size_t;
     auto to_string() const -> std::string;
 
   private:
