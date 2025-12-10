@@ -48,6 +48,11 @@ class MultiBuffer
         return original_size_;
     }
 
+    auto frame_offset_bytes() const -> std::size_t
+    {
+        return frame_offset_;
+    }
+
   private:
     Buffer buffer_;
     std::size_t original_size_;
