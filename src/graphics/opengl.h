@@ -73,6 +73,7 @@
     DO(::PFNGLOBJECTLABELPROC, glObjectLabel)                                                                          \
     DO(::PFNGLVALIDATEPROGRAMPROC, glValidateProgram)                                                                  \
     DO(::PFNGLMULTIDRAWARRAYSINDIRECTPROC, glMultiDrawArraysIndirect)                                                  \
+    DO(::PFNGLMULTIDRAWELEMENTSINDIRECTPROC, glMultiDrawElementsIndirect)                                              \
     DO(::PFNGLMAPNAMEDBUFFERRANGEPROC, glMapNamedBufferRange)                                                          \
     DO(::PFNGLUNMAPNAMEDBUFFERPROC, glUnmapNamedBuffer)                                                                \
     DO(::PFNGLDRAWARRAYSEXTPROC, glDrawArraysEXT)
