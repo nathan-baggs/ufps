@@ -90,14 +90,20 @@ Renderer::Renderer()
 
 auto Renderer::render(const Scene &scene) -> void
 {
-    ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, scene.mesh_manager.native_handle());
+    const auto [vertex_buffer_handle, index_buffer_handle] = scene.mesh_manager.native_handle();
+    ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, vertex_buffer_handle);
+    ::glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffer_handle);
 
     const auto command_count = command_buffer_.build(scene);
 
     ::glBindBuffer(GL_DRAW_INDIRECT_BUFFER, command_buffer_.native_handle());
 
-    ::glMultiDrawArraysIndirect(
-        GL_TRIANGLES, reinterpret_cast<const void *>(command_buffer_.offset_bytes()), command_count, 0);
+    ::glMultiDrawElementsIndirect(
+        GL_TRIANGLES,
+        GL_UNSIGNED_INT,
+        reinterpret_cast<const void *>(command_buffer_.offset_bytes()),
+        command_count,
+        0);
 
     command_buffer_.advance();
 }
