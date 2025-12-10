@@ -1,10 +1,11 @@
 #pragma once
 
 #include <GL/gl.h>
+#include <cstdint>
 #include <string>
-#include <vector>
 
 #include "graphics/buffer.h"
+#include "graphics/mesh_data.h"
 #include "graphics/mesh_view.h"
 #include "graphics/vertex_data.h"
 
@@ -15,15 +16,17 @@ class MeshManager
 {
   public:
     MeshManager();
-    auto load(const std::vector<VertexData> &mesh) -> MeshView;
+    auto load(const MeshData &mesh_data) -> MeshView;
 
-    auto native_handle() const -> ::GLuint;
+    auto native_handle() const -> std::tuple<::GLuint, ::GLuint>;
 
     auto to_string() const -> std::string;
 
   private:
-    std::vector<VertexData> mesh_data_cpu_;
-    Buffer mesh_data_gpu_;
+    std::vector<VertexData> vertex_data_cpu_;
+    std::vector<std::uint32_t> index_data_cpu_;
+    Buffer vertex_data_gpu_;
+    Buffer index_data_gpu_;
 };
 
 }

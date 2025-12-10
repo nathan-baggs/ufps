@@ -3,58 +3,83 @@
 #include <ranges>
 #include <vector>
 
+#include "graphics/buffer.h"
+#include "graphics/mesh_data.h"
 #include "graphics/vertex_data.h"
 #include "utils/data_buffer.h"
 #include "utils/log.h"
 
-namespace ufps
+namespace
 {
-MeshManager::MeshManager()
-    : mesh_data_cpu_{}
-    , mesh_data_gpu_{sizeof(VertexData), "mesh_data"}
+
+template <class T>
+auto resize_gpu_buffer(const std::vector<T> &cpu_buffer, ufps::Buffer &gpu_buffer, std::string_view name)
 {
-    mesh_data_cpu_.reserve(1u);
-}
+    const auto buffer_size_bytes = cpu_buffer.size() * sizeof(T);
 
-auto MeshManager::load(const std::vector<VertexData> &mesh) -> MeshView
-{
-    const auto offset = mesh_data_cpu_.size();
-
-    mesh_data_cpu_.append_range(mesh);
-
-    const auto buffer_size_bytes = mesh_data_cpu_.size() * sizeof(VertexData);
-
-    if (mesh_data_gpu_.size() <= buffer_size_bytes)
+    if (gpu_buffer.size() <= buffer_size_bytes)
     {
-        auto new_size = mesh_data_gpu_.size() * 2zu;
+        auto new_size = gpu_buffer.size() * 2zu;
         while (new_size < buffer_size_bytes)
         {
             new_size *= 2zu;
         }
 
-        log::info("growing mesh_data buffer {} -> {}", mesh_data_gpu_.size(), new_size);
+        ufps::log::info("growing {} buffer {} -> {}", name, gpu_buffer.size(), new_size);
 
         // opengl barrier incase gpu using previous frame
         ::glFinish();
 
-        mesh_data_gpu_ = Buffer{new_size, "mesh_data"};
+        gpu_buffer = ufps::Buffer{new_size, name};
     }
-
-    const auto mesh_view =
-        DataBufferView{reinterpret_cast<const std::byte *>(mesh_data_cpu_.data()), buffer_size_bytes};
-    mesh_data_gpu_.write(mesh_view, 0u);
-
-    return {.offset = static_cast<std::uint32_t>(offset), .count = static_cast<std::uint32_t>(mesh.size())};
 }
 
-auto MeshManager::native_handle() const -> ::GLuint
+}
+
+namespace ufps
 {
-    return mesh_data_gpu_.native_handle();
+MeshManager::MeshManager()
+    : vertex_data_cpu_{}
+    , index_data_cpu_{}
+    , vertex_data_gpu_{sizeof(VertexData), "vertex_mesh_data"}
+    , index_data_gpu_{sizeof(std::uint32_t), "index_mesh_data"}
+{
+}
+
+auto MeshManager::load(const MeshData &mesh_data) -> MeshView
+{
+    const auto vertex_offset = vertex_data_cpu_.size();
+    const auto index_offset = index_data_cpu_.size();
+
+    vertex_data_cpu_.append_range(mesh_data.vertices);
+    resize_gpu_buffer(vertex_data_cpu_, vertex_data_gpu_, "vertex_mesh_data");
+    const auto vertex_data_view = DataBufferView{
+        reinterpret_cast<const std::byte *>(vertex_data_cpu_.data()), vertex_data_cpu_.size() * sizeof(VertexData)};
+    vertex_data_gpu_.write(vertex_data_view, 0u);
+
+    index_data_cpu_.append_range(mesh_data.indices);
+    resize_gpu_buffer(index_data_cpu_, index_data_gpu_, "index_mesh_data");
+    const auto index_data_view = DataBufferView{
+        reinterpret_cast<const std::byte *>(index_data_cpu_.data()), index_data_cpu_.size() * sizeof(std::uint32_t)};
+    index_data_gpu_.write(index_data_view, 0u);
+
+    return {
+        .index_offset = static_cast<std::uint32_t>(index_offset),
+        .index_count = static_cast<std::uint32_t>(mesh_data.indices.size()),
+        .vertex_offset = static_cast<std::uint32_t>(vertex_offset),
+        .vertex_count = static_cast<std::uint32_t>(mesh_data.vertices.size()),
+    };
+}
+
+auto MeshManager::native_handle() const -> std::tuple<::GLuint, ::GLuint>
+{
+    return {vertex_data_gpu_.native_handle(), index_data_gpu_.native_handle()};
 }
 
 auto MeshManager::to_string() const -> std::string
 {
-    return std::format("mesh manager: vertex count: {}", mesh_data_cpu_.size());
+    return std::format(
+        "mesh manager: vertex count: {} index count: {}", vertex_data_cpu_.size(), index_data_cpu_.size());
 }
 
 }
