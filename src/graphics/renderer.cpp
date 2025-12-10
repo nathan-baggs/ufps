@@ -96,7 +96,8 @@ auto Renderer::render(const Scene &scene) -> void
 
     ::glBindBuffer(GL_DRAW_INDIRECT_BUFFER, command_buffer_.native_handle());
 
-    ::glMultiDrawArraysIndirect(GL_TRIANGLES, nullptr, command_count, 0);
+    ::glMultiDrawArraysIndirect(
+        GL_TRIANGLES, reinterpret_cast<const void *>(command_buffer_.offset_bytes()), command_count, 0);
 
     command_buffer_.advance();
 }
