@@ -97,6 +97,14 @@ int main()
                             running = false;
                         }
                     }
+                    else if constexpr (std::same_as<T, ufps::MouseEvent>)
+                    {
+                        static constexpr auto sensitivity = float{0.002f};
+                        const auto delta_x = arg.delta_x() * sensitivity;
+                        const auto delta_y = arg.delta_y() * sensitivity;
+                        scene.camera.adjust_yaw(delta_x);
+                        scene.camera.adjust_pitch(-delta_y);
+                    }
                 },
                 *event);
 
