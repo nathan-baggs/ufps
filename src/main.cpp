@@ -1,3 +1,4 @@
+#include <numbers>
 #include <ranges>
 #include <string_view>
 #include <variant>
@@ -61,7 +62,18 @@ int main()
     auto mesh_manager = ufps::MeshManager{};
     auto renderer = ufps::Renderer{};
 
-    auto scene = ufps::Scene{.entities = {}, .mesh_manager = mesh_manager};
+    auto scene = ufps::Scene{
+        .entities = {},
+        .mesh_manager = mesh_manager,
+        .camera = {
+            {},
+            {0.0f, 0.0f, -1.0f},
+            {0.0f, 1.0f, 0.0f},
+            std::numbers::pi_v<float> / 4.0f,
+            static_cast<float>(window.render_width()),
+            static_cast<float>(window.render_height()),
+            0.1f,
+            1000.0f}};
 
     scene.entities.push_back({.mesh_view = mesh_manager.load(cube())});
 
@@ -79,14 +91,19 @@ int main()
 
                     if constexpr (std::same_as<T, ufps::KeyEvent>)
                     {
-                        ufps::log::info("stopping");
-                        running = false;
+                        if (arg.key() == ufps::Key::ESC)
+                        {
+                            ufps::log::info("stopping");
+                            running = false;
+                        }
                     }
                 },
                 *event);
 
             event = window.pump_event();
         }
+
+        scene.camera.translate({0.0f, 0.0f, 0.01f});
 
         renderer.render(scene);
 
