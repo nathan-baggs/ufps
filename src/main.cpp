@@ -1,4 +1,5 @@
-#include <GL/gl.h>
+#include <numbers>
+#include <ranges>
 #include <string_view>
 #include <variant>
 
@@ -8,15 +9,43 @@
 #include "events/key_event.h"
 #include "graphics/colour.h"
 #include "graphics/command_buffer.h"
+#include "graphics/mesh_data.h"
 #include "graphics/mesh_manager.h"
 #include "graphics/renderer.h"
 #include "graphics/scene.h"
+#include "graphics/vertex_data.h"
 #include "graphics/window.h"
 #include "utils/formatter.h"
 #include "utils/log.h"
 #include "utils/system_info.h"
 
 using namespace std::literals;
+
+namespace
+{
+auto cube() -> ufps::MeshData
+{
+    const ufps::Vector3 positions[] = {
+        {-1.0f, -1.0f, 1.0f}, {1.0f, -1.0f, 1.0f},   {1.0f, 1.0f, 1.0f},   {-1.0f, 1.0f, 1.0f},   {-1.0f, -1.0f, -1.0f},
+        {1.0f, -1.0f, -1.0f}, {1.0f, 1.0f, -1.0f},   {-1.0f, 1.0f, -1.0f}, {-1.0f, -1.0f, -1.0f}, {-1.0f, -1.0f, 1.0f},
+        {-1.0f, 1.0f, 1.0f},  {-1.0f, 1.0f, -1.0f},  {1.0f, -1.0f, -1.0f}, {1.0f, -1.0f, 1.0f},   {1.0f, 1.0f, 1.0f},
+        {1.0f, 1.0f, -1.0f},  {-1.0f, 1.0f, 1.0f},   {1.0f, 1.0f, 1.0f},   {1.0f, 1.0f, -1.0f},   {-1.0f, 1.0f, -1.0f},
+        {-1.0f, -1.0f, 1.0f}, {-1.0f, -1.0f, -1.0f}, {1.0f, -1.0f, -1.0f}, {1.0f, -1.0f, 1.0f},
+    };
+
+    auto indices = std::vector<std::uint32_t>{
+        0,  1,  2,  2,  3,  0,  4,  5,  6,  6,  7,  4,  8,  9,  10, 10, 11, 8,
+        12, 13, 14, 14, 15, 12, 16, 17, 18, 18, 19, 16, 20, 21, 22, 22, 23, 20,
+    };
+
+    return {
+        .vertices = positions |
+                    std::views::transform([](const auto &e)
+                                          { return ufps::VertexData{.position = e, .colour = ufps::colours::azure}; }) |
+                    std::ranges::to<std::vector>(),
+        .indices = std::move(indices)};
+}
+}
 
 int main()
 {
@@ -33,13 +62,20 @@ int main()
     auto mesh_manager = ufps::MeshManager{};
     auto renderer = ufps::Renderer{};
 
-    auto scene = ufps::Scene{.entities = {}, .mesh_manager = mesh_manager};
+    auto scene = ufps::Scene{
+        .entities = {},
+        .mesh_manager = mesh_manager,
+        .camera = {
+            {},
+            {0.0f, 0.0f, -1.0f},
+            {0.0f, 1.0f, 0.0f},
+            std::numbers::pi_v<float> / 4.0f,
+            static_cast<float>(window.render_width()),
+            static_cast<float>(window.render_height()),
+            0.1f,
+            1000.0f}};
 
-    scene.entities.push_back(
-        {.mesh_view = mesh_manager.load(
-             {{{0.0f, 0.0f, 0.0f}, ufps::colours::azure},
-              {{-0.5f, 0.0f, 0.0f}, ufps::Colour{0.6, 0.1, 0.0}},
-              {{-0.5f, 0.5f, 0.0f}, ufps::Colour{0.42, 0.42, 0.42}}})});
+    scene.entities.push_back({.mesh_view = mesh_manager.load(cube())});
 
     while (running)
     {
@@ -55,30 +91,27 @@ int main()
 
                     if constexpr (std::same_as<T, ufps::KeyEvent>)
                     {
-                        if (arg.key() == ufps::Key::T)
-                        {
-                            static auto once = false;
-                            if (!once)
-                            {
-                                scene.entities.push_back(
-                                    {.mesh_view = mesh_manager.load(
-                                         {{{0.0f, 0.0f, 0.0f}, ufps::colours::azure},
-                                          {{-0.5f, 0.5f, 0.0f}, ufps::Colour{0.42, 0.42, 0.42}},
-                                          {{0.0f, 0.5f, 0.0f}, ufps::Colour{0.6, 0.1, 0.0}}})});
-                                once = true;
-                            }
-                        }
-                        else
+                        if (arg.key() == ufps::Key::ESC)
                         {
                             ufps::log::info("stopping");
                             running = false;
                         }
+                    }
+                    else if constexpr (std::same_as<T, ufps::MouseEvent>)
+                    {
+                        static constexpr auto sensitivity = float{0.002f};
+                        const auto delta_x = arg.delta_x() * sensitivity;
+                        const auto delta_y = arg.delta_y() * sensitivity;
+                        scene.camera.adjust_yaw(delta_x);
+                        scene.camera.adjust_pitch(-delta_y);
                     }
                 },
                 *event);
 
             event = window.pump_event();
         }
+
+        scene.camera.translate({0.0f, 0.0f, 0.01f});
 
         renderer.render(scene);
 

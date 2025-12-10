@@ -1,6 +1,7 @@
 add_library(ufpslib STATIC
 )
 
+add_subdirectory(core)
 add_subdirectory(events)
 add_subdirectory(graphics)
 add_subdirectory(utils)

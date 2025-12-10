@@ -38,6 +38,11 @@ class MultiBuffer
         frame_offset_ = (frame_offset_ + original_size_) % (original_size_ * Frames);
     }
 
+    auto native_handle() const
+    {
+        return buffer_.native_handle();
+    }
+
     auto buffer() const -> const Buffer &
     {
         return buffer_;
@@ -46,6 +51,11 @@ class MultiBuffer
     auto original_size() const -> std::size_t
     {
         return original_size_;
+    }
+
+    auto frame_offset_bytes() const -> std::size_t
+    {
+        return frame_offset_;
     }
 
   private:

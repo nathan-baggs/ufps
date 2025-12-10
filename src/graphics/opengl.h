@@ -43,6 +43,7 @@
     DO(::PFNGLNAMEDBUFFERSUBDATAPROC, glNamedBufferSubData)                                                            \
     DO(::PFNGLVERTEXARRAYELEMENTBUFFERPROC, glVertexArrayElementBuffer)                                                \
     DO(::PFNGLBINDBUFFERBASEPROC, glBindBufferBase)                                                                    \
+    DO(::PFNGLBINDBUFFERRANGEPROC, glBindBufferRange)                                                                  \
     DO(::PFNGLCREATETEXTURESPROC, glCreateTextures)                                                                    \
     DO(::PFNGLTEXTURESTORAGE2DPROC, glTextureStorage2D)                                                                \
     DO(::PFNGLTEXTURESTORAGE2DMULTISAMPLEPROC, glTextureStorage2DMultisample)                                          \
@@ -73,6 +74,7 @@
     DO(::PFNGLOBJECTLABELPROC, glObjectLabel)                                                                          \
     DO(::PFNGLVALIDATEPROGRAMPROC, glValidateProgram)                                                                  \
     DO(::PFNGLMULTIDRAWARRAYSINDIRECTPROC, glMultiDrawArraysIndirect)                                                  \
+    DO(::PFNGLMULTIDRAWELEMENTSINDIRECTPROC, glMultiDrawElementsIndirect)                                              \
     DO(::PFNGLMAPNAMEDBUFFERRANGEPROC, glMapNamedBufferRange)                                                          \
     DO(::PFNGLUNMAPNAMEDBUFFERPROC, glUnmapNamedBuffer)                                                                \
     DO(::PFNGLDRAWARRAYSEXTPROC, glDrawArraysEXT)

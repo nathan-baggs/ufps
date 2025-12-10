@@ -76,11 +76,15 @@ TEST(multi_frame, quad_write)
 
     auto mb = ufps::MultiBuffer<FakeBuffer, 3zu>{data_view.size_bytes(), "test_buffer"};
     mb.write(data_view, 0);
+    ASSERT_EQ(mb.frame_offset_bytes(), 0zu);
     mb.advance();
+    ASSERT_EQ(mb.frame_offset_bytes(), 1zu * data_view.size_bytes());
     mb.write(data_view, 0);
     mb.advance();
+    ASSERT_EQ(mb.frame_offset_bytes(), 2zu * data_view.size_bytes());
     mb.write(data_view, 0);
     mb.advance();
+    ASSERT_EQ(mb.frame_offset_bytes(), 0zu);
     mb.write(data_view, 0);
 
     const auto &buffer = mb.buffer();

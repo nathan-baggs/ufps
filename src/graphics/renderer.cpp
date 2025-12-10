@@ -2,6 +2,7 @@
 
 #include <string_view>
 
+#include "core/camera.h"
 #include "graphics/command_buffer.h"
 #include "graphics/opengl.h"
 #include "graphics/program.h"
@@ -26,6 +27,11 @@ layout(binding = 0, std430) readonly buffer vertices {
     VertexData data[];
 };
 
+layout(binding = 1, std430) readonly buffer camera {
+    mat4 view;
+    mat4 projection;
+};
+
 vec3 get_position(int index)
 {
     return vec3(
@@ -46,7 +52,7 @@ layout (location = 0) out vec3 out_colour;
 
 void main()
 {
-    gl_Position = vec4(get_position(gl_VertexID), 1.0);
+    gl_Position = projection * view * vec4(get_position(gl_VertexID), 1.0);
     out_colour = get_colour(gl_VertexID);
 }
 )"sv;
@@ -80,6 +86,7 @@ namespace ufps
 Renderer::Renderer()
     : dummy_vao_{0u, [](auto e) { ::glDeleteVertexArrays(1u, &e); }}
     , command_buffer_{}
+    , camera_buffer_{sizeof(CameraData), "camera_buffer"}
     , program_{create_program()}
 {
     ::glGenVertexArrays(1, &dummy_vao_);
@@ -90,15 +97,31 @@ Renderer::Renderer()
 
 auto Renderer::render(const Scene &scene) -> void
 {
-    ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, scene.mesh_manager.native_handle());
+    camera_buffer_.write(scene.camera.data_view(), 0zu);
+
+    const auto [vertex_buffer_handle, index_buffer_handle] = scene.mesh_manager.native_handle();
+    ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, vertex_buffer_handle);
+    ::glBindBufferRange(
+        GL_SHADER_STORAGE_BUFFER,
+        1,
+        camera_buffer_.native_handle(),
+        camera_buffer_.frame_offset_bytes(),
+        sizeof(CameraData));
+    ::glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffer_handle);
 
     const auto command_count = command_buffer_.build(scene);
 
     ::glBindBuffer(GL_DRAW_INDIRECT_BUFFER, command_buffer_.native_handle());
 
-    ::glMultiDrawArraysIndirect(GL_TRIANGLES, nullptr, command_count, 0);
+    ::glMultiDrawElementsIndirect(
+        GL_TRIANGLES,
+        GL_UNSIGNED_INT,
+        reinterpret_cast<const void *>(command_buffer_.offset_bytes()),
+        command_count,
+        0);
 
     command_buffer_.advance();
+    camera_buffer_.advance();
 }
 
 }
