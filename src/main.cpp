@@ -12,6 +12,7 @@
 #include "events/key_event.h"
 #include "graphics/colour.h"
 #include "graphics/command_buffer.h"
+#include "graphics/material_manager.h"
 #include "graphics/mesh_data.h"
 #include "graphics/mesh_manager.h"
 #include "graphics/renderer.h"
@@ -43,9 +44,7 @@ auto cube() -> ufps::MeshData
     };
 
     return {
-        .vertices = positions |
-                    std::views::transform([](const auto &e)
-                                          { return ufps::VertexData{.position = e, .colour = ufps::colours::azure}; }) |
+        .vertices = positions | std::views::transform([](const auto &e) { return ufps::VertexData{.position = e}; }) |
                     std::ranges::to<std::vector>(),
         .indices = std::move(indices)};
 }
@@ -74,6 +73,16 @@ auto walk_direction(std::unordered_map<ufps::Key, bool> &key_state, const ufps::
         direction -= camera.right();
     }
 
+    if (key_state[ufps::Key::Q])
+    {
+        direction += camera.up();
+    }
+
+    if (key_state[ufps::Key::E])
+    {
+        direction -= camera.up();
+    }
+
     constexpr auto speed = 0.5f;
     return ufps::Vector3::normalise(direction) * speed;
 }
@@ -93,24 +102,39 @@ int main()
     auto running = true;
 
     auto mesh_manager = ufps::MeshManager{};
+    auto material_manager = ufps::MaterialManager{};
     auto renderer = ufps::Renderer{};
+
+    const auto material_key_red = material_manager.add(ufps::Colour{1.0f, 0.0f, 0.0f});
+    const auto material_key_blue = material_manager.add(ufps::Colour{0.0f, 0.0f, 1.0f});
+    const auto material_key_green = material_manager.add(ufps::Colour{0.0f, 1.0f, 0.0f});
+    material_manager.remove(material_key_blue);
 
     auto scene = ufps::Scene{
         .entities = {},
         .mesh_manager = mesh_manager,
-        .camera = {
-            {},
-            {0.0f, 0.0f, -1.0f},
-            {0.0f, 1.0f, 0.0f},
-            std::numbers::pi_v<float> / 4.0f,
-            static_cast<float>(window.render_width()),
-            static_cast<float>(window.render_height()),
-            0.1f,
-            1000.0f}};
+        .material_manager = material_manager,
+        .camera =
+            {{},
+             {0.0f, 0.0f, -1.0f},
+             {0.0f, 1.0f, 0.0f},
+             std::numbers::pi_v<float> / 4.0f,
+             static_cast<float>(window.render_width()),
+             static_cast<float>(window.render_height()),
+             0.1f,
+             1000.0f},
+    };
 
     scene.entities.push_back({
         .mesh_view = mesh_manager.load(cube()),
         .transform = {{10.0f, 0.0f, -10.0f}, {5.0f}, {}},
+        .material_key = material_key_red,
+    });
+
+    scene.entities.push_back({
+        .mesh_view = mesh_manager.load(cube()),
+        .transform = {{-10.0f, 0.0f, -10.0f}, {5.0f}, {}},
+        .material_key = material_key_green,
     });
 
     auto key_state = std::unordered_map<ufps::Key, bool>{
