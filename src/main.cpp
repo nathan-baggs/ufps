@@ -108,7 +108,10 @@ int main()
             0.1f,
             1000.0f}};
 
-    scene.entities.push_back({.mesh_view = mesh_manager.load(cube())});
+    scene.entities.push_back({
+        .mesh_view = mesh_manager.load(cube()),
+        .transform = {{10.0f, 0.0f, -10.0f}, {5.0f}, {}},
+    });
 
     auto key_state = std::unordered_map<ufps::Key, bool>{
         {ufps::Key::W, false}, {ufps::Key::A, false}, {ufps::Key::S, false}, {ufps::Key::D, false}};
