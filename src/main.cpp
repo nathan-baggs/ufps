@@ -1,11 +1,14 @@
+#include <_mingw_mac.h>
 #include <numbers>
 #include <ranges>
 #include <string_view>
+#include <unordered_map>
 #include <variant>
 
 #include <windows.h>
 
 #include "config.h"
+#include "events/key.h"
 #include "events/key_event.h"
 #include "graphics/colour.h"
 #include "graphics/command_buffer.h"
@@ -15,6 +18,7 @@
 #include "graphics/scene.h"
 #include "graphics/vertex_data.h"
 #include "graphics/window.h"
+#include "maths/vector3.h"
 #include "utils/formatter.h"
 #include "utils/log.h"
 #include "utils/system_info.h"
@@ -45,6 +49,35 @@ auto cube() -> ufps::MeshData
                     std::ranges::to<std::vector>(),
         .indices = std::move(indices)};
 }
+
+auto walk_direction(std::unordered_map<ufps::Key, bool> &key_state, const ufps::Camera &camera) -> ufps::Vector3
+{
+    auto direction = ufps::Vector3{};
+
+    if (key_state[ufps::Key::W])
+    {
+        direction += camera.direction();
+    }
+
+    if (key_state[ufps::Key::S])
+    {
+        direction -= camera.direction();
+    }
+
+    if (key_state[ufps::Key::D])
+    {
+        direction += camera.right();
+    }
+
+    if (key_state[ufps::Key::A])
+    {
+        direction -= camera.right();
+    }
+
+    constexpr auto speed = 0.5f;
+    return ufps::Vector3::normalise(direction) * speed;
+}
+
 }
 
 int main()
@@ -77,6 +110,9 @@ int main()
 
     scene.entities.push_back({.mesh_view = mesh_manager.load(cube())});
 
+    auto key_state = std::unordered_map<ufps::Key, bool>{
+        {ufps::Key::W, false}, {ufps::Key::A, false}, {ufps::Key::S, false}, {ufps::Key::D, false}};
+
     while (running)
     {
         ::glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -96,6 +132,10 @@ int main()
                             ufps::log::info("stopping");
                             running = false;
                         }
+                        else
+                        {
+                            key_state[arg.key()] = arg.state() == ufps::KeyState::DOWN;
+                        }
                     }
                     else if constexpr (std::same_as<T, ufps::MouseEvent>)
                     {
@@ -111,7 +151,7 @@ int main()
             event = window.pump_event();
         }
 
-        scene.camera.translate({0.0f, 0.0f, 0.01f});
+        scene.camera.translate(walk_direction(key_state, scene.camera));
 
         renderer.render(scene);
 
