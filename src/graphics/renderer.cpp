@@ -1,13 +1,17 @@
 #include "graphics/renderer.h"
 
+#include <ranges>
+#include <span>
 #include <string_view>
 
 #include "core/camera.h"
 #include "graphics/command_buffer.h"
+#include "graphics/object_data.h"
 #include "graphics/opengl.h"
 #include "graphics/program.h"
 #include "graphics/scene.h"
 #include "graphics/shader.h"
+#include "graphics/utils.h"
 #include "utils/auto_release.h"
 
 using namespace std::literals;
@@ -20,6 +24,16 @@ constexpr auto sample_vertex_shader = R"(
 struct VertexData
 {
     float position[3];
+};
+
+struct ObjectData
+{
+    mat4 model;
+    uint material_index;
+};
+
+struct MaterialData
+{
     float colour[3];
 };
 
@@ -32,7 +46,15 @@ layout(binding = 1, std430) readonly buffer camera {
     mat4 projection;
 };
 
-vec3 get_position(int index)
+layout(binding = 2, std430) readonly buffer objects {
+    ObjectData object_data[];
+};
+
+layout(binding = 3, std430) readonly buffer materials {
+    MaterialData material_data[];
+};
+
+vec3 get_position(uint index)
 {
     return vec3(
         data[index].position[0],
@@ -40,33 +62,67 @@ vec3 get_position(int index)
         data[index].position[2]);
 }
 
-vec3 get_colour(int index)
-{
-    return vec3(
-        data[index].colour[0],
-        data[index].colour[1],
-        data[index].colour[2]);
-}
-
-layout (location = 0) out vec3 out_colour;
+layout (location = 0) out flat uint material_index;
 
 void main()
 {
-    gl_Position = projection * view * vec4(get_position(gl_VertexID), 1.0);
-    out_colour = get_colour(gl_VertexID);
+    gl_Position = projection * view * object_data[gl_DrawID].model * vec4(get_position(gl_VertexID), 1.0);
+    material_index = object_data[gl_DrawID].material_index;
 }
 )"sv;
 
 constexpr auto sample_fragment_shader = R"(
 #version 460 core
 
-layout(location = 0) in vec3 in_colour;
+struct VertexData
+{
+    float position[3];
+};
+
+struct ObjectData
+{
+    mat4 model;
+    uint material_index;
+};
+
+struct MaterialData
+{
+    float colour[3];
+};
+
+layout(binding = 0, std430) readonly buffer vertices {
+    VertexData data[];
+};
+
+layout(binding = 1, std430) readonly buffer camera {
+    mat4 view;
+    mat4 projection;
+};
+
+layout(binding = 2, std430) readonly buffer objects {
+    ObjectData object_data[];
+};
+
+layout(binding = 3, std430) readonly buffer materials {
+    MaterialData material_data[];
+};
+
+vec3 get_colour(uint index)
+{
+    return vec3(
+        material_data[index].colour[0],
+        material_data[index].colour[1],
+        material_data[index].colour[2]);
+}
+
+
+layout(location = 0) in flat uint material_index;
 
 layout(location = 0) out vec4 out_colour;
 
 void main()
 {
-    out_colour = vec4(in_colour, 1.0);
+    out_colour = vec4(get_colour(material_index), 1.0);
 }
 )"sv;
 
@@ -87,6 +143,7 @@ Renderer::Renderer()
     : dummy_vao_{0u, [](auto e) { ::glDeleteVertexArrays(1u, &e); }}
     , command_buffer_{}
     , camera_buffer_{sizeof(CameraData), "camera_buffer"}
+    , object_data_buffer_{sizeof(ObjectData), "object_data_buffer"}
     , program_{create_program()}
 {
     ::glGenVertexArrays(1, &dummy_vao_);
@@ -110,8 +167,26 @@ auto Renderer::render(const Scene &scene) -> void
     ::glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffer_handle);
 
     const auto command_count = command_buffer_.build(scene);
-
     ::glBindBuffer(GL_DRAW_INDIRECT_BUFFER, command_buffer_.native_handle());
+
+    const auto object_data = scene.entities |
+                             std::views::transform(
+                                 [&scene](const auto &e)
+                                 {
+                                     const auto index = scene.material_manager.index(e.material_key);
+                                     return ObjectData{
+                                         .model = e.transform,
+                                         .material_id_index = index,
+                                         .padding = {},
+                                     };
+                                 }) |
+                             std::ranges::to<std::vector>();
+    resize_gpu_buffer(object_data, object_data_buffer_, "object_data_buffer");
+    object_data_buffer_.write(std::as_bytes(std::span{object_data.data(), object_data.size()}), 0zu);
+    ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, object_data_buffer_.native_handle());
+
+    scene.material_manager.sync();
+    ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, scene.material_manager.native_handle());
 
     ::glMultiDrawElementsIndirect(
         GL_TRIANGLES,
@@ -122,6 +197,8 @@ auto Renderer::render(const Scene &scene) -> void
 
     command_buffer_.advance();
     camera_buffer_.advance();
+    object_data_buffer_.advance();
+    scene.material_manager.advance();
 }
 
 }

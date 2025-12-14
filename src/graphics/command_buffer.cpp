@@ -10,6 +10,7 @@
 #include "graphics/opengl.h"
 #include "graphics/persistent_buffer.h"
 #include "graphics/scene.h"
+#include "graphics/utils.h"
 #include "utils/log.h"
 
 namespace
@@ -55,21 +56,7 @@ auto CommandBuffer::build(const Scene &scene) -> std::uint32_t
     const auto command_view =
         DataBufferView{reinterpret_cast<const std::byte *>(command.data()), command.size() * sizeof(IndirectCommand)};
 
-    if (command_view.size_bytes() > command_buffer_.original_size())
-    {
-        auto new_size = command_buffer_.original_size() * 2zu;
-        while (new_size < command_view.size_bytes())
-        {
-            new_size *= 2zu;
-        }
-
-        log::info("growing command buffer {} -> {}", command_buffer_.original_size(), new_size);
-
-        // opengl barrier incase gpu using previous frame
-        ::glFinish();
-
-        command_buffer_ = MultiBuffer<PersistentBuffer>{new_size, "mesh_data"};
-    }
+    resize_gpu_buffer(command, command_buffer_, "command_buffer");
 
     command_buffer_.write(command_view, 0u);
 
@@ -93,7 +80,7 @@ auto CommandBuffer::offset_bytes() const -> std::size_t
 
 auto CommandBuffer::to_string() const -> std::string
 {
-    return std::format("command buffer {} size", command_buffer_.original_size());
+    return std::format("command buffer {} size", command_buffer_.size());
 }
 
 }
