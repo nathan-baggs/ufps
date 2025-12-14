@@ -5,6 +5,7 @@
 #include <ranges>
 #include <span>
 
+#include "maths/quaternion.h"
 #include "maths/vector3.h"
 #include "utils/error.h"
 
@@ -94,6 +95,22 @@ class Matrix4
               1.0f,
           })
     {
+    }
+
+    constexpr Matrix4(const Quaternion &rotation)
+        : Matrix4{}
+    {
+        elements_[0] = 1.0f - 2.0f * rotation.y * rotation.y - 2.0f * rotation.z * rotation.z;
+        elements_[1] = 2.0f * rotation.x * rotation.y + 2.0f * rotation.z * rotation.w;
+        elements_[2] = 2.0f * rotation.x * rotation.z - 2.0f * rotation.y * rotation.w;
+
+        elements_[4] = 2.0f * rotation.x * rotation.y - 2.0f * rotation.z * rotation.w;
+        elements_[5] = 1.0f - 2.0f * rotation.x * rotation.x - 2.0f * rotation.z * rotation.z;
+        elements_[6] = 2.0f * rotation.y * rotation.z + 2.0f * rotation.x * rotation.w;
+
+        elements_[8] = 2.0f * rotation.x * rotation.z + 2.0f * rotation.y * rotation.w;
+        elements_[9] = 2.0f * rotation.y * rotation.z - 2.0f * rotation.x * rotation.w;
+        elements_[10] = 1.0f - 2.0f * rotation.x * rotation.x - 2.0f * rotation.y * rotation.y;
     }
 
     constexpr Matrix4(const Vector3 &translation, const Vector3 &scale)
