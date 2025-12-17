@@ -4,13 +4,16 @@
 #include <format>
 #include <string>
 
+#include <imgui.h>
+
+#include <ImGuizmo.h>
 #include <backends/imgui_impl_opengl3.h>
 #include <backends/imgui_impl_win32.h>
-#include <imgui.h>
 
 #include "events/mouse_button_event.h"
 #include "graphics/scene.h"
 #include "graphics/window.h"
+#include "maths/matrix4.h"
 
 namespace ufps
 {
@@ -47,9 +50,14 @@ auto DebugUI::render(Scene &scene) const -> void
     ::ImGui_ImplWin32_NewFrame();
     ::ImGui::NewFrame();
 
+    ::ImGuizmo::SetOrthographic(false);
+    ::ImGuizmo::BeginFrame();
+    ::ImGuizmo::Enable(true);
+    ::ImGuizmo::SetRect(0, 0, io.DisplaySize.x, io.DisplaySize.y);
+
     ::ImGui::LabelText("FPS", "%0.1f", io.Framerate);
 
-    for (const auto &entity : scene.entities)
+    for (auto &entity : scene.entities)
     {
         auto &material = scene.material_manager[entity.material_key];
 
@@ -64,6 +72,22 @@ auto DebugUI::render(Scene &scene) const -> void
             {
                 std::memcpy(&material.colour, colour, sizeof(colour));
             }
+
+            auto transform = Matrix4{entity.transform};
+            const auto &camera_data = scene.camera.data();
+
+            ::ImGuizmo::Manipulate(
+                camera_data.view.data().data(),
+                camera_data.projection.data().data(),
+                ::ImGuizmo::TRANSLATE | ::ImGuizmo::SCALE | ::ImGuizmo::BOUNDS | ::ImGuizmo::ROTATE,
+                ::ImGuizmo::WORLD,
+                const_cast<float *>(transform.data().data()),
+                nullptr,
+                nullptr,
+                nullptr,
+                nullptr);
+
+            entity.transform = Transform{transform};
         }
     }
 
