@@ -1,5 +1,9 @@
 #include "graphics/debug_ui.h"
 
+#include <cstring>
+#include <format>
+#include <string>
+
 #include <backends/imgui_impl_opengl3.h>
 #include <backends/imgui_impl_win32.h>
 #include <imgui.h>
@@ -35,13 +39,33 @@ DebugUI::~DebugUI()
     ::ImGui::DestroyContext();
 }
 
-auto DebugUI::render([[maybe_unused]] Scene &scene) const -> void
+auto DebugUI::render(Scene &scene) const -> void
 {
+    auto &io = ::ImGui::GetIO();
+
     ::ImGui_ImplOpenGL3_NewFrame();
     ::ImGui_ImplWin32_NewFrame();
     ::ImGui::NewFrame();
 
-    ::ImGui::ShowDemoWindow();
+    ::ImGui::LabelText("FPS", "%0.1f", io.Framerate);
+
+    for (const auto &entity : scene.entities)
+    {
+        auto &material = scene.material_manager[entity.material_key];
+
+        if (::ImGui::CollapsingHeader(entity.name.c_str()))
+        {
+            float colour[3]{};
+            std::memcpy(colour, &material.colour, sizeof(colour));
+
+            const auto label = std::format("{} colour", entity.name);
+
+            if (::ImGui::ColorPicker3(label.c_str(), colour))
+            {
+                std::memcpy(&material.colour, colour, sizeof(colour));
+            }
+        }
+    }
 
     ::ImGui::Render();
     ::ImGui_ImplOpenGL3_RenderDrawData(::ImGui::GetDrawData());
