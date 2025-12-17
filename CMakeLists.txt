@@ -23,6 +23,12 @@ if (NOT googletest_POPULATED)
   add_subdirectory(${googletest_SOURCE_DIR} ${googletest_BINARY_DIR} EXCLUDE_FROM_ALL)
 endif()
 
+FetchContent_Declare(
+	imgui
+	GIT_REPOSITORY https://github.com/ocornut/imgui.git
+	GIT_TAG v1.92.5)
+FetchContent_MakeAvailable(imgui)
+
 add_subdirectory(src)
 
 enable_testing()
