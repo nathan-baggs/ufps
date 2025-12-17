@@ -128,12 +128,14 @@ int main()
     };
 
     scene.entities.push_back({
+        .name = "cube1",
         .mesh_view = mesh_manager.load(cube()),
         .transform = {{10.0f, 0.0f, -10.0f}, {5.0f}, {}},
         .material_key = material_key_red,
     });
 
     scene.entities.push_back({
+        .name = "cube2",
         .mesh_view = mesh_manager.load(cube()),
         .transform = {{-10.0f, 0.0f, -10.0f}, {5.0f}, {}},
         .material_key = material_key_green,
