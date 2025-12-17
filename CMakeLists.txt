@@ -29,6 +29,12 @@ FetchContent_Declare(
 	GIT_TAG v1.92.5)
 FetchContent_MakeAvailable(imgui)
 
+FetchContent_Declare(
+	imguizmo
+	GIT_REPOSITORY https://github.com/CedricGuillemet/ImGuizmo
+	GIT_TAG df1c301)
+FetchContent_MakeAvailable(imguizmo)
+
 add_subdirectory(src)
 
 enable_testing()

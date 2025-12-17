@@ -6,8 +6,10 @@ add_library(imguilib STATIC
   ${imgui_SOURCE_DIR}/imgui_draw.cpp
   ${imgui_SOURCE_DIR}/imgui_tables.cpp
   ${imgui_SOURCE_DIR}/imgui_widgets.cpp
+
+  ${imguizmo_SOURCE_DIR}/ImGuizmo.cpp
 )
-target_include_directories(imguilib PUBLIC ${imgui_SOURCE_DIR})
+target_include_directories(imguilib PUBLIC ${imgui_SOURCE_DIR} ${imguizmo_SOURCE_DIR})
 
 add_library(ufpslib STATIC
 )
