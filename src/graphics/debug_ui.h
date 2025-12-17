@@ -1,5 +1,7 @@
 #pragma once
 
+#include <optional>
+
 #include "events/mouse_button_event.h"
 #include "graphics/scene.h"
 #include "graphics/window.h"
@@ -13,12 +15,13 @@ class DebugUI
     DebugUI(const Window &window);
     ~DebugUI();
 
-    auto render(Scene &scene) const -> void;
+    auto render(Scene &scene) -> void;
 
-    auto add_mouse_event(const MouseButtonEvent &evt) const -> void;
+    auto add_mouse_event(const MouseButtonEvent &evt) -> void;
 
   private:
     const Window &window_;
+    std::optional<MouseButtonEvent> click_;
 };
 
 }

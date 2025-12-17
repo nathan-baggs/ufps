@@ -2,6 +2,7 @@
 
 #include <cstring>
 #include <format>
+#include <optional>
 #include <string>
 
 #include <imgui.h>
@@ -11,9 +12,12 @@
 #include <backends/imgui_impl_win32.h>
 
 #include "events/mouse_button_event.h"
+#include "graphics/opengl.h"
 #include "graphics/scene.h"
 #include "graphics/window.h"
 #include "maths/matrix4.h"
+#include "third_party/opengl/glext.h"
+#include "utils/log.h"
 
 namespace ufps
 {
@@ -42,7 +46,7 @@ DebugUI::~DebugUI()
     ::ImGui::DestroyContext();
 }
 
-auto DebugUI::render(Scene &scene) const -> void
+auto DebugUI::render(Scene &scene) -> void
 {
     auto &io = ::ImGui::GetIO();
 
@@ -93,11 +97,32 @@ auto DebugUI::render(Scene &scene) const -> void
 
     ::ImGui::Render();
     ::ImGui_ImplOpenGL3_RenderDrawData(::ImGui::GetDrawData());
+
+    if (click_)
+    {
+        std::uint8_t buffer[4]{};
+
+        ::glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
+        ::glReadBuffer(GL_BACK);
+        ::glReadPixels(
+            static_cast<::GLint>(click_->x()),
+            static_cast<::GLint>(click_->y()),
+            1,
+            1,
+            GL_RGBA,
+            GL_UNSIGNED_BYTE,
+            buffer);
+
+        log::debug("r: {:x} g: {:x} b: {:x}", buffer[0], buffer[1], buffer[2]);
+        click_.reset();
+    }
 }
 
-auto DebugUI::add_mouse_event(const MouseButtonEvent &evt) const -> void
+auto DebugUI::add_mouse_event(const MouseButtonEvent &evt) -> void
 {
     auto &io = ::ImGui::GetIO();
     io.AddMouseButtonEvent(0, evt.state() == MouseButtonState::DOWN);
+
+    click_ = evt;
 }
 }
