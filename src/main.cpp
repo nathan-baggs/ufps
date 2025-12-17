@@ -11,7 +11,7 @@
 #include "events/key.h"
 #include "events/key_event.h"
 #include "graphics/colour.h"
-#include "graphics/command_buffer.h"
+#include "graphics/debug_ui.h"
 #include "graphics/material_manager.h"
 #include "graphics/mesh_data.h"
 #include "graphics/mesh_manager.h"
@@ -104,6 +104,8 @@ int main()
     auto mesh_manager = ufps::MeshManager{};
     auto material_manager = ufps::MaterialManager{};
     auto renderer = ufps::Renderer{};
+    auto debug_ui = ufps::DebugUI{window};
+    auto debug_mode = false;
 
     const auto material_key_red = material_manager.add(ufps::Colour{1.0f, 0.0f, 0.0f});
     const auto material_key_blue = material_manager.add(ufps::Colour{0.0f, 0.0f, 1.0f});
@@ -159,6 +161,10 @@ int main()
                             ufps::log::info("stopping");
                             running = false;
                         }
+                        if (arg == ufps::KeyEvent{ufps::Key::F1, ufps::KeyState::DOWN})
+                        {
+                            debug_mode = !debug_mode;
+                        }
                         else
                         {
                             key_state[arg.key()] = arg.state() == ufps::KeyState::DOWN;
@@ -166,11 +172,18 @@ int main()
                     }
                     else if constexpr (std::same_as<T, ufps::MouseEvent>)
                     {
-                        static constexpr auto sensitivity = float{0.002f};
-                        const auto delta_x = arg.delta_x() * sensitivity;
-                        const auto delta_y = arg.delta_y() * sensitivity;
-                        scene.camera.adjust_yaw(delta_x);
-                        scene.camera.adjust_pitch(-delta_y);
+                        if (!debug_mode)
+                        {
+                            static constexpr auto sensitivity = float{0.002f};
+                            const auto delta_x = arg.delta_x() * sensitivity;
+                            const auto delta_y = arg.delta_y() * sensitivity;
+                            scene.camera.adjust_yaw(delta_x);
+                            scene.camera.adjust_pitch(-delta_y);
+                        }
+                    }
+                    else if constexpr (std::same_as<T, ufps::MouseButtonEvent>)
+                    {
+                        debug_ui.add_mouse_event(arg);
                     }
                 },
                 *event);
@@ -181,6 +194,11 @@ int main()
         scene.camera.translate(walk_direction(key_state, scene.camera));
 
         renderer.render(scene);
+
+        if (debug_mode)
+        {
+            debug_ui.render(scene);
+        }
 
         window.swap();
     }
