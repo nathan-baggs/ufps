@@ -71,6 +71,14 @@ class MaterialManager
         return key;
     }
 
+    auto operator[](MaterialKey key) -> MaterialData &
+    {
+        const auto element = material_data_cpu_.find(key);
+        expect(element != std::ranges::cend(material_data_cpu_), "key {} does not exist", key);
+
+        return element->second;
+    }
+
     auto remove(MaterialKey key) -> void
     {
         material_data_cpu_.erase(key);
