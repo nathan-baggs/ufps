@@ -6,6 +6,7 @@
 
 #include "maths/matrix4.h"
 #include "maths/vector3.h"
+#include "maths/vector4.h"
 #include "utils/exception.h"
 
 TEST(matrix4, identity_ctor)
@@ -151,4 +152,51 @@ TEST(matrix4, perspective)
     {
         ASSERT_NEAR(proj_spn[i], expected_spn[i], 0.001f);
     }
+}
+
+TEST(matrix4, invert)
+{
+    const auto m = ufps::Matrix4{
+        {0.6f, 2.4f, 1.1f, 0.0f, 2.4f, 0.6f, -0.4f, 1.0f, 1.1f, -0.4f, 0.6f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f}};
+
+    const auto inv = ufps::Matrix4::invert(m);
+
+    const auto expected = ufps::Matrix4{
+        {-0.0323939,
+         0.304503,
+         0.262391,
+         -0.304503,
+         0.304503,
+         0.137674,
+         -0.466472,
+         -0.137674,
+         0.262391,
+         -0.466472,
+         0.874636,
+         0.466472,
+         0,
+         0,
+         0,
+         1}};
+
+    const auto inv_spn = inv.data();
+    const auto expected_spn = expected.data();
+
+    for (auto i = 0u; i < 16u; ++i)
+    {
+        ASSERT_NEAR(inv_spn[i], expected_spn[i], 0.001f);
+    }
+}
+
+TEST(matrix4, multiply_vector4)
+{
+    const auto m = ufps::Matrix4{
+        {1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f, 7.0f, 8.0f, 9.0f, 10.0f, 11.0f, 12.0f, 13.0f, 14.0f, 15.0f, 16.0f}};
+    const auto v = ufps::Vector4{1.0f, 2.0f, 3.0f, 4.0f};
+
+    const auto result = m * v;
+
+    const auto expected = ufps::Vector4{90.0f, 100.0f, 110.0f, 120.0f};
+
+    ASSERT_EQ(result, expected);
 }

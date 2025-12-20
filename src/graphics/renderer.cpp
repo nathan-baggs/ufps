@@ -5,11 +5,11 @@
 #include <string_view>
 
 #include "core/camera.h"
+#include "core/scene.h"
 #include "graphics/command_buffer.h"
 #include "graphics/object_data.h"
 #include "graphics/opengl.h"
 #include "graphics/program.h"
-#include "graphics/scene.h"
 #include "graphics/shader.h"
 #include "graphics/utils.h"
 #include "utils/auto_release.h"

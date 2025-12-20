@@ -38,9 +38,9 @@ auto MeshManager::load(const MeshData &mesh_data) -> MeshView
 
     return {
         .index_offset = static_cast<std::uint32_t>(index_offset),
-        .index_count = static_cast<std::uint32_t>(mesh_data.indices.size()),
+        .indices = std::span<std::uint32_t>{index_data_cpu_.data() + index_offset, mesh_data.indices.size()},
         .vertex_offset = static_cast<std::uint32_t>(vertex_offset),
-        .vertex_count = static_cast<std::uint32_t>(mesh_data.vertices.size()),
+        .vertices = std::span<VertexData>{vertex_data_cpu_.data() + vertex_offset, mesh_data.vertices.size()},
     };
 }
 

@@ -7,6 +7,7 @@
 
 #include "maths/quaternion.h"
 #include "maths/vector3.h"
+#include "maths/vector4.h"
 #include "utils/error.h"
 
 namespace ufps
@@ -141,6 +142,8 @@ class Matrix4
         -> Matrix4;
     static constexpr auto orthographic(float width, float height, float depth) -> Matrix4;
 
+    static constexpr auto invert(const Matrix4 &matrix) -> Matrix4;
+
     constexpr auto data() const -> std::span<const float>
     {
         return elements_;
@@ -152,6 +155,7 @@ class Matrix4
     }
 
     friend constexpr auto operator*=(Matrix4 &m1, const Matrix4 &m2) -> Matrix4 &;
+    friend constexpr auto operator*(const Matrix4 &m1, const Vector4 &v) -> Vector4;
 
     constexpr auto operator==(const Matrix4 &) const -> bool = default;
 
@@ -187,7 +191,7 @@ constexpr auto operator*(const Matrix4 &m1, const Matrix4 &m2) -> Matrix4
     return tmp *= m2;
 }
 
-inline constexpr auto Matrix4::look_at(const Vector3 &eye, const Vector3 &look_at, const Vector3 &up) -> Matrix4
+constexpr auto Matrix4::look_at(const Vector3 &eye, const Vector3 &look_at, const Vector3 &up) -> Matrix4
 {
     const auto f = Vector3::normalise(look_at - eye);
     const auto up_normalised = Vector3::normalise(up);
@@ -201,8 +205,7 @@ inline constexpr auto Matrix4::look_at(const Vector3 &eye, const Vector3 &look_a
     return m * Matrix4{-eye};
 }
 
-inline constexpr auto Matrix4::perspective(float fov, float width, float height, float near_plane, float far_plane)
-    -> Matrix4
+constexpr auto Matrix4::perspective(float fov, float width, float height, float near_plane, float far_plane) -> Matrix4
 {
     Matrix4 m;
 
@@ -233,7 +236,7 @@ inline constexpr auto Matrix4::perspective(float fov, float width, float height,
     return m;
 }
 
-inline constexpr auto Matrix4::orthographic(float width, float height, float depth) -> Matrix4
+constexpr auto Matrix4::orthographic(float width, float height, float depth) -> Matrix4
 {
     const auto right = width / 2.0f;
     const auto left = -right;
@@ -262,6 +265,85 @@ inline constexpr auto Matrix4::orthographic(float width, float height, float dep
          1.0f}};
 
     return m;
+}
+
+constexpr auto Matrix4::invert(const Matrix4 &matrix) -> Matrix4
+{
+    const auto &m = matrix.elements_;
+    auto result = Matrix4{};
+    auto &inv = result.elements_;
+
+    inv[0] = m[5] * m[10] * m[15] - m[5] * m[11] * m[14] - m[9] * m[6] * m[15] + m[9] * m[7] * m[14] +
+             m[13] * m[6] * m[11] - m[13] * m[7] * m[10];
+
+    inv[1] = -m[1] * m[10] * m[15] + m[1] * m[11] * m[14] + m[9] * m[2] * m[15] - m[9] * m[3] * m[14] -
+             m[13] * m[2] * m[11] + m[13] * m[3] * m[10];
+
+    inv[2] = m[1] * m[6] * m[15] - m[1] * m[7] * m[14] - m[5] * m[2] * m[15] + m[5] * m[3] * m[14] +
+             m[13] * m[2] * m[7] - m[13] * m[3] * m[6];
+
+    inv[3] = -m[1] * m[6] * m[11] + m[1] * m[7] * m[10] + m[5] * m[2] * m[11] - m[5] * m[3] * m[10] -
+             m[9] * m[2] * m[7] + m[9] * m[3] * m[6];
+
+    inv[4] = -m[4] * m[10] * m[15] + m[4] * m[11] * m[14] + m[8] * m[6] * m[15] - m[8] * m[7] * m[14] -
+             m[12] * m[6] * m[11] + m[12] * m[7] * m[10];
+
+    inv[5] = m[0] * m[10] * m[15] - m[0] * m[11] * m[14] - m[8] * m[2] * m[15] + m[8] * m[3] * m[14] +
+             m[12] * m[2] * m[11] - m[12] * m[3] * m[10];
+
+    inv[6] = -m[0] * m[6] * m[15] + m[0] * m[7] * m[14] + m[4] * m[2] * m[15] - m[4] * m[3] * m[14] -
+             m[12] * m[2] * m[7] + m[12] * m[3] * m[6];
+
+    inv[7] = m[0] * m[6] * m[11] - m[0] * m[7] * m[10] - m[4] * m[2] * m[11] + m[4] * m[3] * m[10] +
+             m[8] * m[2] * m[7] - m[8] * m[3] * m[6];
+
+    inv[8] = m[4] * m[9] * m[15] - m[4] * m[11] * m[13] - m[8] * m[5] * m[15] + m[8] * m[7] * m[13] +
+             m[12] * m[5] * m[11] - m[12] * m[7] * m[9];
+
+    inv[9] = -m[0] * m[9] * m[15] + m[0] * m[11] * m[13] + m[8] * m[1] * m[15] - m[8] * m[3] * m[13] -
+             m[12] * m[1] * m[11] + m[12] * m[3] * m[9];
+
+    inv[10] = m[0] * m[5] * m[15] - m[0] * m[7] * m[13] - m[4] * m[1] * m[15] + m[4] * m[3] * m[13] +
+              m[12] * m[1] * m[7] - m[12] * m[3] * m[5];
+
+    inv[11] = -m[0] * m[5] * m[11] + m[0] * m[7] * m[9] + m[4] * m[1] * m[11] - m[4] * m[3] * m[9] -
+              m[8] * m[1] * m[7] + m[8] * m[3] * m[5];
+
+    inv[12] = -m[4] * m[9] * m[14] + m[4] * m[10] * m[13] + m[8] * m[5] * m[14] - m[8] * m[6] * m[13] -
+              m[12] * m[5] * m[10] + m[12] * m[6] * m[9];
+
+    inv[13] = m[0] * m[9] * m[14] - m[0] * m[10] * m[13] - m[8] * m[1] * m[14] + m[8] * m[2] * m[13] +
+              m[12] * m[1] * m[10] - m[12] * m[2] * m[9];
+
+    inv[14] = -m[0] * m[5] * m[14] + m[0] * m[6] * m[13] + m[4] * m[1] * m[14] - m[4] * m[2] * m[13] -
+              m[12] * m[1] * m[6] + m[12] * m[2] * m[5];
+
+    inv[15] = m[0] * m[5] * m[10] - m[0] * m[6] * m[9] - m[4] * m[1] * m[10] + m[4] * m[2] * m[9] + m[8] * m[1] * m[6] -
+              m[8] * m[2] * m[5];
+
+    auto det = m[0] * inv[0] + m[1] * inv[4] + m[2] * inv[8] + m[3] * inv[12];
+    expect(det != 0.0f, "matrix is singular and cannot be inverted");
+
+    det = 1.0f / det;
+
+    for (auto &x : inv)
+    {
+        x *= det;
+    }
+
+    return result;
+}
+
+constexpr auto operator*(const Matrix4 &m1, const Vector4 &v) -> Vector4
+{
+    auto result = Vector4{};
+
+    result.x = m1.elements_[0] * v.x + m1.elements_[4] * v.y + m1.elements_[8] * v.z + m1.elements_[12] * v.w;
+    result.y = m1.elements_[1] * v.x + m1.elements_[5] * v.y + m1.elements_[9] * v.z + m1.elements_[13] * v.w;
+    result.z = m1.elements_[2] * v.x + m1.elements_[6] * v.y + m1.elements_[10] * v.z + m1.elements_[14] * v.w;
+    result.w = m1.elements_[3] * v.x + m1.elements_[7] * v.y + m1.elements_[11] * v.z + m1.elements_[15] * v.w;
+
+    return result;
 }
 
 inline auto Matrix4::to_string() const -> std::string

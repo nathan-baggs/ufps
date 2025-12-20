@@ -1,6 +1,5 @@
 #pragma once
 
-#include <GL/gl.h>
 #include <cstdint>
 #include <string>
 

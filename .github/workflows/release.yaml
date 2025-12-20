@@ -32,13 +32,50 @@ jobs:
           version=$(basename "$pkg" | sed -E 's/^ufps-([0-9]+\.[0-9]+\.[0-9]+)-win64\.zip$/\1/')
           echo "version=$version" >> $GITHUB_OUTPUT
 
-      - name: Gather changelog from last commit
+      - name: Gather changelog from PR
         id: changelog
-        run: |
-          git log -1 --pretty=%B > commit_msg.txt
-          echo "msg<<EOF" >> $GITHUB_OUTPUT
-          cat commit_msg.txt >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
+        uses: actions/github-script@v7
+        with:
+          script: |
+            // 1. Get the commit of the current run (the Version Bump commit)
+            const bump_sha = context.payload.workflow_run.head_sha;
+            
+            // 2. Get the commit object to find its parent
+            const bump_commit = await github.rest.repos.getCommit({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              ref: bump_sha
+            });
+            
+            // The parent of the bump commit is the Merge Commit from the PR
+            const merge_sha = bump_commit.data.parents[0].sha;
+
+            // 3. Find the PR associated with that merge commit
+            const prs = await github.rest.repos.listPullRequestsAssociatedWithCommit({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              commit_sha: merge_sha
+            });
+
+            if (!prs.data.length) {
+              console.log('No PR found (manual push?), falling back to bump message.');
+              core.setOutput('msg', 'Automated version bump');
+              return;
+            }
+
+            const pr_number = prs.data[0].number;
+
+            // 4. List all commits in that PR
+            const commits = await github.rest.pulls.listCommits({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: pr_number
+            });
+
+            // 5. Format the message (List of commit subjects)
+            const log = commits.data.map(c => `- ${c.commit.message.split('\n')[0]}`).join('\n');
+            
+            core.setOutput('msg', log);
 
       - name: Create Release
         id: create_release
@@ -51,7 +88,46 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GH_PAT }}
 
+      - name: Check Discord Option
+        id: discord_check
+        uses: actions/github-script@v7
+        with:
+          script: |
+            // 1. Find the commit that triggered the PREVIOUS workflow (the merge commit)
+            // github.event.workflow_run.head_sha is the commit created by the version bump.
+            // We usually want the PR associated with the merge. 
+            // However, listPullRequestsAssociatedWithCommit is robust enough to find the PR 
+            // if we look at the commit history or the head_sha depending on timing.
+            
+            // We will look for PRs associated with the workflow_run's head commit
+            const commit_sha = context.payload.workflow_run.head_sha;
+            
+            const prs = await github.rest.repos.listPullRequestsAssociatedWithCommit({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              commit_sha: commit_sha
+            });
+            
+            // If we can't find a PR (e.g. manual trigger), default to true? 
+            // Or look deeper in history. For now, we assume a PR exists if it's a merge.
+            if (!prs.data.length) { 
+               console.log("No PR found, defaulting to false");
+               core.setOutput('should_post', 'false');
+               return;
+            }
+            
+            const pr = prs.data[0];
+            const body = pr.body || "";
+            
+            // Check for [x] post to discord (case insensitive)
+            const regex = /-\s*\[x\]\s*post to discord/i;
+            const shouldPost = regex.test(body);
+            
+            console.log(`PR #${pr.number} found. Post to discord? ${shouldPost}`);
+            core.setOutput('should_post', shouldPost ? 'true' : 'false');
+
       - name: Send Discord message
+        if: steps.discord_check.outputs.should_post == 'true'
         uses: ./.github/actions/discord-notify
         with:
           webhook:         ${{ secrets.DISCORD_WEBHOOK }}
