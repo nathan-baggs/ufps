@@ -42,7 +42,7 @@ auto CommandBuffer::build(const Scene &scene) -> std::uint32_t
                              [&base](const auto &e)
                              {
                                  const auto cmd = IndirectCommand{
-                                     .count = e.mesh_view.index_count,
+                                     .count = static_cast<std::uint32_t>(std::ranges::size(e.mesh_view.indices)),
                                      .instance_count = 1u,
                                      .first = e.mesh_view.index_offset,
                                      .base_vertex = base,
