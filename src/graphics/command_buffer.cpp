@@ -6,10 +6,10 @@
 #include <ranges>
 #include <string>
 
+#include "core/scene.h"
 #include "graphics/multi_buffer.h"
 #include "graphics/opengl.h"
 #include "graphics/persistent_buffer.h"
-#include "graphics/scene.h"
 #include "graphics/utils.h"
 #include "utils/log.h"
 

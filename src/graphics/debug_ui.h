@@ -2,8 +2,8 @@
 
 #include <optional>
 
+#include "core/scene.h"
 #include "events/mouse_button_event.h"
-#include "graphics/scene.h"
 #include "graphics/window.h"
 
 namespace ufps

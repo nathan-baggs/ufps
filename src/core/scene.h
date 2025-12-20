@@ -3,7 +3,7 @@
 #include <vector>
 
 #include "core/camera.h"
-#include "graphics/entity.h"
+#include "core/entity.h"
 #include "graphics/material_manager.h"
 #include "graphics/mesh_manager.h"
 

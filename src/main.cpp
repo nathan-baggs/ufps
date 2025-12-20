@@ -8,6 +8,7 @@
 #include <windows.h>
 
 #include "config.h"
+#include "core/scene.h"
 #include "events/key.h"
 #include "events/key_event.h"
 #include "graphics/colour.h"
@@ -16,7 +17,6 @@
 #include "graphics/mesh_data.h"
 #include "graphics/mesh_manager.h"
 #include "graphics/renderer.h"
-#include "graphics/scene.h"
 #include "graphics/vertex_data.h"
 #include "graphics/window.h"
 #include "maths/vector3.h"

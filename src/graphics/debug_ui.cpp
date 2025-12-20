@@ -11,9 +11,9 @@
 #include <backends/imgui_impl_opengl3.h>
 #include <backends/imgui_impl_win32.h>
 
+#include "core/scene.h"
 #include "events/mouse_button_event.h"
 #include "graphics/opengl.h"
-#include "graphics/scene.h"
 #include "graphics/window.h"
 #include "maths/matrix4.h"
 #include "third_party/opengl/glext.h"
