@@ -152,3 +152,37 @@ TEST(matrix4, perspective)
         ASSERT_NEAR(proj_spn[i], expected_spn[i], 0.001f);
     }
 }
+
+TEST(matrix4, invert)
+{
+    const auto m = ufps::Matrix4{
+        {0.6f, 2.4f, 1.1f, 0.0f, 2.4f, 0.6f, -0.4f, 1.0f, 1.1f, -0.4f, 0.6f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f}};
+
+    const auto inv = ufps::Matrix4::invert(m);
+
+    const auto expected = ufps::Matrix4{
+        {-0.0323939,
+         0.304503,
+         0.262391,
+         -0.304503,
+         0.304503,
+         0.137674,
+         -0.466472,
+         -0.137674,
+         0.262391,
+         -0.466472,
+         0.874636,
+         0.466472,
+         0,
+         0,
+         0,
+         1}};
+
+    const auto inv_spn = inv.data();
+    const auto expected_spn = expected.data();
+
+    for (auto i = 0u; i < 16u; ++i)
+    {
+        ASSERT_NEAR(inv_spn[i], expected_spn[i], 0.001f);
+    }
+}
