@@ -7,6 +7,7 @@
 
 #include "maths/quaternion.h"
 #include "maths/vector3.h"
+#include "maths/vector4.h"
 #include "utils/error.h"
 
 namespace ufps
@@ -154,6 +155,7 @@ class Matrix4
     }
 
     friend constexpr auto operator*=(Matrix4 &m1, const Matrix4 &m2) -> Matrix4 &;
+    friend constexpr auto operator*(const Matrix4 &m1, const Vector4 &v) -> Vector4;
 
     constexpr auto operator==(const Matrix4 &) const -> bool = default;
 
@@ -328,6 +330,18 @@ constexpr auto Matrix4::invert(const Matrix4 &matrix) -> Matrix4
     {
         x *= det;
     }
+
+    return result;
+}
+
+constexpr auto operator*(const Matrix4 &m1, const Vector4 &v) -> Vector4
+{
+    auto result = Vector4{};
+
+    result.x = m1.elements_[0] * v.x + m1.elements_[4] * v.y + m1.elements_[8] * v.z + m1.elements_[12] * v.w;
+    result.y = m1.elements_[1] * v.x + m1.elements_[5] * v.y + m1.elements_[9] * v.z + m1.elements_[13] * v.w;
+    result.z = m1.elements_[2] * v.x + m1.elements_[6] * v.y + m1.elements_[10] * v.z + m1.elements_[14] * v.w;
+    result.w = m1.elements_[3] * v.x + m1.elements_[7] * v.y + m1.elements_[11] * v.z + m1.elements_[15] * v.w;
 
     return result;
 }

@@ -6,6 +6,7 @@
 
 #include "maths/matrix4.h"
 #include "maths/vector3.h"
+#include "maths/vector4.h"
 #include "utils/exception.h"
 
 TEST(matrix4, identity_ctor)
@@ -185,4 +186,17 @@ TEST(matrix4, invert)
     {
         ASSERT_NEAR(inv_spn[i], expected_spn[i], 0.001f);
     }
+}
+
+TEST(matrix4, multiply_vector4)
+{
+    const auto m = ufps::Matrix4{
+        {1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f, 7.0f, 8.0f, 9.0f, 10.0f, 11.0f, 12.0f, 13.0f, 14.0f, 15.0f, 16.0f}};
+    const auto v = ufps::Vector4{1.0f, 2.0f, 3.0f, 4.0f};
+
+    const auto result = m * v;
+
+    const auto expected = ufps::Vector4{90.0f, 100.0f, 110.0f, 120.0f};
+
+    ASSERT_EQ(result, expected);
 }
