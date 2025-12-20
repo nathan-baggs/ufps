@@ -7,3 +7,7 @@ Check ONE:
 - [ ] patch
 
 _If none are selected, patch will be assumed._
+
+### Release Options
+
+- [x] post to discord
