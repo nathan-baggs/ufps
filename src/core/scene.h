@@ -15,7 +15,7 @@
 namespace ufps
 {
 
-struct IntersctionResult
+struct IntersectionResult
 {
     const Entity *entity;
     Vector3 position;
@@ -23,9 +23,9 @@ struct IntersctionResult
 
 struct Scene
 {
-    constexpr auto intersect_ray(const Ray &ray) const -> std::optional<IntersctionResult>
+    constexpr auto intersect_ray(const Ray &ray) const -> std::optional<IntersectionResult>
     {
-        auto result = std::optional<IntersctionResult>{};
+        auto result = std::optional<IntersectionResult>{};
         auto min_distance = std::numeric_limits<float>::max();
 
         for (const auto &entity : entities)
@@ -49,7 +49,7 @@ struct Scene
 
                     if (*distance < min_distance)
                     {
-                        result = IntersctionResult{.entity = &entity, .position = intersection_point};
+                        result = IntersectionResult{.entity = &entity, .position = intersection_point};
                         min_distance = *distance;
                     }
                 }
