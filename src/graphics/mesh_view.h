@@ -11,9 +11,9 @@ namespace ufps
 struct MeshView
 {
     std::uint32_t index_offset;
-    std::span<std::uint32_t> indices;
+    std::uint32_t index_count;
     std::uint32_t vertex_offset;
-    std::span<VertexData> vertices;
+    std::uint32_t vertex_count;
 };
 
 }

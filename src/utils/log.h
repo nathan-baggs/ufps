@@ -5,12 +5,16 @@
 #include <fstream>
 #include <print>
 #include <source_location>
+#include <string>
 #include <string_view>
+#include <vector>
 
 #include "config.h"
 
 namespace ufps::log
 {
+
+inline std::vector<std::string> history{};
 
 namespace impl
 {
@@ -68,7 +72,7 @@ struct Print
 
         const auto path = std::filesystem::path{loc.file_name()};
 
-        const auto log_line = std::format(
+        auto log_line = std::format(
             "[{}] {}:{} {}", c, path.filename().string(), loc.line(), std::format(msg, std::forward<Args>(args)...));
 
         std::println("{}", log_line);
@@ -77,6 +81,8 @@ struct Print
         {
             impl::log_file << log_line << std::endl;
         }
+
+        history.push_back(std::move(log_line));
     }
 };
 

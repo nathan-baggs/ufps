@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <span>
 #include <string>
 
 #include "graphics/buffer.h"
@@ -18,6 +19,10 @@ class MeshManager
     auto load(const MeshData &mesh_data) -> MeshView;
 
     auto native_handle() const -> std::tuple<::GLuint, ::GLuint>;
+
+    auto index_data(MeshView view) -> std::span<std::uint32_t>;
+
+    auto vertex_data(MeshView view) -> std::span<VertexData>;
 
     auto to_string() const -> std::string;
 
