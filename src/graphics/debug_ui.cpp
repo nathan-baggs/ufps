@@ -125,6 +125,24 @@ auto DebugUI::render(Scene &scene) -> void
         }
     }
 
+    ::ImGui::Begin("log");
+
+    ::ImGui::BeginChild("log output");
+    for (const auto &line : log::history)
+    {
+        switch (line[1])
+        {
+            case 'D': ::ImGui::TextColored({0.0f, 0.5f, 1.0f, 1.0f}, "%s", line.c_str()); break;
+            case 'I': ::ImGui::TextColored({1.0f, 1.0f, 1.0f, 1.0f}, "%s", line.c_str()); break;
+            case 'W': ::ImGui::TextColored({1.0f, 1.0f, 0.0f, 1.0f}, "%s", line.c_str()); break;
+            case 'E': ::ImGui::TextColored({1.0f, 0.0f, 0.0f, 1.0f}, "%s", line.c_str()); break;
+            default: ::ImGui::TextColored({1.0f, 0.412f, 0.706f, 1.0f}, "%s", line.c_str()); break;
+        }
+    }
+    ::ImGui::EndChild();
+
+    ::ImGui::End();
+
     ::ImGui::Render();
     ::ImGui_ImplOpenGL3_RenderDrawData(::ImGui::GetDrawData());
 
