@@ -38,15 +38,25 @@ auto MeshManager::load(const MeshData &mesh_data) -> MeshView
 
     return {
         .index_offset = static_cast<std::uint32_t>(index_offset),
-        .indices = std::span<std::uint32_t>{index_data_cpu_.data() + index_offset, mesh_data.indices.size()},
+        .index_count = static_cast<std::uint32_t>(mesh_data.indices.size()),
         .vertex_offset = static_cast<std::uint32_t>(vertex_offset),
-        .vertices = std::span<VertexData>{vertex_data_cpu_.data() + vertex_offset, mesh_data.vertices.size()},
+        .vertex_count = static_cast<std::uint32_t>(mesh_data.vertices.size()),
     };
 }
 
 auto MeshManager::native_handle() const -> std::tuple<::GLuint, ::GLuint>
 {
     return {vertex_data_gpu_.native_handle(), index_data_gpu_.native_handle()};
+}
+
+auto MeshManager::index_data(MeshView view) -> std::span<std::uint32_t>
+{
+    return {index_data_cpu_.data() + view.index_offset, view.index_count};
+}
+
+auto MeshManager::vertex_data(MeshView view) -> std::span<VertexData>
+{
+    return {vertex_data_cpu_.data() + view.vertex_offset, view.vertex_count};
 }
 
 auto MeshManager::to_string() const -> std::string
