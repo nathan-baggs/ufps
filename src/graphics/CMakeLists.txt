@@ -7,6 +7,7 @@ target_sources(ufpslib PUBLIC
   program.cpp
   renderer.cpp
   shader.cpp
+  utils.cpp
   window.cpp
 )
 

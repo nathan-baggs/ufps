@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "graphics/opengl.h"
+#include "graphics/texture_data.h"
 #include "utils/data_buffer.h"
 #include "utils/log.h"
 
@@ -36,4 +37,7 @@ auto resize_gpu_buffer(const std::vector<T> &cpu_buffer, Buffer &gpu_buffer, std
         gpu_buffer = Buffer{new_size, name};
     }
 }
+
+auto load_texture(DataBufferView image_data) -> TextureData;
+
 }
