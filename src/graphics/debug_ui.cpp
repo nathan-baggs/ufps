@@ -16,13 +16,40 @@
 #include "graphics/opengl.h"
 #include "graphics/window.h"
 #include "maths/matrix4.h"
-#include "third_party/opengl/glext.h"
+#include "maths/ray.h"
+#include "maths/vector4.h"
 #include "utils/log.h"
+
+namespace
+{
+
+auto screen_ray(const ufps::MouseButtonEvent &evt, const ufps::Window &window, const ufps::Camera &camera) -> ufps::Ray
+{
+    const auto x = 2.0f * evt.x() / window.render_width() - 1.0f;
+    const auto y = 1.0f - 2.0f * evt.y() / window.render_height();
+    const auto ray_clip = ufps::Vector4{x, y, -1.0f, 1.0f};
+
+    const auto inv_proj = ufps::Matrix4::invert(camera.data().projection);
+    auto ray_eye = inv_proj * ray_clip;
+    ray_eye.z = -1.0f;
+    ray_eye.w = 0.0f;
+    // ray_eye = ufps::Vector4{ray_eye.x, ray_eye.y, -1.0f, 0.0f};
+
+    const auto inv_view = ufps::Matrix4::invert(camera.data().view);
+    const auto dir_ws = ufps::Vector3::normalise(ufps::Vector3{inv_view * ray_eye});
+    const auto origin_ws = ufps::Vector3{inv_view[12], inv_view[13], inv_view[14]};
+
+    return {origin_ws, dir_ws};
+}
+
+}
 
 namespace ufps
 {
 DebugUI::DebugUI(const Window &window)
     : window_{window}
+    , click_{}
+    , selected_entity_{}
 {
     IMGUI_CHECKVERSION();
     ::ImGui::CreateContext();
@@ -76,7 +103,10 @@ auto DebugUI::render(Scene &scene) -> void
             {
                 std::memcpy(&material.colour, colour, sizeof(colour));
             }
+        }
 
+        if (&entity == selected_entity_)
+        {
             auto transform = Matrix4{entity.transform};
             const auto &camera_data = scene.camera.data();
 
@@ -95,25 +125,33 @@ auto DebugUI::render(Scene &scene) -> void
         }
     }
 
+    ::ImGui::Begin("log");
+
+    ::ImGui::BeginChild("log output");
+    for (const auto &line : log::history)
+    {
+        switch (line[1])
+        {
+            case 'D': ::ImGui::TextColored({0.0f, 0.5f, 1.0f, 1.0f}, "%s", line.c_str()); break;
+            case 'I': ::ImGui::TextColored({1.0f, 1.0f, 1.0f, 1.0f}, "%s", line.c_str()); break;
+            case 'W': ::ImGui::TextColored({1.0f, 1.0f, 0.0f, 1.0f}, "%s", line.c_str()); break;
+            case 'E': ::ImGui::TextColored({1.0f, 0.0f, 0.0f, 1.0f}, "%s", line.c_str()); break;
+            default: ::ImGui::TextColored({1.0f, 0.412f, 0.706f, 1.0f}, "%s", line.c_str()); break;
+        }
+    }
+    ::ImGui::EndChild();
+
+    ::ImGui::End();
+
     ::ImGui::Render();
     ::ImGui_ImplOpenGL3_RenderDrawData(::ImGui::GetDrawData());
 
     if (click_)
     {
-        std::uint8_t buffer[4]{};
+        const auto pick_ray = screen_ray(*click_, window_, scene.camera);
+        const auto intersection = scene.intersect_ray(pick_ray);
+        selected_entity_ = intersection.transform([](const auto &e) { return e.entity; }).value_or(nullptr);
 
-        ::glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
-        ::glReadBuffer(GL_BACK);
-        ::glReadPixels(
-            static_cast<::GLint>(click_->x()),
-            static_cast<::GLint>(click_->y()),
-            1,
-            1,
-            GL_RGBA,
-            GL_UNSIGNED_BYTE,
-            buffer);
-
-        log::debug("r: {:x} g: {:x} b: {:x}", buffer[0], buffer[1], buffer[2]);
         click_.reset();
     }
 }
@@ -123,6 +161,9 @@ auto DebugUI::add_mouse_event(const MouseButtonEvent &evt) -> void
     auto &io = ::ImGui::GetIO();
     io.AddMouseButtonEvent(0, evt.state() == MouseButtonState::DOWN);
 
-    click_ = evt;
+    if (!io.WantCaptureMouse)
+    {
+        click_ = evt;
+    }
 }
 }
