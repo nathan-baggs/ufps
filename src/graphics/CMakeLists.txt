@@ -8,6 +8,7 @@ target_sources(ufpslib PUBLIC
   renderer.cpp
   sampler.cpp
   shader.cpp
+  texture.cpp
   utils.cpp
   window.cpp
 )
