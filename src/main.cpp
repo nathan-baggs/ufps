@@ -1,4 +1,3 @@
-#include <_mingw_mac.h>
 #include <numbers>
 #include <ranges>
 #include <string_view>

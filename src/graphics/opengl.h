@@ -76,8 +76,7 @@
     DO(::PFNGLMULTIDRAWARRAYSINDIRECTPROC, glMultiDrawArraysIndirect)                                                  \
     DO(::PFNGLMULTIDRAWELEMENTSINDIRECTPROC, glMultiDrawElementsIndirect)                                              \
     DO(::PFNGLMAPNAMEDBUFFERRANGEPROC, glMapNamedBufferRange)                                                          \
-    DO(::PFNGLUNMAPNAMEDBUFFERPROC, glUnmapNamedBuffer)                                                                \
-    DO(::PFNGLDRAWARRAYSEXTPROC, glDrawArraysEXT)
+    DO(::PFNGLUNMAPNAMEDBUFFERPROC, glUnmapNamedBuffer)
 
 #define DO_DEFINE(TYPE, NAME) inline TYPE NAME;
 FOR_OPENGL_FUNCTIONS(DO_DEFINE)
