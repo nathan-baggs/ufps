@@ -24,6 +24,7 @@ constexpr auto sample_vertex_shader = R"(
 struct VertexData
 {
     float position[3];
+    float uv[2];
 };
 
 struct ObjectData
@@ -62,21 +63,32 @@ vec3 get_position(uint index)
         data[index].position[2]);
 }
 
+vec2 get_uv(uint index)
+{
+    return vec2(
+        data[index].uv[0],
+        data[index].uv[1]);
+}
+
 layout (location = 0) out flat uint material_index;
+layout (location = 1) out vec2 uv;
 
 void main()
 {
     gl_Position = projection * view * object_data[gl_DrawID].model * vec4(get_position(gl_VertexID), 1.0);
     material_index = object_data[gl_DrawID].material_index;
+    uv = get_uv(gl_VertexID);
 }
 )"sv;
 
 constexpr auto sample_fragment_shader = R"(
 #version 460 core
+#extension GL_ARB_bindless_texture : require
 
 struct VertexData
 {
     float position[3];
+    float uv[2];
 };
 
 struct ObjectData
@@ -115,14 +127,16 @@ vec3 get_colour(uint index)
         material_data[index].colour[2]);
 }
 
+layout(location = 0, bindless_sampler) uniform sampler2D tex;
 
 layout(location = 0) in flat uint material_index;
+layout(location = 1) in vec2 uv;
 
 layout(location = 0) out vec4 out_colour;
 
 void main()
 {
-    out_colour = vec4(get_colour(material_index), 1.0);
+    out_colour = vec4(get_colour(material_index) * texture(tex, uv).rgb, 1.0);
 }
 )"sv;
 
@@ -187,6 +201,8 @@ auto Renderer::render(const Scene &scene) -> void
 
     scene.material_manager.sync();
     ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, scene.material_manager.native_handle());
+
+    ::glProgramUniformHandleui64ARB(program_.native_handle(), 0, scene.the_one_texture.native_handle());
 
     ::glMultiDrawElementsIndirect(
         GL_TRIANGLES,

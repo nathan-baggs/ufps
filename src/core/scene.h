@@ -8,6 +8,7 @@
 #include "core/entity.h"
 #include "graphics/material_manager.h"
 #include "graphics/mesh_manager.h"
+#include "graphics/texture.h"
 #include "maths/ray.h"
 #include "maths/utils.h"
 #include "maths/vector4.h"
@@ -63,6 +64,7 @@ struct Scene
     MeshManager &mesh_manager;
     MaterialManager &material_manager;
     Camera camera;
+    const Texture &the_one_texture;
 };
 
 }
