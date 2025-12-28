@@ -45,6 +45,10 @@
     DO(::PFNGLBINDBUFFERBASEPROC, glBindBufferBase)                                                                    \
     DO(::PFNGLBINDBUFFERRANGEPROC, glBindBufferRange)                                                                  \
     DO(::PFNGLCREATETEXTURESPROC, glCreateTextures)                                                                    \
+    DO(::PFNGLGETTEXTURESAMPLERHANDLEARBPROC, glGetTextureSamplerHandleARB)                                            \
+    DO(::PFNGLMAKETEXTUREHANDLERESIDENTARBPROC, glMakeTextureHandleResidentARB)                                        \
+    DO(::PFNGLPROGRAMUNIFORMHANDLEUI64ARBPROC, glProgramUniformHandleui64ARB)                                          \
+    DO(::PFNGLMAKETEXTUREHANDLENONRESIDENTARBPROC, glMakeTextureHandleNonResidentARB)                                  \
     DO(::PFNGLTEXTURESTORAGE2DPROC, glTextureStorage2D)                                                                \
     DO(::PFNGLTEXTURESTORAGE2DMULTISAMPLEPROC, glTextureStorage2DMultisample)                                          \
     DO(::PFNGLTEXTURESUBIMAGE2DPROC, glTextureSubImage2D)                                                              \
