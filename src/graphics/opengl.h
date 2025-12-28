@@ -45,6 +45,10 @@
     DO(::PFNGLBINDBUFFERBASEPROC, glBindBufferBase)                                                                    \
     DO(::PFNGLBINDBUFFERRANGEPROC, glBindBufferRange)                                                                  \
     DO(::PFNGLCREATETEXTURESPROC, glCreateTextures)                                                                    \
+    DO(::PFNGLGETTEXTURESAMPLERHANDLEARBPROC, glGetTextureSamplerHandleARB)                                            \
+    DO(::PFNGLMAKETEXTUREHANDLERESIDENTARBPROC, glMakeTextureHandleResidentARB)                                        \
+    DO(::PFNGLPROGRAMUNIFORMHANDLEUI64ARBPROC, glProgramUniformHandleui64ARB)                                          \
+    DO(::PFNGLMAKETEXTUREHANDLENONRESIDENTARBPROC, glMakeTextureHandleNonResidentARB)                                  \
     DO(::PFNGLTEXTURESTORAGE2DPROC, glTextureStorage2D)                                                                \
     DO(::PFNGLTEXTURESTORAGE2DMULTISAMPLEPROC, glTextureStorage2DMultisample)                                          \
     DO(::PFNGLTEXTURESUBIMAGE2DPROC, glTextureSubImage2D)                                                              \
@@ -76,8 +80,7 @@
     DO(::PFNGLMULTIDRAWARRAYSINDIRECTPROC, glMultiDrawArraysIndirect)                                                  \
     DO(::PFNGLMULTIDRAWELEMENTSINDIRECTPROC, glMultiDrawElementsIndirect)                                              \
     DO(::PFNGLMAPNAMEDBUFFERRANGEPROC, glMapNamedBufferRange)                                                          \
-    DO(::PFNGLUNMAPNAMEDBUFFERPROC, glUnmapNamedBuffer)                                                                \
-    DO(::PFNGLDRAWARRAYSEXTPROC, glDrawArraysEXT)
+    DO(::PFNGLUNMAPNAMEDBUFFERPROC, glUnmapNamedBuffer)
 
 #define DO_DEFINE(TYPE, NAME) inline TYPE NAME;
 FOR_OPENGL_FUNCTIONS(DO_DEFINE)

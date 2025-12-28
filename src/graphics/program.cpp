@@ -53,4 +53,9 @@ auto Program::use() const -> void
     ::glUseProgram(handle_);
 }
 
+auto Program::native_handle() const -> ::GLuint
+{
+    return handle_;
+}
+
 }

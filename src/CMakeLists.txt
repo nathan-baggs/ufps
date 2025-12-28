@@ -17,6 +17,7 @@ add_library(ufpslib STATIC
 add_subdirectory(core)
 add_subdirectory(events)
 add_subdirectory(graphics)
+add_subdirectory(resources)
 add_subdirectory(utils)
 
 add_executable(ufps
@@ -32,7 +33,6 @@ target_compile_options(ufpslib PRIVATE
   -Wextra
   -pedantic
   -Werror
-  -Wcast-qual
   -Wconversion-null
   -Wmissing-declarations
   -Woverlength-strings
@@ -43,7 +43,7 @@ target_compile_options(ufpslib PRIVATE
   -Wvla
   -Wwrite-strings
 )
-target_include_directories(ufpslib PUBLIC ${PROJECT_SOURCE_DIR}/ ${PROJECT_SOURCE_DIR}/src)
+target_include_directories(ufpslib PUBLIC ${PROJECT_SOURCE_DIR}/ ${PROJECT_SOURCE_DIR}/src ${stb_lib_SOURCE_DIR})
 target_compile_features(ufpslib PUBLIC cxx_std_23)
 target_compile_definitions(ufpslib PUBLIC -DNOMINMAX)
 target_link_libraries(ufpslib PUBLIC stdc++exp wbemuuid opengl32 imguilib dwmapi)
