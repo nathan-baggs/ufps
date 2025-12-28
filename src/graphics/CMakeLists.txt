@@ -6,6 +6,7 @@ target_sources(ufpslib PUBLIC
   persistent_buffer.cpp
   program.cpp
   renderer.cpp
+  sampler.cpp
   shader.cpp
   utils.cpp
   window.cpp
