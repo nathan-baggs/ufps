@@ -23,6 +23,12 @@ struct IntersectionResult
     Vector3 position;
 };
 
+struct LightData
+{
+    Colour ambient;
+    PointLight light;
+};
+
 struct Scene
 {
     constexpr auto intersect_ray(const Ray &ray) const -> std::optional<IntersectionResult>
@@ -66,7 +72,7 @@ struct Scene
     MaterialManager &material_manager;
     Camera camera;
     const Texture &the_one_texture;
-    PointLight light;
+    LightData lights;
 };
 
 }

@@ -6,6 +6,7 @@
 
 #include "core/camera.h"
 #include "core/scene.h"
+#include "events/key.h"
 #include "graphics/command_buffer.h"
 #include "graphics/object_data.h"
 #include "graphics/opengl.h"
@@ -58,6 +59,7 @@ layout(binding = 3, std430) readonly buffer materials {
 };
 
 layout(binding = 4, std430) readonly buffer lights {
+    float ambient_colour[3];
     float point_light_pos[3];
     float point_light_colour[3];
     float point_light_attenuation[3];
@@ -141,6 +143,7 @@ layout(binding = 3, std430) readonly buffer materials {
 };
 
 layout(binding = 4, std430) readonly buffer lights {
+    float ambient_colour[3];
     float point_light_pos[3];
     float point_light_colour[3];
     float point_light_attenuation[3];
@@ -180,7 +183,8 @@ layout(location = 0) out vec4 out_colour;
 
 void main()
 {
-    out_colour = vec4(calc_point(in_frag_position.xyz, in_normal), 1.0);
+    vec3 amb_colour = vec3(ambient_colour[0], ambient_colour[1], ambient_colour[2]);
+    out_colour = vec4(amb_colour + calc_point(in_frag_position.xyz, in_normal), 1.0);
 }
 )"sv;
 
@@ -201,7 +205,7 @@ Renderer::Renderer()
     : dummy_vao_{0u, [](auto e) { ::glDeleteVertexArrays(1u, &e); }}
     , command_buffer_{}
     , camera_buffer_{sizeof(CameraData), "camera_buffer"}
-    , light_buffer_{sizeof(PointLight), "light_buffer"}
+    , light_buffer_{sizeof(LightData), "light_buffer"}
     , object_data_buffer_{sizeof(ObjectData), "object_data_buffer"}
     , program_{create_program()}
 {
@@ -247,7 +251,7 @@ auto Renderer::render(const Scene &scene) -> void
     scene.material_manager.sync();
     ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, scene.material_manager.native_handle());
 
-    light_buffer_.write(std::as_bytes(std::span<const PointLight, 1zu>{&scene.light, 1zu}), 0zu);
+    light_buffer_.write(std::as_bytes(std::span<const LightData, 1zu>{&scene.lights, 1zu}), 0zu);
     ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 4, light_buffer_.native_handle());
 
     ::glProgramUniformHandleui64ARB(program_.native_handle(), 0, scene.the_one_texture.native_handle());

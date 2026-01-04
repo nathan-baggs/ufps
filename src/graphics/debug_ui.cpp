@@ -127,32 +127,42 @@ auto DebugUI::render(Scene &scene) -> void
 
     if (::ImGui::CollapsingHeader("lights"))
     {
-        float pos[] = {scene.light.position.x, scene.light.position.y, scene.light.position.z};
+        float amb_colour[3]{};
+        std::memcpy(amb_colour, &scene.lights.ambient, sizeof(amb_colour));
+
+        if (::ImGui::ColorPicker3("ambient light colour", amb_colour))
+        {
+            std::memcpy(&scene.lights.ambient, amb_colour, sizeof(amb_colour));
+        }
+
+        float pos[] = {scene.lights.light.position.x, scene.lights.light.position.y, scene.lights.light.position.z};
         if (::ImGui::SliderFloat3("position", pos, -100.0f, 100.0f))
         {
-            scene.light.position = {pos[0], pos[1], pos[2]};
+            scene.lights.light.position = {pos[0], pos[1], pos[2]};
         }
 
         float colour[3]{};
-        std::memcpy(colour, &scene.light.colour, sizeof(colour));
+        std::memcpy(colour, &scene.lights.light.colour, sizeof(colour));
 
         if (::ImGui::ColorPicker3("light colour", colour))
         {
-            std::memcpy(&scene.light.colour, colour, sizeof(colour));
+            std::memcpy(&scene.lights.light.colour, colour, sizeof(colour));
         }
 
         float atten[] = {
-            scene.light.constant_attenuation, scene.light.linear_attenuation, scene.light.quadratic_attenuation};
+            scene.lights.light.constant_attenuation,
+            scene.lights.light.linear_attenuation,
+            scene.lights.light.quadratic_attenuation};
         if (::ImGui::SliderFloat3("attenuation", atten, 0.0f, 2.0f))
         {
-            scene.light.constant_attenuation = atten[0];
-            scene.light.linear_attenuation = atten[1];
-            scene.light.quadratic_attenuation = atten[2];
+            scene.lights.light.constant_attenuation = atten[0];
+            scene.lights.light.linear_attenuation = atten[1];
+            scene.lights.light.quadratic_attenuation = atten[2];
         }
 
         if (!selected_entity_)
         {
-            auto transform = Matrix4{scene.light.position};
+            auto transform = Matrix4{scene.lights.light.position};
             const auto &camera_data = scene.camera.data();
 
             ::ImGuizmo::Manipulate(
@@ -167,7 +177,7 @@ auto DebugUI::render(Scene &scene) -> void
                 nullptr);
 
             const auto new_transform = Transform{transform};
-            scene.light.position = new_transform.position;
+            scene.lights.light.position = new_transform.position;
         }
     }
 
