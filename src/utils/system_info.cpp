@@ -45,7 +45,7 @@ auto gpu_id(const ufps::Wmi &wmi) -> std::string
     try
     {
         const auto props = wmi.query("SELECT * FROM Win32_VideoController", "Caption");
-        return props | std::views::join_with(' ') | std::ranges::to<std::string>();
+        return props | std::views::join_with(',') | std::ranges::to<std::string>();
     }
     catch (ufps::Exception &e)
     {
