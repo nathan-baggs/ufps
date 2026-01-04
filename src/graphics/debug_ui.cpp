@@ -125,6 +125,52 @@ auto DebugUI::render(Scene &scene) -> void
         }
     }
 
+    if (::ImGui::CollapsingHeader("lights"))
+    {
+        float pos[] = {scene.light.position.x, scene.light.position.y, scene.light.position.z};
+        if (::ImGui::SliderFloat3("position", pos, -100.0f, 100.0f))
+        {
+            scene.light.position = {pos[0], pos[1], pos[2]};
+        }
+
+        float colour[3]{};
+        std::memcpy(colour, &scene.light.colour, sizeof(colour));
+
+        if (::ImGui::ColorPicker3("light colour", colour))
+        {
+            std::memcpy(&scene.light.colour, colour, sizeof(colour));
+        }
+
+        float atten[] = {
+            scene.light.constant_attenuation, scene.light.linear_attenuation, scene.light.quadratic_attenuation};
+        if (::ImGui::SliderFloat3("attenuation", atten, 0.0f, 2.0f))
+        {
+            scene.light.constant_attenuation = atten[0];
+            scene.light.linear_attenuation = atten[1];
+            scene.light.quadratic_attenuation = atten[2];
+        }
+
+        if (!selected_entity_)
+        {
+            auto transform = Matrix4{scene.light.position};
+            const auto &camera_data = scene.camera.data();
+
+            ::ImGuizmo::Manipulate(
+                camera_data.view.data().data(),
+                camera_data.projection.data().data(),
+                ::ImGuizmo::TRANSLATE | ::ImGuizmo::SCALE | ::ImGuizmo::BOUNDS | ::ImGuizmo::ROTATE,
+                ::ImGuizmo::WORLD,
+                const_cast<float *>(transform.data().data()),
+                nullptr,
+                nullptr,
+                nullptr,
+                nullptr);
+
+            const auto new_transform = Transform{transform};
+            scene.light.position = new_transform.position;
+        }
+    }
+
     ::ImGui::Begin("log");
 
     ::ImGui::BeginChild("log output");
