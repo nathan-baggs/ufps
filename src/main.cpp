@@ -53,6 +53,15 @@ auto cube() -> ufps::MeshData
         {-1.0f, -1.0f, 1.0f}, {-1.0f, -1.0f, -1.0f}, {1.0f, -1.0f, -1.0f}, {1.0f, -1.0f, 1.0f},
     };
 
+    const ufps::Vector3 normals[] = {{0.0f, 0.0f, 1.0f},  {0.0f, 0.0f, 1.0f},  {0.0f, 0.0f, 1.0f},
+                                     {0.0f, 0.0f, 1.0f},  {0.0f, 0.0f, -1.0f}, {0.0f, 0.0f, -1.0f},
+                                     {0.0f, 0.0f, -1.0f}, {0.0f, 0.0f, -1.0f}, {-1.0f, 0.0f, 0.0f},
+                                     {-1.0f, 0.0f, 0.0f}, {-1.0f, 0.0f, 0.0f}, {-1.0f, 0.0f, 0.0f},
+                                     {1.0f, 0.0f, 0.0f},  {1.0f, 0.0f, 0.0f},  {1.0f, 0.0f, 0.0f},
+                                     {1.0f, 0.0f, 0.0f},  {0.0f, 1.0f, 0.0f},  {0.0f, 1.0f, 0.0f},
+                                     {0.0f, 1.0f, 0.0f},  {0.0f, 1.0f, 0.0f},  {0.0f, -1.0f, 0.0f},
+                                     {0.0f, -1.0f, 0.0f}, {0.0f, -1.0f, 0.0f}, {0.0f, -1.0f, 0.0f}};
+
     const ufps::UV uvs[] = {
         {0.0f, 0.0f}, {1.0f, 0.0f}, {1.0f, 1.0f}, {0.0f, 1.0f}, {0.0f, 0.0f}, {1.0f, 0.0f}, {1.0f, 1.0f}, {0.0f, 1.0f},
         {0.0f, 0.0f}, {1.0f, 0.0f}, {1.0f, 1.0f}, {0.0f, 1.0f}, {0.0f, 0.0f}, {1.0f, 0.0f}, {1.0f, 1.0f}, {0.0f, 1.0f},
@@ -64,7 +73,7 @@ auto cube() -> ufps::MeshData
         12, 13, 14, 14, 15, 12, 16, 17, 18, 18, 19, 16, 20, 21, 22, 22, 23, 20,
     };
 
-    return {.vertices = vertices(positions, uvs), .indices = std::move(indices)};
+    return {.vertices = vertices(positions, normals, uvs), .indices = std::move(indices)};
 }
 
 auto walk_direction(std::unordered_map<ufps::Key, bool> &key_state, const ufps::Camera &camera) -> ufps::Vector3
@@ -149,7 +158,13 @@ int main()
              static_cast<float>(window.render_height()),
              0.1f,
              1000.0f},
-        .the_one_texture = diamond_floor_texture};
+        .the_one_texture = diamond_floor_texture,
+        .light = {
+            .position = {},
+            .colour = {.r = 1.0f, .g = 1.0f, .b = 1.0f},
+            .constant_attenuation = 1.0f,
+            .linear_attenuation = 0.007f,
+            .quadratic_attenuation = 0.0002f}};
 
     scene.entities.push_back({
         .name = "cube1",

@@ -21,6 +21,7 @@ class Renderer
     AutoRelease<::GLuint> dummy_vao_;
     CommandBuffer command_buffer_;
     MultiBuffer<PersistentBuffer> camera_buffer_;
+    MultiBuffer<PersistentBuffer> light_buffer_;
     MultiBuffer<PersistentBuffer> object_data_buffer_;
     Program program_;
 };
