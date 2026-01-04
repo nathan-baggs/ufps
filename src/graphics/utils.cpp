@@ -33,6 +33,7 @@ auto load_texture(DataBufferView image_data) -> TextureData
     auto height = int{};
     auto num_channels = int{};
 
+    ::stbi_set_flip_vertically_on_load(true);
     auto raw_data = std::unique_ptr<::stbi_uc, void (*)(void *)>{
         ::stbi_load_from_memory(
             reinterpret_cast<const ::stbi_uc *>(image_data.data()),
