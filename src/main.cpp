@@ -62,6 +62,80 @@ auto cube() -> ufps::MeshData
                                      {0.0f, 1.0f, 0.0f},  {0.0f, 1.0f, 0.0f},  {0.0f, -1.0f, 0.0f},
                                      {0.0f, -1.0f, 0.0f}, {0.0f, -1.0f, 0.0f}, {0.0f, -1.0f, 0.0f}};
 
+    const ufps::Vector3 tangents[] = {
+        // Face 1: Front (+Z Normal) -> Tangent points Right (+X)
+        {1.0f, 0.0f, 0.0f},
+        {1.0f, 0.0f, 0.0f},
+        {1.0f, 0.0f, 0.0f},
+        {1.0f, 0.0f, 0.0f},
+
+        // Face 2: Back (-Z Normal) -> Tangent points Left (-X)
+        {-1.0f, 0.0f, 0.0f},
+        {-1.0f, 0.0f, 0.0f},
+        {-1.0f, 0.0f, 0.0f},
+        {-1.0f, 0.0f, 0.0f},
+
+        // Face 3: Left (-X Normal) -> Tangent points Forward (+Z)
+        {0.0f, 0.0f, 1.0f},
+        {0.0f, 0.0f, 1.0f},
+        {0.0f, 0.0f, 1.0f},
+        {0.0f, 0.0f, 1.0f},
+
+        // Face 4: Right (+X Normal) -> Tangent points Backward (-Z)
+        {0.0f, 0.0f, -1.0f},
+        {0.0f, 0.0f, -1.0f},
+        {0.0f, 0.0f, -1.0f},
+        {0.0f, 0.0f, -1.0f},
+
+        // Face 5: Top (+Y Normal) -> Tangent points Right (+X)
+        {1.0f, 0.0f, 0.0f},
+        {1.0f, 0.0f, 0.0f},
+        {1.0f, 0.0f, 0.0f},
+        {1.0f, 0.0f, 0.0f},
+
+        // Face 6: Bottom (-Y Normal) -> Tangent points Right (+X)
+        {1.0f, 0.0f, 0.0f},
+        {1.0f, 0.0f, 0.0f},
+        {1.0f, 0.0f, 0.0f},
+        {1.0f, 0.0f, 0.0f}};
+
+    const ufps::Vector3 bitangents[] = {
+        // Face 1: Front -> Bitangent points Up (+Y)
+        {0.0f, 1.0f, 0.0f},
+        {0.0f, 1.0f, 0.0f},
+        {0.0f, 1.0f, 0.0f},
+        {0.0f, 1.0f, 0.0f},
+
+        // Face 2: Back -> Bitangent points Up (+Y)
+        {0.0f, 1.0f, 0.0f},
+        {0.0f, 1.0f, 0.0f},
+        {0.0f, 1.0f, 0.0f},
+        {0.0f, 1.0f, 0.0f},
+
+        // Face 3: Left -> Bitangent points Up (+Y)
+        {0.0f, 1.0f, 0.0f},
+        {0.0f, 1.0f, 0.0f},
+        {0.0f, 1.0f, 0.0f},
+        {0.0f, 1.0f, 0.0f},
+
+        // Face 4: Right -> Bitangent points Up (+Y)
+        {0.0f, 1.0f, 0.0f},
+        {0.0f, 1.0f, 0.0f},
+        {0.0f, 1.0f, 0.0f},
+        {0.0f, 1.0f, 0.0f},
+
+        // Face 5: Top -> Bitangent points Backward (-Z)
+        {0.0f, 0.0f, -1.0f},
+        {0.0f, 0.0f, -1.0f},
+        {0.0f, 0.0f, -1.0f},
+        {0.0f, 0.0f, -1.0f},
+
+        // Face 6: Bottom -> Bitangent points Forward (+Z)
+        {0.0f, 0.0f, 1.0f},
+        {0.0f, 0.0f, 1.0f},
+        {0.0f, 0.0f, 1.0f},
+        {0.0f, 0.0f, 1.0f}};
+
     const ufps::UV uvs[] = {
         {0.0f, 0.0f}, {1.0f, 0.0f}, {1.0f, 1.0f}, {0.0f, 1.0f}, {0.0f, 0.0f}, {1.0f, 0.0f}, {1.0f, 1.0f}, {0.0f, 1.0f},
         {0.0f, 0.0f}, {1.0f, 0.0f}, {1.0f, 1.0f}, {0.0f, 1.0f}, {0.0f, 0.0f}, {1.0f, 0.0f}, {1.0f, 1.0f}, {0.0f, 1.0f},
@@ -73,7 +147,7 @@ auto cube() -> ufps::MeshData
         12, 13, 14, 14, 15, 12, 16, 17, 18, 18, 19, 16, 20, 21, 22, 22, 23, 20,
     };
 
-    return {.vertices = vertices(positions, normals, uvs), .indices = std::move(indices)};
+    return {.vertices = vertices(positions, normals, tangents, bitangents, uvs), .indices = std::move(indices)};
 }
 
 auto walk_direction(std::unordered_map<ufps::Key, bool> &key_state, const ufps::Camera &camera) -> ufps::Vector3
@@ -132,7 +206,11 @@ int main()
     const auto diamond_floor_albedo_data = resource_loader.load_data_buffer("textures\\diamond_floor_albedo.png");
     const auto diamond_floor_albedo = ufps::load_texture(diamond_floor_albedo_data);
     const auto sampler = ufps::Sampler{ufps::FilterType::LINEAR, ufps::FilterType::LINEAR, "simple_sampler"};
-    const auto diamond_floor_texture = ufps::Texture{diamond_floor_albedo, "diamond_floor", sampler};
+    const auto diamond_floor_albedo_texture = ufps::Texture{diamond_floor_albedo, "diamond_floor", sampler};
+
+    const auto diamond_floor_normal_data = resource_loader.load_data_buffer("textures\\diamond_floor_normal.png");
+    const auto diamond_floor_normal = ufps::load_texture(diamond_floor_normal_data);
+    const auto diamond_floor_normal_texture = ufps::Texture{diamond_floor_normal, "diamond_floor", sampler};
 
     auto mesh_manager = ufps::MeshManager{};
     auto material_manager = ufps::MaterialManager{};
@@ -158,7 +236,8 @@ int main()
              static_cast<float>(window.render_height()),
              0.1f,
              1000.0f},
-        .the_one_texture = diamond_floor_texture,
+        .the_one_texture = diamond_floor_albedo_texture,
+        .the_one_normal = diamond_floor_normal_texture,
         .lights = {
             .ambient = ufps::Colour{.r = 0.5f, .g = 0.5f, .b = 0.5f},
             .light = {

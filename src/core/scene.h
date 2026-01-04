@@ -72,6 +72,7 @@ struct Scene
     MaterialManager &material_manager;
     Camera camera;
     const Texture &the_one_texture;
+    const Texture &the_one_normal;
     LightData lights;
 };
 

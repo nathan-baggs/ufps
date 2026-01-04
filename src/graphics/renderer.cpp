@@ -27,6 +27,8 @@ struct VertexData
 {
     float position[3];
     float normal[3];
+    float tangent[3];
+    float bitangent[3];
     float uv[2];
 };
 
@@ -81,6 +83,22 @@ vec3 get_normal(uint index)
         data[index].normal[2]);
 }
 
+vec3 get_tangent(uint index)
+{
+    return vec3(
+        data[index].tangent[0],
+        data[index].tangent[1],
+        data[index].tangent[2]);
+}
+
+vec3 get_bitangent(uint index)
+{
+    return vec3(
+        data[index].bitangent[0],
+        data[index].bitangent[1],
+        data[index].bitangent[2]);
+}
+
 vec2 get_uv(uint index)
 {
     return vec2(
@@ -90,16 +108,22 @@ vec2 get_uv(uint index)
 
 layout (location = 0) out flat uint out_material_index;
 layout (location = 1) out vec2 out_uv;
-layout (location = 2) out vec3 out_normal;
-layout (location = 3) out vec4 out_frag_position;
+layout (location = 2) out vec4 out_frag_position;
+layout (location = 3) out mat3 out_tbn;
 
 void main()
 {
+    mat3 normal_mat = transpose(inverse(mat3(object_data[gl_DrawID].model)));
+
     out_frag_position = object_data[gl_DrawID].model * vec4(get_position(gl_VertexID), 1.0);
     gl_Position = projection * view * out_frag_position;
     out_material_index = object_data[gl_DrawID].material_index;
     out_uv = get_uv(gl_VertexID);
-    out_normal = get_normal(gl_VertexID);
+
+    vec3 t = normalize(vec3(object_data[gl_DrawID].model * vec4(get_tangent(gl_VertexID), 0.0)));
+    vec3 b = normalize(vec3(object_data[gl_DrawID].model * vec4(get_bitangent(gl_VertexID), 0.0)));
+    vec3 n = normalize(vec3(object_data[gl_DrawID].model * vec4(get_normal(gl_VertexID), 0.0)));
+    out_tbn = mat3(t, b, n);
 }
 )"sv;
 
@@ -111,6 +135,8 @@ struct VertexData
 {
     float position[3];
     float normal[3];
+    float tangent[3];
+    float bitangent[3];
     float uv[2];
 };
 
@@ -172,19 +198,28 @@ vec3 calc_point(vec3 frag_position, vec3 n)
     return diff * att * colour;
 }
 
-layout(location = 0, bindless_sampler) uniform sampler2D tex;
+layout(location = 0, bindless_sampler) uniform sampler2D albedo_tex;
+layout(location = 1, bindless_sampler) uniform sampler2D normal_tex;
 
 layout(location = 0) in flat uint in_material_index;
 layout(location = 1) in vec2 in_uv;
-layout(location = 2) in vec3 in_normal;
-layout(location = 3) in vec4 in_frag_position;
+layout(location = 2) in vec4 in_frag_position;
+layout(location = 3) in mat3 in_tbn;
 
 layout(location = 0) out vec4 out_colour;
 
 void main()
 {
+    vec3 n = texture(normal_tex, in_uv).xyz;
+    n = (n * 2.0) - 1.0;
+    n = normalize(in_tbn * n);
+
+    vec3 albedo = texture(albedo_tex, in_uv).rgb;
     vec3 amb_colour = vec3(ambient_colour[0], ambient_colour[1], ambient_colour[2]);
-    out_colour = vec4(amb_colour + calc_point(in_frag_position.xyz, in_normal), 1.0);
+    vec3 point_colour = calc_point(in_frag_position.xyz, n);
+
+    out_colour = vec4(albedo * (amb_colour + point_colour), 1.0);
+    out_colour = vec4(in_tbn[2], 1.0);
 }
 )"sv;
 
@@ -255,6 +290,7 @@ auto Renderer::render(const Scene &scene) -> void
     ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 4, light_buffer_.native_handle());
 
     ::glProgramUniformHandleui64ARB(program_.native_handle(), 0, scene.the_one_texture.native_handle());
+    ::glProgramUniformHandleui64ARB(program_.native_handle(), 1, scene.the_one_normal.native_handle());
 
     ::glMultiDrawElementsIndirect(
         GL_TRIANGLES,
