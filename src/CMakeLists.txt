@@ -44,7 +44,7 @@ target_compile_options(ufpslib PRIVATE
   -Wwrite-strings
 )
 target_include_directories(ufpslib PUBLIC ${PROJECT_SOURCE_DIR}/ ${PROJECT_SOURCE_DIR}/src ${stb_lib_SOURCE_DIR})
-target_compile_features(ufpslib PUBLIC cxx_std_23)
+target_compile_features(ufpslib PUBLIC cxx_std_26)
 target_compile_definitions(ufpslib PUBLIC -DNOMINMAX)
 target_link_libraries(ufpslib PUBLIC stdc++exp wbemuuid opengl32 imguilib dwmapi)
 

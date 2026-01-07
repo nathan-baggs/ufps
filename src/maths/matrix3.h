@@ -30,9 +30,21 @@ class Matrix3
     {
     }
 
+    explicit constexpr Matrix3(std::initializer_list<float> il)
+        : Matrix3{std::span<const float>{std::move(il)}}
+    {
+    }
+
     constexpr Matrix3(const std::array<float, 9u> &elements)
         : elements_(elements)
     {
+    }
+
+    explicit constexpr Matrix3(std::span<const float> elements)
+        : Matrix3{}
+    {
+        ensure(elements.size() == 9u, "not enough elements");
+        std::ranges::copy(elements, std::ranges::begin(elements_));
     }
 
     constexpr Matrix3(const Vector3 &v1, const Vector3 &v2, const Vector3 &v3)
