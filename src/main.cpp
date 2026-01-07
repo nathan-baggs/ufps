@@ -166,11 +166,16 @@ int main()
     const auto diamond_floor_albedo_data = resource_loader.load_data_buffer("textures\\diamond_floor_albedo.png");
     const auto diamond_floor_albedo = ufps::load_texture(diamond_floor_albedo_data);
     const auto sampler = ufps::Sampler{ufps::FilterType::LINEAR, ufps::FilterType::LINEAR, "simple_sampler"};
-    const auto diamond_floor_albedo_texture = ufps::Texture{diamond_floor_albedo, "diamond_floor", sampler};
+    const auto diamond_floor_albedo_texture = ufps::Texture{diamond_floor_albedo, "diamond_floor_albedo", sampler};
 
     const auto diamond_floor_normal_data = resource_loader.load_data_buffer("textures\\diamond_floor_normal.png");
     const auto diamond_floor_normal = ufps::load_texture(diamond_floor_normal_data);
-    const auto diamond_floor_normal_texture = ufps::Texture{diamond_floor_normal, "diamond_floor", sampler};
+    const auto diamond_floor_normal_texture = ufps::Texture{diamond_floor_normal, "diamond_floor_normal", sampler};
+
+    const auto diamond_floor_specular_data = resource_loader.load_data_buffer("textures\\diamond_floor_specular.png");
+    const auto diamond_floor_specular = ufps::load_texture(diamond_floor_specular_data);
+    const auto diamond_floor_specular_texture =
+        ufps::Texture{diamond_floor_specular, "diamond_floor_specular", sampler};
 
     auto mesh_manager = ufps::MeshManager{};
     auto material_manager = ufps::MaterialManager{};
@@ -198,6 +203,7 @@ int main()
              1000.0f},
         .the_one_texture = diamond_floor_albedo_texture,
         .the_one_normal = diamond_floor_normal_texture,
+        .the_one_specular = diamond_floor_specular_texture,
         .lights = {
             .ambient = ufps::Colour{.r = 0.5f, .g = 0.5f, .b = 0.5f},
             .light = {
@@ -205,7 +211,8 @@ int main()
                 .colour = {.r = 1.0f, .g = 1.0f, .b = 1.0f},
                 .constant_attenuation = 1.0f,
                 .linear_attenuation = 0.007f,
-                .quadratic_attenuation = 0.0002f}}};
+                .quadratic_attenuation = 0.0002f,
+                .specular_power = 32.0f}}};
 
     scene.entities.push_back({
         .name = "cube1",
