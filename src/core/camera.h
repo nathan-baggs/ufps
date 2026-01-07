@@ -14,6 +14,8 @@ struct CameraData
 {
     Matrix4 view;
     Matrix4 projection;
+    Vector3 position;
+    float pad = 0.0f;
 };
 
 class Camera
@@ -51,7 +53,6 @@ class Camera
 
   private:
     CameraData data_;
-    Vector3 position_;
     Vector3 direction_;
     Vector3 up_;
     Vector3 right_;

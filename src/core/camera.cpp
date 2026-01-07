@@ -31,8 +31,7 @@ Camera::Camera(
     float height,
     float near_plane,
     float far_plane)
-    : data_{.view = Matrix4::look_at(position, look_at, up), .projection = Matrix4::perspective(fov, width, height, near_plane, far_plane)}
-    , position_(position)
+    : data_{.view = Matrix4::look_at(position, look_at, up), .projection = Matrix4::perspective(fov, width, height, near_plane, far_plane), .position = position}
     , direction_(look_at)
     , up_(up)
     , right_(Vector3::normalise(Vector3::cross(direction_, up_)))
@@ -45,13 +44,12 @@ Camera::Camera(
     , far_plane_(far_plane)
 {
     direction_ = create_direction(pitch_, yaw_);
-    data_.view = Matrix4::look_at(position_, position_ + direction_, up_);
+    data_.view = Matrix4::look_at(data_.position, data_.position + direction_, up_);
     adjust_pitch(0.0f);
 }
 
 Camera::Camera(float width, float height, float depth)
-    : data_{.view = Matrix4::look_at(Vector3{0.0f, 0.0f, 1.0f}, {}, {0.0f, 1.0f, 0.0f}), .projection = Matrix4::orthographic(width, height, depth),}
-    , position_(Vector3{0.0f, 0.0f, 1.0f})
+    : data_{.view = Matrix4::look_at(Vector3{0.0f, 0.0f, 1.0f}, {}, {0.0f, 1.0f, 0.0f}), .projection = Matrix4::orthographic(width, height, depth), .position = {0.0f, 0.0f, 1.0f}}
     , direction_(Vector3{0.0f, 0.0f, -1.0f})
     , up_(Vector3{0.0f, 1.0f, 0.0f})
     , right_(Vector3::normalise(Vector3::cross(direction_, up_)))
@@ -67,13 +65,13 @@ Camera::Camera(float width, float height, float depth)
 
 auto Camera::position() const -> Vector3
 {
-    return position_;
+    return data_.position;
 }
 
 auto Camera::set_position(const Vector3 &position) -> void
 {
-    position_ = position;
-    data_.view = Matrix4::look_at(position_, position_ + direction_, up_);
+    data_.position = position;
+    data_.view = Matrix4::look_at(data_.position, data_.position + direction_, up_);
 }
 
 auto Camera::direction() const -> Vector3
@@ -100,7 +98,7 @@ auto Camera::adjust_yaw(float adjust) -> void
     right_ = Vector3::normalise(Vector3::cross(direction_, world_up));
     up_ = Vector3::normalise(Vector3::cross(right_, direction_));
 
-    data_.view = Matrix4::look_at(position_, position_ + direction_, up_);
+    data_.view = Matrix4::look_at(data_.position, data_.position + direction_, up_);
 }
 
 auto Camera::adjust_pitch(float adjust) -> void
@@ -117,7 +115,7 @@ auto Camera::adjust_pitch(float adjust) -> void
     right_ = Vector3::normalise(Vector3::cross(direction_, world_up));
     up_ = Vector3::normalise(Vector3::cross(right_, direction_));
 
-    data_.view = Matrix4::look_at(position_, position_ + direction_, up_);
+    data_.view = Matrix4::look_at(data_.position, data_.position + direction_, up_);
 }
 
 auto Camera::set_yaw(float yaw) -> void
@@ -132,9 +130,9 @@ auto Camera::set_pitch(float pitch) -> void
 
 auto Camera::translate(const Vector3 &translation) -> void
 {
-    position_ += translation;
+    data_.position += translation;
     direction_ = create_direction(pitch_, yaw_);
-    data_.view = Matrix4::look_at(position_, position_ + direction_, up_);
+    data_.view = Matrix4::look_at(data_.position, data_.position + direction_, up_);
 }
 
 auto Camera::fov() const -> float
