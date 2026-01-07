@@ -149,6 +149,8 @@ auto DebugUI::render(Scene &scene) -> void
             std::memcpy(&scene.lights.light.colour, colour, sizeof(colour));
         }
 
+        ::ImGui::SliderFloat("power", &scene.lights.light.specular_power, 0.0f, 100.0f);
+
         float atten[] = {
             scene.lights.light.constant_attenuation,
             scene.lights.light.linear_attenuation,

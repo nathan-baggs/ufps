@@ -13,8 +13,9 @@ struct PointLight
     float constant_attenuation;
     float linear_attenuation;
     float quadratic_attenuation;
+    float specular_power;
 };
 
-static_assert(sizeof(PointLight) == sizeof(float) * 9);
+static_assert(sizeof(PointLight) == sizeof(float) * 10);
 
 }

@@ -73,6 +73,7 @@ struct Scene
     Camera camera;
     const Texture &the_one_texture;
     const Texture &the_one_normal;
+    const Texture &the_one_specular;
     LightData lights;
 };
 

@@ -50,6 +50,8 @@ layout(binding = 0, std430) readonly buffer vertices {
 layout(binding = 1, std430) readonly buffer camera {
     mat4 view;
     mat4 projection;
+    float camera_position[3];
+    float pad;
 };
 
 layout(binding = 2, std430) readonly buffer objects {
@@ -65,6 +67,7 @@ layout(binding = 4, std430) readonly buffer lights {
     float point_light_pos[3];
     float point_light_colour[3];
     float point_light_attenuation[3];
+    float point_light_specular_power;
 };
 
 vec3 get_position(uint index)
@@ -158,6 +161,8 @@ layout(binding = 0, std430) readonly buffer vertices {
 layout(binding = 1, std430) readonly buffer camera {
     mat4 view;
     mat4 projection;
+    float camera_position[3];
+    float pad;
 };
 
 layout(binding = 2, std430) readonly buffer objects {
@@ -173,7 +178,19 @@ layout(binding = 4, std430) readonly buffer lights {
     float point_light_pos[3];
     float point_light_colour[3];
     float point_light_attenuation[3];
+    float point_light_specular_power;
 };
+
+layout(location = 0, bindless_sampler) uniform sampler2D albedo_tex;
+layout(location = 1, bindless_sampler) uniform sampler2D normal_tex;
+layout(location = 2, bindless_sampler) uniform sampler2D specular_tex;
+
+layout(location = 0) in flat uint in_material_index;
+layout(location = 1) in vec2 in_uv;
+layout(location = 2) in vec4 in_frag_position;
+layout(location = 3) in mat3 in_tbn;
+
+layout(location = 0) out vec4 out_colour;
 
 vec3 get_colour(uint index)
 {
@@ -195,18 +212,14 @@ vec3 calc_point(vec3 frag_position, vec3 n)
     vec3 light_dir = normalize(pos - frag_position);
     float diff = max(dot(n, light_dir), 0.0);
 
-    return diff * att * colour;
+    vec3 camera_pos = vec3(camera_position[0], camera_position[1], camera_position[2]);
+
+    vec3 reflect_dir = reflect(-light_dir, n);
+    float spec = pow(max(dot(normalize(camera_pos - frag_position), reflect_dir), 0.0), point_light_specular_power) * texture(specular_tex, in_uv).r;
+
+    return (diff + spec) * att * colour;
 }
 
-layout(location = 0, bindless_sampler) uniform sampler2D albedo_tex;
-layout(location = 1, bindless_sampler) uniform sampler2D normal_tex;
-
-layout(location = 0) in flat uint in_material_index;
-layout(location = 1) in vec2 in_uv;
-layout(location = 2) in vec4 in_frag_position;
-layout(location = 3) in mat3 in_tbn;
-
-layout(location = 0) out vec4 out_colour;
 
 void main()
 {
@@ -290,6 +303,7 @@ auto Renderer::render(const Scene &scene) -> void
 
     ::glProgramUniformHandleui64ARB(program_.native_handle(), 0, scene.the_one_texture.native_handle());
     ::glProgramUniformHandleui64ARB(program_.native_handle(), 1, scene.the_one_normal.native_handle());
+    ::glProgramUniformHandleui64ARB(program_.native_handle(), 2, scene.the_one_specular.native_handle());
 
     ::glMultiDrawElementsIndirect(
         GL_TRIANGLES,
