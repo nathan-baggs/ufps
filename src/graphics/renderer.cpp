@@ -219,7 +219,6 @@ void main()
     vec3 point_colour = calc_point(in_frag_position.xyz, n);
 
     out_colour = vec4(albedo * (amb_colour + point_colour), 1.0);
-    out_colour = vec4(in_tbn[2], 1.0);
 }
 )"sv;
 
