@@ -16,8 +16,11 @@ auto channels_to_format(int num_channels) -> ufps::TextureFormat
 {
     switch (num_channels)
     {
-        case 3: return ufps::TextureFormat::RGB;
-        case 4: return ufps::TextureFormat::RGBA;
+        using enum ufps::TextureFormat;
+
+        case 1: return RED;
+        case 3: return RGB;
+        case 4: return RGBA;
     }
 
     throw ufps::Exception("unsupported channel count: {}", num_channels);

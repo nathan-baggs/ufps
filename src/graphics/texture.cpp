@@ -16,6 +16,7 @@ auto to_opengl(ufps::TextureFormat format, bool include_size) -> ::GLenum
     switch (format)
     {
         using enum ufps::TextureFormat;
+        case RED: return include_size ? GL_R8 : GL_RED;
         case RGB: return include_size ? GL_RGB8 : GL_RGB;
         case RGBA: return include_size ? GL_RGBA8 : GL_RGBA;
     }

@@ -10,6 +10,7 @@ namespace ufps
 
 enum class TextureFormat
 {
+    RED,
     RGB,
     RGBA,
 };
@@ -27,6 +28,7 @@ inline auto to_string(TextureFormat format) -> std::string
     switch (format)
     {
         using enum TextureFormat;
+        case RED: return "RED";
         case RGB: return "RGB";
         case RGBA: return "RGBA";
         default: return "<UNKNOWN>";
