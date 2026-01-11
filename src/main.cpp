@@ -20,6 +20,7 @@
 #include "graphics/renderer.h"
 #include "graphics/sampler.h"
 #include "graphics/texture.h"
+#include "graphics/texture_manager.h"
 #include "graphics/utils.h"
 #include "graphics/vertex_data.h"
 #include "graphics/window.h"
@@ -165,36 +166,41 @@ int main()
     auto running = true;
 
     std::unique_ptr<ufps::ResourceLoader> resource_loader = std::make_unique<ufps::EmbeddedResourceLoader>();
+    auto textures = std::vector<ufps::Texture>{};
 
     const auto diamond_floor_albedo_data = resource_loader->load_data_buffer("textures\\diamond_floor_albedo.png");
     const auto diamond_floor_albedo = ufps::load_texture(diamond_floor_albedo_data);
     const auto sampler = ufps::Sampler{ufps::FilterType::LINEAR, ufps::FilterType::LINEAR, "simple_sampler"};
-    const auto diamond_floor_albedo_texture = ufps::Texture{diamond_floor_albedo, "diamond_floor_albedo", sampler};
+    textures.push_back(ufps::Texture{diamond_floor_albedo, "diamond_floor_albedo", sampler});
 
     const auto diamond_floor_normal_data = resource_loader->load_data_buffer("textures\\diamond_floor_normal.png");
     const auto diamond_floor_normal = ufps::load_texture(diamond_floor_normal_data);
-    const auto diamond_floor_normal_texture = ufps::Texture{diamond_floor_normal, "diamond_floor_normal", sampler};
+    textures.push_back(ufps::Texture{diamond_floor_normal, "diamond_floor_normal", sampler});
 
     const auto diamond_floor_specular_data = resource_loader->load_data_buffer("textures\\diamond_floor_specular.png");
     const auto diamond_floor_specular = ufps::load_texture(diamond_floor_specular_data);
-    const auto diamond_floor_specular_texture =
-        ufps::Texture{diamond_floor_specular, "diamond_floor_specular", sampler};
+    textures.push_back(ufps::Texture{diamond_floor_specular, "diamond_floor_specular", sampler});
 
     auto mesh_manager = ufps::MeshManager{};
     auto material_manager = ufps::MaterialManager{};
+    auto texture_manager = ufps::TextureManager{};
+
+    const auto tex_index = texture_manager.add(std::move(textures));
+    ufps::log::debug("tex_index: {}", tex_index);
+
     auto renderer = ufps::Renderer{*resource_loader};
     auto debug_ui = ufps::DebugUI{window};
     auto debug_mode = false;
 
-    const auto material_key_red = material_manager.add(ufps::Colour{1.0f, 0.0f, 0.0f});
-    const auto material_key_blue = material_manager.add(ufps::Colour{0.0f, 0.0f, 1.0f});
-    const auto material_key_green = material_manager.add(ufps::Colour{0.0f, 1.0f, 0.0f});
-    material_manager.remove(material_key_blue);
+    const auto material_key_red = material_manager.add(tex_index, tex_index + 1u, tex_index + 2u);
+    const auto material_key_blue = material_manager.add(tex_index, tex_index + 1u, tex_index + 2u);
+    const auto material_key_green = material_manager.add(tex_index, tex_index + 1u, tex_index + 2u);
 
     auto scene = ufps::Scene{
         .entities = {},
         .mesh_manager = mesh_manager,
         .material_manager = material_manager,
+        .texture_manager = texture_manager,
         .camera =
             {{},
              {0.0f, 0.0f, -1.0f},
@@ -204,9 +210,6 @@ int main()
              static_cast<float>(window.render_height()),
              0.1f,
              1000.0f},
-        .the_one_texture = diamond_floor_albedo_texture,
-        .the_one_normal = diamond_floor_normal_texture,
-        .the_one_specular = diamond_floor_specular_texture,
         .lights = {
             .ambient = ufps::Colour{.r = 0.5f, .g = 0.5f, .b = 0.5f},
             .light = {
