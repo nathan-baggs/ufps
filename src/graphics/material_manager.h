@@ -47,7 +47,9 @@ class MaterialKey
 
 struct MaterialData
 {
-    Colour colour;
+    std::uint32_t albedo_texture_index;
+    std::uint32_t normal_texture_index;
+    std::uint32_t specular_texture_index;
 };
 
 class MaterialManager

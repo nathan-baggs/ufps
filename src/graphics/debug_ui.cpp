@@ -90,20 +90,7 @@ auto DebugUI::render(Scene &scene) -> void
 
     for (auto &entity : scene.entities)
     {
-        auto &material = scene.material_manager[entity.material_key];
-
-        if (::ImGui::CollapsingHeader(entity.name.c_str()))
-        {
-            float colour[3]{};
-            std::memcpy(colour, &material.colour, sizeof(colour));
-
-            const auto label = std::format("{} colour", entity.name);
-
-            if (::ImGui::ColorPicker3(label.c_str(), colour))
-            {
-                std::memcpy(&material.colour, colour, sizeof(colour));
-            }
-        }
+        ::ImGui::CollapsingHeader(entity.name.c_str());
 
         if (&entity == selected_entity_)
         {

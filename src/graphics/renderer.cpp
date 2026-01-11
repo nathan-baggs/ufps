@@ -87,9 +87,7 @@ auto Renderer::render(const Scene &scene) -> void
     light_buffer_.write(std::as_bytes(std::span<const LightData, 1zu>{&scene.lights, 1zu}), 0zu);
     ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 4, light_buffer_.native_handle());
 
-    ::glProgramUniformHandleui64ARB(program_.native_handle(), 0, scene.the_one_texture.native_handle());
-    ::glProgramUniformHandleui64ARB(program_.native_handle(), 1, scene.the_one_normal.native_handle());
-    ::glProgramUniformHandleui64ARB(program_.native_handle(), 2, scene.the_one_specular.native_handle());
+    ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 5, scene.texture_manager.native_handle());
 
     ::glMultiDrawElementsIndirect(
         GL_TRIANGLES,

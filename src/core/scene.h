@@ -10,6 +10,7 @@
 #include "graphics/mesh_manager.h"
 #include "graphics/point_light.h"
 #include "graphics/texture.h"
+#include "graphics/texture_manager.h"
 #include "maths/ray.h"
 #include "maths/utils.h"
 #include "maths/vector4.h"
@@ -70,10 +71,8 @@ struct Scene
     std::vector<Entity> entities;
     MeshManager &mesh_manager;
     MaterialManager &material_manager;
+    TextureManager &texture_manager;
     Camera camera;
-    const Texture &the_one_texture;
-    const Texture &the_one_normal;
-    const Texture &the_one_specular;
     LightData lights;
 };
 
