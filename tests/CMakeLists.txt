@@ -9,6 +9,7 @@ add_executable(unit_tests
   error_tests.cpp
   formatter_tests.cpp
   multi_buffer_tests.cpp
+  matrix3_tests.cpp
   matrix4_tests.cpp
   vector3_tests.cpp
 )

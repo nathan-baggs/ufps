@@ -14,9 +14,14 @@ struct UV
 struct VertexData
 {
     Vector3 position;
+    Vector3 normal;
+    Vector3 tangent;
+    Vector3 bitangent;
     UV uv;
 };
 
-static_assert(sizeof(VertexData) == sizeof(float) * 3 + sizeof(float) * 2);
+static_assert(
+    sizeof(VertexData) ==
+    sizeof(float) * 3 + sizeof(float) * 3 + sizeof(float) * 3 + sizeof(float) * 3 + sizeof(float) * 2);
 
 }

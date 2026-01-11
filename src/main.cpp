@@ -1,3 +1,4 @@
+#include <memory>
 #include <numbers>
 #include <ranges>
 #include <span>
@@ -19,10 +20,12 @@
 #include "graphics/renderer.h"
 #include "graphics/sampler.h"
 #include "graphics/texture.h"
+#include "graphics/texture_manager.h"
 #include "graphics/utils.h"
 #include "graphics/vertex_data.h"
 #include "graphics/window.h"
 #include "maths/vector3.h"
+#include "resources/embedded_resource_loader.h"
 #include "resources/file_resource_loader.h"
 #include "utils/data_buffer.h"
 #include "utils/formatter.h"
@@ -53,6 +56,15 @@ auto cube() -> ufps::MeshData
         {-1.0f, -1.0f, 1.0f}, {-1.0f, -1.0f, -1.0f}, {1.0f, -1.0f, -1.0f}, {1.0f, -1.0f, 1.0f},
     };
 
+    const ufps::Vector3 normals[] = {{0.0f, 0.0f, 1.0f},  {0.0f, 0.0f, 1.0f},  {0.0f, 0.0f, 1.0f},
+                                     {0.0f, 0.0f, 1.0f},  {0.0f, 0.0f, -1.0f}, {0.0f, 0.0f, -1.0f},
+                                     {0.0f, 0.0f, -1.0f}, {0.0f, 0.0f, -1.0f}, {-1.0f, 0.0f, 0.0f},
+                                     {-1.0f, 0.0f, 0.0f}, {-1.0f, 0.0f, 0.0f}, {-1.0f, 0.0f, 0.0f},
+                                     {1.0f, 0.0f, 0.0f},  {1.0f, 0.0f, 0.0f},  {1.0f, 0.0f, 0.0f},
+                                     {1.0f, 0.0f, 0.0f},  {0.0f, 1.0f, 0.0f},  {0.0f, 1.0f, 0.0f},
+                                     {0.0f, 1.0f, 0.0f},  {0.0f, 1.0f, 0.0f},  {0.0f, -1.0f, 0.0f},
+                                     {0.0f, -1.0f, 0.0f}, {0.0f, -1.0f, 0.0f}, {0.0f, -1.0f, 0.0f}};
+
     const ufps::UV uvs[] = {
         {0.0f, 0.0f}, {1.0f, 0.0f}, {1.0f, 1.0f}, {0.0f, 1.0f}, {0.0f, 0.0f}, {1.0f, 0.0f}, {1.0f, 1.0f}, {0.0f, 1.0f},
         {0.0f, 0.0f}, {1.0f, 0.0f}, {1.0f, 1.0f}, {0.0f, 1.0f}, {0.0f, 0.0f}, {1.0f, 0.0f}, {1.0f, 1.0f}, {0.0f, 1.0f},
@@ -64,7 +76,41 @@ auto cube() -> ufps::MeshData
         12, 13, 14, 14, 15, 12, 16, 17, 18, 18, 19, 16, 20, 21, 22, 22, 23, 20,
     };
 
-    return {.vertices = vertices(positions, uvs), .indices = std::move(indices)};
+    auto vs =
+        ufps::MeshData{.vertices = vertices(positions, normals, normals, normals, uvs), .indices = std::move(indices)};
+
+    for (const auto &indices : std::views::chunk(vs.indices, 3))
+    {
+        auto &v0 = vs.vertices[indices[0]];
+        auto &v1 = vs.vertices[indices[1]];
+        auto &v2 = vs.vertices[indices[2]];
+
+        const auto edge1 = v1.position - v0.position;
+        const auto edge2 = v2.position - v0.position;
+
+        const auto deltaUV1 = ufps::UV{.s = v1.uv.s - v0.uv.s, .t = v1.uv.t - v0.uv.t};
+        const auto deltaUV2 = ufps::UV{.s = v2.uv.s - v0.uv.s, .t = v2.uv.t - v0.uv.t};
+
+        const auto f = 1.0f / (deltaUV1.s * deltaUV2.t - deltaUV2.s * deltaUV1.t);
+
+        const auto tangent = ufps::Vector3{
+            f * (deltaUV2.t * edge1.x - deltaUV1.t * edge2.x),
+            f * (deltaUV2.t * edge1.y - deltaUV1.t * edge2.y),
+            f * (deltaUV2.t * edge1.z - deltaUV1.t * edge2.z),
+        };
+
+        v0.tangent += tangent;
+        v1.tangent += tangent;
+        v2.tangent += tangent;
+    }
+
+    for (auto &v : vs.vertices)
+    {
+        v.tangent = ufps::Vector3::normalise(v.tangent - v.normal * ufps::Vector3::dot(v.normal, v.tangent));
+        v.bitangent = ufps::Vector3::normalise(ufps::Vector3::cross(v.normal, v.tangent));
+    }
+
+    return vs;
 }
 
 auto walk_direction(std::unordered_map<ufps::Key, bool> &key_state, const ufps::Camera &camera) -> ufps::Vector3
@@ -119,27 +165,42 @@ int main()
     auto window = ufps::Window{ufps::WindowMode::WINDOWED, 1920u, 1080u, 1920u, 0u};
     auto running = true;
 
-    auto resource_loader = ufps::FileResourceLoader{"assets"};
-    const auto diamond_floor_albedo_data = resource_loader.load_data_buffer("textures\\diamond_floor_albedo.png");
+    std::unique_ptr<ufps::ResourceLoader> resource_loader = std::make_unique<ufps::EmbeddedResourceLoader>();
+    auto textures = std::vector<ufps::Texture>{};
+
+    const auto diamond_floor_albedo_data = resource_loader->load_data_buffer("textures\\diamond_floor_albedo.png");
     const auto diamond_floor_albedo = ufps::load_texture(diamond_floor_albedo_data);
     const auto sampler = ufps::Sampler{ufps::FilterType::LINEAR, ufps::FilterType::LINEAR, "simple_sampler"};
-    const auto diamond_floor_texture = ufps::Texture{diamond_floor_albedo, "diamond_floor", sampler};
+    textures.push_back(ufps::Texture{diamond_floor_albedo, "diamond_floor_albedo", sampler});
+
+    const auto diamond_floor_normal_data = resource_loader->load_data_buffer("textures\\diamond_floor_normal.png");
+    const auto diamond_floor_normal = ufps::load_texture(diamond_floor_normal_data);
+    textures.push_back(ufps::Texture{diamond_floor_normal, "diamond_floor_normal", sampler});
+
+    const auto diamond_floor_specular_data = resource_loader->load_data_buffer("textures\\diamond_floor_specular.png");
+    const auto diamond_floor_specular = ufps::load_texture(diamond_floor_specular_data);
+    textures.push_back(ufps::Texture{diamond_floor_specular, "diamond_floor_specular", sampler});
 
     auto mesh_manager = ufps::MeshManager{};
     auto material_manager = ufps::MaterialManager{};
-    auto renderer = ufps::Renderer{};
+    auto texture_manager = ufps::TextureManager{};
+
+    const auto tex_index = texture_manager.add(std::move(textures));
+    ufps::log::debug("tex_index: {}", tex_index);
+
+    auto renderer = ufps::Renderer{*resource_loader};
     auto debug_ui = ufps::DebugUI{window};
     auto debug_mode = false;
 
-    const auto material_key_red = material_manager.add(ufps::Colour{1.0f, 0.0f, 0.0f});
-    const auto material_key_blue = material_manager.add(ufps::Colour{0.0f, 0.0f, 1.0f});
-    const auto material_key_green = material_manager.add(ufps::Colour{0.0f, 1.0f, 0.0f});
-    material_manager.remove(material_key_blue);
+    const auto material_key_red = material_manager.add(tex_index, tex_index + 1u, tex_index + 2u);
+    const auto material_key_blue = material_manager.add(tex_index, tex_index + 1u, tex_index + 2u);
+    const auto material_key_green = material_manager.add(tex_index, tex_index + 1u, tex_index + 2u);
 
     auto scene = ufps::Scene{
         .entities = {},
         .mesh_manager = mesh_manager,
         .material_manager = material_manager,
+        .texture_manager = texture_manager,
         .camera =
             {{},
              {0.0f, 0.0f, -1.0f},
@@ -149,7 +210,15 @@ int main()
              static_cast<float>(window.render_height()),
              0.1f,
              1000.0f},
-        .the_one_texture = diamond_floor_texture};
+        .lights = {
+            .ambient = ufps::Colour{.r = 0.5f, .g = 0.5f, .b = 0.5f},
+            .light = {
+                .position = {},
+                .colour = {.r = 1.0f, .g = 1.0f, .b = 1.0f},
+                .constant_attenuation = 1.0f,
+                .linear_attenuation = 0.007f,
+                .quadratic_attenuation = 0.0002f,
+                .specular_power = 32.0f}}};
 
     scene.entities.push_back({
         .name = "cube1",

@@ -90,20 +90,7 @@ auto DebugUI::render(Scene &scene) -> void
 
     for (auto &entity : scene.entities)
     {
-        auto &material = scene.material_manager[entity.material_key];
-
-        if (::ImGui::CollapsingHeader(entity.name.c_str()))
-        {
-            float colour[3]{};
-            std::memcpy(colour, &material.colour, sizeof(colour));
-
-            const auto label = std::format("{} colour", entity.name);
-
-            if (::ImGui::ColorPicker3(label.c_str(), colour))
-            {
-                std::memcpy(&material.colour, colour, sizeof(colour));
-            }
-        }
+        ::ImGui::CollapsingHeader(entity.name.c_str());
 
         if (&entity == selected_entity_)
         {
@@ -122,6 +109,64 @@ auto DebugUI::render(Scene &scene) -> void
                 nullptr);
 
             entity.transform = Transform{transform};
+        }
+    }
+
+    if (::ImGui::CollapsingHeader("lights"))
+    {
+        float amb_colour[3]{};
+        std::memcpy(amb_colour, &scene.lights.ambient, sizeof(amb_colour));
+
+        if (::ImGui::ColorPicker3("ambient light colour", amb_colour))
+        {
+            std::memcpy(&scene.lights.ambient, amb_colour, sizeof(amb_colour));
+        }
+
+        float pos[] = {scene.lights.light.position.x, scene.lights.light.position.y, scene.lights.light.position.z};
+        if (::ImGui::SliderFloat3("position", pos, -100.0f, 100.0f))
+        {
+            scene.lights.light.position = {pos[0], pos[1], pos[2]};
+        }
+
+        float colour[3]{};
+        std::memcpy(colour, &scene.lights.light.colour, sizeof(colour));
+
+        if (::ImGui::ColorPicker3("light colour", colour))
+        {
+            std::memcpy(&scene.lights.light.colour, colour, sizeof(colour));
+        }
+
+        ::ImGui::SliderFloat("power", &scene.lights.light.specular_power, 0.0f, 100.0f);
+
+        float atten[] = {
+            scene.lights.light.constant_attenuation,
+            scene.lights.light.linear_attenuation,
+            scene.lights.light.quadratic_attenuation};
+        if (::ImGui::SliderFloat3("attenuation", atten, 0.0f, 2.0f))
+        {
+            scene.lights.light.constant_attenuation = atten[0];
+            scene.lights.light.linear_attenuation = atten[1];
+            scene.lights.light.quadratic_attenuation = atten[2];
+        }
+
+        if (!selected_entity_)
+        {
+            auto transform = Matrix4{scene.lights.light.position};
+            const auto &camera_data = scene.camera.data();
+
+            ::ImGuizmo::Manipulate(
+                camera_data.view.data().data(),
+                camera_data.projection.data().data(),
+                ::ImGuizmo::TRANSLATE | ::ImGuizmo::SCALE | ::ImGuizmo::BOUNDS | ::ImGuizmo::ROTATE,
+                ::ImGuizmo::WORLD,
+                const_cast<float *>(transform.data().data()),
+                nullptr,
+                nullptr,
+                nullptr,
+                nullptr);
+
+            const auto new_transform = Transform{transform};
+            scene.lights.light.position = new_transform.position;
         }
     }
 

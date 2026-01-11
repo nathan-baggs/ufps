@@ -2,6 +2,7 @@
 
 #include <array>
 #include <format>
+#include <initializer_list>
 #include <ranges>
 #include <span>
 
@@ -42,12 +43,17 @@ class Matrix4
     {
     }
 
+    explicit constexpr Matrix4(std::initializer_list<float> il)
+        : Matrix4{std::span<const float>{std::move(il)}}
+    {
+    }
+
     explicit constexpr Matrix4(const std::array<float, 16u> &elements)
         : Matrix4{std::span<const float>{elements}}
     {
     }
 
-    explicit constexpr Matrix4(const std::span<const float> &elements)
+    explicit constexpr Matrix4(std::span<const float> elements)
         : Matrix4{}
     {
         ensure(elements.size() == 16u, "not enough elements");

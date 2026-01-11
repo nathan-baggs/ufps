@@ -8,7 +8,9 @@
 #include "core/entity.h"
 #include "graphics/material_manager.h"
 #include "graphics/mesh_manager.h"
+#include "graphics/point_light.h"
 #include "graphics/texture.h"
+#include "graphics/texture_manager.h"
 #include "maths/ray.h"
 #include "maths/utils.h"
 #include "maths/vector4.h"
@@ -20,6 +22,12 @@ struct IntersectionResult
 {
     const Entity *entity;
     Vector3 position;
+};
+
+struct LightData
+{
+    Colour ambient;
+    PointLight light;
 };
 
 struct Scene
@@ -63,8 +71,9 @@ struct Scene
     std::vector<Entity> entities;
     MeshManager &mesh_manager;
     MaterialManager &material_manager;
+    TextureManager &texture_manager;
     Camera camera;
-    const Texture &the_one_texture;
+    LightData lights;
 };
 
 }

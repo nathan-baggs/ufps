@@ -6,6 +6,7 @@
 #include "graphics/opengl.h"
 #include "graphics/persistent_buffer.h"
 #include "graphics/program.h"
+#include "resources/resource_loader.h"
 #include "utils/auto_release.h"
 
 namespace ufps
@@ -13,7 +14,7 @@ namespace ufps
 class Renderer
 {
   public:
-    Renderer();
+    Renderer(ResourceLoader &resource_loader);
 
     auto render(const Scene &scene) -> void;
 
@@ -21,6 +22,7 @@ class Renderer
     AutoRelease<::GLuint> dummy_vao_;
     CommandBuffer command_buffer_;
     MultiBuffer<PersistentBuffer> camera_buffer_;
+    MultiBuffer<PersistentBuffer> light_buffer_;
     MultiBuffer<PersistentBuffer> object_data_buffer_;
     Program program_;
 };

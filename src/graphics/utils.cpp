@@ -16,8 +16,11 @@ auto channels_to_format(int num_channels) -> ufps::TextureFormat
 {
     switch (num_channels)
     {
-        case 3: return ufps::TextureFormat::RGB;
-        case 4: return ufps::TextureFormat::RGBA;
+        using enum ufps::TextureFormat;
+
+        case 1: return RED;
+        case 3: return RGB;
+        case 4: return RGBA;
     }
 
     throw ufps::Exception("unsupported channel count: {}", num_channels);
@@ -33,6 +36,7 @@ auto load_texture(DataBufferView image_data) -> TextureData
     auto height = int{};
     auto num_channels = int{};
 
+    ::stbi_set_flip_vertically_on_load(true);
     auto raw_data = std::unique_ptr<::stbi_uc, void (*)(void *)>{
         ::stbi_load_from_memory(
             reinterpret_cast<const ::stbi_uc *>(image_data.data()),
