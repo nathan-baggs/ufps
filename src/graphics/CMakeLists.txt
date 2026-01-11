@@ -9,6 +9,7 @@ target_sources(ufpslib PUBLIC
   sampler.cpp
   shader.cpp
   texture.cpp
+  texture_manager.cpp
   utils.cpp
   window.cpp
 )
