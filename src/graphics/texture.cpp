@@ -54,7 +54,10 @@ Texture::Texture(const TextureData &texture, const std::string &name, const Samp
 
 Texture::~Texture()
 {
-    ::glMakeTextureHandleNonResidentARB(bindless_handle_);
+    if (handle_)
+    {
+        ::glMakeTextureHandleNonResidentARB(bindless_handle_);
+    }
 }
 
 auto Texture::native_handle() const -> ::GLuint64
