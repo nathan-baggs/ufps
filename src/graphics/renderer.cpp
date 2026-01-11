@@ -6,7 +6,6 @@
 
 #include "core/camera.h"
 #include "core/scene.h"
-#include "events/key.h"
 #include "graphics/command_buffer.h"
 #include "graphics/object_data.h"
 #include "graphics/opengl.h"
@@ -14,25 +13,19 @@
 #include "graphics/program.h"
 #include "graphics/shader.h"
 #include "graphics/utils.h"
+#include "resources/resource_loader.h"
 #include "utils/auto_release.h"
 
 using namespace std::literals;
 
 namespace
 {
-constexpr const char sample_vertex_shader[] = {
-#embed "../../assets/shaders/simple.vert" suffix(, )
-    0};
-
-constexpr const char sample_fragment_shader[] = {
-#embed "../../assets/shaders/simple.frag" suffix(, )
-    0};
-
-auto create_program() -> ufps::Program
+auto create_program(ufps::ResourceLoader &resource_loader) -> ufps::Program
 {
-    const auto sample_vert = ufps::Shader{sample_vertex_shader, ufps::ShaderType::VERTEX, "sample_vertex_shader"sv};
-    const auto sample_frag =
-        ufps::Shader{sample_fragment_shader, ufps::ShaderType::FRAGMENT, "sample_fragment_shader"sv};
+    const auto sample_vert = ufps::Shader{
+        resource_loader.load_string("shaders\\simple.vert"), ufps::ShaderType::VERTEX, "sample_vertex_shader"sv};
+    const auto sample_frag = ufps::Shader{
+        resource_loader.load_string("shaders\\simple.frag"), ufps::ShaderType::FRAGMENT, "sample_fragment_shader"sv};
     return ufps::Program{sample_vert, sample_frag, "sample_prog"sv};
 }
 
@@ -41,13 +34,13 @@ auto create_program() -> ufps::Program
 namespace ufps
 {
 
-Renderer::Renderer()
+Renderer::Renderer(ResourceLoader &resource_loader)
     : dummy_vao_{0u, [](auto e) { ::glDeleteVertexArrays(1u, &e); }}
     , command_buffer_{}
     , camera_buffer_{sizeof(CameraData), "camera_buffer"}
     , light_buffer_{sizeof(LightData), "light_buffer"}
     , object_data_buffer_{sizeof(ObjectData), "object_data_buffer"}
-    , program_{create_program()}
+    , program_{create_program(resource_loader)}
 {
     ::glGenVertexArrays(1, &dummy_vao_);
     ::glBindVertexArray(dummy_vao_);
