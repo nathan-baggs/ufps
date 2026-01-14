@@ -19,6 +19,8 @@ auto to_opengl(ufps::TextureFormat format, bool include_size) -> ::GLenum
         case RED: return include_size ? GL_R8 : GL_RED;
         case RGB: return include_size ? GL_RGB8 : GL_RGB;
         case RGBA: return include_size ? GL_RGBA8 : GL_RGBA;
+        case RGB16F: return GL_RGB16F;
+        case DEPTH24: return GL_DEPTH_COMPONENT24;
     }
     throw ufps::Exception("unknown texture format: {}", format);
 }
@@ -39,16 +41,19 @@ Texture::Texture(const TextureData &texture, const std::string &name, const Samp
     ::glCreateTextures(GL_TEXTURE_2D, 1, &handle_);
     ::glObjectLabel(GL_TEXTURE, handle_, name.length(), name.data());
     ::glTextureStorage2D(handle_, 1, to_opengl(texture.format, true), texture.width, texture.height);
-    ::glTextureSubImage2D(
-        handle_,
-        0,
-        0,
-        0,
-        texture.width,
-        texture.height,
-        to_opengl(texture.format, false),
-        GL_UNSIGNED_BYTE,
-        texture.data.data());
+    if (const auto &data = texture.data; data)
+    {
+        ::glTextureSubImage2D(
+            handle_,
+            0,
+            0,
+            0,
+            texture.width,
+            texture.height,
+            to_opengl(texture.format, false),
+            GL_UNSIGNED_BYTE,
+            data->data());
+    }
 
     bindless_handle_ = ::glGetTextureSamplerHandleARB(handle_, sampler.native_handle());
     ::glMakeTextureHandleResidentARB(bindless_handle_);
