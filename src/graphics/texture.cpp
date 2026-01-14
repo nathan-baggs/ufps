@@ -32,6 +32,8 @@ Texture::Texture(const TextureData &texture, const std::string &name, const Samp
     : handle_{0z, [](auto texture) { ::glDeleteTextures(1, &texture); }}
     , bindless_handle_{}
     , name_{name}
+    , width_{texture.width}
+    , height_{texture.height}
 
 {
     ::glCreateTextures(GL_TEXTURE_2D, 1, &handle_);
@@ -69,5 +71,15 @@ auto Texture::name() const -> std::string
 {
     return name_;
 };
+
+auto Texture::width() const -> std::uint32_t
+{
+    return width_;
+}
+
+auto Texture::height() const -> std::uint32_t
+{
+    return height_;
+}
 
 }
