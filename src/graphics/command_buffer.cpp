@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <format>
 #include <ranges>
+#include <span>
 #include <string>
 
 #include "core/scene.h"
@@ -61,6 +62,26 @@ auto CommandBuffer::build(const Scene &scene) -> std::uint32_t
     command_buffer_.write(command_view, 0u);
 
     return command.size();
+}
+
+auto CommandBuffer::build(const Entity &entity) -> std::uint32_t
+{
+    const auto cmd = IndirectCommand{
+        .count = entity.mesh_view.index_count,
+        .instance_count = 1u,
+        .first = entity.mesh_view.index_offset,
+        .base_vertex = 0u,
+        .base_instance = 0u,
+    };
+    const auto command_view = std::as_bytes(std::span{&cmd, 1});
+
+    log::debug("count {} first {}", cmd.count, cmd.first);
+
+    resize_gpu_buffer(std::vector<IndirectCommand>{cmd}, command_buffer_, "command_buffer");
+
+    command_buffer_.write(command_view, 0u);
+
+    return 1u;
 }
 
 auto CommandBuffer::native_handle() const -> ::GLuint
