@@ -9,6 +9,7 @@
 #include "graphics/opengl.h"
 #include "graphics/texture.h"
 #include "graphics/utils.h"
+#include "utils/error.h"
 #include "utils/log.h"
 
 namespace ufps
@@ -53,5 +54,23 @@ auto TextureManager::add(std::vector<Texture> textures) -> std::uint32_t
 auto TextureManager::native_handle() const -> ::GLuint
 {
     return gpu_buffer_.native_handle();
+}
+
+auto TextureManager::texture(std::uint32_t index) const -> const Texture *
+{
+    expect(index <= textures_.size(), "index {} out of range", index);
+    return std::addressof(textures_[index]);
+}
+
+auto TextureManager::textures(const std::vector<std::uint32_t> &indices) const -> std::vector<const Texture *>
+{
+    return indices | //
+           std::views::transform(
+               [this](auto i)
+               {
+                   expect(i <= textures_.size(), "index {} out of range", i);
+                   return std::addressof(textures_[i]);
+               }) | //
+           std::ranges::to<std::vector>();
 }
 }

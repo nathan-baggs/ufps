@@ -20,6 +20,10 @@ class TextureManager
 
     auto native_handle() const -> ::GLuint;
 
+    auto texture(std::uint32_t index) const -> const Texture *;
+
+    auto textures(const std::vector<std::uint32_t> &indices) const -> std::vector<const Texture *>;
+
   private:
     Buffer gpu_buffer_;
     std::vector<::GLuint64> cpu_buffer_;
