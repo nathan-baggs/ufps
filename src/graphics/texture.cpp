@@ -62,7 +62,12 @@ Texture::~Texture()
     }
 }
 
-auto Texture::native_handle() const -> ::GLuint64
+auto Texture::native_handle() const -> ::GLuint
+{
+    return handle_;
+}
+
+auto Texture::bindless_handle() const -> ::GLuint64
 {
     return bindless_handle_;
 }
