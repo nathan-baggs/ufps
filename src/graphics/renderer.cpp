@@ -8,9 +8,11 @@
 #include <string_view>
 
 #include "core/camera.h"
+#include "core/entity.h"
 #include "core/scene.h"
 #include "graphics/command_buffer.h"
 #include "graphics/frame_buffer.h"
+#include "graphics/mesh_manager.h"
 #include "graphics/object_data.h"
 #include "graphics/opengl.h"
 #include "graphics/point_light.h"
@@ -29,20 +31,27 @@ using namespace std::literals;
 
 namespace
 {
-auto create_program(ufps::ResourceLoader &resource_loader) -> ufps::Program
+auto create_program(
+    ufps::ResourceLoader &resource_loader,
+    std::string_view vertex_path,
+    std::string_view vertex_name,
+    std::string_view fragment_path,
+    std::string_view fragment_name,
+    std::string_view program_name) -> ufps::Program
 {
-    const auto sample_vert = ufps::Shader{
-        resource_loader.load_string("shaders\\simple.vert"), ufps::ShaderType::VERTEX, "sample_vertex_shader"sv};
-    const auto sample_frag = ufps::Shader{
-        resource_loader.load_string("shaders\\simple.frag"), ufps::ShaderType::FRAGMENT, "sample_fragment_shader"sv};
-    return ufps::Program{sample_vert, sample_frag, "sample_prog"sv};
+    const auto sample_vert =
+        ufps::Shader{resource_loader.load_string(vertex_path), ufps::ShaderType::VERTEX, vertex_name};
+    const auto sample_frag =
+        ufps::Shader{resource_loader.load_string(fragment_path), ufps::ShaderType::FRAGMENT, fragment_name};
+    return ufps::Program{sample_vert, sample_frag, program_name};
 }
 
 auto create_frame_buffer(
     std::uint32_t width,
     std::uint32_t height,
     ufps::Sampler &sampler,
-    ufps::TextureManager &texture_manager) -> ufps::FrameBuffer
+    ufps::TextureManager &texture_manager,
+    std::uint32_t &fb_texture_index) -> ufps::FrameBuffer
 {
     const auto fb_texture_data = ufps::TextureData{
         .width = width,
@@ -51,7 +60,7 @@ auto create_frame_buffer(
         .data = std::nullopt,
     };
     auto fb_texture = ufps::Texture{fb_texture_data, "fb_texture", sampler};
-    const auto fb_texture_index = texture_manager.add(std::move(fb_texture));
+    fb_texture_index = texture_manager.add(std::move(fb_texture));
 
     const auto depth_texture_data = ufps::TextureData{
         .width = width,
@@ -68,6 +77,18 @@ auto create_frame_buffer(
         "main_frame_buffer"};
 }
 
+auto sprite() -> ufps::MeshData
+{
+    const ufps::Vector3 positions[] = {
+        {-1.0f, 1.0f, 0.0f}, {-1.0f, -1.0f, 0.0f}, {1.0f, -1.0f, 0.0f}, {1.0f, 1.0f, 0.0f}};
+
+    const ufps::UV uvs[] = {{0.0f, 1.0f}, {0.0f, 0.0f}, {1.0f, 0.0f}, {1.0f, 1.0f}};
+
+    auto indices = std::vector<std::uint32_t>{0, 1, 2, 0, 2, 3};
+
+    return {.vertices = vertices(positions, positions, positions, positions, uvs), .indices = std::move(indices)};
+}
+
 }
 
 namespace ufps
@@ -77,26 +98,47 @@ Renderer::Renderer(
     std::uint32_t width,
     std::uint32_t height,
     ResourceLoader &resource_loader,
-    TextureManager &texture_manager)
+    TextureManager &texture_manager,
+    MeshManager &mesh_manager)
     : dummy_vao_{0u, [](auto e) { ::glDeleteVertexArrays(1u, &e); }}
     , command_buffer_{}
+    , post_processing_command_buffer_{}
+    , post_process_sprite_{.name = "post_process_sprite", .mesh_view = mesh_manager.load(sprite()), .transform = {}, .material_key = {0u}}
     , camera_buffer_{sizeof(CameraData), "camera_buffer"}
     , light_buffer_{sizeof(LightData), "light_buffer"}
     , object_data_buffer_{sizeof(ObjectData), "object_data_buffer"}
-    , program_{create_program(resource_loader)}
+    , gbuffer_program_{create_program(
+          resource_loader,
+          "shaders\\simple.vert",
+          "simple_vertex_shader",
+          "shaders\\simple.frag",
+          "simple_fragment_shader",
+          " gbuffer_program")}
+    , light_pass_program_{create_program(
+          resource_loader,
+          "shaders\\light_pass.vert",
+          "light_pass_vertex_shader",
+          "shaders\\light_pass.frag",
+          "light_pass_fragment_shader",
+          "light_pass_program")}
     , fb_sampler_{FilterType::LINEAR, FilterType::LINEAR, "fb_sampler"}
-    , fb_{create_frame_buffer(width, height, fb_sampler_, texture_manager)}
+    , fb_texture_index_{}
+    , fb_{create_frame_buffer(width, height, fb_sampler_, texture_manager, fb_texture_index_)}
+    , light_pass_texture_index_{}
+    , light_pass_fb_{create_frame_buffer(width, height, fb_sampler_, texture_manager, light_pass_texture_index_)}
 {
+    post_processing_command_buffer_.build(post_process_sprite_);
+
     ::glGenVertexArrays(1, &dummy_vao_);
     ::glBindVertexArray(dummy_vao_);
-
-    program_.use();
 }
 
 auto Renderer::render(const Scene &scene) -> void
 {
     fb_.bind();
     ::glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    gbuffer_program_.use();
 
     camera_buffer_.write(scene.camera.data_view(), 0zu);
 
@@ -144,25 +186,38 @@ auto Renderer::render(const Scene &scene) -> void
         command_count,
         0);
 
+    light_pass_fb_.bind();
+    light_pass_program_.use();
+    ::glClear(GL_COLOR_BUFFER_BIT);
+    ::glProgramUniform1ui(light_pass_program_.native_handle(), 0u, 1u);
+    ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, vertex_buffer_handle);
+    ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, scene.texture_manager.native_handle());
+    ::glMultiDrawElementsIndirect(
+        GL_TRIANGLES,
+        GL_UNSIGNED_INT,
+        reinterpret_cast<const void *>(post_processing_command_buffer_.offset_bytes()),
+        1u,
+        0);
+
     command_buffer_.advance();
     camera_buffer_.advance();
     light_buffer_.advance();
     object_data_buffer_.advance();
     scene.material_manager.advance();
 
-    fb_.unbind();
+    light_pass_fb_.unbind();
 
     ::glBlitNamedFramebuffer(
-        fb_.native_handle(),
+        light_pass_fb_.native_handle(),
         0u,
         0u,
         0u,
-        fb_.width(),
-        fb_.height(),
+        light_pass_fb_.width(),
+        light_pass_fb_.height(),
         0u,
         0u,
-        fb_.width(),
-        fb_.height(),
+        light_pass_fb_.width(),
+        light_pass_fb_.height(),
         GL_COLOR_BUFFER_BIT,
         GL_NEAREST);
 }
