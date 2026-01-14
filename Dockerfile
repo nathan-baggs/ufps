@@ -1,9 +1,6 @@
 FROM ubuntu:24.04
-
 WORKDIR /mnt
-
 ENV MINGW=/mingw
-
 ARG PKG_CONFIG_VERSION=0.29.2
 ARG CMAKE_VERSION=4.1.2
 ARG BINUTILS_VERSION=2.45
@@ -11,9 +8,9 @@ ARG MINGW_VERSION=13.0.0
 ARG GCC_VERSION=15.2.0
 ARG NASM_VERSION=3.01
 ARG NVCC_VERSION=13.0.2
+ARG LLVM_VERSION=21.1.0
 
 RUN ln -sf /bin/bash /bin/sh
-
 RUN set -ex \
     \
     && apt-get update \
@@ -51,6 +48,7 @@ RUN set -ex \
         git \
         jq \
         curl \
+        python3 \
     \
     && wget -q https://pkg-config.freedesktop.org/releases/pkg-config-${PKG_CONFIG_VERSION}.tar.gz -O - | tar -xz \
     && wget -q https://github.com/Kitware/CMake/releases/download/v${CMAKE_VERSION}/cmake-${CMAKE_VERSION}.tar.gz -O - | tar -xz \
@@ -58,6 +56,7 @@ RUN set -ex \
     && wget -q https://sourceforge.net/projects/mingw-w64/files/mingw-w64/mingw-w64-release/mingw-w64-v${MINGW_VERSION}.tar.bz2 -O - | tar -xj \
     && wget -q https://ftp.gnu.org/gnu/gcc/gcc-${GCC_VERSION}/gcc-${GCC_VERSION}.tar.xz -O - | tar -xJ \
     && wget -q https://www.nasm.us/pub/nasm/releasebuilds/${NASM_VERSION}/nasm-${NASM_VERSION}.tar.xz -O - | tar -xJ \
+    && wget -q https://github.com/llvm/llvm-project/releases/download/llvmorg-${LLVM_VERSION}/llvm-project-${LLVM_VERSION}.src.tar.xz -O - | tar -xJ \
     \
     && mkdir -p ${MINGW}/include ${MINGW}/lib/pkgconfig \
     && chmod 0777 -R /mnt ${MINGW} \
@@ -80,6 +79,17 @@ RUN set -ex \
     && make -j`nproc` \
     && make install \
     && cd .. \
+    \
+    && cd llvm-project-${LLVM_VERSION}.src \
+    && mkdir build \
+    && cd build \
+    && cmake -G Ninja ../llvm \
+        -DCMAKE_BUILD_TYPE=Release \
+        -DCMAKE_INSTALL_PREFIX=/usr/local \
+        -DLLVM_ENABLE_PROJECTS="lld" \
+    && ninja lld \
+    && ninja install \
+    && cd ../.. \
     \
     && cd binutils-${BINUTILS_VERSION} \
     && ./configure \
@@ -167,6 +177,7 @@ RUN set -ex \
     && rm -r mingw-w64 mingw-w64-v${MINGW_VERSION} \
     && rm -r gcc gcc-${GCC_VERSION} \
     && rm -r nasm-${NASM_VERSION} \
+    && rm -r llvm-project-${LLVM_VERSION}.src \
     \
     && apt-get remove --purge -y file gcc g++ zlib1g-dev libssl-dev libgmp-dev libmpfr-dev libmpc-dev libisl-dev \
     \
@@ -183,4 +194,3 @@ RUN set -ex \
     && apt-get remove --purge -y gnupg \
     && apt-get autoremove --purge -y \
     && apt-get clean
-
