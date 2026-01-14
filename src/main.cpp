@@ -188,7 +188,7 @@ int main()
     const auto tex_index = texture_manager.add(std::move(textures));
     ufps::log::debug("tex_index: {}", tex_index);
 
-    auto renderer = ufps::Renderer{*resource_loader};
+    auto renderer = ufps::Renderer{window.render_width(), window.render_height(), *resource_loader, texture_manager};
     auto debug_ui = ufps::DebugUI{window};
     auto debug_mode = false;
 
@@ -239,8 +239,6 @@ int main()
 
     while (running)
     {
-        ::glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
         auto event = window.pump_event();
         while (event && running)
         {
