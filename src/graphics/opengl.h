@@ -33,6 +33,7 @@
     DO(::PFNGLUNIFORM3FVPROC, glUniform3fv)                                                                            \
     DO(::PFNGLUNIFORM1IPROC, glUniform1i)                                                                              \
     DO(::PFNGLUNIFORM1FPROC, glUniform1f)                                                                              \
+    DO(::PFNGLPROGRAMUNIFORM1UIPROC, glProgramUniform1ui)                                                              \
     DO(::PFNGLCREATEBUFFERSPROC, glCreateBuffers)                                                                      \
     DO(::PFNGLNAMEDBUFFERSTORAGEPROC, glNamedBufferStorage)                                                            \
     DO(::PFNGLCREATEVERTEXARRAYSPROC, glCreateVertexArrays)                                                            \
