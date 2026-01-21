@@ -27,9 +27,9 @@ layout(location = 0) out vec4 out_colour;
 
 void main()
 {
-    //vec3 colour = texture(textures[tex_index], in_uv).rgb;
+    vec3 colour = texture(textures[tex_index], in_uv).rgb;
 
-    out_colour = vec4(1.0, 0.0, 0.0, 1.0);
+    out_colour = vec4(colour, 1.0);
 }
 
 
