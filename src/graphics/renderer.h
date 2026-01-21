@@ -18,6 +18,15 @@
 
 namespace ufps
 {
+
+struct RenderTarget
+{
+    FrameBuffer fb;
+    std::uint32_t colour_attachment_count;
+    std::uint32_t first_colour_attachment_index;
+    std::uint32_t depth_attachment_index;
+};
+
 class Renderer
 {
   public:
@@ -41,9 +50,7 @@ class Renderer
     Program gbuffer_program_;
     Program light_pass_program_;
     Sampler fb_sampler_;
-    std::uint32_t fb_texture_index_;
-    FrameBuffer fb_;
-    std::uint32_t light_pass_texture_index_;
-    FrameBuffer light_pass_fb_;
+    RenderTarget gbuffer_rt_;
+    RenderTarget light_pass_rt_;
 };
 }

@@ -1,6 +1,5 @@
 #include "graphics/renderer.h"
 
-#include <GL/gl.h>
 #include <cstdint>
 #include <optional>
 #include <ranges>
@@ -46,22 +45,32 @@ auto create_program(
     return ufps::Program{sample_vert, sample_frag, program_name};
 }
 
-auto create_frame_buffer(
+auto create_render_target(
+    std::uint32_t colour_attachment_count,
     std::uint32_t width,
     std::uint32_t height,
     ufps::Sampler &sampler,
     ufps::TextureManager &texture_manager,
-    std::uint32_t &fb_texture_index,
-    std::string_view name) -> ufps::FrameBuffer
+    std::string_view name) -> ufps::RenderTarget
 {
-    const auto fb_texture_data = ufps::TextureData{
+    const auto colour_attachment_texture_data = ufps::TextureData{
         .width = width,
         .height = height,
         .format = ufps::TextureFormat::RGB16F,
         .data = std::nullopt,
     };
-    auto fb_texture = ufps::Texture{fb_texture_data, std::format("{}_fb_texture", name), sampler};
-    fb_texture_index = texture_manager.add(std::move(fb_texture));
+
+    auto colour_attachements =
+        std::views::iota(0u, colour_attachment_count) |
+        std::views::transform(
+            [&](auto index)
+            {
+                return ufps::Texture{
+                    colour_attachment_texture_data, std::format("{}_{}_texture", name, index), sampler};
+            }) |
+        std::ranges::to<std::vector>();
+
+    const auto first_index = texture_manager.add(std::move(colour_attachements));
 
     const auto depth_texture_data = ufps::TextureData{
         .width = width,
@@ -72,10 +81,18 @@ auto create_frame_buffer(
     auto depth_texture = ufps::Texture{depth_texture_data, std::format("{}_depth_texture", name), sampler};
     const auto depth_texture_index = texture_manager.add(std::move(depth_texture));
 
-    return {
-        texture_manager.textures({fb_texture_index}),
+    auto fb = ufps::FrameBuffer{
+        texture_manager.textures(
+            std::views::iota(first_index, first_index + colour_attachment_count) | std::ranges::to<std::vector>()),
         texture_manager.texture(depth_texture_index),
         std::format("{}_frame_buffer", name)};
+
+    return {
+        .fb = std::move(fb),
+        .colour_attachment_count = colour_attachment_count,
+        .first_colour_attachment_index = first_index,
+        .depth_attachment_index = depth_texture_index,
+    };
 }
 
 auto sprite() -> ufps::MeshData
@@ -89,7 +106,6 @@ auto sprite() -> ufps::MeshData
 
     return {.vertices = vertices(positions, positions, positions, positions, uvs), .indices = std::move(indices)};
 }
-
 }
 
 namespace ufps
@@ -110,11 +126,11 @@ Renderer::Renderer(
     , object_data_buffer_{sizeof(ObjectData), "object_data_buffer"}
     , gbuffer_program_{create_program(
           resource_loader,
-          "shaders\\simple.vert",
-          "simple_vertex_shader",
-          "shaders\\simple.frag",
-          "simple_fragment_shader",
-          " gbuffer_program")}
+          "shaders\\gbuffer.vert",
+          "gbuffer_vertex_shader",
+          "shaders\\gbuffer.frag",
+          "gbuffer_fragment_shader",
+          "gbuffer_program")}
     , light_pass_program_{create_program(
           resource_loader,
           "shaders\\light_pass.vert",
@@ -123,11 +139,8 @@ Renderer::Renderer(
           "light_pass_fragment_shader",
           "light_pass_program")}
     , fb_sampler_{FilterType::LINEAR, FilterType::LINEAR, "fb_sampler"}
-    , fb_texture_index_{}
-    , fb_{create_frame_buffer(width, height, fb_sampler_, texture_manager, fb_texture_index_, "fb")}
-    , light_pass_texture_index_{}
-    , light_pass_fb_{
-          create_frame_buffer(width, height, fb_sampler_, texture_manager, light_pass_texture_index_, "light_pass")}
+    , gbuffer_rt_{create_render_target(4u, width, height, fb_sampler_, texture_manager, "gbuffer")}
+    , light_pass_rt_{create_render_target(1u, width, height, fb_sampler_, texture_manager, "light_pass")}
 {
     post_processing_command_buffer_.build(post_process_sprite_);
 
@@ -137,7 +150,7 @@ Renderer::Renderer(
 
 auto Renderer::render(const Scene &scene) -> void
 {
-    fb_.bind();
+    gbuffer_rt_.fb.bind();
     ::glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     gbuffer_program_.use();
@@ -176,10 +189,7 @@ auto Renderer::render(const Scene &scene) -> void
     scene.material_manager.sync();
     ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, scene.material_manager.native_handle());
 
-    light_buffer_.write(std::as_bytes(std::span<const LightData, 1zu>{&scene.lights, 1zu}), 0zu);
-    ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 4, light_buffer_.native_handle());
-
-    ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 5, scene.texture_manager.native_handle());
+    ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 4, scene.texture_manager.native_handle());
 
     ::glMultiDrawElementsIndirect(
         GL_TRIANGLES,
@@ -188,12 +198,24 @@ auto Renderer::render(const Scene &scene) -> void
         command_count,
         0);
 
-    light_pass_fb_.bind();
+    light_buffer_.write(std::as_bytes(std::span<const LightData, 1zu>{&scene.lights, 1zu}), 0zu);
+
+    light_pass_rt_.fb.bind();
     ::glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     light_pass_program_.use();
-    ::glProgramUniform1ui(light_pass_program_.native_handle(), 0u, fb_texture_index_);
+    ::glProgramUniform1ui(light_pass_program_.native_handle(), 0u, gbuffer_rt_.first_colour_attachment_index + 0u);
+    ::glProgramUniform1ui(light_pass_program_.native_handle(), 1u, gbuffer_rt_.first_colour_attachment_index + 1u);
+    ::glProgramUniform1ui(light_pass_program_.native_handle(), 2u, gbuffer_rt_.first_colour_attachment_index + 2u);
+    ::glProgramUniform1ui(light_pass_program_.native_handle(), 3u, gbuffer_rt_.first_colour_attachment_index + 3u);
     ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, vertex_buffer_handle);
     ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, scene.texture_manager.native_handle());
+    ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, light_buffer_.native_handle());
+    ::glBindBufferRange(
+        GL_SHADER_STORAGE_BUFFER,
+        3,
+        camera_buffer_.native_handle(),
+        camera_buffer_.frame_offset_bytes(),
+        sizeof(CameraData));
     ::glBindBuffer(GL_DRAW_INDIRECT_BUFFER, post_processing_command_buffer_.native_handle());
     ::glMultiDrawElementsIndirect(
         GL_TRIANGLES,
@@ -208,19 +230,19 @@ auto Renderer::render(const Scene &scene) -> void
     object_data_buffer_.advance();
     scene.material_manager.advance();
 
-    light_pass_fb_.unbind();
+    light_pass_rt_.fb.unbind();
 
     ::glBlitNamedFramebuffer(
-        light_pass_fb_.native_handle(),
+        light_pass_rt_.fb.native_handle(),
         0u,
         0u,
         0u,
-        light_pass_fb_.width(),
-        light_pass_fb_.height(),
+        light_pass_rt_.fb.width(),
+        light_pass_rt_.fb.height(),
         0u,
         0u,
-        light_pass_fb_.width(),
-        light_pass_fb_.height(),
+        light_pass_rt_.fb.width(),
+        light_pass_rt_.fb.height(),
         GL_COLOR_BUFFER_BIT,
         GL_NEAREST);
 }
