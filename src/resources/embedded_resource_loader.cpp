@@ -19,6 +19,14 @@ constexpr const std::uint8_t sample_fragment_shader[] = {
 #embed "../../assets/shaders/simple.frag"
 };
 
+constexpr const std::uint8_t gbuffer_vertex_shader[] = {
+#embed "../../assets/shaders/gbuffer.vert"
+};
+
+constexpr const std::uint8_t gbuffer_fragment_shader[] = {
+#embed "../../assets/shaders/gbuffer.frag"
+};
+
 constexpr const std::uint8_t light_pass_vertex_shader[] = {
 #embed "../../assets/shaders/light_pass.vert"
 };
@@ -57,6 +65,8 @@ EmbeddedResourceLoader::EmbeddedResourceLoader()
     lookup_ = {
         {"shaders\\simple.vert", sample_vertex_shader},
         {"shaders\\simple.frag", sample_fragment_shader},
+        {"shaders\\gbuffer.vert", gbuffer_vertex_shader},
+        {"shaders\\gbuffer.frag", gbuffer_fragment_shader},
         {"shaders\\light_pass.vert", light_pass_vertex_shader},
         {"shaders\\light_pass.frag", light_pass_fragment_shader},
         {"textures\\diamond_floor_albedo.png", diamond_floor_albedo},
