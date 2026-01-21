@@ -9,6 +9,7 @@
 #include "graphics/opengl.h"
 #include "graphics/texture.h"
 #include "graphics/utils.h"
+#include "utils/error.h"
 #include "utils/log.h"
 
 namespace ufps
@@ -26,7 +27,7 @@ auto TextureManager::add(Texture texture) -> std::uint32_t
     const auto new_index = textures_.size();
 
     auto &new_tex = textures_.emplace_back(std::move(texture));
-    cpu_buffer_.push_back(new_tex.native_handle());
+    cpu_buffer_.push_back(new_tex.bindless_handle());
 
     resize_gpu_buffer(cpu_buffer_, gpu_buffer_, "bindless_textures");
 
@@ -39,19 +40,9 @@ auto TextureManager::add(std::vector<Texture> textures) -> std::uint32_t
 {
     const auto new_index = textures_.size();
 
-    for (const auto &t : textures)
-    {
-        log::debug("{}", t.native_handle());
-    }
-
     textures_.append_range(std::views::as_rvalue(textures));
     cpu_buffer_ =
-        textures_ | std::views::transform([](auto &e) { return e.native_handle(); }) | std::ranges::to<std::vector>();
-
-    for (const auto &t : cpu_buffer_)
-    {
-        log::debug("{}", t);
-    }
+        textures_ | std::views::transform([](auto &e) { return e.bindless_handle(); }) | std::ranges::to<std::vector>();
 
     resize_gpu_buffer(cpu_buffer_, gpu_buffer_, "bindless_textures");
 
@@ -63,5 +54,23 @@ auto TextureManager::add(std::vector<Texture> textures) -> std::uint32_t
 auto TextureManager::native_handle() const -> ::GLuint
 {
     return gpu_buffer_.native_handle();
+}
+
+auto TextureManager::texture(std::uint32_t index) const -> const Texture *
+{
+    expect(index <= textures_.size(), "index {} out of range", index);
+    return std::addressof(textures_[index]);
+}
+
+auto TextureManager::textures(const std::vector<std::uint32_t> &indices) const -> std::vector<const Texture *>
+{
+    return indices | //
+           std::views::transform(
+               [this](auto i)
+               {
+                   expect(i <= textures_.size(), "index {} out of range", i);
+                   return std::addressof(textures_[i]);
+               }) | //
+           std::ranges::to<std::vector>();
 }
 }

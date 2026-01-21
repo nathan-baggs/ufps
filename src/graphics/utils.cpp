@@ -54,6 +54,6 @@ auto load_texture(DataBufferView image_data) -> TextureData
         .width = static_cast<std::uint32_t>(width),
         .height = static_cast<std::uint32_t>(height),
         .format = channels_to_format(num_channels),
-        .data = {ptr, ptr + width * height * num_channels}};
+        .data = {{ptr, ptr + width * height * num_channels}}};
 }
 }

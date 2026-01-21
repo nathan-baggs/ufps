@@ -37,15 +37,6 @@ using namespace std::literals;
 namespace
 {
 
-template <class... Args>
-auto vertices(Args &&...args) -> std::vector<ufps::VertexData>
-{
-    return std::views::zip_transform(
-               []<class... A>(A &&...a) { return ufps::VertexData{std::forward<A>(a)...}; },
-               std::forward<Args>(args)...) |
-           std::ranges::to<std::vector>();
-}
-
 auto cube() -> ufps::MeshData
 {
     const ufps::Vector3 positions[] = {
@@ -188,7 +179,8 @@ int main()
     const auto tex_index = texture_manager.add(std::move(textures));
     ufps::log::debug("tex_index: {}", tex_index);
 
-    auto renderer = ufps::Renderer{*resource_loader};
+    auto renderer =
+        ufps::Renderer{window.render_width(), window.render_height(), *resource_loader, texture_manager, mesh_manager};
     auto debug_ui = ufps::DebugUI{window};
     auto debug_mode = false;
 
@@ -239,8 +231,6 @@ int main()
 
     while (running)
     {
-        ::glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
         auto event = window.pump_event();
         while (event && running)
         {

@@ -19,6 +19,8 @@ auto to_opengl(ufps::TextureFormat format, bool include_size) -> ::GLenum
         case RED: return include_size ? GL_R8 : GL_RED;
         case RGB: return include_size ? GL_RGB8 : GL_RGB;
         case RGBA: return include_size ? GL_RGBA8 : GL_RGBA;
+        case RGB16F: return GL_RGB16F;
+        case DEPTH24: return GL_DEPTH_COMPONENT24;
     }
     throw ufps::Exception("unknown texture format: {}", format);
 }
@@ -32,21 +34,26 @@ Texture::Texture(const TextureData &texture, const std::string &name, const Samp
     : handle_{0z, [](auto texture) { ::glDeleteTextures(1, &texture); }}
     , bindless_handle_{}
     , name_{name}
+    , width_{texture.width}
+    , height_{texture.height}
 
 {
     ::glCreateTextures(GL_TEXTURE_2D, 1, &handle_);
     ::glObjectLabel(GL_TEXTURE, handle_, name.length(), name.data());
     ::glTextureStorage2D(handle_, 1, to_opengl(texture.format, true), texture.width, texture.height);
-    ::glTextureSubImage2D(
-        handle_,
-        0,
-        0,
-        0,
-        texture.width,
-        texture.height,
-        to_opengl(texture.format, false),
-        GL_UNSIGNED_BYTE,
-        texture.data.data());
+    if (const auto &data = texture.data; data)
+    {
+        ::glTextureSubImage2D(
+            handle_,
+            0,
+            0,
+            0,
+            texture.width,
+            texture.height,
+            to_opengl(texture.format, false),
+            GL_UNSIGNED_BYTE,
+            data->data());
+    }
 
     bindless_handle_ = ::glGetTextureSamplerHandleARB(handle_, sampler.native_handle());
     ::glMakeTextureHandleResidentARB(bindless_handle_);
@@ -60,7 +67,12 @@ Texture::~Texture()
     }
 }
 
-auto Texture::native_handle() const -> ::GLuint64
+auto Texture::native_handle() const -> ::GLuint
+{
+    return handle_;
+}
+
+auto Texture::bindless_handle() const -> ::GLuint64
 {
     return bindless_handle_;
 }
@@ -69,5 +81,15 @@ auto Texture::name() const -> std::string
 {
     return name_;
 };
+
+auto Texture::width() const -> std::uint32_t
+{
+    return width_;
+}
+
+auto Texture::height() const -> std::uint32_t
+{
+    return height_;
+}
 
 }

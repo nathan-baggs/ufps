@@ -14,6 +14,13 @@ namespace ufps
 class Transform
 {
   public:
+    constexpr Transform()
+        : position{}
+        , scale{1.0f}
+        , rotation{}
+    {
+    }
+
     constexpr Transform(const Vector3 &position, const Vector3 &scale, const Quaternion &rotation)
         : position(position)
         , scale(scale)

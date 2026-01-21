@@ -1,11 +1,13 @@
 #pragma once
 
 #include <cstddef>
+#include <ranges>
 #include <string_view>
 #include <vector>
 
 #include "graphics/opengl.h"
 #include "graphics/texture_data.h"
+#include "graphics/vertex_data.h"
 #include "utils/data_buffer.h"
 #include "utils/log.h"
 
@@ -15,6 +17,15 @@ template <class T>
 concept IsBuffer = requires(T t, DataBufferView data, std::size_t offset) {
     { t.write(data, offset) };
 };
+
+template <class... Args>
+auto vertices(Args &&...args) -> std::vector<ufps::VertexData>
+{
+    return std::views::zip_transform(
+               []<class... A>(A &&...a) { return ufps::VertexData{std::forward<A>(a)...}; },
+               std::forward<Args>(args)...) |
+           std::ranges::to<std::vector>();
+}
 
 template <class T, IsBuffer Buffer>
 auto resize_gpu_buffer(const std::vector<T> &cpu_buffer, Buffer &gpu_buffer, std::string_view name)
