@@ -46,7 +46,7 @@ auto CommandBuffer::build(const Scene &scene) -> std::uint32_t
                                      .count = e.mesh_view.index_count,
                                      .instance_count = 1u,
                                      .first = e.mesh_view.index_offset,
-                                     .base_vertex = base,
+                                     .base_vertex = static_cast<std::int32_t>(e.mesh_view.vertex_offset),
                                      .base_instance = 0u,
                                  };
                                  base += e.mesh_view.vertex_offset;
