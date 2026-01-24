@@ -23,3 +23,5 @@ Testing/*
 sysroot
 .clangd
 imgui.ini
+.gdbinit
+gdb_printers
