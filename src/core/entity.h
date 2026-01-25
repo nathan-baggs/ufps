@@ -1,8 +1,8 @@
 #pragma once
 
+#include <cstdint>
 #include <string>
 
-#include "graphics/material_manager.h"
 #include "graphics/mesh_view.h"
 #include "maths/transform.h"
 
@@ -14,7 +14,7 @@ struct Entity
     std::string name;
     MeshView mesh_view;
     Transform transform;
-    MaterialKey material_key;
+    std::uint32_t material_index;
 };
 
 }

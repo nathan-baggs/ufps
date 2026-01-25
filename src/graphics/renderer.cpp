@@ -120,7 +120,7 @@ Renderer::Renderer(
     : dummy_vao_{0u, [](auto e) { ::glDeleteVertexArrays(1u, &e); }}
     , command_buffer_{"gbuffer_command_buffer"}
     , post_processing_command_buffer_{"post_processing_command_buffer"}
-    , post_process_sprite_{.name = "post_process_sprite", .mesh_view = mesh_manager.load(sprite()), .transform = {}, .material_key = {0u}}
+    , post_process_sprite_{.name = "post_process_sprite", .mesh_view = mesh_manager.load(sprite()), .transform = {}, .material_index = 0u}
     , camera_buffer_{sizeof(CameraData), "camera_buffer"}
     , light_buffer_{sizeof(LightData), "light_buffer"}
     , object_data_buffer_{sizeof(ObjectData), "object_data_buffer"}
@@ -172,12 +172,11 @@ auto Renderer::render(const Scene &scene) -> void
 
     const auto object_data = scene.entities |
                              std::views::transform(
-                                 [&scene](const auto &e)
+                                 [](const auto &e)
                                  {
-                                     const auto index = scene.material_manager.index(e.material_key);
                                      return ObjectData{
                                          .model = e.transform,
-                                         .material_id_index = index,
+                                         .material_id_index = e.material_index,
                                          .padding = {},
                                      };
                                  }) |
@@ -186,7 +185,6 @@ auto Renderer::render(const Scene &scene) -> void
     object_data_buffer_.write(std::as_bytes(std::span{object_data.data(), object_data.size()}), 0zu);
     ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, object_data_buffer_.native_handle());
 
-    scene.material_manager.sync();
     ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, scene.material_manager.native_handle());
 
     ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 4, scene.texture_manager.native_handle());
@@ -228,7 +226,6 @@ auto Renderer::render(const Scene &scene) -> void
     camera_buffer_.advance();
     light_buffer_.advance();
     object_data_buffer_.advance();
-    scene.material_manager.advance();
 
     light_pass_rt_.fb.unbind();
 

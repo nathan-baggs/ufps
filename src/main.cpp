@@ -184,9 +184,9 @@ int main()
     auto debug_ui = ufps::DebugUI{window};
     auto debug_mode = false;
 
-    const auto material_key_red = material_manager.add(tex_index, tex_index + 1u, tex_index + 2u);
-    const auto material_key_blue = material_manager.add(tex_index, tex_index + 1u, tex_index + 2u);
-    const auto material_key_green = material_manager.add(tex_index, tex_index + 1u, tex_index + 2u);
+    const auto material_index_red = material_manager.add(tex_index, tex_index + 1u, tex_index + 2u);
+    const auto material_index_blue = material_manager.add(tex_index, tex_index + 1u, tex_index + 2u);
+    const auto material_index_green = material_manager.add(tex_index, tex_index + 1u, tex_index + 2u);
 
     auto scene = ufps::Scene{
         .entities = {},
@@ -216,14 +216,14 @@ int main()
         .name = "cube1",
         .mesh_view = mesh_manager.load(cube()),
         .transform = {{10.0f, 0.0f, -10.0f}, {5.0f}, {}},
-        .material_key = material_key_red,
+        .material_index = material_index_red,
     });
 
     scene.entities.push_back({
         .name = "cube2",
         .mesh_view = mesh_manager.load(cube()),
         .transform = {{-10.0f, 0.0f, -10.0f}, {5.0f}, {}},
-        .material_key = material_key_green,
+        .material_index = material_index_green,
     });
 
     auto key_state = std::unordered_map<ufps::Key, bool>{
