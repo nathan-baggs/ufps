@@ -33,7 +33,6 @@ auto screen_ray(const ufps::MouseButtonEvent &evt, const ufps::Window &window, c
     auto ray_eye = inv_proj * ray_clip;
     ray_eye.z = -1.0f;
     ray_eye.w = 0.0f;
-    // ray_eye = ufps::Vector4{ray_eye.x, ray_eye.y, -1.0f, 0.0f};
 
     const auto inv_view = ufps::Matrix4::invert(camera.data().view);
     const auto dir_ws = ufps::Vector3::normalise(ufps::Vector3{inv_view * ray_eye});
@@ -57,6 +56,7 @@ DebugUI::DebugUI(const Window &window)
 
     io.ConfigFlags |= ::ImGuiConfigFlags_NavEnableKeyboard;
     io.ConfigFlags |= ::ImGuiConfigFlags_NavEnableGamepad;
+    io.ConfigFlags |= ::ImGuiConfigFlags_DockingEnable;
     ::ShowCursor(true);
     io.MouseDrawCursor = io.WantCaptureMouse;
 
@@ -85,6 +85,10 @@ auto DebugUI::render(Scene &scene) -> void
     ::ImGuizmo::BeginFrame();
     ::ImGuizmo::Enable(true);
     ::ImGuizmo::SetRect(0, 0, io.DisplaySize.x, io.DisplaySize.y);
+
+    ::ImGui::DockSpaceOverViewport(0, ::ImGui::GetMainViewport(), ::ImGuiDockNodeFlags_PassthruCentralNode);
+
+    ::ImGui::Begin("scene");
 
     ::ImGui::LabelText("FPS", "%0.1f", io.Framerate);
 
@@ -170,6 +174,7 @@ auto DebugUI::render(Scene &scene) -> void
         }
     }
 
+    ::ImGui::End();
     ::ImGui::Begin("log");
 
     ::ImGui::BeginChild("log output");
