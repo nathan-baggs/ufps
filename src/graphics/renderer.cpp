@@ -118,8 +118,8 @@ Renderer::Renderer(
     TextureManager &texture_manager,
     MeshManager &mesh_manager)
     : dummy_vao_{0u, [](auto e) { ::glDeleteVertexArrays(1u, &e); }}
-    , command_buffer_{}
-    , post_processing_command_buffer_{}
+    , command_buffer_{"gbuffer_command_buffer"}
+    , post_processing_command_buffer_{"post_processing_command_buffer"}
     , post_process_sprite_{.name = "post_process_sprite", .mesh_view = mesh_manager.load(sprite()), .transform = {}, .material_key = {0u}}
     , camera_buffer_{sizeof(CameraData), "camera_buffer"}
     , light_buffer_{sizeof(LightData), "light_buffer"}

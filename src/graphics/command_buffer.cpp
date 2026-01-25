@@ -30,8 +30,8 @@ struct IndirectCommand
 namespace ufps
 {
 
-CommandBuffer::CommandBuffer()
-    : command_buffer_{1u, "command_buffer"}
+CommandBuffer::CommandBuffer(std::string_view name)
+    : command_buffer_{1u, name}
 {
 }
 
