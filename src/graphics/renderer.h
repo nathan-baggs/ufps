@@ -5,7 +5,6 @@
 #include "core/scene.h"
 #include "graphics/command_buffer.h"
 #include "graphics/frame_buffer.h"
-#include "graphics/material_manager.h"
 #include "graphics/mesh_manager.h"
 #include "graphics/multi_buffer.h"
 #include "graphics/opengl.h"
@@ -13,6 +12,7 @@
 #include "graphics/program.h"
 #include "graphics/sampler.h"
 #include "graphics/texture_manager.h"
+#include "graphics/window.h"
 #include "resources/resource_loader.h"
 #include "utils/auto_release.h"
 
@@ -31,15 +31,18 @@ class Renderer
 {
   public:
     Renderer(
-        std::uint32_t width,
-        std::uint32_t height,
+        const Window &window,
         ResourceLoader &resource_loader,
         TextureManager &texture_manager,
         MeshManager &mesh_manager);
+    virtual ~Renderer() = default;
 
-    auto render(const Scene &scene) -> void;
+    auto render(Scene &scene) -> void;
 
-  private:
+  protected:
+    virtual auto post_render(Scene &scene) -> void;
+
+    const Window &window_;
     AutoRelease<::GLuint> dummy_vao_;
     CommandBuffer command_buffer_;
     CommandBuffer post_processing_command_buffer_;

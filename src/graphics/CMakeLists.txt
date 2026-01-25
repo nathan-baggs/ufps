@@ -1,7 +1,7 @@
 target_sources(ufpslib PUBLIC
   buffer.cpp
   command_buffer.cpp
-  debug_ui.cpp
+  debug_renderer.cpp
   frame_buffer.cpp
   mesh_manager.cpp
   persistent_buffer.cpp

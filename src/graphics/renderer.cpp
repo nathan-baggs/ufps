@@ -112,12 +112,12 @@ namespace ufps
 {
 
 Renderer::Renderer(
-    std::uint32_t width,
-    std::uint32_t height,
+    const Window &window,
     ResourceLoader &resource_loader,
     TextureManager &texture_manager,
     MeshManager &mesh_manager)
-    : dummy_vao_{0u, [](auto e) { ::glDeleteVertexArrays(1u, &e); }}
+    : window_{window}
+    , dummy_vao_{0u, [](auto e) { ::glDeleteVertexArrays(1u, &e); }}
     , command_buffer_{"gbuffer_command_buffer"}
     , post_processing_command_buffer_{"post_processing_command_buffer"}
     , post_process_sprite_{.name = "post_process_sprite", .mesh_view = mesh_manager.load(sprite()), .transform = {}, .material_index = 0u}
@@ -139,8 +139,20 @@ Renderer::Renderer(
           "light_pass_fragment_shader",
           "light_pass_program")}
     , fb_sampler_{FilterType::LINEAR, FilterType::LINEAR, "fb_sampler"}
-    , gbuffer_rt_{create_render_target(4u, width, height, fb_sampler_, texture_manager, "gbuffer")}
-    , light_pass_rt_{create_render_target(1u, width, height, fb_sampler_, texture_manager, "light_pass")}
+    , gbuffer_rt_{create_render_target(
+          4u,
+          window_.render_width(),
+          window_.render_height(),
+          fb_sampler_,
+          texture_manager,
+          "gbuffer")}
+    , light_pass_rt_{create_render_target(
+          1u,
+          window_.render_width(),
+          window_.render_height(),
+          fb_sampler_,
+          texture_manager,
+          "light_pass")}
 {
     post_processing_command_buffer_.build(post_process_sprite_);
 
@@ -148,7 +160,7 @@ Renderer::Renderer(
     ::glBindVertexArray(dummy_vao_);
 }
 
-auto Renderer::render(const Scene &scene) -> void
+auto Renderer::render(Scene &scene) -> void
 {
     gbuffer_rt_.fb.bind();
     ::glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -227,6 +239,11 @@ auto Renderer::render(const Scene &scene) -> void
     light_buffer_.advance();
     object_data_buffer_.advance();
 
+    post_render(scene);
+}
+
+auto Renderer::post_render(Scene &) -> void
+{
     light_pass_rt_.fb.unbind();
 
     ::glBlitNamedFramebuffer(
@@ -243,4 +260,5 @@ auto Renderer::render(const Scene &scene) -> void
         GL_COLOR_BUFFER_BIT,
         GL_NEAREST);
 }
+
 }

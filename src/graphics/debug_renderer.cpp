@@ -1,4 +1,4 @@
-#include "graphics/debug_ui.h"
+#include "graphics/debug_renderer.h"
 
 #include <cstring>
 #include <format>
@@ -45,8 +45,13 @@ auto screen_ray(const ufps::MouseButtonEvent &evt, const ufps::Window &window, c
 
 namespace ufps
 {
-DebugUI::DebugUI(const Window &window)
-    : window_{window}
+DebugRenderer::DebugRenderer(
+    const Window &window,
+    ResourceLoader &resource_loader,
+    TextureManager &texture_manager,
+    MeshManager &mesh_manager)
+    : Renderer{window, resource_loader, texture_manager, mesh_manager}
+    , enabled_{false}
     , click_{}
     , selected_entity_{}
 {
@@ -66,15 +71,22 @@ DebugUI::DebugUI(const Window &window)
     ::ImGui_ImplOpenGL3_Init();
 }
 
-DebugUI::~DebugUI()
+DebugRenderer::~DebugRenderer()
 {
     ::ImGui_ImplOpenGL3_Shutdown();
     ::ImGui_ImplWin32_Shutdown();
     ::ImGui::DestroyContext();
 }
 
-auto DebugUI::render(Scene &scene) -> void
+auto DebugRenderer::post_render(Scene &scene) -> void
 {
+    Renderer::post_render(scene);
+
+    if (!enabled_)
+    {
+        return;
+    }
+
     auto &io = ::ImGui::GetIO();
 
     ::ImGui_ImplOpenGL3_NewFrame();
@@ -206,7 +218,7 @@ auto DebugUI::render(Scene &scene) -> void
     }
 }
 
-auto DebugUI::add_mouse_event(const MouseButtonEvent &evt) -> void
+auto DebugRenderer::add_mouse_event(const MouseButtonEvent &evt) -> void
 {
     auto &io = ::ImGui::GetIO();
     io.AddMouseButtonEvent(0, evt.state() == MouseButtonState::DOWN);
@@ -215,5 +227,10 @@ auto DebugUI::add_mouse_event(const MouseButtonEvent &evt) -> void
     {
         click_ = evt;
     }
+}
+
+auto DebugRenderer::set_enabled(bool enabled) -> void
+{
+    enabled_ = enabled;
 }
 }
