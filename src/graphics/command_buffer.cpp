@@ -37,10 +37,9 @@ CommandBuffer::CommandBuffer()
 
 auto CommandBuffer::build(const Scene &scene) -> std::uint32_t
 {
-    auto base = 0;
     const auto command = scene.entities |
                          std::views::transform(
-                             [&base](const auto &e)
+                             [](const auto &e)
                              {
                                  const auto cmd = IndirectCommand{
                                      .count = e.mesh_view.index_count,
@@ -49,7 +48,6 @@ auto CommandBuffer::build(const Scene &scene) -> std::uint32_t
                                      .base_vertex = static_cast<std::int32_t>(e.mesh_view.vertex_offset),
                                      .base_instance = 0u,
                                  };
-                                 base += e.mesh_view.vertex_offset;
                                  return cmd;
                              }) |
                          std::ranges::to<std::vector>();
