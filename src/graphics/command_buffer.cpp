@@ -102,4 +102,9 @@ auto CommandBuffer::to_string() const -> std::string
     return std::format("command buffer {} size", command_buffer_.size());
 }
 
+auto CommandBuffer::name() const -> std::string_view
+{
+    return command_buffer_.name();
+}
+
 }

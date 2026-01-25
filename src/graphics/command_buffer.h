@@ -21,6 +21,7 @@ class CommandBuffer
     auto advance() -> void;
     auto offset_bytes() const -> std::size_t;
     auto to_string() const -> std::string;
+    auto name() const -> std::string_view;
 
   private:
     MultiBuffer<PersistentBuffer> command_buffer_;

@@ -14,6 +14,7 @@ namespace ufps
 Buffer::Buffer(std::size_t size, std::string_view name)
     : buffer_{0u, [](auto buffer) { ::glDeleteBuffers(1, &buffer); }}
     , size_{size}
+    , name_{name}
 {
     ::glCreateBuffers(1, &buffer_);
     ::glNamedBufferStorage(buffer_, size, nullptr, GL_DYNAMIC_STORAGE_BIT);
@@ -34,6 +35,16 @@ auto Buffer::native_handle() const -> ::GLuint
 auto Buffer::size() const -> std::size_t
 {
     return size_;
+}
+
+auto Buffer::name() const -> std::string_view
+{
+    return name_;
+}
+
+auto Buffer::to_string() const -> std::string
+{
+    return std::format("{} {}", name(), size());
 }
 
 }
