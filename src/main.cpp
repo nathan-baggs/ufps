@@ -13,7 +13,7 @@
 #include "events/key.h"
 #include "events/key_event.h"
 #include "graphics/colour.h"
-#include "graphics/debug_ui.h"
+#include "graphics/debug_renderer.h"
 #include "graphics/material_manager.h"
 #include "graphics/mesh_data.h"
 #include "graphics/mesh_manager.h"
@@ -179,14 +179,12 @@ int main()
     const auto tex_index = texture_manager.add(std::move(textures));
     ufps::log::debug("tex_index: {}", tex_index);
 
-    auto renderer =
-        ufps::Renderer{window.render_width(), window.render_height(), *resource_loader, texture_manager, mesh_manager};
-    auto debug_ui = ufps::DebugUI{window};
+    auto renderer = ufps::DebugRenderer{window, *resource_loader, texture_manager, mesh_manager};
     auto debug_mode = false;
 
-    const auto material_key_red = material_manager.add(tex_index, tex_index + 1u, tex_index + 2u);
-    const auto material_key_blue = material_manager.add(tex_index, tex_index + 1u, tex_index + 2u);
-    const auto material_key_green = material_manager.add(tex_index, tex_index + 1u, tex_index + 2u);
+    const auto material_index_red = material_manager.add(tex_index, tex_index + 1u, tex_index + 2u);
+    const auto material_index_blue = material_manager.add(tex_index, tex_index + 1u, tex_index + 2u);
+    const auto material_index_green = material_manager.add(tex_index, tex_index + 1u, tex_index + 2u);
 
     auto scene = ufps::Scene{
         .entities = {},
@@ -216,14 +214,14 @@ int main()
         .name = "cube1",
         .mesh_view = mesh_manager.load(cube()),
         .transform = {{10.0f, 0.0f, -10.0f}, {5.0f}, {}},
-        .material_key = material_key_red,
+        .material_index = material_index_red,
     });
 
     scene.entities.push_back({
         .name = "cube2",
         .mesh_view = mesh_manager.load(cube()),
         .transform = {{-10.0f, 0.0f, -10.0f}, {5.0f}, {}},
-        .material_key = material_key_green,
+        .material_index = material_index_green,
     });
 
     auto key_state = std::unordered_map<ufps::Key, bool>{
@@ -249,6 +247,7 @@ int main()
                         if (arg == ufps::KeyEvent{ufps::Key::F1, ufps::KeyState::DOWN})
                         {
                             debug_mode = !debug_mode;
+                            renderer.set_enabled(debug_mode);
                         }
                         else
                         {
@@ -268,7 +267,7 @@ int main()
                     }
                     else if constexpr (std::same_as<T, ufps::MouseButtonEvent>)
                     {
-                        debug_ui.add_mouse_event(arg);
+                        renderer.add_mouse_event(arg);
                     }
                 },
                 *event);
@@ -279,11 +278,6 @@ int main()
         scene.camera.translate(walk_direction(key_state, scene.camera));
 
         renderer.render(scene);
-
-        if (debug_mode)
-        {
-            debug_ui.render(scene);
-        }
 
         window.swap();
     }

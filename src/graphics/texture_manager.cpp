@@ -29,7 +29,7 @@ auto TextureManager::add(Texture texture) -> std::uint32_t
     auto &new_tex = textures_.emplace_back(std::move(texture));
     cpu_buffer_.push_back(new_tex.bindless_handle());
 
-    resize_gpu_buffer(cpu_buffer_, gpu_buffer_, "bindless_textures");
+    resize_gpu_buffer(cpu_buffer_, gpu_buffer_);
 
     gpu_buffer_.write(std::as_bytes(std::span{cpu_buffer_.data(), cpu_buffer_.size()}), 0zu);
 
@@ -44,7 +44,7 @@ auto TextureManager::add(std::vector<Texture> textures) -> std::uint32_t
     cpu_buffer_ =
         textures_ | std::views::transform([](auto &e) { return e.bindless_handle(); }) | std::ranges::to<std::vector>();
 
-    resize_gpu_buffer(cpu_buffer_, gpu_buffer_, "bindless_textures");
+    resize_gpu_buffer(cpu_buffer_, gpu_buffer_);
 
     gpu_buffer_.write(std::as_bytes(std::span{cpu_buffer_.data(), cpu_buffer_.size()}), 0zu);
 

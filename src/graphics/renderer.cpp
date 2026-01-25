@@ -112,15 +112,15 @@ namespace ufps
 {
 
 Renderer::Renderer(
-    std::uint32_t width,
-    std::uint32_t height,
+    const Window &window,
     ResourceLoader &resource_loader,
     TextureManager &texture_manager,
     MeshManager &mesh_manager)
-    : dummy_vao_{0u, [](auto e) { ::glDeleteVertexArrays(1u, &e); }}
-    , command_buffer_{}
-    , post_processing_command_buffer_{}
-    , post_process_sprite_{.name = "post_process_sprite", .mesh_view = mesh_manager.load(sprite()), .transform = {}, .material_key = {0u}}
+    : window_{window}
+    , dummy_vao_{0u, [](auto e) { ::glDeleteVertexArrays(1u, &e); }}
+    , command_buffer_{"gbuffer_command_buffer"}
+    , post_processing_command_buffer_{"post_processing_command_buffer"}
+    , post_process_sprite_{.name = "post_process_sprite", .mesh_view = mesh_manager.load(sprite()), .transform = {}, .material_index = 0u}
     , camera_buffer_{sizeof(CameraData), "camera_buffer"}
     , light_buffer_{sizeof(LightData), "light_buffer"}
     , object_data_buffer_{sizeof(ObjectData), "object_data_buffer"}
@@ -139,8 +139,20 @@ Renderer::Renderer(
           "light_pass_fragment_shader",
           "light_pass_program")}
     , fb_sampler_{FilterType::LINEAR, FilterType::LINEAR, "fb_sampler"}
-    , gbuffer_rt_{create_render_target(4u, width, height, fb_sampler_, texture_manager, "gbuffer")}
-    , light_pass_rt_{create_render_target(1u, width, height, fb_sampler_, texture_manager, "light_pass")}
+    , gbuffer_rt_{create_render_target(
+          4u,
+          window_.render_width(),
+          window_.render_height(),
+          fb_sampler_,
+          texture_manager,
+          "gbuffer")}
+    , light_pass_rt_{create_render_target(
+          1u,
+          window_.render_width(),
+          window_.render_height(),
+          fb_sampler_,
+          texture_manager,
+          "light_pass")}
 {
     post_processing_command_buffer_.build(post_process_sprite_);
 
@@ -148,7 +160,7 @@ Renderer::Renderer(
     ::glBindVertexArray(dummy_vao_);
 }
 
-auto Renderer::render(const Scene &scene) -> void
+auto Renderer::render(Scene &scene) -> void
 {
     gbuffer_rt_.fb.bind();
     ::glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -172,21 +184,19 @@ auto Renderer::render(const Scene &scene) -> void
 
     const auto object_data = scene.entities |
                              std::views::transform(
-                                 [&scene](const auto &e)
+                                 [](const auto &e)
                                  {
-                                     const auto index = scene.material_manager.index(e.material_key);
                                      return ObjectData{
                                          .model = e.transform,
-                                         .material_id_index = index,
+                                         .material_id_index = e.material_index,
                                          .padding = {},
                                      };
                                  }) |
                              std::ranges::to<std::vector>();
-    resize_gpu_buffer(object_data, object_data_buffer_, "object_data_buffer");
+    resize_gpu_buffer(object_data, object_data_buffer_);
     object_data_buffer_.write(std::as_bytes(std::span{object_data.data(), object_data.size()}), 0zu);
     ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, object_data_buffer_.native_handle());
 
-    scene.material_manager.sync();
     ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, scene.material_manager.native_handle());
 
     ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 4, scene.texture_manager.native_handle());
@@ -228,8 +238,12 @@ auto Renderer::render(const Scene &scene) -> void
     camera_buffer_.advance();
     light_buffer_.advance();
     object_data_buffer_.advance();
-    scene.material_manager.advance();
 
+    post_render(scene);
+}
+
+auto Renderer::post_render(Scene &) -> void
+{
     light_pass_rt_.fb.unbind();
 
     ::glBlitNamedFramebuffer(
@@ -246,4 +260,5 @@ auto Renderer::render(const Scene &scene) -> void
         GL_COLOR_BUFFER_BIT,
         GL_NEAREST);
 }
+
 }

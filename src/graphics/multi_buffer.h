@@ -54,6 +54,11 @@ class MultiBuffer
         return frame_offset_;
     }
 
+    auto name() const -> std::string_view
+    {
+        return buffer_.name();
+    }
+
   private:
     Buffer buffer_;
     std::size_t size_;

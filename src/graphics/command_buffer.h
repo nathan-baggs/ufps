@@ -14,13 +14,14 @@ namespace ufps
 class CommandBuffer
 {
   public:
-    CommandBuffer();
+    CommandBuffer(std::string_view name);
     auto build(const Scene &scene) -> std::uint32_t;
     auto build(const Entity &entity) -> std::uint32_t;
     auto native_handle() const -> ::GLuint;
     auto advance() -> void;
     auto offset_bytes() const -> std::size_t;
     auto to_string() const -> std::string;
+    auto name() const -> std::string_view;
 
   private:
     MultiBuffer<PersistentBuffer> command_buffer_;

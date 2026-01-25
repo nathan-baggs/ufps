@@ -2,6 +2,7 @@
 
 #include <cstddef>
 #include <cstring>
+#include <string>
 #include <string_view>
 
 #include "graphics/opengl.h"
@@ -15,6 +16,7 @@ namespace ufps
 PersistentBuffer::PersistentBuffer(std::size_t size, std::string_view name)
     : buffer_{0u, [](auto buffer) { ::glUnmapNamedBuffer(buffer); ::glDeleteBuffers(1, &buffer); }}
     , size_{size}
+    , name_{name}
 {
     const auto flags = GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT;
     ::glCreateBuffers(1, &buffer_);
@@ -33,6 +35,16 @@ auto PersistentBuffer::write(DataBufferView data, std::size_t offset) const -> v
 auto PersistentBuffer::native_handle() const -> ::GLuint
 {
     return buffer_;
+}
+
+auto PersistentBuffer::name() const -> std::string_view
+{
+    return name_;
+}
+
+auto PersistentBuffer::to_string() const -> std::string
+{
+    return std::format("{} {}", name(), size_);
 }
 
 }

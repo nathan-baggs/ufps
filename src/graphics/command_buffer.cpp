@@ -30,17 +30,16 @@ struct IndirectCommand
 namespace ufps
 {
 
-CommandBuffer::CommandBuffer()
-    : command_buffer_{1u, "command_buffer"}
+CommandBuffer::CommandBuffer(std::string_view name)
+    : command_buffer_{1u, name}
 {
 }
 
 auto CommandBuffer::build(const Scene &scene) -> std::uint32_t
 {
-    auto base = 0;
     const auto command = scene.entities |
                          std::views::transform(
-                             [&base](const auto &e)
+                             [](const auto &e)
                              {
                                  const auto cmd = IndirectCommand{
                                      .count = e.mesh_view.index_count,
@@ -49,7 +48,6 @@ auto CommandBuffer::build(const Scene &scene) -> std::uint32_t
                                      .base_vertex = static_cast<std::int32_t>(e.mesh_view.vertex_offset),
                                      .base_instance = 0u,
                                  };
-                                 base += e.mesh_view.vertex_offset;
                                  return cmd;
                              }) |
                          std::ranges::to<std::vector>();
@@ -57,7 +55,7 @@ auto CommandBuffer::build(const Scene &scene) -> std::uint32_t
     const auto command_view =
         DataBufferView{reinterpret_cast<const std::byte *>(command.data()), command.size() * sizeof(IndirectCommand)};
 
-    resize_gpu_buffer(command, command_buffer_, "command_buffer");
+    resize_gpu_buffer(command, command_buffer_);
 
     command_buffer_.write(command_view, 0u);
 
@@ -75,9 +73,7 @@ auto CommandBuffer::build(const Entity &entity) -> std::uint32_t
     };
     const auto command_view = std::as_bytes(std::span{&cmd, 1});
 
-    log::debug("count {} first {}", cmd.count, cmd.first);
-
-    resize_gpu_buffer(std::vector<IndirectCommand>{cmd}, command_buffer_, "command_buffer");
+    resize_gpu_buffer(std::vector<IndirectCommand>{cmd}, command_buffer_);
 
     command_buffer_.write(command_view, 0u);
 
@@ -102,6 +98,11 @@ auto CommandBuffer::offset_bytes() const -> std::size_t
 auto CommandBuffer::to_string() const -> std::string
 {
     return std::format("command buffer {} size", command_buffer_.size());
+}
+
+auto CommandBuffer::name() const -> std::string_view
+{
+    return command_buffer_.name();
 }
 
 }
