@@ -205,6 +205,17 @@ auto DebugRenderer::post_render(Scene &scene) -> void
 
     ::ImGui::End();
 
+    ::ImGui::Begin("render_targets");
+    const auto aspect_ratio = static_cast<float>(window_.render_width()) / static_cast<float>(window_.render_height());
+    for (auto i = 0u; i < gbuffer_rt_.colour_attachment_count; ++i)
+    {
+        const auto tex = scene.texture_manager.texture(gbuffer_rt_.first_colour_attachment_index + i);
+        ::ImGui::Image(
+            tex->native_handle(), ::ImVec2(200.0f * aspect_ratio, 200.0f), ::ImVec2(0.0f, 1.0f), ::ImVec2(1.0f, 0.0f));
+        ::ImGui::SameLine();
+    }
+    ::ImGui::End();
+
     ::ImGui::Render();
     ::ImGui_ImplOpenGL3_RenderDrawData(::ImGui::GetDrawData());
 
