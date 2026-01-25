@@ -68,7 +68,7 @@ class MaterialManager
         const auto key = MaterialKey{key_num++};
 
         material_data_cpu_.emplace(key, MaterialData{std::forward<Args>(args)...});
-        resize_gpu_buffer(data(), material_data_gpu_, "material_manager_buffer");
+        resize_gpu_buffer(data(), material_data_gpu_);
 
         return key;
     }

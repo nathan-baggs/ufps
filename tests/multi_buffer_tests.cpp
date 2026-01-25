@@ -1,4 +1,5 @@
 #include <cstddef>
+#include <iterator>
 #include <string_view>
 #include <tuple>
 #include <vector>
@@ -10,11 +11,12 @@
 
 using namespace std::literals;
 
-struct FakeBuffer
+class FakeBuffer
 {
+  public:
     FakeBuffer(std::size_t size, std::string_view name)
-        : size{size}
-        , name{name}
+        : size_{size}
+        , name_{name}
     {
     }
 
@@ -23,9 +25,19 @@ struct FakeBuffer
         write_calls.push_back({data.data(), offset});
     }
 
+    auto size() const -> std::size_t
+    {
+        return size_;
+    }
+
+    auto name() const -> std::string_view
+    {
+        return name_;
+    }
+
     std::vector<std::tuple<const std::byte *, std::size_t>> write_calls;
-    std::size_t size;
-    std::string_view name;
+    std::size_t size_;
+    std::string name_;
 };
 
 TEST(multi_frame, single_write)
@@ -33,15 +45,15 @@ TEST(multi_frame, single_write)
     auto data = ufps::DataBuffer{std::byte{0x0}, std::byte{0x1}, std::byte{0x2}};
     auto data_view = ufps::DataBufferView{data};
 
-    auto mb = ufps::MultiBuffer<FakeBuffer, 3zu>{data_view.size_bytes(), "test_buffer"};
+    auto mb = ufps::MultiBuffer<FakeBuffer, 3zu>{data_view.size_bytes(), "test_buffer"sv};
     mb.write(data_view, 0);
 
     const auto &buffer = mb.buffer();
 
     const auto expected = std::vector{std::make_tuple(data_view.data(), 0zu)};
-    ASSERT_EQ(buffer.size, data_view.size_bytes() * 3zu);
+    ASSERT_EQ(buffer.size(), data_view.size_bytes() * 3zu);
     ASSERT_EQ(buffer.write_calls, expected);
-    ASSERT_EQ(buffer.name, "test_buffer"sv);
+    ASSERT_EQ(buffer.name(), "test_buffer"sv);
     ASSERT_EQ(mb.size(), data_view.size_bytes());
 }
 
@@ -65,7 +77,7 @@ TEST(multi_frame, triple_write)
         std::make_tuple(data_view.data(), data_view.size_bytes() * 2zu),
     };
 
-    ASSERT_EQ(buffer.size, data_view.size_bytes() * 3zu);
+    ASSERT_EQ(buffer.size(), data_view.size_bytes() * 3zu);
     ASSERT_EQ(buffer.write_calls, expected);
 }
 
@@ -96,7 +108,7 @@ TEST(multi_frame, quad_write)
         std::make_tuple(data_view.data(), data_view.size_bytes() * 0zu),
     };
 
-    ASSERT_EQ(buffer.size, data_view.size_bytes() * 3zu);
+    ASSERT_EQ(buffer.size(), data_view.size_bytes() * 3zu);
     ASSERT_EQ(buffer.write_calls, expected);
 }
 
@@ -123,6 +135,6 @@ TEST(multi_frame, multi_write_offset)
         std::make_tuple(data_view.data(), data_view.size_bytes() * 0zu + 4zu),
     };
 
-    ASSERT_EQ(buffer.size, data_view.size_bytes() * 3zu);
+    ASSERT_EQ(buffer.size(), data_view.size_bytes() * 3zu);
     ASSERT_EQ(buffer.write_calls, expected);
 }

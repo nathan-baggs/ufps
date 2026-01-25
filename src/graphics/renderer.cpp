@@ -182,7 +182,7 @@ auto Renderer::render(const Scene &scene) -> void
                                      };
                                  }) |
                              std::ranges::to<std::vector>();
-    resize_gpu_buffer(object_data, object_data_buffer_, "object_data_buffer");
+    resize_gpu_buffer(object_data, object_data_buffer_);
     object_data_buffer_.write(std::as_bytes(std::span{object_data.data(), object_data.size()}), 0zu);
     ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, object_data_buffer_.native_handle());
 
