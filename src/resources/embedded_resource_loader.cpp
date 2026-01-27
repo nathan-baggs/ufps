@@ -47,6 +47,10 @@ constexpr const std::uint8_t diamond_floor_specular[] = {
 #embed "../../assets/textures/diamond_floor_specular.png"
 };
 
+constexpr const std::uint8_t corner01_8_8_x[] = {
+#embed "../../secret-assets/models/SM_Corner01_8_8_X.fbx"
+};
+
 template <class T>
 auto to_container(std::span<const std::uint8_t> data) -> T
 {
@@ -63,12 +67,15 @@ namespace ufps
 EmbeddedResourceLoader::EmbeddedResourceLoader()
 {
     lookup_ = {
-        {"shaders\\simple.vert", sample_vertex_shader},
-        {"shaders\\simple.frag", sample_fragment_shader},
-        {"shaders\\gbuffer.vert", gbuffer_vertex_shader},
+        {"models\\SM_Corner01_8_8_X.fbx", corner01_8_8_x},
+
         {"shaders\\gbuffer.frag", gbuffer_fragment_shader},
-        {"shaders\\light_pass.vert", light_pass_vertex_shader},
+        {"shaders\\gbuffer.vert", gbuffer_vertex_shader},
         {"shaders\\light_pass.frag", light_pass_fragment_shader},
+        {"shaders\\light_pass.vert", light_pass_vertex_shader},
+        {"shaders\\simple.frag", sample_fragment_shader},
+        {"shaders\\simple.vert", sample_vertex_shader},
+
         {"textures\\diamond_floor_albedo.png", diamond_floor_albedo},
         {"textures\\diamond_floor_normal.png", diamond_floor_normal},
         {"textures\\diamond_floor_specular.png", diamond_floor_specular},

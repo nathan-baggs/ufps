@@ -1,0 +1,3 @@
+[submodule "secret-assets"]
+	path = secret-assets
+	url = git@github.com:nathan-baggs/ufps-secret-assets.git
