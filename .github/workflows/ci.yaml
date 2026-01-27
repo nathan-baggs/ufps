@@ -12,6 +12,9 @@ jobs:
       image: ghcr.io/nathan-baggs/custom-mingw64:latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          submodules: 'true'
+          token: ${{ secrets.SUBMODULE_TOKEN }}
       - name: Build (cross-compile for Windows)
         run: |
           cmake -B build -DCMAKE_TOOLCHAIN_FILE=mingw_toolchain.cmake -G "Ninja Multi-Config"
