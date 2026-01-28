@@ -186,6 +186,8 @@ int main()
     const auto material_index_blue = material_manager.add(tex_index, tex_index + 1u, tex_index + 2u);
     const auto material_index_green = material_manager.add(tex_index, tex_index + 1u, tex_index + 2u);
 
+    const auto models = ufps::load_model(resource_loader->load_data_buffer("models\\SM_Corner01_8_8_X.fbx"));
+
     auto scene = ufps::Scene{
         .entities = {},
         .mesh_manager = mesh_manager,
@@ -210,19 +212,18 @@ int main()
                 .quadratic_attenuation = 0.0002f,
                 .specular_power = 32.0f}}};
 
-    scene.entities.push_back({
-        .name = "cube1",
-        .mesh_view = mesh_manager.load(cube()),
-        .transform = {{10.0f, 0.0f, -10.0f}, {5.0f}, {}},
-        .material_index = material_index_red,
-    });
-
-    scene.entities.push_back({
-        .name = "cube2",
-        .mesh_view = mesh_manager.load(cube()),
-        .transform = {{-10.0f, 0.0f, -10.0f}, {5.0f}, {}},
-        .material_index = material_index_green,
-    });
+    scene.entities = models | std::views::enumerate |
+                     std::views::transform(
+                         [&](const auto &e)
+                         {
+                             const auto &[index, model] = e;
+                             return ufps::Entity{
+                                 .name = std::format("model{}", index),
+                                 .mesh_view = mesh_manager.load(model.mesh_data),
+                                 .transform = {{}, {1.0f}, {}},
+                                 .material_index = material_index_red};
+                         }) |
+                     std::ranges::to<std::vector>();
 
     auto key_state = std::unordered_map<ufps::Key, bool>{
         {ufps::Key::W, false}, {ufps::Key::A, false}, {ufps::Key::S, false}, {ufps::Key::D, false}};
