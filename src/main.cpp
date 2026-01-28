@@ -177,7 +177,6 @@ int main()
     auto texture_manager = ufps::TextureManager{};
 
     const auto tex_index = texture_manager.add(std::move(textures));
-    ufps::log::debug("tex_index: {}", tex_index);
 
     auto renderer = ufps::DebugRenderer{window, *resource_loader, texture_manager, mesh_manager};
     auto debug_mode = false;
@@ -185,6 +184,9 @@ int main()
     const auto material_index_red = material_manager.add(tex_index, tex_index + 1u, tex_index + 2u);
     const auto material_index_blue = material_manager.add(tex_index, tex_index + 1u, tex_index + 2u);
     const auto material_index_green = material_manager.add(tex_index, tex_index + 1u, tex_index + 2u);
+
+    const auto models =
+        ufps::load_model(resource_loader->load_data_buffer("models\\SM_Corner01_8_8_X.fbx"), *resource_loader);
 
     auto scene = ufps::Scene{
         .entities = {},
@@ -210,20 +212,23 @@ int main()
                 .quadratic_attenuation = 0.0002f,
                 .specular_power = 32.0f}}};
 
-    scene.entities.push_back({
-        .name = "cube1",
-        .mesh_view = mesh_manager.load(cube()),
-        .transform = {{10.0f, 0.0f, -10.0f}, {5.0f}, {}},
-        .material_index = material_index_red,
-    });
+    for (const auto &[index, model] : models | std::views::enumerate)
+    {
+        auto albedo_index = tex_index;
+        if (const auto &a = model.albedo; a)
+        {
+            auto albedo = ufps::Texture{*model.albedo, "tex_leave_me_alone", sampler};
+            albedo_index = texture_manager.add(std::move(albedo));
+        }
+        const auto model_mat = material_manager.add(albedo_index, tex_index + 1u, tex_index + 2u);
 
-    scene.entities.push_back({
-        .name = "cube2",
-        .mesh_view = mesh_manager.load(cube()),
-        .transform = {{-10.0f, 0.0f, -10.0f}, {5.0f}, {}},
-        .material_index = material_index_green,
-    });
-
+        scene.entities.push_back({
+            .name = std::format("model{}", index),
+            .mesh_view = mesh_manager.load(model.mesh_data),
+            .transform = {{}, {1.0f}, {}},
+            .material_index = model_mat,
+        });
+    }
     auto key_state = std::unordered_map<ufps::Key, bool>{
         {ufps::Key::W, false}, {ufps::Key::A, false}, {ufps::Key::S, false}, {ufps::Key::D, false}};
 
