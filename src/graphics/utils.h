@@ -6,6 +6,7 @@
 #include <type_traits>
 #include <vector>
 
+#include "graphics/model_data.h"
 #include "graphics/opengl.h"
 #include "graphics/texture_data.h"
 #include "graphics/vertex_data.h"
@@ -52,5 +53,7 @@ auto resize_gpu_buffer(const std::vector<T> &cpu_buffer, Buffer &gpu_buffer)
 }
 
 auto load_texture(DataBufferView image_data) -> TextureData;
+
+auto load_model(DataBufferView model_data) -> std::vector<ModelData>;
 
 }

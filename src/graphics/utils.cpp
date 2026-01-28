@@ -1,16 +1,65 @@
 #include "graphics/utils.h"
+#include "assimp/mesh.h"
+#include "assimp/vector3.h"
+#include "graphics/mesh_data.h"
 
 #include <memory>
+#include <optional>
+#include <ranges>
+#include <span>
+#include <vector>
 
+#include <assimp/DefaultLogger.hpp>
+#include <assimp/Importer.hpp>
+#include <assimp/LogStream.hpp>
+#include <assimp/Logger.hpp>
+#include <assimp/postprocess.h>
+#include <assimp/scene.h>
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 
+#include "graphics/model_data.h"
 #include "graphics/texture_data.h"
 #include "utils/data_buffer.h"
 #include "utils/error.h"
+#include "utils/log.h"
 
 namespace
 {
+
+template <ufps::log::Level L>
+class SimpleAssimpLogStream : public ::Assimp::LogStream
+{
+  public:
+    auto write(const char *msg) -> void override
+    {
+        if constexpr (L == ufps::log::Level::INFO)
+        {
+            ufps::log::info("{}", msg);
+        }
+        else if constexpr (L == ufps::log::Level::WARN)
+        {
+            ufps::log::warn("{}", msg);
+        }
+        else if constexpr (L == ufps::log::Level::ERR)
+        {
+            ufps::log::error("{}", msg);
+        }
+        else if constexpr (L == ufps::log::Level::DEBUG)
+        {
+            ufps::log::debug("{}", msg);
+        }
+        else
+        {
+            ufps::log::error("[unknown level] {}", msg);
+        }
+    }
+};
+
+auto to_native(const ::aiVector3D &v) -> ufps::Vector3
+{
+    return {v.x, v.y, v.z};
+}
 
 auto channels_to_format(int num_channels) -> ufps::TextureFormat
 {
@@ -55,5 +104,70 @@ auto load_texture(DataBufferView image_data) -> TextureData
         .height = static_cast<std::uint32_t>(height),
         .format = channels_to_format(num_channels),
         .data = {{ptr, ptr + width * height * num_channels}}};
+}
+
+auto load_model(DataBufferView model_data) -> std::vector<ModelData>
+{
+    [[maybe_unused]] static auto *logger = []
+    {
+        ::Assimp::DefaultLogger::create("", ::Assimp::Logger::VERBOSE);
+        auto *logger = ::Assimp::DefaultLogger::get();
+
+        logger->attachStream(new SimpleAssimpLogStream<ufps::log::Level::ERR>{}, ::Assimp::Logger::Err);
+        logger->attachStream(new SimpleAssimpLogStream<ufps::log::Level::DEBUG>{}, ::Assimp::Logger::Debugging);
+        logger->attachStream(new SimpleAssimpLogStream<ufps::log::Level::WARN>{}, ::Assimp::Logger::Warn);
+        logger->attachStream(new SimpleAssimpLogStream<ufps::log::Level::INFO>{}, ::Assimp::Logger::Info);
+
+        return logger;
+    }();
+
+    auto importer = ::Assimp::Importer{};
+    const auto *scene = importer.ReadFileFromMemory(
+        model_data.data(),
+        model_data.size(),
+        ::aiProcess_Triangulate | ::aiProcess_FlipUVs | ::aiProcess_CalcTangentSpace,
+        ".fbx");
+    ensure(scene != nullptr, "failed to parse assimp scene");
+
+    const auto loaded_meshes = std::span<::aiMesh *>(scene->mMeshes, scene->mMeshes + scene->mNumMeshes);
+    log::info("found {} meshes", std::ranges::size(loaded_meshes));
+
+    auto models = std::vector<ModelData>{};
+
+    for (const auto *mesh : loaded_meshes)
+    {
+        log::info("found mesh: {}", mesh->mName.C_Str());
+
+        const auto positions = std::span<::aiVector3D>{mesh->mVertices, mesh->mVertices + mesh->mNumVertices} |
+                               std::views::transform(to_native);
+        const auto normals = std::span<::aiVector3D>{mesh->mNormals, mesh->mNormals + mesh->mNumVertices} |
+                             std::views::transform(to_native);
+        const auto tangents = std::span<::aiVector3D>{mesh->mTangents, mesh->mTangents + mesh->mNumVertices} |
+                              std::views::transform(to_native);
+        const auto bitangents = std::span<::aiVector3D>{mesh->mBitangents, mesh->mBitangents + mesh->mNumVertices} |
+                                std::views::transform(to_native);
+        const auto uvs =
+            std::span<::aiVector3D>{mesh->mTextureCoords[0], mesh->mTextureCoords[0] + mesh->mNumVertices} |
+            std::views::transform([](const auto &v) { return UV{.s = v.x, .t = v.y}; });
+
+        auto indices =
+            std::span<::aiFace>{mesh->mFaces, mesh->mFaces + mesh->mNumFaces} |
+            std::views::transform([](const auto &e)
+                                  { return std::span<std::uint32_t>{e.mIndices, e.mIndices + e.mNumIndices}; }) |
+            std::views::join | std::ranges::to<std::vector>();
+
+        models.push_back({
+            .mesh_data =
+                MeshData{
+                    .vertices = vertices(positions, normals, tangents, bitangents, uvs),
+                    .indices = std::move(indices),
+                },
+            .albedo = std::nullopt,
+            .normal = std::nullopt,
+            .specular = std::nullopt,
+        });
+    }
+
+    return models;
 }
 }
