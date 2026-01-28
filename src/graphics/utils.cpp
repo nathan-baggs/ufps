@@ -1,8 +1,5 @@
-#include "graphics/utils.h"
-#include "assimp/mesh.h"
-#include "assimp/vector3.h"
-#include "graphics/mesh_data.h"
-
+#include <cstdint>
+#include <filesystem>
 #include <memory>
 #include <optional>
 #include <ranges>
@@ -18,9 +15,16 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 
+#include "assimp/material.h"
+#include "assimp/mesh.h"
+#include "assimp/vector3.h"
+#include "graphics/mesh_data.h"
 #include "graphics/model_data.h"
 #include "graphics/texture_data.h"
+#include "graphics/utils.h"
+#include "resources/resource_loader.h"
 #include "utils/data_buffer.h"
+
 #include "utils/error.h"
 #include "utils/log.h"
 
@@ -106,7 +110,7 @@ auto load_texture(DataBufferView image_data) -> TextureData
         .data = {{ptr, ptr + width * height * num_channels}}};
 }
 
-auto load_model(DataBufferView model_data) -> std::vector<ModelData>
+auto load_model(DataBufferView model_data, ResourceLoader &resource_loader) -> std::vector<ModelData>
 {
     [[maybe_unused]] static auto *logger = []
     {
@@ -130,13 +134,31 @@ auto load_model(DataBufferView model_data) -> std::vector<ModelData>
     ensure(scene != nullptr, "failed to parse assimp scene");
 
     const auto loaded_meshes = std::span<::aiMesh *>(scene->mMeshes, scene->mMeshes + scene->mNumMeshes);
-    log::info("found {} meshes", std::ranges::size(loaded_meshes));
+    const auto materials = std::span<::aiMaterial *>(scene->mMaterials, scene->mMaterials + scene->mNumMaterials);
+    log::info("found {} meshes, {} materials", std::ranges::size(loaded_meshes), std::ranges::size(materials));
+
+    ensure(
+        std::ranges::size(loaded_meshes) == std::ranges::size(materials), "mismatch mesh/material count in model file");
 
     auto models = std::vector<ModelData>{};
 
-    for (const auto *mesh : loaded_meshes)
+    for (const auto &[index, mesh] : loaded_meshes | std::views::enumerate)
     {
         log::info("found mesh: {}", mesh->mName.C_Str());
+
+        const auto *material = scene->mMaterials[index];
+        const auto base_colour_count = material->GetTextureCount(::aiTextureType_BASE_COLOR);
+        if (base_colour_count != 1)
+        {
+            log::warn("unsupported base colour count: {}", base_colour_count);
+            continue;
+        }
+
+        auto path_str = ::aiString{};
+        material->GetTexture(::aiTextureType_BASE_COLOR, 0u, &path_str);
+        const auto path = std::filesystem::path{path_str.C_Str()};
+        const auto filename = path.filename();
+        log::info("found base colour texture: {}", filename.string());
 
         const auto positions = std::span<::aiVector3D>{mesh->mVertices, mesh->mVertices + mesh->mNumVertices} |
                                std::views::transform(to_native);
@@ -162,7 +184,7 @@ auto load_model(DataBufferView model_data) -> std::vector<ModelData>
                     .vertices = vertices(positions, normals, tangents, bitangents, uvs),
                     .indices = std::move(indices),
                 },
-            .albedo = std::nullopt,
+            .albedo = load_texture(resource_loader.load_data_buffer(std::format("textures\\{}", filename.string()))),
             .normal = std::nullopt,
             .specular = std::nullopt,
         });
