@@ -1,8 +1,8 @@
 #include "resources/file_resource_loader.h"
 
 #include <cstddef>
-#include <errhandlingapi.h>
 #include <filesystem>
+#include <vector>
 
 #include <handleapi.h>
 #include <windows.h>
@@ -52,18 +52,36 @@ auto load(const std::filesystem::path &path)
 
 namespace ufps
 {
-FileResourceLoader::FileResourceLoader(const std::filesystem::path &root)
-    : root_{root}
+FileResourceLoader::FileResourceLoader(const std::vector<std::filesystem::path> &roots)
+    : roots_{roots}
 {
 }
 
 auto FileResourceLoader::load_string(std::string_view name) -> std::string
 {
-    return load<std::string>(root_ / name);
+    for (const auto &root : roots_)
+    {
+        const auto path = root / name;
+        if (std::filesystem::exists(path))
+        {
+            return load<std::string>(path);
+        }
+    }
+
+    throw Exception("cannot find {}", name);
 }
 
 auto FileResourceLoader::load_data_buffer(std::string_view name) -> DataBuffer
 {
-    return load<DataBuffer>(root_ / name);
+    for (const auto &root : roots_)
+    {
+        const auto path = root / name;
+        if (std::filesystem::exists(path))
+        {
+            return load<DataBuffer>(path);
+        }
+    }
+
+    throw Exception("cannot find {}", name);
 }
 }
