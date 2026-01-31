@@ -27,6 +27,7 @@
 #include "maths/vector3.h"
 #include "resources/embedded_resource_loader.h"
 #include "resources/file_resource_loader.h"
+#include "resources/resource_loader.h"
 #include "utils/data_buffer.h"
 #include "utils/formatter.h"
 #include "utils/log.h"
@@ -156,8 +157,18 @@ int main()
     auto window = ufps::Window{ufps::WindowMode::WINDOWED, 1920u, 1080u, 1920u, 0u};
     auto running = true;
 
-    std::unique_ptr<ufps::ResourceLoader> resource_loader =
-        std::make_unique<ufps::FileResourceLoader>(std::vector<std::filesystem::path>{"assets", "secret-assets"});
+    auto resource_loader = std::unique_ptr<ufps::ResourceLoader>();
+    if constexpr (ufps::config::use_embedded_resouce_loader)
+    {
+        ufps::log::info("using embedded resource loader");
+        resource_loader = std::make_unique<ufps::EmbeddedResourceLoader>();
+    }
+    else
+    {
+        ufps::log::info("using file resource loader");
+        resource_loader =
+            std::make_unique<ufps::FileResourceLoader>(std::vector<std::filesystem::path>{"assets", "secret-assets"});
+    }
     auto textures = std::vector<ufps::Texture>{};
 
     const auto diamond_floor_albedo_data = resource_loader->load_data_buffer("textures\\diamond_floor_albedo.png");
