@@ -156,7 +156,8 @@ int main()
     auto window = ufps::Window{ufps::WindowMode::WINDOWED, 1920u, 1080u, 1920u, 0u};
     auto running = true;
 
-    std::unique_ptr<ufps::ResourceLoader> resource_loader = std::make_unique<ufps::EmbeddedResourceLoader>();
+    std::unique_ptr<ufps::ResourceLoader> resource_loader =
+        std::make_unique<ufps::FileResourceLoader>(std::vector<std::filesystem::path>{"assets", "secret-assets"});
     auto textures = std::vector<ufps::Texture>{};
 
     const auto diamond_floor_albedo_data = resource_loader->load_data_buffer("textures\\diamond_floor_albedo.png");
