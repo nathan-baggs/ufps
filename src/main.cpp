@@ -232,7 +232,22 @@ int main()
             auto albedo = ufps::Texture{*model.albedo, "tex_leave_me_alone", sampler};
             albedo_index = texture_manager.add(std::move(albedo));
         }
-        const auto model_mat = material_manager.add(albedo_index, tex_index + 1u, tex_index + 2u);
+
+        auto normal_index = tex_index + 1u;
+        if (const auto &n = model.normal; n)
+        {
+            auto normal = ufps::Texture{*model.normal, "tex_leave_me_alone", sampler};
+            normal_index = texture_manager.add(std::move(normal));
+        }
+
+        auto specular_index = tex_index + 2u;
+        if (const auto &s = model.specular; s)
+        {
+            auto specular = ufps::Texture{*model.specular, "tex_leave_me_alone", sampler};
+            specular_index = texture_manager.add(std::move(specular));
+        }
+
+        const auto model_mat = material_manager.add(albedo_index, normal_index, specular_index);
 
         scene.entities.push_back({
             .name = std::format("model{}", index),

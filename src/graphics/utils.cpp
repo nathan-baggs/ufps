@@ -1,9 +1,11 @@
+#include "events/key.h"
 #include <cstdint>
 #include <filesystem>
 #include <memory>
 #include <optional>
 #include <ranges>
 #include <span>
+#include <utility>
 #include <vector>
 
 #include <assimp/DefaultLogger.hpp>
@@ -77,6 +79,15 @@ auto channels_to_format(int num_channels) -> ufps::TextureFormat
     }
 
     throw ufps::Exception("unsupported channel count: {}", num_channels);
+}
+
+auto get_texture_filename(::aiMaterial const *material, ::aiTextureType type) -> std::optional<std::string>
+{
+    auto path_str = ::aiString{};
+    material->GetTexture(type, 0u, &path_str);
+    const auto path = std::filesystem::path{path_str.C_Str()};
+
+    return path.empty() ? std::nullopt : std::optional{std::format("textures\\{}", path.filename().string())};
 }
 
 }
@@ -154,12 +165,6 @@ auto load_model(DataBufferView model_data, ResourceLoader &resource_loader) -> s
             continue;
         }
 
-        auto path_str = ::aiString{};
-        material->GetTexture(::aiTextureType_BASE_COLOR, 0u, &path_str);
-        const auto path = std::filesystem::path{path_str.C_Str()};
-        const auto filename = path.filename();
-        log::info("found base colour texture: {}", filename.string());
-
         const auto positions = std::span<::aiVector3D>{mesh->mVertices, mesh->mVertices + mesh->mNumVertices} |
                                std::views::transform(to_native);
         const auto normals = std::span<::aiVector3D>{mesh->mNormals, mesh->mNormals + mesh->mNumVertices} |
@@ -178,15 +183,22 @@ auto load_model(DataBufferView model_data, ResourceLoader &resource_loader) -> s
                                   { return std::span<std::uint32_t>{e.mIndices, e.mIndices + e.mNumIndices}; }) |
             std::views::join | std::ranges::to<std::vector>();
 
+        const auto load_tex = [material, &resource_loader](::aiTextureType type) -> std::optional<TextureData>
+        {
+            return get_texture_filename(material, type)
+                .transform([&resource_loader](const auto &e)
+                           { return load_texture(resource_loader.load_data_buffer(e)); });
+        };
+
         models.push_back({
             .mesh_data =
                 MeshData{
                     .vertices = vertices(positions, normals, tangents, bitangents, uvs),
                     .indices = std::move(indices),
                 },
-            .albedo = load_texture(resource_loader.load_data_buffer(std::format("textures\\{}", filename.string()))),
-            .normal = std::nullopt,
-            .specular = std::nullopt,
+            .albedo = load_tex(::aiTextureType_BASE_COLOR),
+            .normal = load_tex(::aiTextureType_NORMAL_CAMERA),
+            .specular = load_tex(::aiTextureType_METALNESS),
         });
     }
 
