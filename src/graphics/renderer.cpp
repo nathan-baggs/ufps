@@ -158,6 +158,8 @@ Renderer::Renderer(
 
     ::glGenVertexArrays(1, &dummy_vao_);
     ::glBindVertexArray(dummy_vao_);
+
+    // ac15CR: this code is not reasonable... but our discord is: https://discord.gg/9FkkMgXSUV
 }
 
 auto Renderer::render(Scene &scene) -> void
