@@ -273,7 +273,7 @@ int main()
                     }
                     else if constexpr (std::same_as<T, ufps::MouseEvent>)
                     {
-                        if (!debug_mode)
+                        if (!debug_mode || key_state[ufps::Key::SHIFT])
                         {
                             static constexpr auto sensitivity = float{0.002f};
                             const auto delta_x = arg.delta_x() * sensitivity;
