@@ -1,10 +1,10 @@
-#include "events/key.h"
 #include <cstdint>
 #include <filesystem>
 #include <memory>
 #include <optional>
 #include <ranges>
 #include <span>
+#include <tuple>
 #include <utility>
 #include <vector>
 
@@ -121,7 +121,8 @@ auto load_texture(DataBufferView image_data) -> TextureData
         .data = {{ptr, ptr + width * height * num_channels}}};
 }
 
-auto load_model(DataBufferView model_data, ResourceLoader &resource_loader) -> std::vector<ModelData>
+auto load_model(DataBufferView model_data, ResourceLoader &resource_loader)
+    -> std::tuple<std::string, std::vector<ModelData>>
 {
     [[maybe_unused]] static auto *logger = []
     {
@@ -202,6 +203,6 @@ auto load_model(DataBufferView model_data, ResourceLoader &resource_loader) -> s
         });
     }
 
-    return models;
+    return {loaded_meshes.front()->mName.C_Str(), models};
 }
 }

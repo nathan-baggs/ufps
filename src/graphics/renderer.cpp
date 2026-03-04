@@ -120,7 +120,7 @@ Renderer::Renderer(
     , dummy_vao_{0u, [](auto e) { ::glDeleteVertexArrays(1u, &e); }}
     , command_buffer_{"gbuffer_command_buffer"}
     , post_processing_command_buffer_{"post_processing_command_buffer"}
-    , post_process_sprite_{.name = "post_process_sprite", .mesh_view = mesh_manager.load(sprite()), .transform = {}, .material_index = 0u}
+    , post_process_sprite_{.name = "post_process_sprite", .sub_meshes = {{.mesh_view = mesh_manager.load(sprite()), .material_index = 0u}}, .transform = {}}
     , camera_buffer_{sizeof(CameraData), "camera_buffer"}
     , light_buffer_{sizeof(LightData), "light_buffer"}
     , object_data_buffer_{sizeof(ObjectData), "object_data_buffer"}
@@ -184,17 +184,22 @@ auto Renderer::render(Scene &scene) -> void
     const auto command_count = command_buffer_.build(scene);
     ::glBindBuffer(GL_DRAW_INDIRECT_BUFFER, command_buffer_.native_handle());
 
-    const auto object_data = scene.entities |
-                             std::views::transform(
-                                 [](const auto &e)
-                                 {
-                                     return ObjectData{
-                                         .model = e.transform,
-                                         .material_id_index = e.material_index,
-                                         .padding = {},
-                                     };
-                                 }) |
-                             std::ranges::to<std::vector>();
+    auto object_data = std::vector<ObjectData>{};
+
+    for (const auto &entity : scene.entities)
+    {
+        object_data.append_range(
+            entity.sub_meshes | std::views::transform(
+                                    [&entity](const auto &e)
+                                    {
+                                        return ObjectData{
+                                            .model = entity.transform,
+                                            .material_id_index = e.material_index,
+                                            .padding = {},
+                                        };
+                                    }));
+    }
+
     resize_gpu_buffer(object_data, object_data_buffer_);
     object_data_buffer_.write(std::as_bytes(std::span{object_data.data(), object_data.size()}), 0zu);
     ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, object_data_buffer_.native_handle());
@@ -262,5 +267,4 @@ auto Renderer::post_render(Scene &) -> void
         GL_COLOR_BUFFER_BIT,
         GL_NEAREST);
 }
-
 }

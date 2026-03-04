@@ -197,7 +197,7 @@ int main()
     const auto material_index_blue = material_manager.add(tex_index, tex_index + 1u, tex_index + 2u);
     const auto material_index_green = material_manager.add(tex_index, tex_index + 1u, tex_index + 2u);
 
-    const auto models =
+    const auto &[name, models] =
         ufps::load_model(resource_loader->load_data_buffer("models\\SM_Corner01_8_8_X.fbx"), *resource_loader);
 
     auto scene = ufps::Scene{
@@ -224,38 +224,41 @@ int main()
                 .quadratic_attenuation = 0.0002f,
                 .specular_power = 32.0f}}};
 
+    auto entity = ufps::Entity{.name = name};
+
     for (const auto &[index, model] : models | std::views::enumerate)
     {
         auto albedo_index = tex_index;
         if (const auto &a = model.albedo; a)
         {
-            auto albedo = ufps::Texture{*model.albedo, "tex_leave_me_alone", sampler};
+            auto albedo = ufps::Texture{*model.albedo, std::format("{}_albedo", name), sampler};
             albedo_index = texture_manager.add(std::move(albedo));
         }
 
         auto normal_index = tex_index + 1u;
         if (const auto &n = model.normal; n)
         {
-            auto normal = ufps::Texture{*model.normal, "tex_leave_me_alone", sampler};
+            auto normal = ufps::Texture{*model.normal, std::format("{}_normal", name), sampler};
             normal_index = texture_manager.add(std::move(normal));
         }
 
         auto specular_index = tex_index + 2u;
         if (const auto &s = model.specular; s)
         {
-            auto specular = ufps::Texture{*model.specular, "tex_leave_me_alone", sampler};
+            auto specular = ufps::Texture{*model.specular, std::format("{}_specular", name), sampler};
             specular_index = texture_manager.add(std::move(specular));
         }
 
         const auto model_mat = material_manager.add(albedo_index, normal_index, specular_index);
 
-        scene.entities.push_back({
-            .name = std::format("model{}", index),
+        entity.sub_meshes.push_back({
             .mesh_view = mesh_manager.load(model.mesh_data),
-            .transform = {{}, {1.0f}, {}},
             .material_index = model_mat,
         });
     }
+
+    scene.entities.push_back(std::move(entity));
+
     auto key_state = std::unordered_map<ufps::Key, bool>{
         {ufps::Key::W, false}, {ufps::Key::A, false}, {ufps::Key::S, false}, {ufps::Key::D, false}};
 

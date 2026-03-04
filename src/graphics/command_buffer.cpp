@@ -38,6 +38,8 @@ CommandBuffer::CommandBuffer(std::string_view name)
 auto CommandBuffer::build(const Scene &scene) -> std::uint32_t
 {
     const auto command = scene.entities |
+                         std::views::transform([](const auto &e) { return std::views::all(e.sub_meshes); }) |
+                         std::views::join |
                          std::views::transform(
                              [](const auto &e)
                              {
@@ -64,20 +66,29 @@ auto CommandBuffer::build(const Scene &scene) -> std::uint32_t
 
 auto CommandBuffer::build(const Entity &entity) -> std::uint32_t
 {
-    const auto cmd = IndirectCommand{
-        .count = entity.mesh_view.index_count,
-        .instance_count = 1u,
-        .first = entity.mesh_view.index_offset,
-        .base_vertex = 0u,
-        .base_instance = 0u,
-    };
-    const auto command_view = std::as_bytes(std::span{&cmd, 1});
+    const auto command = entity.sub_meshes |
+                         std::views::transform(
+                             [](const auto &e)
+                             {
+                                 const auto cmd = IndirectCommand{
+                                     .count = e.mesh_view.index_count,
+                                     .instance_count = 1u,
+                                     .first = e.mesh_view.index_offset,
+                                     .base_vertex = static_cast<std::int32_t>(e.mesh_view.vertex_offset),
+                                     .base_instance = 0u,
+                                 };
+                                 return cmd;
+                             }) |
+                         std::ranges::to<std::vector>();
 
-    resize_gpu_buffer(std::vector<IndirectCommand>{cmd}, command_buffer_);
+    const auto command_view =
+        DataBufferView{reinterpret_cast<const std::byte *>(command.data()), command.size() * sizeof(IndirectCommand)};
+
+    resize_gpu_buffer(command, command_buffer_);
 
     command_buffer_.write(command_view, 0u);
 
-    return 1u;
+    return command.size();
 }
 
 auto CommandBuffer::native_handle() const -> ::GLuint

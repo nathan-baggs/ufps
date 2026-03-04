@@ -43,23 +43,27 @@ struct Scene
             const auto transformed_ray =
                 Ray{inv_transform * Vector4{ray.origin, 1.0f}, inv_transform * Vector4{ray.direction, 0.0f}};
 
-            const auto indices = mesh_manager.index_data(entity.mesh_view);
-            const auto vertices = mesh_manager.vertex_data(entity.mesh_view);
-
-            for (const auto &indices : std::views::chunk(indices, 3))
+            for (const auto &[mesh_view, _] : entity.sub_meshes)
             {
-                const auto v0 = vertices[indices[0]].position;
-                const auto v1 = vertices[indices[1]].position;
-                const auto v2 = vertices[indices[2]].position;
+                const auto indices = mesh_manager.index_data(mesh_view);
+                const auto vertices = mesh_manager.vertex_data(mesh_view);
 
-                if (const auto distance = intersect(transformed_ray, v0, v1, v2); distance)
+                for (const auto &indices : std::views::chunk(indices, 3))
                 {
-                    const auto intersection_point = transformed_ray.origin + transformed_ray.direction * (*distance);
+                    const auto v0 = vertices[indices[0]].position;
+                    const auto v1 = vertices[indices[1]].position;
+                    const auto v2 = vertices[indices[2]].position;
 
-                    if (*distance < min_distance)
+                    if (const auto distance = intersect(transformed_ray, v0, v1, v2); distance)
                     {
-                        result = IntersectionResult{.entity = &entity, .position = intersection_point};
-                        min_distance = *distance;
+                        const auto intersection_point =
+                            transformed_ray.origin + transformed_ray.direction * (*distance);
+
+                        if (*distance < min_distance)
+                        {
+                            result = IntersectionResult{.entity = &entity, .position = intersection_point};
+                            min_distance = *distance;
+                        }
                     }
                 }
             }
