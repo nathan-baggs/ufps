@@ -14,6 +14,7 @@
 #include "core/scene.h"
 #include "events/mouse_button_event.h"
 #include "graphics/opengl.h"
+#include "graphics/utils.h"
 #include "graphics/window.h"
 #include "maths/matrix4.h"
 #include "maths/ray.h"
@@ -54,6 +55,15 @@ DebugRenderer::DebugRenderer(
     , enabled_{false}
     , click_{}
     , selected_entity_{}
+    , debug_lines_{}
+    , debug_line_buffer_{sizeof(LineData) * 2u, "line_data_buffer"}
+    , debug_line_program_{create_program(
+          resource_loader,
+          "shaders\\line.vert",
+          "line_vertex_shader",
+          "shaders\\line.frag",
+          "line_fragment_shader",
+          "line_program")}
 {
     IMGUI_CHECKVERSION();
     ::ImGui::CreateContext();
@@ -80,11 +90,55 @@ DebugRenderer::~DebugRenderer()
 
 auto DebugRenderer::post_render(Scene &scene) -> void
 {
+    if (selected_entity_)
+    {
+        debug_lines_.push_back({.position = {}, .colour = {1.0f, 0.0f, 0.0f}});
+        debug_lines_.push_back({.position = {0.0f, 1000.0f, 0.0f}, .colour = {0.0f, 1.0f, 0.0f}});
+    }
+
     Renderer::post_render(scene);
 
     if (!enabled_)
     {
         return;
+    }
+
+    auto debug_line_count = 0zu;
+
+    if (!debug_lines_.empty())
+    {
+        debug_line_count = debug_lines_.size();
+
+        light_pass_rt_.fb.unbind();
+        ::glBlitNamedFramebuffer(
+            gbuffer_rt_.fb.native_handle(),
+            0,
+            0u,
+            0u,
+            gbuffer_rt_.fb.width(),
+            gbuffer_rt_.fb.height(),
+            0u,
+            0u,
+            gbuffer_rt_.fb.width(),
+            gbuffer_rt_.fb.height(),
+            GL_DEPTH_BUFFER_BIT,
+            GL_NEAREST);
+        debug_line_program_.use();
+
+        resize_gpu_buffer(debug_lines_, debug_line_buffer_);
+        debug_line_buffer_.write(std::as_bytes(std::span{debug_lines_.data(), debug_lines_.size()}), 0zu);
+        ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, debug_line_buffer_.native_handle());
+        ::glBindBufferRange(
+            GL_SHADER_STORAGE_BUFFER,
+            1,
+            camera_buffer_.native_handle(),
+            camera_buffer_.frame_offset_bytes(),
+            sizeof(CameraData));
+        ::glDrawArrays(GL_LINES, 0, debug_lines_.size());
+
+        debug_lines_.clear();
+
+        debug_line_buffer_.advance();
     }
 
     auto &io = ::ImGui::GetIO();
@@ -103,6 +157,7 @@ auto DebugRenderer::post_render(Scene &scene) -> void
     ::ImGui::Begin("scene");
 
     ::ImGui::LabelText("FPS", "%0.1f", io.Framerate);
+    ::ImGui::LabelText("Debug Lines", "%0.1f", static_cast<float>(debug_line_count));
 
     for (auto &entity : scene.entities)
     {

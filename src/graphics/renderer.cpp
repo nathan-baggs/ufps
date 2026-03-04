@@ -30,20 +30,6 @@ using namespace std::literals;
 
 namespace
 {
-auto create_program(
-    ufps::ResourceLoader &resource_loader,
-    std::string_view vertex_path,
-    std::string_view vertex_name,
-    std::string_view fragment_path,
-    std::string_view fragment_name,
-    std::string_view program_name) -> ufps::Program
-{
-    const auto sample_vert =
-        ufps::Shader{resource_loader.load_string(vertex_path), ufps::ShaderType::VERTEX, vertex_name};
-    const auto sample_frag =
-        ufps::Shader{resource_loader.load_string(fragment_path), ufps::ShaderType::FRAGMENT, fragment_name};
-    return ufps::Program{sample_vert, sample_frag, program_name};
-}
 
 auto create_render_target(
     std::uint32_t colour_attachment_count,
@@ -266,5 +252,20 @@ auto Renderer::post_render(Scene &) -> void
         light_pass_rt_.fb.height(),
         GL_COLOR_BUFFER_BIT,
         GL_NEAREST);
+}
+
+auto Renderer::create_program(
+    ufps::ResourceLoader &resource_loader,
+    std::string_view vertex_path,
+    std::string_view vertex_name,
+    std::string_view fragment_path,
+    std::string_view fragment_name,
+    std::string_view program_name) -> ufps::Program
+{
+    const auto sample_vert =
+        ufps::Shader{resource_loader.load_string(vertex_path), ufps::ShaderType::VERTEX, vertex_name};
+    const auto sample_frag =
+        ufps::Shader{resource_loader.load_string(fragment_path), ufps::ShaderType::FRAGMENT, fragment_name};
+    return ufps::Program{sample_vert, sample_frag, program_name};
 }
 }
