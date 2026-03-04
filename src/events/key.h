@@ -36,6 +36,7 @@ enum class Key
     X = 0x58,
     Y = 0x59,
     Z = 0x5a,
+    SHIFT = VK_SHIFT,
     SPACE = VK_SPACE,
     F1 = VK_F1
 };
@@ -79,6 +80,7 @@ inline auto to_string(Key obj) -> std::string
         case Y: return "Y";
         case Z: return "Z";
         case F1: return "F1";
+        case SHIFT: return "SHIFT";
         case SPACE: return "SPACE";
     }
 

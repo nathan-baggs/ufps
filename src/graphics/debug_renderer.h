@@ -1,10 +1,12 @@
 #pragma once
 
 #include <optional>
+#include <vector>
 
 #include "core/entity.h"
 #include "core/scene.h"
 #include "events/mouse_button_event.h"
+#include "graphics/line_data.h"
 #include "graphics/mesh_manager.h"
 #include "graphics/renderer.h"
 #include "graphics/texture_manager.h"
@@ -35,6 +37,9 @@ class DebugRenderer : public Renderer
     bool enabled_;
     std::optional<MouseButtonEvent> click_;
     const Entity *selected_entity_;
+    std::vector<LineData> debug_lines_;
+    MultiBuffer<PersistentBuffer> debug_line_buffer_;
+    Program debug_line_program_;
 };
 
 }

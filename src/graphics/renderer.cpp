@@ -30,20 +30,6 @@ using namespace std::literals;
 
 namespace
 {
-auto create_program(
-    ufps::ResourceLoader &resource_loader,
-    std::string_view vertex_path,
-    std::string_view vertex_name,
-    std::string_view fragment_path,
-    std::string_view fragment_name,
-    std::string_view program_name) -> ufps::Program
-{
-    const auto sample_vert =
-        ufps::Shader{resource_loader.load_string(vertex_path), ufps::ShaderType::VERTEX, vertex_name};
-    const auto sample_frag =
-        ufps::Shader{resource_loader.load_string(fragment_path), ufps::ShaderType::FRAGMENT, fragment_name};
-    return ufps::Program{sample_vert, sample_frag, program_name};
-}
 
 auto create_render_target(
     std::uint32_t colour_attachment_count,
@@ -120,7 +106,7 @@ Renderer::Renderer(
     , dummy_vao_{0u, [](auto e) { ::glDeleteVertexArrays(1u, &e); }}
     , command_buffer_{"gbuffer_command_buffer"}
     , post_processing_command_buffer_{"post_processing_command_buffer"}
-    , post_process_sprite_{.name = "post_process_sprite", .mesh_view = mesh_manager.load(sprite()), .transform = {}, .material_index = 0u}
+    , post_process_sprite_{.name = "post_process_sprite", .sub_meshes = {{.mesh_view = mesh_manager.load(sprite()), .material_index = 0u}}, .transform = {}}
     , camera_buffer_{sizeof(CameraData), "camera_buffer"}
     , light_buffer_{sizeof(LightData), "light_buffer"}
     , object_data_buffer_{sizeof(ObjectData), "object_data_buffer"}
@@ -158,6 +144,8 @@ Renderer::Renderer(
 
     ::glGenVertexArrays(1, &dummy_vao_);
     ::glBindVertexArray(dummy_vao_);
+
+    // ac15CR: this code is not reasonable... but our discord is: https://discord.gg/9FkkMgXSUV
 }
 
 auto Renderer::render(Scene &scene) -> void
@@ -182,17 +170,22 @@ auto Renderer::render(Scene &scene) -> void
     const auto command_count = command_buffer_.build(scene);
     ::glBindBuffer(GL_DRAW_INDIRECT_BUFFER, command_buffer_.native_handle());
 
-    const auto object_data = scene.entities |
-                             std::views::transform(
-                                 [](const auto &e)
-                                 {
-                                     return ObjectData{
-                                         .model = e.transform,
-                                         .material_id_index = e.material_index,
-                                         .padding = {},
-                                     };
-                                 }) |
-                             std::ranges::to<std::vector>();
+    auto object_data = std::vector<ObjectData>{};
+
+    for (const auto &entity : scene.entities)
+    {
+        object_data.append_range(
+            entity.sub_meshes | std::views::transform(
+                                    [&entity](const auto &e)
+                                    {
+                                        return ObjectData{
+                                            .model = entity.transform,
+                                            .material_id_index = e.material_index,
+                                            .padding = {},
+                                        };
+                                    }));
+    }
+
     resize_gpu_buffer(object_data, object_data_buffer_);
     object_data_buffer_.write(std::as_bytes(std::span{object_data.data(), object_data.size()}), 0zu);
     ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, object_data_buffer_.native_handle());
@@ -261,4 +254,18 @@ auto Renderer::post_render(Scene &) -> void
         GL_NEAREST);
 }
 
+auto Renderer::create_program(
+    ufps::ResourceLoader &resource_loader,
+    std::string_view vertex_path,
+    std::string_view vertex_name,
+    std::string_view fragment_path,
+    std::string_view fragment_name,
+    std::string_view program_name) -> ufps::Program
+{
+    const auto sample_vert =
+        ufps::Shader{resource_loader.load_string(vertex_path), ufps::ShaderType::VERTEX, vertex_name};
+    const auto sample_frag =
+        ufps::Shader{resource_loader.load_string(fragment_path), ufps::ShaderType::FRAGMENT, fragment_name};
+    return ufps::Program{sample_vert, sample_frag, program_name};
+}
 }

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <deque>
 #include <vector>
 
 #include "graphics/buffer.h"
@@ -27,7 +28,7 @@ class TextureManager
   private:
     Buffer gpu_buffer_;
     std::vector<::GLuint64> cpu_buffer_;
-    std::vector<Texture> textures_;
+    std::deque<Texture> textures_;
 };
 
 }

@@ -20,31 +20,35 @@ FrameBuffer::FrameBuffer(
     const Texture *depth_texture,
     const std::string &name)
     : handle_(0u, [](const auto buffer) { ::glDeleteFramebuffers(1u, &buffer); })
-    , colour_textures_{colour_textures}
-    , depth_texture_{depth_texture}
+    , width_{}
+    , height_{}
     , name_{name}
+
 {
-    expect(!colour_textures_.empty(), "must have colour textures");
-    expect(colour_textures_.size() < 8u, "hit arbitrary colour texture limit");
+    expect(!colour_textures.empty(), "must have colour textures");
+    expect(colour_textures.size() < 8u, "hit arbitrary colour texture limit");
     expect(
         std::ranges::all_of(
-            colour_textures_,
+            colour_textures | std::views::drop(1zu),
             [&](const auto *e)
-            { return e->width() == colour_textures_[0]->width() && e->height() == colour_textures_[0]->height(); }),
+            { return e->width() == colour_textures[0]->width() && e->height() == colour_textures[0]->height(); }),
         "all colour textures must have same dimensions");
+
+    width_ = colour_textures[0]->width();
+    height_ = colour_textures[0]->height();
 
     ::glCreateFramebuffers(1, &handle_);
 
-    for (const auto &[index, colour_tex] : std::views::enumerate(colour_textures_))
+    for (const auto &[index, colour_tex] : std::views::enumerate(colour_textures))
     {
         ::glNamedFramebufferTexture(
             handle_, static_cast<::GLenum>(GL_COLOR_ATTACHMENT0 + index), colour_tex->native_handle(), 0);
     }
 
-    ::glNamedFramebufferTexture(handle_, GL_DEPTH_ATTACHMENT, depth_texture_->native_handle(), 0);
+    ::glNamedFramebufferTexture(handle_, GL_DEPTH_ATTACHMENT, depth_texture->native_handle(), 0);
 
     const auto attachments =
-        std::views::iota(0zu, colour_textures_.size()) |
+        std::views::iota(0zu, colour_textures.size()) |
         std::views::transform([](auto e) { return static_cast<::GLenum>(GL_COLOR_ATTACHMENT0 + e); }) |
         std::ranges::to<std::vector>();
 
@@ -74,17 +78,12 @@ auto FrameBuffer::unbind() const -> void
 
 auto FrameBuffer::width() const -> std::uint32_t
 {
-    return colour_textures_.front()->width();
+    return width_;
 }
 
 auto FrameBuffer::height() const -> std::uint32_t
 {
-    return colour_textures_.front()->height();
-}
-
-auto FrameBuffer::colour_textures() const -> std::span<const Texture *const>
-{
-    return colour_textures_;
+    return height_;
 }
 
 auto FrameBuffer::name() const -> std::string_view

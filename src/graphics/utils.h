@@ -3,7 +3,7 @@
 #include <cstddef>
 #include <ranges>
 #include <string_view>
-#include <type_traits>
+#include <tuple>
 #include <vector>
 
 #include "graphics/model_data.h"
@@ -55,6 +55,7 @@ auto resize_gpu_buffer(const std::vector<T> &cpu_buffer, Buffer &gpu_buffer)
 
 auto load_texture(DataBufferView image_data) -> TextureData;
 
-auto load_model(DataBufferView model_data, ResourceLoader &resource_loader) -> std::vector<ModelData>;
+auto load_model(DataBufferView model_data, ResourceLoader &resource_loader)
+    -> std::tuple<std::string, std::vector<ModelData>>;
 
 }

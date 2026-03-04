@@ -24,13 +24,12 @@ class FrameBuffer
 
     auto width() const -> std::uint32_t;
     auto height() const -> std::uint32_t;
-    auto colour_textures() const -> std::span<const Texture *const>;
     auto name() const -> std::string_view;
 
   private:
     AutoRelease<::GLuint> handle_;
-    std::vector<const Texture *> colour_textures_;
-    const Texture *depth_texture_;
+    std::uint32_t width_;
+    std::uint32_t height_;
     std::string name_;
 };
 

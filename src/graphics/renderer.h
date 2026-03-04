@@ -40,6 +40,14 @@ class Renderer
     auto render(Scene &scene) -> void;
 
   protected:
+    static auto create_program(
+        ufps::ResourceLoader &resource_loader,
+        std::string_view vertex_path,
+        std::string_view vertex_name,
+        std::string_view fragment_path,
+        std::string_view fragment_name,
+        std::string_view program_name) -> ufps::Program;
+
     virtual auto post_render(Scene &scene) -> void;
 
     const Window &window_;
