@@ -37,8 +37,7 @@ CommandBuffer::CommandBuffer(std::string_view name)
 
 auto CommandBuffer::build(const Scene &scene) -> std::uint32_t
 {
-    const auto command = scene.entities |
-                         std::views::transform([](const auto &e) { return std::views::all(e.sub_meshes); }) |
+    const auto command = scene.entities | std::views::transform([](const auto &e) { return e.sub_meshes(); }) |
                          std::views::join |
                          std::views::transform(
                              [](const auto &e)
@@ -66,7 +65,7 @@ auto CommandBuffer::build(const Scene &scene) -> std::uint32_t
 
 auto CommandBuffer::build(const Entity &entity) -> std::uint32_t
 {
-    const auto command = entity.sub_meshes |
+    const auto command = entity.sub_meshes() |
                          std::views::transform(
                              [](const auto &e)
                              {

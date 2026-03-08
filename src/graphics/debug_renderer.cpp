@@ -179,13 +179,15 @@ auto DebugRenderer::post_render(Scene &scene) -> void
     if (selected_entity_)
     {
         auto aabb_lines =
-            selected_entity_->sub_meshes |
+            selected_entity_->sub_meshes() |
             std::views::transform(
                 [&](const auto &e)
-                { return create_aabb_lines(e.aabb(), selected_entity_->transform, {0.0f, 1.0f, 0.0f}); }) |
+                { return create_aabb_lines(e.aabb(), selected_entity_->transform(), {0.4f, 0.4f, 0.4f}); }) |
             std::views::join;
 
         debug_lines_.append_range(aabb_lines);
+        debug_lines_.append_range(
+            create_aabb_lines(selected_entity_->aabb(), selected_entity_->transform(), {0.0f, 1.0f, 0.0f}));
     }
 
     Renderer::post_render(scene);
@@ -253,11 +255,11 @@ auto DebugRenderer::post_render(Scene &scene) -> void
 
     for (auto &entity : scene.entities)
     {
-        ::ImGui::CollapsingHeader(entity.name.c_str());
+        ::ImGui::CollapsingHeader(entity.name().c_str());
 
         if (&entity == selected_entity_)
         {
-            auto transform = Matrix4{entity.transform};
+            auto transform = Matrix4{entity.transform()};
             const auto &camera_data = scene.camera.data();
 
             ::ImGuizmo::Manipulate(
@@ -271,7 +273,7 @@ auto DebugRenderer::post_render(Scene &scene) -> void
                 nullptr,
                 nullptr);
 
-            entity.transform = Transform{transform};
+            entity.set_transform(transform);
         }
     }
 

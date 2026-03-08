@@ -106,7 +106,7 @@ Renderer::Renderer(
     , dummy_vao_{0u, [](auto e) { ::glDeleteVertexArrays(1u, &e); }}
     , command_buffer_{"gbuffer_command_buffer"}
     , post_processing_command_buffer_{"post_processing_command_buffer"}
-    , post_process_sprite_{.name = "post_process_sprite", .sub_meshes = {{mesh_manager.load(sprite()), 0u, mesh_manager}}, .transform = {}}
+    , post_process_sprite_{"post_process_sprite", std::vector<SubMesh>{{mesh_manager.load(sprite()), 0u, mesh_manager}}, {}}
     , camera_buffer_{sizeof(CameraData), "camera_buffer"}
     , light_buffer_{sizeof(LightData), "light_buffer"}
     , object_data_buffer_{sizeof(ObjectData), "object_data_buffer"}
@@ -175,15 +175,15 @@ auto Renderer::render(Scene &scene) -> void
     for (const auto &entity : scene.entities)
     {
         object_data.append_range(
-            entity.sub_meshes | std::views::transform(
-                                    [&entity](const auto &e)
-                                    {
-                                        return ObjectData{
-                                            .model = entity.transform,
-                                            .material_id_index = e.material_index(),
-                                            .padding = {},
-                                        };
-                                    }));
+            entity.sub_meshes() | std::views::transform(
+                                      [&entity](const auto &e)
+                                      {
+                                          return ObjectData{
+                                              .model = entity.transform(),
+                                              .material_id_index = e.material_index(),
+                                              .padding = {},
+                                          };
+                                      }));
     }
 
     resize_gpu_buffer(object_data, object_data_buffer_);

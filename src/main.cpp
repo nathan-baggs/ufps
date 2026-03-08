@@ -224,7 +224,7 @@ int main()
                 .quadratic_attenuation = 0.0002f,
                 .specular_power = 32.0f}}};
 
-    auto entity = ufps::Entity{.name = name};
+    auto sub_meshes = std::vector<ufps::SubMesh>{};
 
     for (const auto &[index, model] : models | std::views::enumerate)
     {
@@ -250,11 +250,10 @@ int main()
         }
 
         const auto model_mat = material_manager.add(albedo_index, normal_index, specular_index);
-
-        entity.sub_meshes.push_back({mesh_manager.load(model.mesh_data), model_mat, mesh_manager});
+        sub_meshes.push_back({mesh_manager.load(model.mesh_data), model_mat, mesh_manager});
     }
 
-    scene.entities.push_back(std::move(entity));
+    scene.entities.push_back({name, sub_meshes, {}});
 
     auto key_state = std::unordered_map<ufps::Key, bool>{
         {ufps::Key::W, false}, {ufps::Key::A, false}, {ufps::Key::S, false}, {ufps::Key::D, false}};
