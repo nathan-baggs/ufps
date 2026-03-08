@@ -106,7 +106,7 @@ Renderer::Renderer(
     , dummy_vao_{0u, [](auto e) { ::glDeleteVertexArrays(1u, &e); }}
     , command_buffer_{"gbuffer_command_buffer"}
     , post_processing_command_buffer_{"post_processing_command_buffer"}
-    , post_process_sprite_{.name = "post_process_sprite", .sub_meshes = {{.mesh_view = mesh_manager.load(sprite()), .material_index = 0u}}, .transform = {}}
+    , post_process_sprite_{.name = "post_process_sprite", .sub_meshes = {{mesh_manager.load(sprite()), 0u, mesh_manager}}, .transform = {}}
     , camera_buffer_{sizeof(CameraData), "camera_buffer"}
     , light_buffer_{sizeof(LightData), "light_buffer"}
     , object_data_buffer_{sizeof(ObjectData), "object_data_buffer"}
@@ -180,7 +180,7 @@ auto Renderer::render(Scene &scene) -> void
                                     {
                                         return ObjectData{
                                             .model = entity.transform,
-                                            .material_id_index = e.material_index,
+                                            .material_id_index = e.material_index(),
                                             .padding = {},
                                         };
                                     }));

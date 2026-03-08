@@ -4,17 +4,13 @@
 #include <string>
 #include <vector>
 
+#include "core/sub_mesh.h"
 #include "graphics/mesh_view.h"
+#include "maths/aabb.h"
 #include "maths/transform.h"
 
 namespace ufps
 {
-
-struct SubMesh
-{
-    MeshView mesh_view;
-    std::uint32_t material_index;
-};
 
 struct Entity
 {

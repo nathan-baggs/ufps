@@ -43,8 +43,9 @@ struct Scene
             const auto transformed_ray =
                 Ray{inv_transform * Vector4{ray.origin, 1.0f}, inv_transform * Vector4{ray.direction, 0.0f}};
 
-            for (const auto &[mesh_view, _] : entity.sub_meshes)
+            for (const auto &sub_mesh : entity.sub_meshes)
             {
+                const auto mesh_view = sub_mesh.mesh_view();
                 const auto indices = mesh_manager.index_data(mesh_view);
                 const auto vertices = mesh_manager.vertex_data(mesh_view);
 

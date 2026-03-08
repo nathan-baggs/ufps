@@ -251,10 +251,7 @@ int main()
 
         const auto model_mat = material_manager.add(albedo_index, normal_index, specular_index);
 
-        entity.sub_meshes.push_back({
-            .mesh_view = mesh_manager.load(model.mesh_data),
-            .material_index = model_mat,
-        });
+        entity.sub_meshes.push_back({mesh_manager.load(model.mesh_data), model_mat, mesh_manager});
     }
 
     scene.entities.push_back(std::move(entity));
