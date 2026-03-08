@@ -1,4 +1,5 @@
 target_sources(ufpslib PUBLIC
-	camera.cpp
+  camera.cpp
+  sub_mesh.cpp
 )
 
