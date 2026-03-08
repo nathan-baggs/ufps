@@ -1,6 +1,6 @@
 #include "graphics/mesh_manager.h"
 
-#include <ranges>
+#include <string_view>
 #include <vector>
 
 #include "graphics/buffer.h"
@@ -8,6 +8,8 @@
 #include "graphics/utils.h"
 #include "graphics/vertex_data.h"
 #include "utils/data_buffer.h"
+#include "utils/error.h"
+#include "utils/string_map.h"
 
 namespace ufps
 {
@@ -16,11 +18,14 @@ MeshManager::MeshManager()
     , index_data_cpu_{}
     , vertex_data_gpu_{sizeof(VertexData), "vertex_mesh_data"}
     , index_data_gpu_{sizeof(std::uint32_t), "index_mesh_data"}
+    , mesh_lookup_{}
 {
 }
 
-auto MeshManager::load(const MeshData &mesh_data) -> MeshView
+auto MeshManager::load(std::string_view name, const MeshData &mesh_data) -> MeshView
 {
+    expect(!mesh_lookup_.contains(name), "{} mesh exists", name);
+
     const auto vertex_offset = vertex_data_cpu_.size();
     const auto index_offset = index_data_cpu_.size();
 
@@ -36,12 +41,29 @@ auto MeshManager::load(const MeshData &mesh_data) -> MeshView
         reinterpret_cast<const std::byte *>(index_data_cpu_.data()), index_data_cpu_.size() * sizeof(std::uint32_t)};
     index_data_gpu_.write(index_data_view, 0u);
 
-    return {
+    auto mesh_view = MeshView{
         .index_offset = static_cast<std::uint32_t>(index_offset),
         .index_count = static_cast<std::uint32_t>(mesh_data.indices.size()),
         .vertex_offset = static_cast<std::uint32_t>(vertex_offset),
         .vertex_count = static_cast<std::uint32_t>(mesh_data.vertices.size()),
     };
+
+    mesh_lookup_.emplace(name, mesh_view);
+
+    return mesh_view;
+}
+
+auto MeshManager::mesh(std::string_view name) -> MeshView
+{
+    auto mesh_view = mesh_lookup_.find(name);
+    expect(mesh_view != std::ranges::cend(mesh_lookup_), "{} mesh does not exist", name);
+
+    return mesh_view->second;
+}
+
+auto MeshManager::mesh_names() const -> std::vector<std::string>
+{
+    return mesh_lookup_ | std::views::keys | std::ranges::to<std::vector>();
 }
 
 auto MeshManager::native_handle() const -> std::tuple<::GLuint, ::GLuint>
