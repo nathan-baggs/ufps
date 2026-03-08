@@ -139,7 +139,7 @@ auto walk_direction(std::unordered_map<ufps::Key, bool> &key_state, const ufps::
         direction -= camera.up();
     }
 
-    constexpr auto speed = 0.5f;
+    constexpr auto speed = 0.1f;
     return ufps::Vector3::normalise(direction) * speed;
 }
 
@@ -250,7 +250,8 @@ int main()
         }
 
         const auto model_mat = material_manager.add(albedo_index, normal_index, specular_index);
-        sub_meshes.push_back({mesh_manager.load(model.mesh_data), model_mat, mesh_manager});
+        sub_meshes.push_back(
+            {mesh_manager.load(std::format("{}_{}", name, index), model.mesh_data), model_mat, mesh_manager});
     }
 
     scene.entities.push_back({name, sub_meshes, {}});
