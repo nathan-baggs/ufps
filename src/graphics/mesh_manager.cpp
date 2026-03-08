@@ -49,12 +49,12 @@ auto MeshManager::native_handle() const -> std::tuple<::GLuint, ::GLuint>
     return {vertex_data_gpu_.native_handle(), index_data_gpu_.native_handle()};
 }
 
-auto MeshManager::index_data(MeshView view) -> std::span<std::uint32_t>
+auto MeshManager::index_data(MeshView view) const -> std::span<const std::uint32_t>
 {
     return {index_data_cpu_.data() + view.index_offset, view.index_count};
 }
 
-auto MeshManager::vertex_data(MeshView view) -> std::span<VertexData>
+auto MeshManager::vertex_data(MeshView view) const -> std::span<const VertexData>
 {
     return {vertex_data_cpu_.data() + view.vertex_offset, view.vertex_count};
 }
