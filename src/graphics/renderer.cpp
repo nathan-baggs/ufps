@@ -106,7 +106,7 @@ Renderer::Renderer(
     , dummy_vao_{0u, [](auto e) { ::glDeleteVertexArrays(1u, &e); }}
     , command_buffer_{"gbuffer_command_buffer"}
     , post_processing_command_buffer_{"post_processing_command_buffer"}
-    , post_process_sprite_{"post_process_sprite", std::vector<SubMesh>{{mesh_manager.load(sprite()), 0u, mesh_manager}}, {}}
+    , post_process_sprite_{"post_process_sprite", std::vector<SubMesh>{{mesh_manager.load("sprite", sprite()), 0u, mesh_manager}}, {}}
     , camera_buffer_{sizeof(CameraData), "camera_buffer"}
     , light_buffer_{sizeof(LightData), "light_buffer"}
     , object_data_buffer_{sizeof(ObjectData), "object_data_buffer"}
@@ -138,7 +138,8 @@ Renderer::Renderer(
           window_.render_height(),
           fb_sampler_,
           texture_manager,
-          "light_pass")}
+          "light_pass"),},
+    mesh_manager_{mesh_manager}
 {
     post_processing_command_buffer_.build(post_process_sprite_);
 
