@@ -276,14 +276,14 @@ auto DebugRenderer::post_render(Scene &scene) -> void
         scene.create_entity(mesh_names_cstr[*mesh_selected_index]);
     }
 
-    for (auto &entity : scene.entities)
+    for (auto &entity : scene.entities())
     {
         ::ImGui::CollapsingHeader(entity.name().c_str());
 
         if (&entity == selected_entity_)
         {
             auto transform = Matrix4{entity.transform()};
-            const auto &camera_data = scene.camera.data();
+            const auto &camera_data = scene.camera().data();
 
             ::ImGuizmo::Manipulate(
                 camera_data.view.data().data(),
@@ -303,44 +303,45 @@ auto DebugRenderer::post_render(Scene &scene) -> void
     if (::ImGui::CollapsingHeader("lights"))
     {
         float amb_colour[3]{};
-        std::memcpy(amb_colour, &scene.lights.ambient, sizeof(amb_colour));
+        std::memcpy(amb_colour, &scene.lights().ambient, sizeof(amb_colour));
 
         if (::ImGui::ColorPicker3("ambient light colour", amb_colour))
         {
-            std::memcpy(&scene.lights.ambient, amb_colour, sizeof(amb_colour));
+            std::memcpy(&scene.lights().ambient, amb_colour, sizeof(amb_colour));
         }
 
-        float pos[] = {scene.lights.light.position.x, scene.lights.light.position.y, scene.lights.light.position.z};
+        float pos[] = {
+            scene.lights().light.position.x, scene.lights().light.position.y, scene.lights().light.position.z};
         if (::ImGui::SliderFloat3("position", pos, -100.0f, 100.0f))
         {
-            scene.lights.light.position = {pos[0], pos[1], pos[2]};
+            scene.lights().light.position = {pos[0], pos[1], pos[2]};
         }
 
         float colour[3]{};
-        std::memcpy(colour, &scene.lights.light.colour, sizeof(colour));
+        std::memcpy(colour, &scene.lights().light.colour, sizeof(colour));
 
         if (::ImGui::ColorPicker3("light colour", colour))
         {
-            std::memcpy(&scene.lights.light.colour, colour, sizeof(colour));
+            std::memcpy(&scene.lights().light.colour, colour, sizeof(colour));
         }
 
-        ::ImGui::SliderFloat("power", &scene.lights.light.specular_power, 0.0f, 100.0f);
+        ::ImGui::SliderFloat("power", &scene.lights().light.specular_power, 0.0f, 100.0f);
 
         float atten[] = {
-            scene.lights.light.constant_attenuation,
-            scene.lights.light.linear_attenuation,
-            scene.lights.light.quadratic_attenuation};
+            scene.lights().light.constant_attenuation,
+            scene.lights().light.linear_attenuation,
+            scene.lights().light.quadratic_attenuation};
         if (::ImGui::SliderFloat3("attenuation", atten, 0.0f, 2.0f))
         {
-            scene.lights.light.constant_attenuation = atten[0];
-            scene.lights.light.linear_attenuation = atten[1];
-            scene.lights.light.quadratic_attenuation = atten[2];
+            scene.lights().light.constant_attenuation = atten[0];
+            scene.lights().light.linear_attenuation = atten[1];
+            scene.lights().light.quadratic_attenuation = atten[2];
         }
 
         if (!selected_entity_)
         {
-            auto transform = Matrix4{scene.lights.light.position};
-            const auto &camera_data = scene.camera.data();
+            auto transform = Matrix4{scene.lights().light.position};
+            const auto &camera_data = scene.camera().data();
 
             ::ImGuizmo::Manipulate(
                 camera_data.view.data().data(),
@@ -354,7 +355,7 @@ auto DebugRenderer::post_render(Scene &scene) -> void
                 nullptr);
 
             const auto new_transform = Transform{transform};
-            scene.lights.light.position = new_transform.position;
+            scene.lights().light.position = new_transform.position;
         }
     }
 
@@ -382,13 +383,13 @@ auto DebugRenderer::post_render(Scene &scene) -> void
     const auto aspect_ratio = static_cast<float>(window_.render_width()) / static_cast<float>(window_.render_height());
     for (auto i = 0u; i < gbuffer_rt_.colour_attachment_count; ++i)
     {
-        const auto tex = scene.texture_manager.texture(gbuffer_rt_.first_colour_attachment_index + i);
+        const auto tex = scene.texture_manager().texture(gbuffer_rt_.first_colour_attachment_index + i);
         ::ImGui::Image(
             tex->native_handle(), ::ImVec2(width * aspect_ratio, width), ::ImVec2(0.0f, 1.0f), ::ImVec2(1.0f, 0.0f));
         ::ImGui::SameLine();
     }
     ::ImGui::Image(
-        scene.texture_manager.texture(gbuffer_rt_.depth_attachment_index)->native_handle(),
+        scene.texture_manager().texture(gbuffer_rt_.depth_attachment_index)->native_handle(),
         ::ImVec2(width * aspect_ratio, width),
         ::ImVec2(0.0f, 1.0f),
         ::ImVec2(1.0f, 0.0f));
@@ -399,7 +400,7 @@ auto DebugRenderer::post_render(Scene &scene) -> void
 
     if (click_)
     {
-        const auto pick_ray = screen_ray(*click_, window_, scene.camera);
+        const auto pick_ray = screen_ray(*click_, window_, scene.camera());
         const auto intersection = scene.intersect_ray(pick_ray);
         selected_entity_ = intersection.transform([](const auto &e) { return e.entity; }).value_or(nullptr);
 

@@ -2,6 +2,7 @@
 
 #include <optional>
 #include <ranges>
+#include <type_traits>
 #include <vector>
 
 #include "core/camera.h"
@@ -33,14 +34,22 @@ struct LightData
     PointLight light;
 };
 
-struct Scene
+class Scene
 {
+  public:
+    Scene(
+        MeshManager &mesh_manager,
+        MaterialManager &material_manager,
+        TextureManager &texture_manager,
+        Camera camera,
+        LightData lights);
+
     constexpr auto intersect_ray(const Ray &ray) const -> std::optional<IntersectionResult>
     {
         auto result = std::optional<IntersectionResult>{};
         auto min_distance = std::numeric_limits<float>::max();
 
-        for (const auto &entity : entities)
+        for (const auto &entity : entities_)
         {
             const auto inv_transform = Matrix4::invert(entity.transform());
             const auto transformed_ray =
@@ -49,8 +58,8 @@ struct Scene
             for (const auto &render_entity : entity.render_entities())
             {
                 const auto mesh_view = render_entity.mesh_view();
-                const auto indices = mesh_manager.index_data(mesh_view);
-                const auto vertices = mesh_manager.vertex_data(mesh_view);
+                const auto indices = mesh_manager_.index_data(mesh_view);
+                const auto vertices = mesh_manager_.vertex_data(mesh_view);
 
                 for (const auto &indices : std::views::chunk(indices, 3))
                 {
@@ -76,22 +85,35 @@ struct Scene
         return result;
     }
 
-    auto create_entity(std::string_view name) -> void
-    {
-        const auto cached = std::ranges::find_if(entity_cache, [name](const auto &e) { return e.name() == name; });
-        expect(cached != std::ranges::cend(entity_cache), "unknown entity: {}", name);
+    auto create_entity(std::string_view name) -> void;
 
-        auto &new_entity = entities.emplace_back(*cached);
-        new_entity.set_transform({});
+    template <class Self>
+    auto entities(this Self &&self)
+    {
+        using t = std::conditional_t<std::is_const_v<std::remove_reference_t<Self>>, const Entity, Entity>;
+        return std::span<t>{self.entities_.data(), self.entities_.data() + self.entities_.size()};
     }
 
-    std::vector<Entity> entities;
-    std::vector<Entity> entity_cache;
-    MeshManager &mesh_manager;
-    MaterialManager &material_manager;
-    TextureManager &texture_manager;
-    Camera camera;
-    LightData lights;
+    auto cache_entity(std::string_view, Entity entity) -> void;
+
+    auto camera() -> Camera &;
+
+    auto lights() -> LightData &;
+
+    auto mesh_manager() const -> MeshManager &;
+
+    auto material_manager() const -> MaterialManager &;
+
+    auto texture_manager() const -> TextureManager &;
+
+  private:
+    std::vector<Entity> entities_;
+    std::vector<Entity> entity_cache_;
+    MeshManager &mesh_manager_;
+    MaterialManager &material_manager_;
+    TextureManager &texture_manager_;
+    Camera camera_;
+    LightData lights_;
 };
 
 }

@@ -199,28 +199,25 @@ int main()
     const auto material_index_green = material_manager.add(tex_index, tex_index + 1u, tex_index + 2u);
 
     auto scene = ufps::Scene{
-        .entities = {},
-        .mesh_manager = mesh_manager,
-        .material_manager = material_manager,
-        .texture_manager = texture_manager,
-        .camera =
-            {{},
-             {0.0f, 0.0f, -1.0f},
-             {0.0f, 1.0f, 0.0f},
-             std::numbers::pi_v<float> / 4.0f,
-             static_cast<float>(window.render_width()),
-             static_cast<float>(window.render_height()),
-             0.1f,
-             1000.0f},
-        .lights = {
-            .ambient = ufps::Colour{.r = 0.5f, .g = 0.5f, .b = 0.5f},
-            .light = {
-                .position = {},
-                .colour = {.r = 1.0f, .g = 1.0f, .b = 1.0f},
-                .constant_attenuation = 1.0f,
-                .linear_attenuation = 0.007f,
-                .quadratic_attenuation = 0.0002f,
-                .specular_power = 32.0f}}};
+        mesh_manager,
+        material_manager,
+        texture_manager,
+        {{},
+         {0.0f, 0.0f, -1.0f},
+         {0.0f, 1.0f, 0.0f},
+         std::numbers::pi_v<float> / 4.0f,
+         static_cast<float>(window.render_width()),
+         static_cast<float>(window.render_height()),
+         0.1f,
+         1000.0f},
+        {.ambient = ufps::Colour{.r = 0.5f, .g = 0.5f, .b = 0.5f},
+         .light = {
+             .position = {},
+             .colour = {.r = 1.0f, .g = 1.0f, .b = 1.0f},
+             .constant_attenuation = 1.0f,
+             .linear_attenuation = 0.007f,
+             .quadratic_attenuation = 0.0002f,
+             .specular_power = 32.0f}}};
 
     const auto models_to_load = std::vector{
         "models\\SM_Corner03_12_12_B_X.fbx"sv,
@@ -274,7 +271,7 @@ int main()
                                    }) |
                                std::ranges::to<std::vector>();
         ufps::log::debug("adding {} to cache", name);
-        scene.entity_cache.push_back({std::string{name}, std::move(render_entities), {}});
+        scene.cache_entity(name, {std::string{name}, std::move(render_entities), {}});
     }
 
     scene.create_entity("SM_Corner01_8_8_X");
@@ -316,8 +313,8 @@ int main()
                             static constexpr auto sensitivity = float{0.002f};
                             const auto delta_x = arg.delta_x() * sensitivity;
                             const auto delta_y = arg.delta_y() * sensitivity;
-                            scene.camera.adjust_yaw(delta_x);
-                            scene.camera.adjust_pitch(-delta_y);
+                            scene.camera().adjust_yaw(delta_x);
+                            scene.camera().adjust_pitch(-delta_y);
                         }
                     }
                     else if constexpr (std::same_as<T, ufps::MouseButtonEvent>)
@@ -330,7 +327,7 @@ int main()
             event = window.pump_event();
         }
 
-        scene.camera.translate(walk_direction(key_state, scene.camera));
+        scene.camera().translate(walk_direction(key_state, scene.camera()));
 
         renderer.render(scene);
 
