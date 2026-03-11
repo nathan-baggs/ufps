@@ -273,8 +273,7 @@ auto DebugRenderer::post_render(Scene &scene) -> void
 
     if (mesh_selected_index)
     {
-        auto &entity = scene.entities.back();
-        scene.entities.push_back(Entity{"new_entity", entity.render_entities() | std::ranges::to<std::vector>(), {}});
+        scene.create_entity(mesh_names_cstr[*mesh_selected_index]);
     }
 
     for (auto &entity : scene.entities)

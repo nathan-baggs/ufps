@@ -198,9 +198,6 @@ int main()
     const auto material_index_blue = material_manager.add(tex_index, tex_index + 1u, tex_index + 2u);
     const auto material_index_green = material_manager.add(tex_index, tex_index + 1u, tex_index + 2u);
 
-    const auto &[name, models] =
-        ufps::load_model(resource_loader->load_data_buffer("models\\SM_Corner01_8_8_X.fbx"), *resource_loader);
-
     auto scene = ufps::Scene{
         .entities = {},
         .mesh_manager = mesh_manager,
@@ -225,47 +222,62 @@ int main()
                 .quadratic_attenuation = 0.0002f,
                 .specular_power = 32.0f}}};
 
-    auto mesh_data = std::vector<ufps::MeshData>{};
-    auto materials = std::vector<std::uint32_t>{};
+    const auto models_to_load = std::vector{
+        "models\\SM_Corner03_12_12_B_X.fbx"sv,
+        "models\\SM_Corner01_8_8_X.fbx"sv,
+    };
 
-    for (const auto &[index, model] : models | std::views::enumerate)
+    for (const auto &model_to_load : models_to_load)
     {
-        auto albedo_index = tex_index;
-        if (const auto &a = model.albedo; a)
+        auto mesh_data = std::vector<ufps::MeshData>{};
+        auto materials = std::vector<std::uint32_t>{};
+        auto mesh_views = std::span<const ::ufps::MeshView>{};
+
+        const auto &[name, models] =
+            ufps::load_model(resource_loader->load_data_buffer(model_to_load), *resource_loader);
+
+        for (const auto &[index, model] : models | std::views::enumerate)
         {
-            auto albedo = ufps::Texture{*model.albedo, std::format("{}_albedo", name), sampler};
-            albedo_index = texture_manager.add(std::move(albedo));
+            auto albedo_index = tex_index;
+            if (const auto &a = model.albedo; a)
+            {
+                auto albedo = ufps::Texture{*model.albedo, std::format("{}_albedo", name), sampler};
+                albedo_index = texture_manager.add(std::move(albedo));
+            }
+
+            auto normal_index = tex_index + 1u;
+            if (const auto &n = model.normal; n)
+            {
+                auto normal = ufps::Texture{*model.normal, std::format("{}_normal", name), sampler};
+                normal_index = texture_manager.add(std::move(normal));
+            }
+
+            auto specular_index = tex_index + 2u;
+            if (const auto &s = model.specular; s)
+            {
+                auto specular = ufps::Texture{*model.specular, std::format("{}_specular", name), sampler};
+                specular_index = texture_manager.add(std::move(specular));
+            }
+
+            materials.push_back(material_manager.add(albedo_index, normal_index, specular_index));
+            mesh_data.push_back(model.mesh_data);
         }
 
-        auto normal_index = tex_index + 1u;
-        if (const auto &n = model.normal; n)
-        {
-            auto normal = ufps::Texture{*model.normal, std::format("{}_normal", name), sampler};
-            normal_index = texture_manager.add(std::move(normal));
-        }
+        mesh_views = mesh_manager.load(name, std::span<const ufps::MeshData>{mesh_data});
 
-        auto specular_index = tex_index + 2u;
-        if (const auto &s = model.specular; s)
-        {
-            auto specular = ufps::Texture{*model.specular, std::format("{}_specular", name), sampler};
-            specular_index = texture_manager.add(std::move(specular));
-        }
-
-        materials.push_back(material_manager.add(albedo_index, normal_index, specular_index));
-        mesh_data.push_back(model.mesh_data);
+        auto render_entities = std::views::zip(mesh_views, materials) |
+                               std::views::transform(
+                                   [&mesh_manager](const auto &e)
+                                   {
+                                       const auto &[mesh_view, material] = e;
+                                       return ufps::RenderEntity(mesh_view, material, mesh_manager);
+                                   }) |
+                               std::ranges::to<std::vector>();
+        ufps::log::debug("adding {} to cache", name);
+        scene.entity_cache.push_back({std::string{name}, std::move(render_entities), {}});
     }
 
-    const auto mesh_views = mesh_manager.load(name, std::span<const ufps::MeshData>{mesh_data});
-
-    auto render_entities = std::views::zip(mesh_views, materials) |
-                           std::views::transform(
-                               [&mesh_manager](const auto &e)
-                               {
-                                   const auto &[mesh_view, material] = e;
-                                   return ufps::RenderEntity(mesh_view, material, mesh_manager);
-                               }) |
-                           std::ranges::to<std::vector>();
-    scene.entities.push_back({name, std::move(render_entities), {}});
+    scene.create_entity("SM_Corner01_8_8_X");
 
     auto key_state = std::unordered_map<ufps::Key, bool>{
         {ufps::Key::W, false}, {ufps::Key::A, false}, {ufps::Key::S, false}, {ufps::Key::D, false}};

@@ -14,6 +14,9 @@
 #include "maths/ray.h"
 #include "maths/utils.h"
 #include "maths/vector4.h"
+#include "utils/error.h"
+#include "utils/log.h"
+#include "utils/string_map.h"
 
 namespace ufps
 {
@@ -73,7 +76,17 @@ struct Scene
         return result;
     }
 
+    auto create_entity(std::string_view name) -> void
+    {
+        const auto cached = std::ranges::find_if(entity_cache, [name](const auto &e) { return e.name() == name; });
+        expect(cached != std::ranges::cend(entity_cache), "unknown entity: {}", name);
+
+        auto &new_entity = entities.emplace_back(*cached);
+        new_entity.set_transform({});
+    }
+
     std::vector<Entity> entities;
+    std::vector<Entity> entity_cache;
     MeshManager &mesh_manager;
     MaterialManager &material_manager;
     TextureManager &texture_manager;
