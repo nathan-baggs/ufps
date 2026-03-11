@@ -5,13 +5,13 @@
 #include <string>
 #include <vector>
 
-#include "core/sub_mesh.h"
+#include "core/render_entity.h"
 #include "maths/aabb.h"
 #include "maths/transform.h"
 
 namespace
 {
-auto create_aabb(std::span<ufps::SubMesh> sub_meshes) -> ufps::AABB
+auto create_aabb(std::span<ufps::RenderEntity> render_entities) -> ufps::AABB
 {
     auto initial_aabb = ufps::AABB{
         .min = {std::numeric_limits<float>::max()},
@@ -19,7 +19,7 @@ auto create_aabb(std::span<ufps::SubMesh> sub_meshes) -> ufps::AABB
     };
 
     return std::ranges::fold_left(
-        sub_meshes,
+        render_entities,
         initial_aabb,
         [](const auto &a, const auto &e)
         {
@@ -43,11 +43,11 @@ auto create_aabb(std::span<ufps::SubMesh> sub_meshes) -> ufps::AABB
 
 namespace ufps
 {
-Entity::Entity(std::string name, std::vector<SubMesh> sub_meshes, Transform transform)
+Entity::Entity(std::string name, std::vector<RenderEntity> render_entities, Transform transform)
     : name_{std::move(name)}
-    , sub_meshes_{std::move(sub_meshes)}
+    , render_entities_{std::move(render_entities)}
     , transform_{std::move(transform)}
-    , aabb_{create_aabb(sub_meshes_)}
+    , aabb_{create_aabb(render_entities_)}
 {
 }
 
@@ -56,9 +56,9 @@ auto Entity::name() const -> std::string
     return name_;
 }
 
-auto Entity::sub_meshes() const -> std::span<const SubMesh>
+auto Entity::render_entities() const -> std::span<const RenderEntity>
 {
-    return sub_meshes_;
+    return render_entities_;
 }
 
 auto Entity::transform() const -> const Transform &

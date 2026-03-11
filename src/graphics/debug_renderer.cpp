@@ -179,7 +179,7 @@ auto DebugRenderer::post_render(Scene &scene) -> void
     if (selected_entity_)
     {
         auto aabb_lines =
-            selected_entity_->sub_meshes() |
+            selected_entity_->render_entities() |
             std::views::transform(
                 [&](const auto &e)
                 { return create_aabb_lines(e.aabb(), selected_entity_->transform(), {0.4f, 0.4f, 0.4f}); }) |
@@ -274,7 +274,7 @@ auto DebugRenderer::post_render(Scene &scene) -> void
     if (mesh_selected_index)
     {
         auto &entity = scene.entities.back();
-        scene.entities.push_back(Entity{"new_entity", entity.sub_meshes() | std::ranges::to<std::vector>(), {}});
+        scene.entities.push_back(Entity{"new_entity", entity.render_entities() | std::ranges::to<std::vector>(), {}});
     }
 
     for (auto &entity : scene.entities)

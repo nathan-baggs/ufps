@@ -1,4 +1,4 @@
-#include "core/sub_mesh.h"
+#include "core/render_entity.h"
 
 #include <algorithm>
 #include <cstdint>
@@ -45,24 +45,24 @@ auto calculate_aabb(ufps::MeshView mesh_view, const ufps::MeshManager &mesh_mana
 
 namespace ufps
 {
-SubMesh::SubMesh(MeshView mesh_view, std::uint32_t material_index, const MeshManager &mesh_manager)
+RenderEntity::RenderEntity(MeshView mesh_view, std::uint32_t material_index, const MeshManager &mesh_manager)
     : mesh_view_{mesh_view}
     , material_index_{material_index}
     , aabb_{calculate_aabb(mesh_view_, mesh_manager)}
 {
 }
 
-auto SubMesh::mesh_view() const -> MeshView
+auto RenderEntity::mesh_view() const -> MeshView
 {
     return mesh_view_;
 }
 
-auto SubMesh::material_index() const -> std::uint32_t
+auto RenderEntity::material_index() const -> std::uint32_t
 {
     return material_index_;
 }
 
-auto SubMesh::aabb() const -> const AABB &
+auto RenderEntity::aabb() const -> const AABB &
 {
     return aabb_;
 }

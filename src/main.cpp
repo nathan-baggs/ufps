@@ -9,6 +9,7 @@
 #include <windows.h>
 
 #include "config.h"
+#include "core/render_entity.h"
 #include "core/scene.h"
 #include "events/key.h"
 #include "events/key_event.h"
@@ -256,15 +257,15 @@ int main()
 
     const auto mesh_views = mesh_manager.load(name, std::span<const ufps::MeshData>{mesh_data});
 
-    auto sub_meshes = std::views::zip(mesh_views, materials) |
-                      std::views::transform(
-                          [&mesh_manager](const auto &e)
-                          {
-                              const auto &[mesh_view, material] = e;
-                              return ufps::SubMesh(mesh_view, material, mesh_manager);
-                          }) |
-                      std::ranges::to<std::vector>();
-    scene.entities.push_back({name, std::move(sub_meshes), {}});
+    auto render_entities = std::views::zip(mesh_views, materials) |
+                           std::views::transform(
+                               [&mesh_manager](const auto &e)
+                               {
+                                   const auto &[mesh_view, material] = e;
+                                   return ufps::RenderEntity(mesh_view, material, mesh_manager);
+                               }) |
+                           std::ranges::to<std::vector>();
+    scene.entities.push_back({name, std::move(render_entities), {}});
 
     auto key_state = std::unordered_map<ufps::Key, bool>{
         {ufps::Key::W, false}, {ufps::Key::A, false}, {ufps::Key::S, false}, {ufps::Key::D, false}};

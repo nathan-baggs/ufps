@@ -8,10 +8,10 @@
 
 namespace ufps
 {
-class SubMesh
+class RenderEntity
 {
   public:
-    SubMesh(MeshView mesh_view, std::uint32_t material_index, const MeshManager &mesh_manager);
+    RenderEntity(MeshView mesh_view, std::uint32_t material_index, const MeshManager &mesh_manager);
 
     auto mesh_view() const -> MeshView;
     auto material_index() const -> std::uint32_t;

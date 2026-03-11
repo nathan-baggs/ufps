@@ -184,15 +184,15 @@ auto Renderer::render(Scene &scene) -> void
     for (const auto &entity : scene.entities)
     {
         object_data.append_range(
-            entity.sub_meshes() | std::views::transform(
-                                      [&entity](const auto &e)
-                                      {
-                                          return ObjectData{
-                                              .model = entity.transform(),
-                                              .material_id_index = e.material_index(),
-                                              .padding = {},
-                                          };
-                                      }));
+            entity.render_entities() | std::views::transform(
+                                           [&entity](const auto &e)
+                                           {
+                                               return ObjectData{
+                                                   .model = entity.transform(),
+                                                   .material_id_index = e.material_index(),
+                                                   .padding = {},
+                                               };
+                                           }));
     }
 
     resize_gpu_buffer(object_data, object_data_buffer_);
