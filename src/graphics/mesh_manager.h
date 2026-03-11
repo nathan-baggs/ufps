@@ -18,9 +18,9 @@ class MeshManager
 {
   public:
     MeshManager();
-    auto load(std::string_view name, const MeshData &mesh_data) -> MeshView;
+    auto load(std::string_view name, std::span<const MeshData> mesh_data) -> std::span<const MeshView>;
 
-    auto mesh(std::string_view name) -> MeshView;
+    auto mesh(std::string_view name) -> std::span<const MeshView>;
 
     auto mesh_names() const -> std::vector<std::string>;
 
@@ -37,7 +37,7 @@ class MeshManager
     std::vector<std::uint32_t> index_data_cpu_;
     Buffer vertex_data_gpu_;
     Buffer index_data_gpu_;
-    StringMap<MeshView> mesh_lookup_;
+    StringMap<std::vector<MeshView>> mesh_lookup_;
 };
 
 }

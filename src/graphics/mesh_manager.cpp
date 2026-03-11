@@ -22,38 +22,44 @@ MeshManager::MeshManager()
 {
 }
 
-auto MeshManager::load(std::string_view name, const MeshData &mesh_data) -> MeshView
+auto MeshManager::load(std::string_view name, std::span<const MeshData> meshes) -> std::span<const MeshView>
 {
     expect(!mesh_lookup_.contains(name), "{} mesh exists", name);
 
-    const auto vertex_offset = vertex_data_cpu_.size();
-    const auto index_offset = index_data_cpu_.size();
+    auto mesh_views = std::vector<MeshView>{};
 
-    vertex_data_cpu_.append_range(mesh_data.vertices);
-    resize_gpu_buffer(vertex_data_cpu_, vertex_data_gpu_);
-    const auto vertex_data_view = DataBufferView{
-        reinterpret_cast<const std::byte *>(vertex_data_cpu_.data()), vertex_data_cpu_.size() * sizeof(VertexData)};
-    vertex_data_gpu_.write(vertex_data_view, 0u);
+    for (const auto &mesh_data : meshes)
+    {
+        const auto vertex_offset = vertex_data_cpu_.size();
+        const auto index_offset = index_data_cpu_.size();
 
-    index_data_cpu_.append_range(mesh_data.indices);
-    resize_gpu_buffer(index_data_cpu_, index_data_gpu_);
-    const auto index_data_view = DataBufferView{
-        reinterpret_cast<const std::byte *>(index_data_cpu_.data()), index_data_cpu_.size() * sizeof(std::uint32_t)};
-    index_data_gpu_.write(index_data_view, 0u);
+        vertex_data_cpu_.append_range(mesh_data.vertices);
+        resize_gpu_buffer(vertex_data_cpu_, vertex_data_gpu_);
+        const auto vertex_data_view = DataBufferView{
+            reinterpret_cast<const std::byte *>(vertex_data_cpu_.data()), vertex_data_cpu_.size() * sizeof(VertexData)};
+        vertex_data_gpu_.write(vertex_data_view, 0u);
 
-    auto mesh_view = MeshView{
-        .index_offset = static_cast<std::uint32_t>(index_offset),
-        .index_count = static_cast<std::uint32_t>(mesh_data.indices.size()),
-        .vertex_offset = static_cast<std::uint32_t>(vertex_offset),
-        .vertex_count = static_cast<std::uint32_t>(mesh_data.vertices.size()),
-    };
+        index_data_cpu_.append_range(mesh_data.indices);
+        resize_gpu_buffer(index_data_cpu_, index_data_gpu_);
+        const auto index_data_view = DataBufferView{
+            reinterpret_cast<const std::byte *>(index_data_cpu_.data()),
+            index_data_cpu_.size() * sizeof(std::uint32_t)};
+        index_data_gpu_.write(index_data_view, 0u);
 
-    mesh_lookup_.emplace(name, mesh_view);
+        mesh_views.push_back({
+            .index_offset = static_cast<std::uint32_t>(index_offset),
+            .index_count = static_cast<std::uint32_t>(mesh_data.indices.size()),
+            .vertex_offset = static_cast<std::uint32_t>(vertex_offset),
+            .vertex_count = static_cast<std::uint32_t>(mesh_data.vertices.size()),
+        });
+    }
 
-    return mesh_view;
+    const auto &[iter, _] = mesh_lookup_.emplace(name, mesh_views);
+
+    return iter->second;
 }
 
-auto MeshManager::mesh(std::string_view name) -> MeshView
+auto MeshManager::mesh(std::string_view name) -> std::span<const MeshView>
 {
     auto mesh_view = mesh_lookup_.find(name);
     expect(mesh_view != std::ranges::cend(mesh_lookup_), "{} mesh does not exist", name);
