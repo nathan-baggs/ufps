@@ -224,7 +224,8 @@ int main()
                 .quadratic_attenuation = 0.0002f,
                 .specular_power = 32.0f}}};
 
-    auto sub_meshes = std::vector<ufps::SubMesh>{};
+    auto mesh_data = std::vector<ufps::MeshData>{};
+    auto materials = std::vector<std::uint32_t>{};
 
     for (const auto &[index, model] : models | std::views::enumerate)
     {
@@ -249,12 +250,21 @@ int main()
             specular_index = texture_manager.add(std::move(specular));
         }
 
-        const auto model_mat = material_manager.add(albedo_index, normal_index, specular_index);
-        sub_meshes.push_back(
-            {mesh_manager.load(std::format("{}_{}", name, index), model.mesh_data), model_mat, mesh_manager});
+        materials.push_back(material_manager.add(albedo_index, normal_index, specular_index));
+        mesh_data.push_back(model.mesh_data);
     }
 
-    scene.entities.push_back({name, sub_meshes, {}});
+    const auto mesh_views = mesh_manager.load(name, std::span<const ufps::MeshData>{mesh_data});
+
+    auto sub_meshes = std::views::zip(mesh_views, materials) |
+                      std::views::transform(
+                          [&mesh_manager](const auto &e)
+                          {
+                              const auto &[mesh_view, material] = e;
+                              return ufps::SubMesh(mesh_view, material, mesh_manager);
+                          }) |
+                      std::ranges::to<std::vector>();
+    scene.entities.push_back({name, std::move(sub_meshes), {}});
 
     auto key_state = std::unordered_map<ufps::Key, bool>{
         {ufps::Key::W, false}, {ufps::Key::A, false}, {ufps::Key::S, false}, {ufps::Key::D, false}};

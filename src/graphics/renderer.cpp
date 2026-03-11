@@ -92,6 +92,14 @@ auto sprite() -> ufps::MeshData
 
     return {.vertices = vertices(positions, positions, positions, positions, uvs), .indices = std::move(indices)};
 }
+
+auto create_sprite(ufps::MeshManager &mesh_manager) -> ufps::Entity
+{
+    const auto mesh_data = std::vector{sprite()};
+    const auto mesh_views = mesh_manager.load("sprite", mesh_data);
+    return {"post_process_sprite", {{mesh_views.front(), 0u, mesh_manager}}, {}};
+}
+
 }
 
 namespace ufps
@@ -106,7 +114,7 @@ Renderer::Renderer(
     , dummy_vao_{0u, [](auto e) { ::glDeleteVertexArrays(1u, &e); }}
     , command_buffer_{"gbuffer_command_buffer"}
     , post_processing_command_buffer_{"post_processing_command_buffer"}
-    , post_process_sprite_{"post_process_sprite", std::vector<SubMesh>{{mesh_manager.load("sprite", sprite()), 0u, mesh_manager}}, {}}
+    , post_process_sprite_{create_sprite(mesh_manager)}
     , camera_buffer_{sizeof(CameraData), "camera_buffer"}
     , light_buffer_{sizeof(LightData), "light_buffer"}
     , object_data_buffer_{sizeof(ObjectData), "object_data_buffer"}
