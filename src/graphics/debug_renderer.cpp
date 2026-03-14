@@ -187,9 +187,9 @@ DebugRenderer::~DebugRenderer()
 
 auto DebugRenderer::post_render(Scene &scene) -> void
 {
-    if (std::holds_alternative<const Entity *>(selected_))
+    if (std::holds_alternative<Entity *>(selected_))
     {
-        const auto *selected_entity = std::get<const Entity *>(selected_);
+        const auto *selected_entity = std::get<Entity *>(selected_);
         auto aabb_lines =
             selected_entity->render_entities() |
             std::views::transform(
@@ -338,91 +338,38 @@ auto DebugRenderer::post_render(Scene &scene) -> void
     for (auto &entity : scene.entities())
     {
         ::ImGui::CollapsingHeader(entity.name().c_str());
-
-        if (const auto selected_entity = std::get_if<const Entity *>(&selected_);
-            selected_entity && *selected_entity == &entity)
-        {
-            auto transform = Matrix4{entity.transform()};
-            const auto &camera_data = scene.camera().data();
-
-            static float snap_translation[3] = {1.0f, 1.0f, 1.0f};
-
-            ::ImGuizmo::Manipulate(
-                camera_data.view.data().data(),
-                camera_data.projection.data().data(),
-                ::ImGuizmo::TRANSLATE | ::ImGuizmo::SCALE | ::ImGuizmo::ROTATE,
-                ::ImGuizmo::WORLD,
-                const_cast<float *>(transform.data().data()),
-                nullptr,
-                snap_translation,
-                nullptr,
-                nullptr);
-
-            entity.set_transform(transform);
-        }
     }
 
     for (const auto &[index, light] : std::views::enumerate(scene.lights().lights))
     {
         const auto light_name = std::format("light {}", index);
 
-        if (::ImGui::CollapsingHeader(light_name.c_str()))
+        ::ImGui::CollapsingHeader(light_name.c_str());
+    }
+
+    float amb_colour[3]{};
+    std::memcpy(amb_colour, &scene.lights().ambient, sizeof(amb_colour));
+
+    if (::ImGui::ColorPicker3("ambient light colour", amb_colour))
+    {
+        std::memcpy(&scene.lights().ambient, amb_colour, sizeof(amb_colour));
+    }
+    const auto camera_transform = scene.camera().data().view;
+
+    ::ImGui::BeginTable(
+        "transform", 4, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingFixedFit);
+
+    for (auto row = 0; row < 4; ++row)
+    {
+        ::ImGui::TableNextRow();
+        for (auto col = 0; col < 4; ++col)
         {
-            float amb_colour[3]{};
-            std::memcpy(amb_colour, &scene.lights().ambient, sizeof(amb_colour));
-
-            if (::ImGui::ColorPicker3("ambient light colour", amb_colour))
-            {
-                std::memcpy(&scene.lights().ambient, amb_colour, sizeof(amb_colour));
-            }
-
-            float pos[] = {light.position.x, light.position.y, light.position.z};
-            if (::ImGui::SliderFloat3("position", pos, -100.0f, 100.0f))
-            {
-                light.position = {pos[0], pos[1], pos[2]};
-            }
-
-            float colour[3]{};
-            std::memcpy(colour, &light.colour, sizeof(colour));
-
-            if (::ImGui::ColorPicker3("light colour", colour))
-            {
-                std::memcpy(&light.colour, colour, sizeof(colour));
-            }
-
-            ::ImGui::SliderFloat("power", &light.specular_power, 0.0f, 100.0f);
-
-            float atten[] = {light.constant_attenuation, light.linear_attenuation, light.quadratic_attenuation};
-            if (::ImGui::SliderFloat3("attenuation", atten, 0.0f, 2.0f))
-            {
-                light.constant_attenuation = atten[0];
-                light.linear_attenuation = atten[1];
-                light.quadratic_attenuation = atten[2];
-            }
+            ::ImGui::TableSetColumnIndex(col);
+            ::ImGui::Text("%0.2f", camera_transform[col * 4 + row]);
         }
     }
 
-    if (auto **selected_light = std::get_if<PointLight *>(&selected_); selected_light)
-    {
-        auto *light = *selected_light;
-
-        auto transform = Matrix4{light->position};
-        const auto &camera_data = scene.camera().data();
-
-        ::ImGuizmo::Manipulate(
-            camera_data.view.data().data(),
-            camera_data.projection.data().data(),
-            ::ImGuizmo::TRANSLATE | ::ImGuizmo::SCALE | ::ImGuizmo::BOUNDS | ::ImGuizmo::ROTATE,
-            ::ImGuizmo::WORLD,
-            const_cast<float *>(transform.data().data()),
-            nullptr,
-            nullptr,
-            nullptr,
-            nullptr);
-
-        const auto new_transform = Transform{transform};
-        light->position = new_transform.position;
-    }
+    ::ImGui::EndTable();
 
     ::ImGui::End();
     ::ImGui::Begin("log");
@@ -490,13 +437,107 @@ auto DebugRenderer::post_render(Scene &scene) -> void
         ::ImVec2(1.0f, 0.0f));
     ::ImGui::End();
 
+    if (!std::holds_alternative<std::monostate>(selected_))
+    {
+        ::ImGui::Begin("inspector");
+
+        if (auto **selected_entity = std::get_if<Entity *>(&selected_))
+        {
+            auto *entity = *selected_entity;
+            ::ImGui::Text("entity: %s", entity->name().c_str());
+
+            auto transform = Matrix4{entity->transform()};
+
+            ::ImGui::BeginTable(
+                "transform", 4, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingFixedFit);
+
+            for (auto row = 0; row < 4; ++row)
+            {
+                ::ImGui::TableNextRow();
+                for (auto col = 0; col < 4; ++col)
+                {
+                    ::ImGui::TableSetColumnIndex(col);
+                    ::ImGui::Text("%0.2f", transform[col * 4 + row]);
+                }
+            }
+
+            ::ImGui::EndTable();
+
+            const auto &camera_data = scene.camera().data();
+
+            static float snap_translation[3] = {1.0f, 1.0f, 1.0f};
+
+            ::ImGuizmo::Manipulate(
+                camera_data.view.data().data(),
+                camera_data.projection.data().data(),
+                ::ImGuizmo::TRANSLATE | ::ImGuizmo::SCALE | ::ImGuizmo::ROTATE,
+                ::ImGuizmo::WORLD,
+                const_cast<float *>(transform.data().data()),
+                nullptr,
+                snap_translation,
+                nullptr,
+                nullptr);
+
+            entity->set_transform(transform);
+        }
+        else if (auto **selected_light = std::get_if<PointLight *>(&selected_))
+        {
+            auto *light = *selected_light;
+
+            ::ImGui::Text("point light");
+
+            float pos[] = {light->position.x, light->position.y, light->position.z};
+            if (::ImGui::SliderFloat3("position", pos, -100.0f, 100.0f))
+            {
+                light->position = {pos[0], pos[1], pos[2]};
+            }
+
+            float colour[3]{};
+            std::memcpy(colour, &light->colour, sizeof(colour));
+
+            if (::ImGui::ColorPicker3("light colour", colour))
+            {
+                std::memcpy(&light->colour, colour, sizeof(colour));
+            }
+
+            ::ImGui::SliderFloat("power", &light->specular_power, 0.0f, 100.0f);
+
+            float atten[] = {light->constant_attenuation, light->linear_attenuation, light->quadratic_attenuation};
+            if (::ImGui::SliderFloat3("attenuation", atten, 0.0f, 2.0f))
+            {
+                light->constant_attenuation = atten[0];
+                light->linear_attenuation = atten[1];
+                light->quadratic_attenuation = atten[2];
+            }
+
+            auto transform = Matrix4{light->position};
+            const auto &camera_data = scene.camera().data();
+
+            ::ImGuizmo::Manipulate(
+                camera_data.view.data().data(),
+                camera_data.projection.data().data(),
+                ::ImGuizmo::TRANSLATE | ::ImGuizmo::SCALE | ::ImGuizmo::BOUNDS | ::ImGuizmo::ROTATE,
+                ::ImGuizmo::WORLD,
+                const_cast<float *>(transform.data().data()),
+                nullptr,
+                nullptr,
+                nullptr,
+                nullptr);
+
+            const auto new_transform = Transform{transform};
+            light->position = new_transform.position;
+        }
+
+        ::ImGui::End();
+    }
+
     ::ImGui::Render();
     ::ImGui_ImplOpenGL3_RenderDrawData(::ImGui::GetDrawData());
 
     if (click_)
     {
         const auto pick_ray = screen_ray(*click_, window_, scene.camera());
-        const auto intersection = scene.intersect_ray(pick_ray);
+        auto intersection = scene.intersect_ray(pick_ray);
         if (intersection)
         {
             selected_ = intersection->entity;

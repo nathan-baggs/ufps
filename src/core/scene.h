@@ -20,7 +20,7 @@ namespace ufps
 
 struct IntersectionResult
 {
-    const Entity *entity;
+    Entity *entity;
     Vector3 position;
     float distance;
 };
@@ -41,7 +41,7 @@ class Scene
         Camera camera,
         LightData lights);
 
-    constexpr auto intersect_ray(const Ray &ray) const -> std::optional<IntersectionResult>;
+    constexpr auto intersect_ray(const Ray &ray) -> std::optional<IntersectionResult>;
 
     auto create_entity(std::string_view name) -> void;
 
@@ -94,12 +94,12 @@ class Scene
     LightData lights_;
 };
 
-constexpr auto Scene::intersect_ray(const Ray &ray) const -> std::optional<IntersectionResult>
+constexpr auto Scene::intersect_ray(const Ray &ray) -> std::optional<IntersectionResult>
 {
     auto result = std::optional<IntersectionResult>{};
     auto min_distance = std::numeric_limits<float>::max();
 
-    for (const auto &entity : entities_)
+    for (auto &entity : entities_)
     {
         const auto inv_transform = Matrix4::invert(entity.transform());
         const auto transformed_ray =
