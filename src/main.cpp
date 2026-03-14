@@ -189,6 +189,8 @@ int main()
     auto material_manager = ufps::MaterialManager{};
     auto texture_manager = ufps::TextureManager{};
 
+    mesh_manager.load("cube", std::vector{cube()});
+
     const auto tex_index = texture_manager.add(std::move(textures));
 
     auto renderer = ufps::DebugRenderer{window, *resource_loader, texture_manager, mesh_manager};
