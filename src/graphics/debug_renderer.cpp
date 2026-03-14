@@ -298,6 +298,19 @@ auto DebugRenderer::post_render(Scene &scene) -> void
     ::ImGui::LabelText("FPS", "%0.1f", io.Framerate);
     ::ImGui::LabelText("Debug Lines", "%0.1f", static_cast<float>(debug_line_count));
 
+    if (::ImGui::Button("add light"))
+    {
+        scene.add(
+            PointLight{
+                .position = {},
+                .colour = {.r = 1.0f, .g = 1.0f, .b = 1.0f},
+                .constant_attenuation = 1.0f,
+                .linear_attenuation = 0.007f,
+                .quadratic_attenuation = 0.0002f,
+                .specular_power = 32.0f});
+        selected_ = &scene.lights().lights.back();
+    }
+
     const auto mesh_names_cstr = mesh_manager_.mesh_names() |
                                  std::views::transform([](const auto &e) { return e.c_str(); }) |
                                  std::ranges::to<std::vector>();
@@ -319,6 +332,7 @@ auto DebugRenderer::post_render(Scene &scene) -> void
     if (mesh_selected_index)
     {
         scene.create_entity(mesh_names_cstr[*mesh_selected_index]);
+        selected_ = &scene.entities().back();
     }
 
     for (auto &entity : scene.entities())
