@@ -2,7 +2,6 @@
 
 #include <cstring>
 #include <format>
-#include <locale>
 #include <optional>
 #include <ranges>
 #include <string>
@@ -18,6 +17,7 @@
 #include "graphics/colour.h"
 #include "graphics/line_data.h"
 #include "graphics/opengl.h"
+#include "graphics/point_light.h"
 #include "graphics/utils.h"
 #include "graphics/window.h"
 #include "maths/aabb.h"
@@ -209,15 +209,6 @@ auto DebugRenderer::post_render(Scene &scene) -> void
         return;
     }
 
-    const auto light_transform = Transform{scene.lights().light.position, {debug_light_scale}, {}};
-    const auto light_model = Matrix4{light_transform};
-
-    const auto debug_light_aabb = ufps::AABB{
-        .min = light_model * Vector4{-1.0f, -1.0f, -1.0f, 1.0f},
-        .max = light_model * Vector4{1.0f},
-    };
-    debug_lines_.append_range(create_aabb_lines(debug_light_aabb, {}, {1.0f, 0.0f, 0.0f}));
-
     light_pass_rt_.fb.unbind();
     ::glBlitNamedFramebuffer(
         gbuffer_rt_.fb.native_handle(),
@@ -249,15 +240,22 @@ auto DebugRenderer::post_render(Scene &scene) -> void
     ensure(cube_parts.size() == 1u, "cube mesh should have exactly 1 part");
     const auto cube_indices_offset_bytes = cube_parts.front().index_offset * sizeof(std::uint32_t);
 
-    ::glProgramUniformMatrix4fv(debug_light_program_.native_handle(), 0u, 1u, GL_FALSE, light_model.data().data());
-    ::glProgramUniform3f(
-        debug_light_program_.native_handle(),
-        1u,
-        scene.lights().light.colour.r,
-        scene.lights().light.colour.g,
-        scene.lights().light.colour.b);
+    for (const auto &light : scene.lights().lights)
+    {
+        const auto light_transform = Transform{light.position, {debug_light_scale}, {}};
+        const auto light_model = Matrix4{light_transform};
 
-    ::glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, reinterpret_cast<const void *>(cube_indices_offset_bytes));
+        const auto debug_light_aabb = ufps::AABB{
+            .min = light_model * Vector4{-1.0f, -1.0f, -1.0f, 1.0f},
+            .max = light_model * Vector4{1.0f},
+        };
+        debug_lines_.append_range(create_aabb_lines(debug_light_aabb, {}, {1.0f, 0.0f, 0.0f}));
+
+        ::glProgramUniformMatrix4fv(debug_light_program_.native_handle(), 0u, 1u, GL_FALSE, light_model.data().data());
+        ::glProgramUniform3f(debug_light_program_.native_handle(), 1u, light.colour.r, light.colour.g, light.colour.b);
+
+        ::glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, reinterpret_cast<const void *>(cube_indices_offset_bytes));
+    }
 
     auto debug_line_count = 0zu;
 
@@ -350,48 +348,51 @@ auto DebugRenderer::post_render(Scene &scene) -> void
         }
     }
 
-    if (::ImGui::CollapsingHeader("lights"))
+    for (const auto &[index, light] : std::views::enumerate(scene.lights().lights))
     {
-        float amb_colour[3]{};
-        std::memcpy(amb_colour, &scene.lights().ambient, sizeof(amb_colour));
+        const auto light_name = std::format("light {}", index);
 
-        if (::ImGui::ColorPicker3("ambient light colour", amb_colour))
+        if (::ImGui::CollapsingHeader(light_name.c_str()))
         {
-            std::memcpy(&scene.lights().ambient, amb_colour, sizeof(amb_colour));
-        }
+            float amb_colour[3]{};
+            std::memcpy(amb_colour, &scene.lights().ambient, sizeof(amb_colour));
 
-        float pos[] = {
-            scene.lights().light.position.x, scene.lights().light.position.y, scene.lights().light.position.z};
-        if (::ImGui::SliderFloat3("position", pos, -100.0f, 100.0f))
-        {
-            scene.lights().light.position = {pos[0], pos[1], pos[2]};
-        }
+            if (::ImGui::ColorPicker3("ambient light colour", amb_colour))
+            {
+                std::memcpy(&scene.lights().ambient, amb_colour, sizeof(amb_colour));
+            }
 
-        float colour[3]{};
-        std::memcpy(colour, &scene.lights().light.colour, sizeof(colour));
+            float pos[] = {light.position.x, light.position.y, light.position.z};
+            if (::ImGui::SliderFloat3("position", pos, -100.0f, 100.0f))
+            {
+                light.position = {pos[0], pos[1], pos[2]};
+            }
 
-        if (::ImGui::ColorPicker3("light colour", colour))
-        {
-            std::memcpy(&scene.lights().light.colour, colour, sizeof(colour));
-        }
+            float colour[3]{};
+            std::memcpy(colour, &light.colour, sizeof(colour));
 
-        ::ImGui::SliderFloat("power", &scene.lights().light.specular_power, 0.0f, 100.0f);
+            if (::ImGui::ColorPicker3("light colour", colour))
+            {
+                std::memcpy(&light.colour, colour, sizeof(colour));
+            }
 
-        float atten[] = {
-            scene.lights().light.constant_attenuation,
-            scene.lights().light.linear_attenuation,
-            scene.lights().light.quadratic_attenuation};
-        if (::ImGui::SliderFloat3("attenuation", atten, 0.0f, 2.0f))
-        {
-            scene.lights().light.constant_attenuation = atten[0];
-            scene.lights().light.linear_attenuation = atten[1];
-            scene.lights().light.quadratic_attenuation = atten[2];
+            ::ImGui::SliderFloat("power", &light.specular_power, 0.0f, 100.0f);
+
+            float atten[] = {light.constant_attenuation, light.linear_attenuation, light.quadratic_attenuation};
+            if (::ImGui::SliderFloat3("attenuation", atten, 0.0f, 2.0f))
+            {
+                light.constant_attenuation = atten[0];
+                light.linear_attenuation = atten[1];
+                light.quadratic_attenuation = atten[2];
+            }
         }
     }
 
-    if (const auto selected_light = std::get_if<const LightData *>(&selected_); selected_light)
+    if (auto **selected_light = std::get_if<PointLight *>(&selected_); selected_light)
     {
-        auto transform = Matrix4{scene.lights().light.position};
+        auto *light = *selected_light;
+
+        auto transform = Matrix4{light->position};
         const auto &camera_data = scene.camera().data();
 
         ::ImGuizmo::Manipulate(
@@ -406,7 +407,7 @@ auto DebugRenderer::post_render(Scene &scene) -> void
             nullptr);
 
         const auto new_transform = Transform{transform};
-        scene.lights().light.position = new_transform.position;
+        light->position = new_transform.position;
     }
 
     ::ImGui::End();
@@ -491,11 +492,22 @@ auto DebugRenderer::post_render(Scene &scene) -> void
             selected_ = std::monostate{};
         }
 
-        if (const auto light_intersection = intersect(pick_ray, debug_light_aabb); light_intersection)
+        for (auto &light : scene.lights().lights)
         {
-            if (!intersection || light_intersection < intersection->distance)
+            const auto light_transform = Transform{light.position, {debug_light_scale}, {}};
+            const auto light_model = Matrix4{light_transform};
+
+            const auto debug_light_aabb = ufps::AABB{
+                .min = light_model * Vector4{-1.0f, -1.0f, -1.0f, 1.0f},
+                .max = light_model * Vector4{1.0f},
+            };
+
+            if (const auto light_intersection = intersect(pick_ray, debug_light_aabb); light_intersection)
             {
-                selected_ = std::addressof(scene.lights());
+                if (!intersection || light_intersection < intersection->distance)
+                {
+                    selected_ = std::addressof(light);
+                }
             }
         }
 

@@ -28,7 +28,7 @@ struct IntersectionResult
 struct LightData
 {
     Colour ambient;
-    PointLight light;
+    std::vector<PointLight> lights;
 };
 
 class Scene
@@ -77,6 +77,11 @@ class Scene
     constexpr auto &texture_manager(this auto &&self)
     {
         return self.texture_manager_;
+    }
+
+    constexpr auto add(PointLight light) -> void
+    {
+        lights_.lights.push_back(std::move(light));
     }
 
   private:

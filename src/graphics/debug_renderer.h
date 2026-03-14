@@ -9,6 +9,7 @@
 #include "events/mouse_button_event.h"
 #include "graphics/line_data.h"
 #include "graphics/mesh_manager.h"
+#include "graphics/point_light.h"
 #include "graphics/renderer.h"
 #include "graphics/texture_manager.h"
 #include "graphics/window.h"
@@ -37,7 +38,7 @@ class DebugRenderer : public Renderer
   private:
     bool enabled_;
     std::optional<MouseButtonEvent> click_;
-    std::variant<std::monostate, const Entity *, const LightData *> selected_;
+    std::variant<std::monostate, const Entity *, PointLight *> selected_;
     std::vector<LineData> debug_lines_;
     MultiBuffer<PersistentBuffer> debug_line_buffer_;
     Program debug_line_program_;

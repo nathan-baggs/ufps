@@ -9,6 +9,7 @@
 #include "core/camera.h"
 #include "core/entity.h"
 #include "core/scene.h"
+#include "graphics/buffer_writer.h"
 #include "graphics/command_buffer.h"
 #include "graphics/frame_buffer.h"
 #include "graphics/mesh_manager.h"
@@ -215,6 +216,25 @@ auto Renderer::render(Scene &scene) -> void
     light_pass_rt_.fb.bind();
     ::glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     light_pass_program_.use();
+
+    {
+        const auto &lights = scene.lights();
+
+        const auto buffer_size_bytes =
+            sizeof(lights.ambient) + sizeof(std::uint32_t) + sizeof(PointLight) * lights.lights.size();
+        if (light_buffer_.size() < buffer_size_bytes)
+        {
+            light_buffer_ = {buffer_size_bytes, light_buffer_.name()};
+            // opengl barrier incase gpu using previous frame
+            ::glFinish();
+        }
+
+        auto writer = BufferWriter{light_buffer_};
+        writer.write(lights.ambient);
+        writer.write(static_cast<std::uint32_t>(lights.lights.size()));
+        writer.write<PointLight>(lights.lights);
+    }
+
     ::glProgramUniform1ui(light_pass_program_.native_handle(), 0u, gbuffer_rt_.first_colour_attachment_index + 0u);
     ::glProgramUniform1ui(light_pass_program_.native_handle(), 1u, gbuffer_rt_.first_colour_attachment_index + 1u);
     ::glProgramUniform1ui(light_pass_program_.native_handle(), 2u, gbuffer_rt_.first_colour_attachment_index + 2u);

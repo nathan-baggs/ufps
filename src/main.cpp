@@ -213,13 +213,13 @@ int main()
          0.1f,
          1000.0f},
         {.ambient = ufps::Colour{.r = 0.5f, .g = 0.5f, .b = 0.5f},
-         .light = {
-             .position = {},
-             .colour = {.r = 1.0f, .g = 1.0f, .b = 1.0f},
-             .constant_attenuation = 1.0f,
-             .linear_attenuation = 0.007f,
-             .quadratic_attenuation = 0.0002f,
-             .specular_power = 32.0f}}};
+         .lights = {
+             {.position = {},
+              .colour = {.r = 1.0f, .g = 1.0f, .b = 1.0f},
+              .constant_attenuation = 1.0f,
+              .linear_attenuation = 0.007f,
+              .quadratic_attenuation = 0.0002f,
+              .specular_power = 32.0f}}}};
 
     const auto models_to_load = std::vector{
         "models\\SM_Corner03_12_12_B_X.fbx"sv,

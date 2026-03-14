@@ -10,6 +10,14 @@ struct VertexData
     float uv[2];
 };
 
+struct PointLight
+{
+    float position[3];
+    float colour[3];
+    float attenuation[3];
+    float specular_power;
+};
+
 layout(binding = 0, std430) readonly buffer vertices {
     VertexData data[];
 };
@@ -20,10 +28,8 @@ layout(binding = 1, std430) readonly buffer textures_buffer {
 
 layout(binding = 2, std430) readonly buffer lights {
     float ambient_colour[3];
-    float point_light_pos[3];
-    float point_light_colour[3];
-    float point_light_attenuation[3];
-    float point_light_specular_power;
+    uint num_point_lights;
+    PointLight point_lights[];
 };
 
 layout(binding = 3, std430) readonly buffer camera {
@@ -43,6 +49,26 @@ layout(location = 1) in vec2 in_uv;
 
 layout(location = 0) out vec4 out_colour;
 
+vec3 calculate_point_light(PointLight light, vec3 normal, vec3 frag_pos, vec3 albedo, float specular)
+{
+    vec3 point_pos = vec3(light.position[0], light.position[1], light.position[2]);
+    vec3 point_colour = vec3(light.colour[0], light.colour[1], light.colour[2]);
+    vec3 point_attenuation = vec3(light.attenuation[0], light.attenuation[1], light.attenuation[2]);
+
+    vec3 light_dir = normalize(point_pos - frag_pos);
+    float diffuse = max(dot(normal, light_dir), 0.0);
+
+    vec3 camera_pos = vec3(camera_position[0], camera_position[1], camera_position[2]);
+
+    vec3 reflect_dir = reflect(-light_dir, normal);
+    float spec = pow(max(dot(normalize(camera_pos - frag_pos), reflect_dir), 0.0), light.specular_power) * specular;
+
+    float distance = length(point_pos - frag_pos);
+    float att = 1.0 / (point_attenuation.x + (point_attenuation.y * distance) + (point_attenuation.z * (distance * distance)));
+
+    return ((diffuse + spec) * att) * point_colour * albedo;
+}
+
 void main()
 {
     vec3 albedo = texture(textures[albedo_tex_index], in_uv).rgb;
@@ -50,25 +76,14 @@ void main()
     vec3 frag_pos = texture(textures[position_tex_index], in_uv).xyz;
     float specular = texture(textures[specular_tex_index], in_uv).r;
 
-    vec3 point_pos = vec3(point_light_pos[0], point_light_pos[1], point_light_pos[2]);
-    vec3 point_colour = vec3(point_light_colour[0], point_light_colour[1], point_light_colour[2]);
-    vec3 point_attenuation = vec3(point_light_attenuation[0], point_light_attenuation[1], point_light_attenuation[2]);
-
     vec3 ambient = vec3(ambient_colour[0], ambient_colour[1], ambient_colour[2]);
-    vec3 light_dir = normalize(point_pos - frag_pos);
-    float diffuse = max(dot(normal, light_dir), 0.0);
 
-    vec3 camera_pos = vec3(camera_position[0], camera_position[1], camera_position[2]);
+    vec3 result = ambient * albedo;
 
-    vec3 reflect_dir = reflect(-light_dir, normal);
-    float spec = pow(max(dot(normalize(camera_pos - frag_pos), reflect_dir), 0.0), point_light_specular_power) * specular;
+    for (uint i = 0; i < num_point_lights; i++)
+    {
+        result += calculate_point_light(point_lights[i], normal, frag_pos, albedo, specular);
+    }
 
-    float distance = length(point_pos - frag_pos);
-    float att = 1.0 / (point_attenuation.x + (point_attenuation.y * distance) + (point_attenuation.z * (distance * distance)));
-    
-    vec3 lighting = (ambient * albedo) + ((diffuse + spec) * att) * point_colour * albedo;
-
-    out_colour = vec4(lighting, 1.0);
+    out_colour = vec4(result, 1.0);
 }
-
-
