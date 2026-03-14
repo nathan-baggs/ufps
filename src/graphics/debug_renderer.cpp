@@ -285,14 +285,16 @@ auto DebugRenderer::post_render(Scene &scene) -> void
             auto transform = Matrix4{entity.transform()};
             const auto &camera_data = scene.camera().data();
 
+            static float snap_translation[3] = {1.0f, 1.0f, 1.0f};
+
             ::ImGuizmo::Manipulate(
                 camera_data.view.data().data(),
                 camera_data.projection.data().data(),
-                ::ImGuizmo::TRANSLATE | ::ImGuizmo::SCALE | ::ImGuizmo::BOUNDS | ::ImGuizmo::ROTATE,
+                ::ImGuizmo::TRANSLATE | ::ImGuizmo::SCALE | ::ImGuizmo::ROTATE,
                 ::ImGuizmo::WORLD,
                 const_cast<float *>(transform.data().data()),
                 nullptr,
-                nullptr,
+                snap_translation,
                 nullptr,
                 nullptr);
 
