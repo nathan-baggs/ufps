@@ -2,6 +2,7 @@
 
 #include <optional>
 
+#include "maths/aabb.h"
 #include "maths/ray.h"
 #include "maths/vector3.h"
 
@@ -41,6 +42,23 @@ constexpr auto intersect(const Ray &ray, const Vector3 &v0, const Vector3 &v1, c
 
     const auto t = f * Vector3::dot(edge2, q);
     return t > 1e-8f ? std::make_optional(t) : std::nullopt;
+}
+
+constexpr auto intersect(const Ray &ray, const AABB &aabb) -> std::optional<float>
+{
+    const auto inv_dir = Vector3{1.0f} / ray.direction;
+    const auto t1 = (aabb.min - ray.origin) * inv_dir;
+    const auto t2 = (aabb.max - ray.origin) * inv_dir;
+
+    const auto tmin = std::max(std::max(std::min(t1.x, t2.x), std::min(t1.y, t2.y)), std::min(t1.z, t2.z));
+    const auto tmax = std::min(std::min(std::max(t1.x, t2.x), std::max(t1.y, t2.y)), std::max(t1.z, t2.z));
+
+    if (tmax < 0.0f || tmin > tmax)
+    {
+        return {};
+    }
+
+    return std::make_optional(tmin);
 }
 
 }
