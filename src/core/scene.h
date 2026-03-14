@@ -10,14 +10,10 @@
 #include "graphics/material_manager.h"
 #include "graphics/mesh_manager.h"
 #include "graphics/point_light.h"
-#include "graphics/texture.h"
 #include "graphics/texture_manager.h"
 #include "maths/ray.h"
 #include "maths/utils.h"
 #include "maths/vector4.h"
-#include "utils/error.h"
-#include "utils/log.h"
-#include "utils/string_map.h"
 
 namespace ufps
 {
@@ -44,67 +40,43 @@ class Scene
         Camera camera,
         LightData lights);
 
-    constexpr auto intersect_ray(const Ray &ray) const -> std::optional<IntersectionResult>
-    {
-        auto result = std::optional<IntersectionResult>{};
-        auto min_distance = std::numeric_limits<float>::max();
-
-        for (const auto &entity : entities_)
-        {
-            const auto inv_transform = Matrix4::invert(entity.transform());
-            const auto transformed_ray =
-                Ray{inv_transform * Vector4{ray.origin, 1.0f}, inv_transform * Vector4{ray.direction, 0.0f}};
-
-            for (const auto &render_entity : entity.render_entities())
-            {
-                const auto mesh_view = render_entity.mesh_view();
-                const auto indices = mesh_manager_.index_data(mesh_view);
-                const auto vertices = mesh_manager_.vertex_data(mesh_view);
-
-                for (const auto &indices : std::views::chunk(indices, 3))
-                {
-                    const auto v0 = vertices[indices[0]].position;
-                    const auto v1 = vertices[indices[1]].position;
-                    const auto v2 = vertices[indices[2]].position;
-
-                    if (const auto distance = intersect(transformed_ray, v0, v1, v2); distance)
-                    {
-                        const auto intersection_point =
-                            transformed_ray.origin + transformed_ray.direction * (*distance);
-
-                        if (*distance < min_distance)
-                        {
-                            result = IntersectionResult{.entity = &entity, .position = intersection_point};
-                            min_distance = *distance;
-                        }
-                    }
-                }
-            }
-        }
-
-        return result;
-    }
+    constexpr auto intersect_ray(const Ray &ray) const -> std::optional<IntersectionResult>;
 
     auto create_entity(std::string_view name) -> void;
 
     template <class Self>
     auto entities(this Self &&self)
     {
-        using t = std::conditional_t<std::is_const_v<std::remove_reference_t<Self>>, const Entity, Entity>;
-        return std::span<t>{self.entities_.data(), self.entities_.data() + self.entities_.size()};
+        using SpanType = std::conditional_t<std::is_const_v<std::remove_reference_t<Self>>, const Entity, Entity>;
+        return std::span<SpanType>{self.entities_.data(), self.entities_.data() + self.entities_.size()};
     }
 
     auto cache_entity(std::string_view, Entity entity) -> void;
 
-    auto camera() -> Camera &;
+    constexpr auto &camera(this auto &&self)
+    {
+        return self.camera_;
+    }
 
-    auto lights() -> LightData &;
+    constexpr auto &lights(this auto &&self)
+    {
+        return self.lights_;
+    }
 
-    auto mesh_manager() const -> MeshManager &;
+    constexpr auto &mesh_manager(this auto &&self)
+    {
+        return self.mesh_manager_;
+    }
 
-    auto material_manager() const -> MaterialManager &;
+    constexpr auto &material_manager(this auto &&self)
+    {
+        return self.material_manager_;
+    }
 
-    auto texture_manager() const -> TextureManager &;
+    constexpr auto &texture_manager(this auto &&self)
+    {
+        return self.texture_manager_;
+    }
 
   private:
     std::vector<Entity> entities_;
@@ -115,5 +87,45 @@ class Scene
     Camera camera_;
     LightData lights_;
 };
+
+constexpr auto Scene::intersect_ray(const Ray &ray) const -> std::optional<IntersectionResult>
+{
+    auto result = std::optional<IntersectionResult>{};
+    auto min_distance = std::numeric_limits<float>::max();
+
+    for (const auto &entity : entities_)
+    {
+        const auto inv_transform = Matrix4::invert(entity.transform());
+        const auto transformed_ray =
+            Ray{inv_transform * Vector4{ray.origin, 1.0f}, inv_transform * Vector4{ray.direction, 0.0f}};
+
+        for (const auto &render_entity : entity.render_entities())
+        {
+            const auto mesh_view = render_entity.mesh_view();
+            const auto indices = mesh_manager_.index_data(mesh_view);
+            const auto vertices = mesh_manager_.vertex_data(mesh_view);
+
+            for (const auto &indices : std::views::chunk(indices, 3))
+            {
+                const auto v0 = vertices[indices[0]].position;
+                const auto v1 = vertices[indices[1]].position;
+                const auto v2 = vertices[indices[2]].position;
+
+                if (const auto distance = intersect(transformed_ray, v0, v1, v2); distance)
+                {
+                    const auto intersection_point = transformed_ray.origin + transformed_ray.direction * (*distance);
+
+                    if (*distance < min_distance)
+                    {
+                        result = IntersectionResult{.entity = &entity, .position = intersection_point};
+                        min_distance = *distance;
+                    }
+                }
+            }
+        }
+    }
+
+    return result;
+}
 
 }

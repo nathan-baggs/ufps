@@ -43,29 +43,4 @@ auto Scene::cache_entity(std::string_view name, Entity entity) -> void
     entity_cache_.push_back(std::move(entity));
 }
 
-auto Scene::camera() -> Camera &
-{
-    return camera_;
-}
-
-auto Scene::lights() -> LightData &
-{
-    return lights_;
-}
-
-auto Scene::mesh_manager() const -> MeshManager &
-{
-    return mesh_manager_;
-}
-
-auto Scene::material_manager() const -> MaterialManager &
-{
-    return material_manager_;
-}
-
-auto Scene::texture_manager() const -> TextureManager &
-{
-    return texture_manager_;
-}
-
 }
