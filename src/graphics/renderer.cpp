@@ -236,12 +236,12 @@ auto Renderer::render(Scene &scene) -> void
         1u,
         0);
 
+    post_render(scene);
+
     command_buffer_.advance();
     camera_buffer_.advance();
     light_buffer_.advance();
     object_data_buffer_.advance();
-
-    post_render(scene);
 }
 
 auto Renderer::post_render(Scene &) -> void
