@@ -412,7 +412,29 @@ auto DebugRenderer::post_render(Scene &scene) -> void
     ::ImGui::End();
     ::ImGui::Begin("log");
 
+    static auto auto_scroll = true;
+    static auto force_scroll_to_bottom = false;
+    if (::ImGui::Checkbox("auto scroll", &auto_scroll))
+    {
+        if (auto_scroll)
+        {
+            force_scroll_to_bottom = auto_scroll;
+        }
+    }
+
     ::ImGui::BeginChild("log output");
+
+    if (auto_scroll && !force_scroll_to_bottom)
+    {
+        const auto scroll_max = ::ImGui::GetScrollMaxY();
+        const auto scroll_current = ::ImGui::GetScrollY();
+
+        if (scroll_max > 0.0f && scroll_current < scroll_max)
+        {
+            auto_scroll = false;
+        }
+    }
+
     for (const auto &line : log::history)
     {
         switch (line[1])
@@ -424,7 +446,15 @@ auto DebugRenderer::post_render(Scene &scene) -> void
             default: ::ImGui::TextColored({1.0f, 0.412f, 0.706f, 1.0f}, "%s", line.c_str()); break;
         }
     }
+
+    if (auto_scroll)
+    {
+        ::ImGui::SetScrollHereY(1.0f);
+    }
+
     ::ImGui::EndChild();
+
+    force_scroll_to_bottom = false;
 
     ::ImGui::End();
 
