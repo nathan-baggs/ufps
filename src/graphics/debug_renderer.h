@@ -1,6 +1,7 @@
 #pragma once
 
 #include <optional>
+#include <variant>
 #include <vector>
 
 #include "core/entity.h"
@@ -36,7 +37,7 @@ class DebugRenderer : public Renderer
   private:
     bool enabled_;
     std::optional<MouseButtonEvent> click_;
-    const Entity *selected_entity_;
+    std::variant<std::monostate, const Entity *, const LightData *> selected_;
     std::vector<LineData> debug_lines_;
     MultiBuffer<PersistentBuffer> debug_line_buffer_;
     Program debug_line_program_;
