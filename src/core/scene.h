@@ -99,26 +99,35 @@ constexpr auto Scene::intersect_ray(const Ray &ray) const -> std::optional<Inter
         const auto transformed_ray =
             Ray{inv_transform * Vector4{ray.origin, 1.0f}, inv_transform * Vector4{ray.direction, 0.0f}};
 
-        for (const auto &render_entity : entity.render_entities())
+        if (!!intersect(transformed_ray, entity.aabb()))
         {
-            const auto mesh_view = render_entity.mesh_view();
-            const auto indices = mesh_manager_.index_data(mesh_view);
-            const auto vertices = mesh_manager_.vertex_data(mesh_view);
-
-            for (const auto &indices : std::views::chunk(indices, 3))
+            for (const auto &render_entity : entity.render_entities())
             {
-                const auto v0 = vertices[indices[0]].position;
-                const auto v1 = vertices[indices[1]].position;
-                const auto v2 = vertices[indices[2]].position;
-
-                if (const auto distance = intersect(transformed_ray, v0, v1, v2); distance)
+                if (!intersect(transformed_ray, render_entity.aabb()))
                 {
-                    const auto intersection_point = transformed_ray.origin + transformed_ray.direction * (*distance);
+                    continue;
+                }
 
-                    if (*distance < min_distance)
+                const auto mesh_view = render_entity.mesh_view();
+                const auto indices = mesh_manager_.index_data(mesh_view);
+                const auto vertices = mesh_manager_.vertex_data(mesh_view);
+
+                for (const auto &indices : std::views::chunk(indices, 3))
+                {
+                    const auto v0 = vertices[indices[0]].position;
+                    const auto v1 = vertices[indices[1]].position;
+                    const auto v2 = vertices[indices[2]].position;
+
+                    if (const auto distance = intersect(transformed_ray, v0, v1, v2); distance)
                     {
-                        result = IntersectionResult{.entity = &entity, .position = intersection_point};
-                        min_distance = *distance;
+                        const auto intersection_point =
+                            transformed_ray.origin + transformed_ray.direction * (*distance);
+
+                        if (*distance < min_distance)
+                        {
+                            result = IntersectionResult{.entity = &entity, .position = intersection_point};
+                            min_distance = *distance;
+                        }
                     }
                 }
             }
