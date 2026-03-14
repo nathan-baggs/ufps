@@ -22,6 +22,7 @@ struct IntersectionResult
 {
     const Entity *entity;
     Vector3 position;
+    float distance;
 };
 
 struct LightData
@@ -125,7 +126,8 @@ constexpr auto Scene::intersect_ray(const Ray &ray) const -> std::optional<Inter
 
                         if (*distance < min_distance)
                         {
-                            result = IntersectionResult{.entity = &entity, .position = intersection_point};
+                            result = IntersectionResult{
+                                .entity = &entity, .position = intersection_point, .distance = *distance};
                             min_distance = *distance;
                         }
                     }
