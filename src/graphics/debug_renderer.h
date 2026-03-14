@@ -40,6 +40,7 @@ class DebugRenderer : public Renderer
     std::vector<LineData> debug_lines_;
     MultiBuffer<PersistentBuffer> debug_line_buffer_;
     Program debug_line_program_;
+    Program debug_light_program_;
 };
 
 }

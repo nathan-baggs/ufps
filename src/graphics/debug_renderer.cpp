@@ -22,6 +22,7 @@
 #include "maths/aabb.h"
 #include "maths/matrix4.h"
 #include "maths/ray.h"
+#include "maths/transform.h"
 #include "maths/vector3.h"
 #include "maths/vector4.h"
 #include "utils/log.h"
@@ -150,6 +151,13 @@ DebugRenderer::DebugRenderer(
           "shaders\\line.frag",
           "line_fragment_shader",
           "line_program")}
+    , debug_light_program_{create_program(
+          resource_loader,
+          "shaders\\debug_light.vert",
+          "debug_light_vertex_shader",
+          "shaders\\debug_light.frag",
+          "debug_light_fragment_shader",
+          "debug_light_program")}
 {
     IMGUI_CHECKVERSION();
     ::ImGui::CreateContext();
@@ -197,27 +205,63 @@ auto DebugRenderer::post_render(Scene &scene) -> void
         return;
     }
 
+    const auto unit_aabb = ufps::AABB{
+        .min = {-0.5f, -0.5f, -0.5f},
+        .max = {0.5f, 0.5f, 0.5f},
+    };
+    const auto light_aabb_transform = Transform{scene.lights().light.position, {0.5f}, {}};
+    debug_lines_.append_range(create_aabb_lines(unit_aabb, light_aabb_transform, {1.0f, 0.0f, 0.0f}));
+
+    light_pass_rt_.fb.unbind();
+    ::glBlitNamedFramebuffer(
+        gbuffer_rt_.fb.native_handle(),
+        0,
+        0u,
+        0u,
+        gbuffer_rt_.fb.width(),
+        gbuffer_rt_.fb.height(),
+        0u,
+        0u,
+        gbuffer_rt_.fb.width(),
+        gbuffer_rt_.fb.height(),
+        GL_DEPTH_BUFFER_BIT,
+        GL_NEAREST);
+
+    debug_light_program_.use();
+
+    const auto [vertex_buffer_handle, index_buffer_handle] = scene.mesh_manager().native_handle();
+    ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, vertex_buffer_handle);
+    ::glBindBufferRange(
+        GL_SHADER_STORAGE_BUFFER,
+        1,
+        camera_buffer_.native_handle(),
+        camera_buffer_.frame_offset_bytes(),
+        sizeof(CameraData));
+    ::glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffer_handle);
+
+    const auto cube_parts = scene.mesh_manager().mesh("cube");
+    ensure(cube_parts.size() == 1u, "cube mesh should have exactly 1 part");
+    const auto cube_indices_offset_bytes = cube_parts.front().index_offset * sizeof(std::uint32_t);
+
+    const auto light_transform = Transform{scene.lights().light.position, {0.2f}, {}};
+    const auto light_model = Matrix4{light_transform};
+
+    ::glProgramUniformMatrix4fv(debug_light_program_.native_handle(), 0u, 1u, GL_FALSE, light_model.data().data());
+    ::glProgramUniform3f(
+        debug_light_program_.native_handle(),
+        1u,
+        scene.lights().light.colour.r,
+        scene.lights().light.colour.g,
+        scene.lights().light.colour.b);
+
+    ::glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, reinterpret_cast<const void *>(cube_indices_offset_bytes));
+
     auto debug_line_count = 0zu;
 
     if (!debug_lines_.empty())
     {
-        debug_line_count = debug_lines_.size();
-
-        light_pass_rt_.fb.unbind();
-        ::glBlitNamedFramebuffer(
-            gbuffer_rt_.fb.native_handle(),
-            0,
-            0u,
-            0u,
-            gbuffer_rt_.fb.width(),
-            gbuffer_rt_.fb.height(),
-            0u,
-            0u,
-            gbuffer_rt_.fb.width(),
-            gbuffer_rt_.fb.height(),
-            GL_DEPTH_BUFFER_BIT,
-            GL_NEAREST);
         debug_line_program_.use();
+        debug_line_count = debug_lines_.size();
 
         resize_gpu_buffer(debug_lines_, debug_line_buffer_);
         debug_line_buffer_.write(std::as_bytes(std::span{debug_lines_.data(), debug_lines_.size()}), 0zu);
