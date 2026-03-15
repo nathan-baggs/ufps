@@ -37,17 +37,16 @@ CommandBuffer::CommandBuffer(std::string_view name)
 
 auto CommandBuffer::build(const Scene &scene) -> std::uint32_t
 {
-    const auto command = scene.entities |
-                         std::views::transform([](const auto &e) { return std::views::all(e.sub_meshes); }) |
+    const auto command = scene.entities() | std::views::transform([](const auto &e) { return e.render_entities(); }) |
                          std::views::join |
                          std::views::transform(
                              [](const auto &e)
                              {
                                  const auto cmd = IndirectCommand{
-                                     .count = e.mesh_view.index_count,
+                                     .count = e.mesh_view().index_count,
                                      .instance_count = 1u,
-                                     .first = e.mesh_view.index_offset,
-                                     .base_vertex = static_cast<std::int32_t>(e.mesh_view.vertex_offset),
+                                     .first = e.mesh_view().index_offset,
+                                     .base_vertex = static_cast<std::int32_t>(e.mesh_view().vertex_offset),
                                      .base_instance = 0u,
                                  };
                                  return cmd;
@@ -66,15 +65,15 @@ auto CommandBuffer::build(const Scene &scene) -> std::uint32_t
 
 auto CommandBuffer::build(const Entity &entity) -> std::uint32_t
 {
-    const auto command = entity.sub_meshes |
+    const auto command = entity.render_entities() |
                          std::views::transform(
                              [](const auto &e)
                              {
                                  const auto cmd = IndirectCommand{
-                                     .count = e.mesh_view.index_count,
+                                     .count = e.mesh_view().index_count,
                                      .instance_count = 1u,
-                                     .first = e.mesh_view.index_offset,
-                                     .base_vertex = static_cast<std::int32_t>(e.mesh_view.vertex_offset),
+                                     .first = e.mesh_view().index_offset,
+                                     .base_vertex = static_cast<std::int32_t>(e.mesh_view().vertex_offset),
                                      .base_instance = 0u,
                                  };
                                  return cmd;

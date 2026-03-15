@@ -9,6 +9,7 @@
 #include "core/camera.h"
 #include "core/entity.h"
 #include "core/scene.h"
+#include "graphics/buffer_writer.h"
 #include "graphics/command_buffer.h"
 #include "graphics/frame_buffer.h"
 #include "graphics/mesh_manager.h"
@@ -92,6 +93,14 @@ auto sprite() -> ufps::MeshData
 
     return {.vertices = vertices(positions, positions, positions, positions, uvs), .indices = std::move(indices)};
 }
+
+auto create_sprite(ufps::MeshManager &mesh_manager) -> ufps::Entity
+{
+    const auto mesh_data = std::vector{sprite()};
+    const auto mesh_views = mesh_manager.load("sprite", mesh_data);
+    return {"post_process_sprite", {{mesh_views.front(), 0u, mesh_manager}}, {}};
+}
+
 }
 
 namespace ufps
@@ -106,7 +115,7 @@ Renderer::Renderer(
     , dummy_vao_{0u, [](auto e) { ::glDeleteVertexArrays(1u, &e); }}
     , command_buffer_{"gbuffer_command_buffer"}
     , post_processing_command_buffer_{"post_processing_command_buffer"}
-    , post_process_sprite_{.name = "post_process_sprite", .sub_meshes = {{.mesh_view = mesh_manager.load(sprite()), .material_index = 0u}}, .transform = {}}
+    , post_process_sprite_{create_sprite(mesh_manager)}
     , camera_buffer_{sizeof(CameraData), "camera_buffer"}
     , light_buffer_{sizeof(LightData), "light_buffer"}
     , object_data_buffer_{sizeof(ObjectData), "object_data_buffer"}
@@ -138,7 +147,8 @@ Renderer::Renderer(
           window_.render_height(),
           fb_sampler_,
           texture_manager,
-          "light_pass")}
+          "light_pass"),},
+    mesh_manager_{mesh_manager}
 {
     post_processing_command_buffer_.build(post_process_sprite_);
 
@@ -155,9 +165,9 @@ auto Renderer::render(Scene &scene) -> void
 
     gbuffer_program_.use();
 
-    camera_buffer_.write(scene.camera.data_view(), 0zu);
+    camera_buffer_.write(scene.camera().data_view(), 0zu);
 
-    const auto [vertex_buffer_handle, index_buffer_handle] = scene.mesh_manager.native_handle();
+    const auto [vertex_buffer_handle, index_buffer_handle] = scene.mesh_manager().native_handle();
     ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, vertex_buffer_handle);
     ::glBindBufferRange(
         GL_SHADER_STORAGE_BUFFER,
@@ -172,27 +182,27 @@ auto Renderer::render(Scene &scene) -> void
 
     auto object_data = std::vector<ObjectData>{};
 
-    for (const auto &entity : scene.entities)
+    for (const auto &entity : scene.entities())
     {
         object_data.append_range(
-            entity.sub_meshes | std::views::transform(
-                                    [&entity](const auto &e)
-                                    {
-                                        return ObjectData{
-                                            .model = entity.transform,
-                                            .material_id_index = e.material_index,
-                                            .padding = {},
-                                        };
-                                    }));
+            entity.render_entities() | std::views::transform(
+                                           [&entity](const auto &e)
+                                           {
+                                               return ObjectData{
+                                                   .model = entity.transform(),
+                                                   .material_id_index = e.material_index(),
+                                                   .padding = {},
+                                               };
+                                           }));
     }
 
     resize_gpu_buffer(object_data, object_data_buffer_);
     object_data_buffer_.write(std::as_bytes(std::span{object_data.data(), object_data.size()}), 0zu);
     ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, object_data_buffer_.native_handle());
 
-    ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, scene.material_manager.native_handle());
+    ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, scene.material_manager().native_handle());
 
-    ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 4, scene.texture_manager.native_handle());
+    ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 4, scene.texture_manager().native_handle());
 
     ::glMultiDrawElementsIndirect(
         GL_TRIANGLES,
@@ -201,17 +211,36 @@ auto Renderer::render(Scene &scene) -> void
         command_count,
         0);
 
-    light_buffer_.write(std::as_bytes(std::span<const LightData, 1zu>{&scene.lights, 1zu}), 0zu);
+    light_buffer_.write(std::as_bytes(std::span<const LightData, 1zu>{&scene.lights(), 1zu}), 0zu);
 
     light_pass_rt_.fb.bind();
     ::glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     light_pass_program_.use();
+
+    {
+        const auto &lights = scene.lights();
+
+        const auto buffer_size_bytes =
+            sizeof(lights.ambient) + sizeof(std::uint32_t) + sizeof(PointLight) * lights.lights.size();
+        if (light_buffer_.size() < buffer_size_bytes)
+        {
+            light_buffer_ = {buffer_size_bytes, light_buffer_.name()};
+            // opengl barrier incase gpu using previous frame
+            ::glFinish();
+        }
+
+        auto writer = BufferWriter{light_buffer_};
+        writer.write(lights.ambient);
+        writer.write(static_cast<std::uint32_t>(lights.lights.size()));
+        writer.write<PointLight>(lights.lights);
+    }
+
     ::glProgramUniform1ui(light_pass_program_.native_handle(), 0u, gbuffer_rt_.first_colour_attachment_index + 0u);
     ::glProgramUniform1ui(light_pass_program_.native_handle(), 1u, gbuffer_rt_.first_colour_attachment_index + 1u);
     ::glProgramUniform1ui(light_pass_program_.native_handle(), 2u, gbuffer_rt_.first_colour_attachment_index + 2u);
     ::glProgramUniform1ui(light_pass_program_.native_handle(), 3u, gbuffer_rt_.first_colour_attachment_index + 3u);
     ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, vertex_buffer_handle);
-    ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, scene.texture_manager.native_handle());
+    ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, scene.texture_manager().native_handle());
     ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, light_buffer_.native_handle());
     ::glBindBufferRange(
         GL_SHADER_STORAGE_BUFFER,
@@ -227,12 +256,12 @@ auto Renderer::render(Scene &scene) -> void
         1u,
         0);
 
+    post_render(scene);
+
     command_buffer_.advance();
     camera_buffer_.advance();
     light_buffer_.advance();
     object_data_buffer_.advance();
-
-    post_render(scene);
 }
 
 auto Renderer::post_render(Scene &) -> void

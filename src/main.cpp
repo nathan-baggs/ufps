@@ -9,6 +9,7 @@
 #include <windows.h>
 
 #include "config.h"
+#include "core/render_entity.h"
 #include "core/scene.h"
 #include "events/key.h"
 #include "events/key_event.h"
@@ -139,7 +140,7 @@ auto walk_direction(std::unordered_map<ufps::Key, bool> &key_state, const ufps::
         direction -= camera.up();
     }
 
-    constexpr auto speed = 0.5f;
+    constexpr auto speed = 0.1f;
     return ufps::Vector3::normalise(direction) * speed;
 }
 
@@ -188,6 +189,8 @@ int main()
     auto material_manager = ufps::MaterialManager{};
     auto texture_manager = ufps::TextureManager{};
 
+    mesh_manager.load("cube", std::vector{cube()});
+
     const auto tex_index = texture_manager.add(std::move(textures));
 
     auto renderer = ufps::DebugRenderer{window, *resource_loader, texture_manager, mesh_manager};
@@ -197,67 +200,83 @@ int main()
     const auto material_index_blue = material_manager.add(tex_index, tex_index + 1u, tex_index + 2u);
     const auto material_index_green = material_manager.add(tex_index, tex_index + 1u, tex_index + 2u);
 
-    const auto &[name, models] =
-        ufps::load_model(resource_loader->load_data_buffer("models\\SM_Corner01_8_8_X.fbx"), *resource_loader);
-
     auto scene = ufps::Scene{
-        .entities = {},
-        .mesh_manager = mesh_manager,
-        .material_manager = material_manager,
-        .texture_manager = texture_manager,
-        .camera =
-            {{},
-             {0.0f, 0.0f, -1.0f},
-             {0.0f, 1.0f, 0.0f},
-             std::numbers::pi_v<float> / 4.0f,
-             static_cast<float>(window.render_width()),
-             static_cast<float>(window.render_height()),
-             0.1f,
-             1000.0f},
-        .lights = {
-            .ambient = ufps::Colour{.r = 0.5f, .g = 0.5f, .b = 0.5f},
-            .light = {
-                .position = {},
-                .colour = {.r = 1.0f, .g = 1.0f, .b = 1.0f},
-                .constant_attenuation = 1.0f,
-                .linear_attenuation = 0.007f,
-                .quadratic_attenuation = 0.0002f,
-                .specular_power = 32.0f}}};
+        mesh_manager,
+        material_manager,
+        texture_manager,
+        {{},
+         {0.0f, 0.0f, -1.0f},
+         {0.0f, 1.0f, 0.0f},
+         std::numbers::pi_v<float> / 4.0f,
+         static_cast<float>(window.render_width()),
+         static_cast<float>(window.render_height()),
+         0.1f,
+         1000.0f},
+        {.ambient = ufps::Colour{.r = 0.5f, .g = 0.5f, .b = 0.5f},
+         .lights = {
+             {.position = {},
+              .colour = {.r = 1.0f, .g = 1.0f, .b = 1.0f},
+              .constant_attenuation = 1.0f,
+              .linear_attenuation = 0.007f,
+              .quadratic_attenuation = 0.0002f,
+              .specular_power = 32.0f}}}};
 
-    auto entity = ufps::Entity{.name = name};
+    const auto models_to_load = std::vector{
+        "models\\SM_Corner03_12_12_B_X.fbx"sv,
+        "models\\SM_Corner01_8_8_X.fbx"sv,
+    };
 
-    for (const auto &[index, model] : models | std::views::enumerate)
+    for (const auto &model_to_load : models_to_load)
     {
-        auto albedo_index = tex_index;
-        if (const auto &a = model.albedo; a)
+        auto mesh_data = std::vector<ufps::MeshData>{};
+        auto materials = std::vector<std::uint32_t>{};
+        auto mesh_views = std::span<const ::ufps::MeshView>{};
+
+        const auto &[name, models] =
+            ufps::load_model(resource_loader->load_data_buffer(model_to_load), *resource_loader);
+
+        for (const auto &[index, model] : models | std::views::enumerate)
         {
-            auto albedo = ufps::Texture{*model.albedo, std::format("{}_albedo", name), sampler};
-            albedo_index = texture_manager.add(std::move(albedo));
+            auto albedo_index = tex_index;
+            if (const auto &a = model.albedo; a)
+            {
+                auto albedo = ufps::Texture{*model.albedo, std::format("{}_albedo", name), sampler};
+                albedo_index = texture_manager.add(std::move(albedo));
+            }
+
+            auto normal_index = tex_index + 1u;
+            if (const auto &n = model.normal; n)
+            {
+                auto normal = ufps::Texture{*model.normal, std::format("{}_normal", name), sampler};
+                normal_index = texture_manager.add(std::move(normal));
+            }
+
+            auto specular_index = tex_index + 2u;
+            if (const auto &s = model.specular; s)
+            {
+                auto specular = ufps::Texture{*model.specular, std::format("{}_specular", name), sampler};
+                specular_index = texture_manager.add(std::move(specular));
+            }
+
+            materials.push_back(material_manager.add(albedo_index, normal_index, specular_index));
+            mesh_data.push_back(model.mesh_data);
         }
 
-        auto normal_index = tex_index + 1u;
-        if (const auto &n = model.normal; n)
-        {
-            auto normal = ufps::Texture{*model.normal, std::format("{}_normal", name), sampler};
-            normal_index = texture_manager.add(std::move(normal));
-        }
+        mesh_views = mesh_manager.load(name, std::span<const ufps::MeshData>{mesh_data});
 
-        auto specular_index = tex_index + 2u;
-        if (const auto &s = model.specular; s)
-        {
-            auto specular = ufps::Texture{*model.specular, std::format("{}_specular", name), sampler};
-            specular_index = texture_manager.add(std::move(specular));
-        }
-
-        const auto model_mat = material_manager.add(albedo_index, normal_index, specular_index);
-
-        entity.sub_meshes.push_back({
-            .mesh_view = mesh_manager.load(model.mesh_data),
-            .material_index = model_mat,
-        });
+        auto render_entities = std::views::zip(mesh_views, materials) |
+                               std::views::transform(
+                                   [&mesh_manager](const auto &e)
+                                   {
+                                       const auto &[mesh_view, material] = e;
+                                       return ufps::RenderEntity(mesh_view, material, mesh_manager);
+                                   }) |
+                               std::ranges::to<std::vector>();
+        ufps::log::debug("adding {} to cache", name);
+        scene.cache_entity(name, {std::string{name}, std::move(render_entities), {}});
     }
 
-    scene.entities.push_back(std::move(entity));
+    scene.create_entity("SM_Corner01_8_8_X");
 
     auto key_state = std::unordered_map<ufps::Key, bool>{
         {ufps::Key::W, false}, {ufps::Key::A, false}, {ufps::Key::S, false}, {ufps::Key::D, false}};
@@ -296,8 +315,8 @@ int main()
                             static constexpr auto sensitivity = float{0.002f};
                             const auto delta_x = arg.delta_x() * sensitivity;
                             const auto delta_y = arg.delta_y() * sensitivity;
-                            scene.camera.adjust_yaw(delta_x);
-                            scene.camera.adjust_pitch(-delta_y);
+                            scene.camera().adjust_yaw(delta_x);
+                            scene.camera().adjust_pitch(-delta_y);
                         }
                     }
                     else if constexpr (std::same_as<T, ufps::MouseButtonEvent>)
@@ -310,7 +329,7 @@ int main()
             event = window.pump_event();
         }
 
-        scene.camera.translate(walk_direction(key_state, scene.camera));
+        scene.camera().translate(walk_direction(key_state, scene.camera()));
 
         renderer.render(scene);
 

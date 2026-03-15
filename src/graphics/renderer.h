@@ -63,5 +63,6 @@ class Renderer
     Sampler fb_sampler_;
     RenderTarget gbuffer_rt_;
     RenderTarget light_pass_rt_;
+    MeshManager &mesh_manager_;
 };
 }

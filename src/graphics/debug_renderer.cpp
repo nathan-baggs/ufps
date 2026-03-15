@@ -3,6 +3,7 @@
 #include <cstring>
 #include <format>
 #include <optional>
+#include <ranges>
 #include <string>
 
 #include <imgui.h>
@@ -13,16 +14,24 @@
 
 #include "core/scene.h"
 #include "events/mouse_button_event.h"
+#include "graphics/colour.h"
+#include "graphics/line_data.h"
 #include "graphics/opengl.h"
+#include "graphics/point_light.h"
 #include "graphics/utils.h"
 #include "graphics/window.h"
+#include "maths/aabb.h"
 #include "maths/matrix4.h"
 #include "maths/ray.h"
+#include "maths/transform.h"
+#include "maths/vector3.h"
 #include "maths/vector4.h"
 #include "utils/log.h"
 
 namespace
 {
+
+static constexpr auto debug_light_scale = 0.25f;
 
 auto screen_ray(const ufps::MouseButtonEvent &evt, const ufps::Window &window, const ufps::Camera &camera) -> ufps::Ray
 {
@@ -42,6 +51,87 @@ auto screen_ray(const ufps::MouseButtonEvent &evt, const ufps::Window &window, c
     return {origin_ws, dir_ws};
 }
 
+auto draw_line(
+    const ufps::Vector3 &start,
+    const ufps::Vector3 &end,
+    const ufps::Colour &colour,
+    std::vector<ufps::LineData> &lines) -> void
+{
+    lines.push_back({start, colour});
+    lines.push_back({end, colour});
+}
+
+auto create_aabb_lines(const ufps::AABB &aabb, const ufps::Matrix4 &transform, const ufps::Colour &colour)
+    -> std::vector<ufps::LineData>
+{
+    auto lines = std::vector<ufps::LineData>{};
+
+    draw_line(
+        transform * ufps::Vector4{aabb.max.x, aabb.max.y, aabb.max.z, 1.0f},
+        transform * ufps::Vector4{aabb.min.x, aabb.max.y, aabb.max.z, 1.0f},
+        colour,
+        lines);
+    draw_line(
+        transform * ufps::Vector4{aabb.min.x, aabb.max.y, aabb.max.z, 1.0f},
+        transform * ufps::Vector4{aabb.min.x, aabb.max.y, aabb.min.z, 1.0f},
+        colour,
+        lines);
+    draw_line(
+        transform * ufps::Vector4{aabb.min.x, aabb.max.y, aabb.min.z, 1.0f},
+        transform * ufps::Vector4{aabb.max.x, aabb.max.y, aabb.min.z, 1.0f},
+        colour,
+        lines);
+    draw_line(
+        transform * ufps::Vector4{aabb.max.x, aabb.max.y, aabb.min.z, 1.0f},
+        transform * ufps::Vector4{aabb.max.x, aabb.max.y, aabb.max.z, 1.0f},
+        colour,
+        lines);
+
+    draw_line(
+        transform * ufps::Vector4{aabb.max.x, aabb.max.y, aabb.max.z, 1.0f},
+        transform * ufps::Vector4{aabb.max.x, aabb.min.y, aabb.max.z, 1.0f},
+        colour,
+        lines);
+    draw_line(
+        transform * ufps::Vector4{aabb.min.x, aabb.max.y, aabb.max.z, 1.0f},
+        transform * ufps::Vector4{aabb.min.x, aabb.min.y, aabb.max.z, 1.0f},
+        colour,
+        lines);
+    draw_line(
+        transform * ufps::Vector4{aabb.min.x, aabb.max.y, aabb.min.z, 1.0f},
+        transform * ufps::Vector4{aabb.min.x, aabb.min.y, aabb.min.z, 1.0f},
+        colour,
+        lines);
+    draw_line(
+        transform * ufps::Vector4{aabb.max.x, aabb.max.y, aabb.min.z, 1.0f},
+        transform * ufps::Vector4{aabb.max.x, aabb.min.y, aabb.min.z, 1.0f},
+        colour,
+        lines);
+
+    draw_line(
+        transform * ufps::Vector4{aabb.max.x, aabb.min.y, aabb.max.z, 1.0f},
+        transform * ufps::Vector4{aabb.min.x, aabb.min.y, aabb.max.z, 1.0f},
+        colour,
+        lines);
+    draw_line(
+        transform * ufps::Vector4{aabb.min.x, aabb.min.y, aabb.max.z, 1.0f},
+        transform * ufps::Vector4{aabb.min.x, aabb.min.y, aabb.min.z, 1.0f},
+        colour,
+        lines);
+    draw_line(
+        transform * ufps::Vector4{aabb.min.x, aabb.min.y, aabb.min.z, 1.0f},
+        transform * ufps::Vector4{aabb.max.x, aabb.min.y, aabb.min.z, 1.0f},
+        colour,
+        lines);
+    draw_line(
+        transform * ufps::Vector4{aabb.max.x, aabb.min.y, aabb.min.z, 1.0f},
+        transform * ufps::Vector4{aabb.max.x, aabb.min.y, aabb.max.z, 1.0f},
+        colour,
+        lines);
+
+    return lines;
+}
+
 }
 
 namespace ufps
@@ -54,7 +144,7 @@ DebugRenderer::DebugRenderer(
     : Renderer{window, resource_loader, texture_manager, mesh_manager}
     , enabled_{false}
     , click_{}
-    , selected_entity_{}
+    , selected_{std::monostate{}}
     , debug_lines_{}
     , debug_line_buffer_{sizeof(LineData) * 2u, "line_data_buffer"}
     , debug_line_program_{create_program(
@@ -64,6 +154,13 @@ DebugRenderer::DebugRenderer(
           "shaders\\line.frag",
           "line_fragment_shader",
           "line_program")}
+    , debug_light_program_{create_program(
+          resource_loader,
+          "shaders\\debug_light.vert",
+          "debug_light_vertex_shader",
+          "shaders\\debug_light.frag",
+          "debug_light_fragment_shader",
+          "debug_light_program")}
 {
     IMGUI_CHECKVERSION();
     ::ImGui::CreateContext();
@@ -90,10 +187,19 @@ DebugRenderer::~DebugRenderer()
 
 auto DebugRenderer::post_render(Scene &scene) -> void
 {
-    if (selected_entity_)
+    if (std::holds_alternative<Entity *>(selected_))
     {
-        debug_lines_.push_back({.position = {}, .colour = {1.0f, 0.0f, 0.0f}});
-        debug_lines_.push_back({.position = {0.0f, 1000.0f, 0.0f}, .colour = {0.0f, 1.0f, 0.0f}});
+        const auto *selected_entity = std::get<Entity *>(selected_);
+        auto aabb_lines =
+            selected_entity->render_entities() |
+            std::views::transform(
+                [&](const auto &e)
+                { return create_aabb_lines(e.aabb(), selected_entity->transform(), {0.4f, 0.4f, 0.4f}); }) |
+            std::views::join;
+
+        debug_lines_.append_range(aabb_lines);
+        debug_lines_.append_range(
+            create_aabb_lines(selected_entity->aabb(), selected_entity->transform(), {0.0f, 1.0f, 0.0f}));
     }
 
     Renderer::post_render(scene);
@@ -103,27 +209,60 @@ auto DebugRenderer::post_render(Scene &scene) -> void
         return;
     }
 
+    light_pass_rt_.fb.unbind();
+    ::glBlitNamedFramebuffer(
+        gbuffer_rt_.fb.native_handle(),
+        0,
+        0u,
+        0u,
+        gbuffer_rt_.fb.width(),
+        gbuffer_rt_.fb.height(),
+        0u,
+        0u,
+        gbuffer_rt_.fb.width(),
+        gbuffer_rt_.fb.height(),
+        GL_DEPTH_BUFFER_BIT,
+        GL_NEAREST);
+
+    debug_light_program_.use();
+
+    const auto [vertex_buffer_handle, index_buffer_handle] = scene.mesh_manager().native_handle();
+    ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, vertex_buffer_handle);
+    ::glBindBufferRange(
+        GL_SHADER_STORAGE_BUFFER,
+        1,
+        camera_buffer_.native_handle(),
+        camera_buffer_.frame_offset_bytes(),
+        sizeof(CameraData));
+    ::glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffer_handle);
+
+    const auto cube_parts = scene.mesh_manager().mesh("cube");
+    ensure(cube_parts.size() == 1u, "cube mesh should have exactly 1 part");
+    const auto cube_indices_offset_bytes = cube_parts.front().index_offset * sizeof(std::uint32_t);
+
+    for (const auto &light : scene.lights().lights)
+    {
+        const auto light_transform = Transform{light.position, {debug_light_scale}, {}};
+        const auto light_model = Matrix4{light_transform};
+
+        const auto debug_light_aabb = ufps::AABB{
+            .min = light_model * Vector4{-1.0f, -1.0f, -1.0f, 1.0f},
+            .max = light_model * Vector4{1.0f},
+        };
+        debug_lines_.append_range(create_aabb_lines(debug_light_aabb, {}, {1.0f, 0.0f, 0.0f}));
+
+        ::glProgramUniformMatrix4fv(debug_light_program_.native_handle(), 0u, 1u, GL_FALSE, light_model.data().data());
+        ::glProgramUniform3f(debug_light_program_.native_handle(), 1u, light.colour.r, light.colour.g, light.colour.b);
+
+        ::glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, reinterpret_cast<const void *>(cube_indices_offset_bytes));
+    }
+
     auto debug_line_count = 0zu;
 
     if (!debug_lines_.empty())
     {
-        debug_line_count = debug_lines_.size();
-
-        light_pass_rt_.fb.unbind();
-        ::glBlitNamedFramebuffer(
-            gbuffer_rt_.fb.native_handle(),
-            0,
-            0u,
-            0u,
-            gbuffer_rt_.fb.width(),
-            gbuffer_rt_.fb.height(),
-            0u,
-            0u,
-            gbuffer_rt_.fb.width(),
-            gbuffer_rt_.fb.height(),
-            GL_DEPTH_BUFFER_BIT,
-            GL_NEAREST);
         debug_line_program_.use();
+        debug_line_count = debug_lines_.size();
 
         resize_gpu_buffer(debug_lines_, debug_line_buffer_);
         debug_line_buffer_.write(std::as_bytes(std::span{debug_lines_.data(), debug_lines_.size()}), 0zu);
@@ -159,71 +298,220 @@ auto DebugRenderer::post_render(Scene &scene) -> void
     ::ImGui::LabelText("FPS", "%0.1f", io.Framerate);
     ::ImGui::LabelText("Debug Lines", "%0.1f", static_cast<float>(debug_line_count));
 
-    for (auto &entity : scene.entities)
+    if (::ImGui::Button("add light"))
     {
-        ::ImGui::CollapsingHeader(entity.name.c_str());
+        scene.add(
+            PointLight{
+                .position = {},
+                .colour = {.r = 1.0f, .g = 1.0f, .b = 1.0f},
+                .constant_attenuation = 1.0f,
+                .linear_attenuation = 0.007f,
+                .quadratic_attenuation = 0.0002f,
+                .specular_power = 32.0f});
+        selected_ = &scene.lights().lights.back();
+    }
 
-        if (&entity == selected_entity_)
+    const auto mesh_names_cstr = mesh_manager_.mesh_names() |
+                                 std::views::transform([](const auto &e) { return e.c_str(); }) |
+                                 std::ranges::to<std::vector>();
+
+    auto mesh_selected_index = std::optional<std::uint32_t>{};
+
+    if (::ImGui::BeginCombo("mesh_names", mesh_names_cstr.front(), 0))
+    {
+        for (const auto &[index, name] : std::views::enumerate(mesh_names_cstr))
         {
-            auto transform = Matrix4{entity.transform};
-            const auto &camera_data = scene.camera.data();
+            if (::ImGui::Selectable(name))
+            {
+                mesh_selected_index = index;
+            }
+        }
+        ::ImGui::EndCombo();
+    }
+
+    if (mesh_selected_index)
+    {
+        scene.create_entity(mesh_names_cstr[*mesh_selected_index]);
+        selected_ = &scene.entities().back();
+    }
+
+    for (auto &entity : scene.entities())
+    {
+        ::ImGui::CollapsingHeader(entity.name().c_str());
+    }
+
+    for (const auto &[index, light] : std::views::enumerate(scene.lights().lights))
+    {
+        const auto light_name = std::format("light {}", index);
+
+        ::ImGui::CollapsingHeader(light_name.c_str());
+    }
+
+    float amb_colour[3]{};
+    std::memcpy(amb_colour, &scene.lights().ambient, sizeof(amb_colour));
+
+    if (::ImGui::ColorPicker3("ambient light colour", amb_colour))
+    {
+        std::memcpy(&scene.lights().ambient, amb_colour, sizeof(amb_colour));
+    }
+    const auto camera_transform = scene.camera().data().view;
+
+    ::ImGui::BeginTable(
+        "transform", 4, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingFixedFit);
+
+    for (auto row = 0; row < 4; ++row)
+    {
+        ::ImGui::TableNextRow();
+        for (auto col = 0; col < 4; ++col)
+        {
+            ::ImGui::TableSetColumnIndex(col);
+            ::ImGui::Text("%0.2f", camera_transform[col * 4 + row]);
+        }
+    }
+
+    ::ImGui::EndTable();
+
+    ::ImGui::End();
+    ::ImGui::Begin("log");
+
+    static auto auto_scroll = true;
+    static auto force_scroll_to_bottom = false;
+    if (::ImGui::Checkbox("auto scroll", &auto_scroll))
+    {
+        if (auto_scroll)
+        {
+            force_scroll_to_bottom = auto_scroll;
+        }
+    }
+
+    ::ImGui::BeginChild("log output");
+
+    if (auto_scroll && !force_scroll_to_bottom)
+    {
+        const auto scroll_max = ::ImGui::GetScrollMaxY();
+        const auto scroll_current = ::ImGui::GetScrollY();
+
+        if (scroll_max > 0.0f && scroll_current < scroll_max)
+        {
+            auto_scroll = false;
+        }
+    }
+
+    for (const auto &line : log::history)
+    {
+        switch (line[1])
+        {
+            case 'D': ::ImGui::TextColored({0.0f, 0.5f, 1.0f, 1.0f}, "%s", line.c_str()); break;
+            case 'I': ::ImGui::TextColored({1.0f, 1.0f, 1.0f, 1.0f}, "%s", line.c_str()); break;
+            case 'W': ::ImGui::TextColored({1.0f, 1.0f, 0.0f, 1.0f}, "%s", line.c_str()); break;
+            case 'E': ::ImGui::TextColored({1.0f, 0.0f, 0.0f, 1.0f}, "%s", line.c_str()); break;
+            default: ::ImGui::TextColored({1.0f, 0.412f, 0.706f, 1.0f}, "%s", line.c_str()); break;
+        }
+    }
+
+    if (auto_scroll)
+    {
+        ::ImGui::SetScrollHereY(1.0f);
+    }
+
+    ::ImGui::EndChild();
+
+    force_scroll_to_bottom = false;
+
+    ::ImGui::End();
+
+    ::ImGui::Begin("render_targets");
+    static constexpr auto width = 175.0f;
+    const auto aspect_ratio = static_cast<float>(window_.render_width()) / static_cast<float>(window_.render_height());
+    for (auto i = 0u; i < gbuffer_rt_.colour_attachment_count; ++i)
+    {
+        const auto tex = scene.texture_manager().texture(gbuffer_rt_.first_colour_attachment_index + i);
+        ::ImGui::Image(
+            tex->native_handle(), ::ImVec2(width * aspect_ratio, width), ::ImVec2(0.0f, 1.0f), ::ImVec2(1.0f, 0.0f));
+        ::ImGui::SameLine();
+    }
+    ::ImGui::Image(
+        scene.texture_manager().texture(gbuffer_rt_.depth_attachment_index)->native_handle(),
+        ::ImVec2(width * aspect_ratio, width),
+        ::ImVec2(0.0f, 1.0f),
+        ::ImVec2(1.0f, 0.0f));
+    ::ImGui::End();
+
+    if (!std::holds_alternative<std::monostate>(selected_))
+    {
+        ::ImGui::Begin("inspector");
+
+        if (auto **selected_entity = std::get_if<Entity *>(&selected_))
+        {
+            auto *entity = *selected_entity;
+            ::ImGui::Text("entity: %s", entity->name().c_str());
+
+            auto transform = Matrix4{entity->transform()};
+
+            ::ImGui::BeginTable(
+                "transform", 4, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingFixedFit);
+
+            for (auto row = 0; row < 4; ++row)
+            {
+                ::ImGui::TableNextRow();
+                for (auto col = 0; col < 4; ++col)
+                {
+                    ::ImGui::TableSetColumnIndex(col);
+                    ::ImGui::Text("%0.2f", transform[col * 4 + row]);
+                }
+            }
+
+            ::ImGui::EndTable();
+
+            const auto &camera_data = scene.camera().data();
+
+            static float snap_translation[3] = {1.0f, 1.0f, 1.0f};
 
             ::ImGuizmo::Manipulate(
                 camera_data.view.data().data(),
                 camera_data.projection.data().data(),
-                ::ImGuizmo::TRANSLATE | ::ImGuizmo::SCALE | ::ImGuizmo::BOUNDS | ::ImGuizmo::ROTATE,
+                ::ImGuizmo::TRANSLATE | ::ImGuizmo::SCALE | ::ImGuizmo::ROTATE,
                 ::ImGuizmo::WORLD,
                 const_cast<float *>(transform.data().data()),
                 nullptr,
-                nullptr,
+                snap_translation,
                 nullptr,
                 nullptr);
 
-            entity.transform = Transform{transform};
+            entity->set_transform(transform);
         }
-    }
-
-    if (::ImGui::CollapsingHeader("lights"))
-    {
-        float amb_colour[3]{};
-        std::memcpy(amb_colour, &scene.lights.ambient, sizeof(amb_colour));
-
-        if (::ImGui::ColorPicker3("ambient light colour", amb_colour))
+        else if (auto **selected_light = std::get_if<PointLight *>(&selected_))
         {
-            std::memcpy(&scene.lights.ambient, amb_colour, sizeof(amb_colour));
-        }
+            auto *light = *selected_light;
 
-        float pos[] = {scene.lights.light.position.x, scene.lights.light.position.y, scene.lights.light.position.z};
-        if (::ImGui::SliderFloat3("position", pos, -100.0f, 100.0f))
-        {
-            scene.lights.light.position = {pos[0], pos[1], pos[2]};
-        }
+            ::ImGui::Text("point light");
 
-        float colour[3]{};
-        std::memcpy(colour, &scene.lights.light.colour, sizeof(colour));
+            float pos[] = {light->position.x, light->position.y, light->position.z};
+            if (::ImGui::SliderFloat3("position", pos, -100.0f, 100.0f))
+            {
+                light->position = {pos[0], pos[1], pos[2]};
+            }
 
-        if (::ImGui::ColorPicker3("light colour", colour))
-        {
-            std::memcpy(&scene.lights.light.colour, colour, sizeof(colour));
-        }
+            float colour[3]{};
+            std::memcpy(colour, &light->colour, sizeof(colour));
 
-        ::ImGui::SliderFloat("power", &scene.lights.light.specular_power, 0.0f, 100.0f);
+            if (::ImGui::ColorPicker3("light colour", colour))
+            {
+                std::memcpy(&light->colour, colour, sizeof(colour));
+            }
 
-        float atten[] = {
-            scene.lights.light.constant_attenuation,
-            scene.lights.light.linear_attenuation,
-            scene.lights.light.quadratic_attenuation};
-        if (::ImGui::SliderFloat3("attenuation", atten, 0.0f, 2.0f))
-        {
-            scene.lights.light.constant_attenuation = atten[0];
-            scene.lights.light.linear_attenuation = atten[1];
-            scene.lights.light.quadratic_attenuation = atten[2];
-        }
+            ::ImGui::SliderFloat("power", &light->specular_power, 0.0f, 100.0f);
 
-        if (!selected_entity_)
-        {
-            auto transform = Matrix4{scene.lights.light.position};
-            const auto &camera_data = scene.camera.data();
+            float atten[] = {light->constant_attenuation, light->linear_attenuation, light->quadratic_attenuation};
+            if (::ImGui::SliderFloat3("attenuation", atten, 0.0f, 2.0f))
+            {
+                light->constant_attenuation = atten[0];
+                light->linear_attenuation = atten[1];
+                light->quadratic_attenuation = atten[2];
+            }
+
+            auto transform = Matrix4{light->position};
+            const auto &camera_data = scene.camera().data();
 
             ::ImGuizmo::Manipulate(
                 camera_data.view.data().data(),
@@ -237,54 +525,46 @@ auto DebugRenderer::post_render(Scene &scene) -> void
                 nullptr);
 
             const auto new_transform = Transform{transform};
-            scene.lights.light.position = new_transform.position;
+            light->position = new_transform.position;
         }
+
+        ::ImGui::End();
     }
-
-    ::ImGui::End();
-    ::ImGui::Begin("log");
-
-    ::ImGui::BeginChild("log output");
-    for (const auto &line : log::history)
-    {
-        switch (line[1])
-        {
-            case 'D': ::ImGui::TextColored({0.0f, 0.5f, 1.0f, 1.0f}, "%s", line.c_str()); break;
-            case 'I': ::ImGui::TextColored({1.0f, 1.0f, 1.0f, 1.0f}, "%s", line.c_str()); break;
-            case 'W': ::ImGui::TextColored({1.0f, 1.0f, 0.0f, 1.0f}, "%s", line.c_str()); break;
-            case 'E': ::ImGui::TextColored({1.0f, 0.0f, 0.0f, 1.0f}, "%s", line.c_str()); break;
-            default: ::ImGui::TextColored({1.0f, 0.412f, 0.706f, 1.0f}, "%s", line.c_str()); break;
-        }
-    }
-    ::ImGui::EndChild();
-
-    ::ImGui::End();
-
-    ::ImGui::Begin("render_targets");
-    static constexpr auto width = 175.0f;
-    const auto aspect_ratio = static_cast<float>(window_.render_width()) / static_cast<float>(window_.render_height());
-    for (auto i = 0u; i < gbuffer_rt_.colour_attachment_count; ++i)
-    {
-        const auto tex = scene.texture_manager.texture(gbuffer_rt_.first_colour_attachment_index + i);
-        ::ImGui::Image(
-            tex->native_handle(), ::ImVec2(width * aspect_ratio, width), ::ImVec2(0.0f, 1.0f), ::ImVec2(1.0f, 0.0f));
-        ::ImGui::SameLine();
-    }
-    ::ImGui::Image(
-        scene.texture_manager.texture(gbuffer_rt_.depth_attachment_index)->native_handle(),
-        ::ImVec2(width * aspect_ratio, width),
-        ::ImVec2(0.0f, 1.0f),
-        ::ImVec2(1.0f, 0.0f));
-    ::ImGui::End();
 
     ::ImGui::Render();
     ::ImGui_ImplOpenGL3_RenderDrawData(::ImGui::GetDrawData());
 
     if (click_)
     {
-        const auto pick_ray = screen_ray(*click_, window_, scene.camera);
-        const auto intersection = scene.intersect_ray(pick_ray);
-        selected_entity_ = intersection.transform([](const auto &e) { return e.entity; }).value_or(nullptr);
+        const auto pick_ray = screen_ray(*click_, window_, scene.camera());
+        auto intersection = scene.intersect_ray(pick_ray);
+        if (intersection)
+        {
+            selected_ = intersection->entity;
+        }
+        else
+        {
+            selected_ = std::monostate{};
+        }
+
+        for (auto &light : scene.lights().lights)
+        {
+            const auto light_transform = Transform{light.position, {debug_light_scale}, {}};
+            const auto light_model = Matrix4{light_transform};
+
+            const auto debug_light_aabb = ufps::AABB{
+                .min = light_model * Vector4{-1.0f, -1.0f, -1.0f, 1.0f},
+                .max = light_model * Vector4{1.0f},
+            };
+
+            if (const auto light_intersection = intersect(pick_ray, debug_light_aabb); light_intersection)
+            {
+                if (!intersection || light_intersection < intersection->distance)
+                {
+                    selected_ = std::addressof(light);
+                }
+            }
+        }
 
         click_.reset();
     }

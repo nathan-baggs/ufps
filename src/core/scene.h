@@ -2,6 +2,7 @@
 
 #include <optional>
 #include <ranges>
+#include <type_traits>
 #include <vector>
 
 #include "core/camera.h"
@@ -9,7 +10,6 @@
 #include "graphics/material_manager.h"
 #include "graphics/mesh_manager.h"
 #include "graphics/point_light.h"
-#include "graphics/texture.h"
 #include "graphics/texture_manager.h"
 #include "maths/ray.h"
 #include "maths/utils.h"
@@ -20,33 +20,103 @@ namespace ufps
 
 struct IntersectionResult
 {
-    const Entity *entity;
+    Entity *entity;
     Vector3 position;
+    float distance;
 };
 
 struct LightData
 {
     Colour ambient;
-    PointLight light;
+    std::vector<PointLight> lights;
 };
 
-struct Scene
+class Scene
 {
-    constexpr auto intersect_ray(const Ray &ray) const -> std::optional<IntersectionResult>
+  public:
+    Scene(
+        MeshManager &mesh_manager,
+        MaterialManager &material_manager,
+        TextureManager &texture_manager,
+        Camera camera,
+        LightData lights);
+
+    constexpr auto intersect_ray(const Ray &ray) -> std::optional<IntersectionResult>;
+
+    auto create_entity(std::string_view name) -> void;
+
+    template <class Self>
+    auto entities(this Self &&self)
     {
-        auto result = std::optional<IntersectionResult>{};
-        auto min_distance = std::numeric_limits<float>::max();
+        using SpanType = std::conditional_t<std::is_const_v<std::remove_reference_t<Self>>, const Entity, Entity>;
+        return std::span<SpanType>{self.entities_.data(), self.entities_.data() + self.entities_.size()};
+    }
 
-        for (const auto &entity : entities)
+    auto cache_entity(std::string_view, Entity entity) -> void;
+
+    constexpr auto &camera(this auto &&self)
+    {
+        return self.camera_;
+    }
+
+    constexpr auto &lights(this auto &&self)
+    {
+        return self.lights_;
+    }
+
+    constexpr auto &mesh_manager(this auto &&self)
+    {
+        return self.mesh_manager_;
+    }
+
+    constexpr auto &material_manager(this auto &&self)
+    {
+        return self.material_manager_;
+    }
+
+    constexpr auto &texture_manager(this auto &&self)
+    {
+        return self.texture_manager_;
+    }
+
+    constexpr auto add(PointLight light) -> void
+    {
+        lights_.lights.push_back(std::move(light));
+    }
+
+  private:
+    std::vector<Entity> entities_;
+    std::vector<Entity> entity_cache_;
+    MeshManager &mesh_manager_;
+    MaterialManager &material_manager_;
+    TextureManager &texture_manager_;
+    Camera camera_;
+    LightData lights_;
+};
+
+constexpr auto Scene::intersect_ray(const Ray &ray) -> std::optional<IntersectionResult>
+{
+    auto result = std::optional<IntersectionResult>{};
+    auto min_distance = std::numeric_limits<float>::max();
+
+    for (auto &entity : entities_)
+    {
+        const auto inv_transform = Matrix4::invert(entity.transform());
+        const auto transformed_ray =
+            Ray{inv_transform * Vector4{ray.origin, 1.0f}, inv_transform * Vector4{ray.direction, 0.0f}};
+
+        if (!!intersect(transformed_ray, entity.aabb()))
         {
-            const auto inv_transform = Matrix4::invert(entity.transform);
-            const auto transformed_ray =
-                Ray{inv_transform * Vector4{ray.origin, 1.0f}, inv_transform * Vector4{ray.direction, 0.0f}};
-
-            for (const auto &[mesh_view, _] : entity.sub_meshes)
+            for (const auto &render_entity : entity.render_entities())
             {
-                const auto indices = mesh_manager.index_data(mesh_view);
-                const auto vertices = mesh_manager.vertex_data(mesh_view);
+                if (!intersect(transformed_ray, render_entity.aabb()))
+                {
+                    continue;
+                }
+
+                const auto mesh_view = render_entity.mesh_view();
+                const auto indices = mesh_manager_.index_data(mesh_view);
+                const auto vertices = mesh_manager_.vertex_data(mesh_view);
 
                 for (const auto &indices : std::views::chunk(indices, 3))
                 {
@@ -61,23 +131,17 @@ struct Scene
 
                         if (*distance < min_distance)
                         {
-                            result = IntersectionResult{.entity = &entity, .position = intersection_point};
+                            result = IntersectionResult{
+                                .entity = &entity, .position = intersection_point, .distance = *distance};
                             min_distance = *distance;
                         }
                     }
                 }
             }
         }
-
-        return result;
     }
 
-    std::vector<Entity> entities;
-    MeshManager &mesh_manager;
-    MaterialManager &material_manager;
-    TextureManager &texture_manager;
-    Camera camera;
-    LightData lights;
-};
+    return result;
+}
 
 }
