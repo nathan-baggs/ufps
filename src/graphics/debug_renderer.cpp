@@ -1,5 +1,6 @@
 #include "graphics/debug_renderer.h"
 
+#include <algorithm>
 #include <cstring>
 #include <format>
 #include <optional>
@@ -366,6 +367,23 @@ auto DebugRenderer::post_render(Scene &scene) -> void
             scene.tone_map_options().gamma = value;
         }
     }
+
+    std::uint32_t histogram[256]{};
+    ::glGetNamedBufferSubData(luminance_histogram_buffer_.native_handle(), 0, sizeof(histogram), &histogram);
+
+    const auto scaled_histogram =
+        histogram | std::views::transform([](const auto e) { return std::log2(static_cast<float>(e) + 1.0f); }) |
+        std::ranges::to<std::vector>();
+
+    ::ImGui::PlotHistogram(
+        "luminance",
+        scaled_histogram.data(),
+        256,
+        0,
+        nullptr,
+        0.0f,
+        std::ranges::max(scaled_histogram),
+        ::ImVec2(::ImGui::GetContentRegionAvail().x, 150.0f));
 
     const auto mesh_names_cstr = mesh_manager_.mesh_names() |
                                  std::views::transform([](const auto &e) { return e.c_str(); }) |

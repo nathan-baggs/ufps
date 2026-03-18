@@ -119,6 +119,7 @@ Renderer::Renderer(
     , camera_buffer_{sizeof(CameraData), "camera_buffer"}
     , light_buffer_{sizeof(LightData), "light_buffer"}
     , object_data_buffer_{sizeof(ObjectData), "object_data_buffer"}
+    , luminance_histogram_buffer_{sizeof(std::uint32_t) * 256, "luminance_histogram_buffer"}
     , gbuffer_program_{create_program(
           resource_loader,
           "shaders\\gbuffer.vert",
@@ -140,6 +141,11 @@ Renderer::Renderer(
           "shaders\\tone_map.frag",
           "tone_map_fragment_shader",
           "tone_map_program")}
+    , luminance_histogram_program_{create_program(
+          resource_loader,
+          "shaders\\luminance_histogram.comp",
+          "luminance_histogram_shader",
+          "luminance_histogram_program")}
     , fb_sampler_{FilterType::LINEAR, FilterType::LINEAR, "fb_sampler"}
     , gbuffer_rt_{create_render_target(
           4u,
@@ -271,6 +277,25 @@ auto Renderer::render(Scene &scene) -> void
         1u,
         0);
 
+    luminance_histogram_program_.use();
+    const auto zero = ::GLuint{0};
+    ::glClearNamedBufferData(
+        luminance_histogram_buffer_.native_handle(), GL_R32UI, GL_RED_INTEGER, GL_UNSIGNED_INT, &zero);
+
+    ::glProgramUniform1ui(
+        luminance_histogram_program_.native_handle(), 0u, light_pass_rt_.first_colour_attachment_index);
+    ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, scene.texture_manager().native_handle());
+    ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, luminance_histogram_buffer_.native_handle());
+    ::glProgramUniform1f(luminance_histogram_program_.native_handle(), 1u, -10.0f);
+    ::glProgramUniform1f(luminance_histogram_program_.native_handle(), 2u, 2.0f);
+
+    ::glDispatchCompute(
+        static_cast<std::uint32_t>(light_pass_rt_.fb.width() + 15) / 16,
+        static_cast<std::uint32_t>(light_pass_rt_.fb.height() + 15) / 16,
+        1);
+
+    ::glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT | GL_BUFFER_UPDATE_BARRIER_BIT);
+
     tone_map_rt_.fb.bind();
     ::glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     tone_map_program_.use();
@@ -335,5 +360,16 @@ auto Renderer::create_program(
     const auto sample_frag =
         ufps::Shader{resource_loader.load_string(fragment_path), ufps::ShaderType::FRAGMENT, fragment_name};
     return ufps::Program{sample_vert, sample_frag, program_name};
+}
+
+auto Renderer::create_program(
+    ufps::ResourceLoader &resource_loader,
+    std::string_view compute_path,
+    std::string_view compute_name,
+    std::string_view program_name) -> ufps::Program
+{
+    const auto compute_shader =
+        ufps::Shader{resource_loader.load_string(compute_path), ufps::ShaderType::COMPUTE, compute_name};
+    return ufps::Program{compute_shader, program_name};
 }
 }

@@ -48,6 +48,12 @@ class Renderer
         std::string_view fragment_name,
         std::string_view program_name) -> ufps::Program;
 
+    static auto create_program(
+        ufps::ResourceLoader &resource_loader,
+        std::string_view compute_path,
+        std::string_view compute_name,
+        std::string_view program_name) -> ufps::Program;
+
     virtual auto post_render(Scene &scene) -> void;
 
     const Window &window_;
@@ -58,9 +64,11 @@ class Renderer
     MultiBuffer<PersistentBuffer> camera_buffer_;
     MultiBuffer<PersistentBuffer> light_buffer_;
     MultiBuffer<PersistentBuffer> object_data_buffer_;
+    Buffer luminance_histogram_buffer_;
     Program gbuffer_program_;
     Program light_pass_program_;
     Program tone_map_program_;
+    Program luminance_histogram_program_;
     Sampler fb_sampler_;
     RenderTarget gbuffer_rt_;
     RenderTarget light_pass_rt_;
