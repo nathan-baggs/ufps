@@ -60,9 +60,12 @@ class Renderer
     MultiBuffer<PersistentBuffer> object_data_buffer_;
     Program gbuffer_program_;
     Program light_pass_program_;
+    Program tone_map_program_;
     Sampler fb_sampler_;
     RenderTarget gbuffer_rt_;
     RenderTarget light_pass_rt_;
+    RenderTarget tone_map_rt_;
     MeshManager &mesh_manager_;
+    FrameBuffer *final_fb_;
 };
 }

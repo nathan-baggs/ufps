@@ -133,6 +133,13 @@ Renderer::Renderer(
           "shaders\\light_pass.frag",
           "light_pass_fragment_shader",
           "light_pass_program")}
+    , tone_map_program_{create_program(
+          resource_loader,
+          "shaders\\tone_map.vert",
+          "tone_map_vertex_shader",
+          "shaders\\tone_map.frag",
+          "tone_map_fragment_shader",
+          "tone_map_program")}
     , fb_sampler_{FilterType::LINEAR, FilterType::LINEAR, "fb_sampler"}
     , gbuffer_rt_{create_render_target(
           4u,
@@ -147,8 +154,16 @@ Renderer::Renderer(
           window_.render_height(),
           fb_sampler_,
           texture_manager,
-          "light_pass"),},
-    mesh_manager_{mesh_manager}
+          "light_pass"),}
+    , tone_map_rt_{create_render_target(
+          1u,
+          window_.render_width(),
+          window_.render_height(),
+          fb_sampler_,
+          texture_manager,
+          "tone_map"),},
+    mesh_manager_{mesh_manager},
+    final_fb_{}
 {
     post_processing_command_buffer_.build(post_process_sprite_);
 
@@ -256,6 +271,23 @@ auto Renderer::render(Scene &scene) -> void
         1u,
         0);
 
+    tone_map_rt_.fb.bind();
+    ::glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    tone_map_program_.use();
+
+    ::glProgramUniform1ui(tone_map_program_.native_handle(), 0u, light_pass_rt_.first_colour_attachment_index);
+    ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, vertex_buffer_handle);
+    ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, scene.texture_manager().native_handle());
+    ::glBindBuffer(GL_DRAW_INDIRECT_BUFFER, post_processing_command_buffer_.native_handle());
+    ::glMultiDrawElementsIndirect(
+        GL_TRIANGLES,
+        GL_UNSIGNED_INT,
+        reinterpret_cast<const void *>(post_processing_command_buffer_.offset_bytes()),
+        1u,
+        0);
+
+    final_fb_ = &tone_map_rt_.fb;
+
     post_render(scene);
 
     command_buffer_.advance();
@@ -266,19 +298,19 @@ auto Renderer::render(Scene &scene) -> void
 
 auto Renderer::post_render(Scene &) -> void
 {
-    light_pass_rt_.fb.unbind();
+    final_fb_->unbind();
 
     ::glBlitNamedFramebuffer(
-        light_pass_rt_.fb.native_handle(),
+        final_fb_->native_handle(),
         0u,
         0u,
         0u,
-        light_pass_rt_.fb.width(),
-        light_pass_rt_.fb.height(),
+        final_fb_->width(),
+        final_fb_->height(),
         0u,
         0u,
-        light_pass_rt_.fb.width(),
-        light_pass_rt_.fb.height(),
+        final_fb_->width(),
+        final_fb_->height(),
         GL_COLOR_BUFFER_BIT,
         GL_NEAREST);
 }
