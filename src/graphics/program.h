@@ -13,6 +13,7 @@ class Program
 {
   public:
     Program(const Shader &vertex_shader, const Shader &fragment_shader, std::string_view name);
+    Program(const Shader &compute_shader, std::string_view name);
 
     auto use() const -> void;
 

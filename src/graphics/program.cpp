@@ -48,6 +48,24 @@ Program::Program(const Shader &vertex_shader, const Shader &fragment_shader, std
     check_state(handle_, GL_VALIDATE_STATUS, name, "failed to validate program");
 }
 
+Program::Program(const Shader &compute_shader, std::string_view name)
+    : handle_{}
+{
+    expect(compute_shader.type() == ShaderType::COMPUTE, "shader is not a compute shader");
+
+    handle_ = {::glCreateProgram(), ::glDeleteProgram};
+    ensure(handle_, "failed to create opengl program");
+
+    ::glObjectLabel(GL_PROGRAM, handle_, name.length(), name.data());
+
+    ::glAttachShader(handle_, compute_shader.native_handle());
+    ::glLinkProgram(handle_);
+    ::glValidateProgram(handle_);
+
+    check_state(handle_, GL_LINK_STATUS, name, "failed to link program");
+    check_state(handle_, GL_VALIDATE_STATUS, name, "failed to validate program");
+}
+
 auto Program::use() const -> void
 {
     ::glUseProgram(handle_);
