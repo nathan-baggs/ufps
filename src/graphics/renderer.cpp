@@ -276,6 +276,13 @@ auto Renderer::render(Scene &scene) -> void
     tone_map_program_.use();
 
     ::glProgramUniform1ui(tone_map_program_.native_handle(), 0u, light_pass_rt_.first_colour_attachment_index);
+    ::glProgramUniform1f(tone_map_program_.native_handle(), 1u, scene.tone_map_options().max_brightness);
+    ::glProgramUniform1f(tone_map_program_.native_handle(), 2u, scene.tone_map_options().contrast);
+    ::glProgramUniform1f(tone_map_program_.native_handle(), 3u, scene.tone_map_options().linear_section_start);
+    ::glProgramUniform1f(tone_map_program_.native_handle(), 4u, scene.tone_map_options().linear_section_length);
+    ::glProgramUniform1f(tone_map_program_.native_handle(), 5u, scene.tone_map_options().black_tightness);
+    ::glProgramUniform1f(tone_map_program_.native_handle(), 6u, scene.tone_map_options().pedestal);
+    ::glProgramUniform1f(tone_map_program_.native_handle(), 7u, scene.tone_map_options().gamma);
     ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, vertex_buffer_handle);
     ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, scene.texture_manager().native_handle());
     ::glBindBuffer(GL_DRAW_INDIRECT_BUFFER, post_processing_command_buffer_.native_handle());

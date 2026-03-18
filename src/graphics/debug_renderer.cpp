@@ -311,6 +311,62 @@ auto DebugRenderer::post_render(Scene &scene) -> void
         selected_ = &scene.lights().lights.back();
     }
 
+    {
+        auto value = scene.tone_map_options().max_brightness;
+        if (::ImGui::SliderFloat("maximum brightness", &value, 0.0f, 100.0f))
+        {
+            scene.tone_map_options().max_brightness = value;
+        }
+    }
+
+    {
+        auto value = scene.tone_map_options().contrast;
+        if (::ImGui::SliderFloat("contrast", &value, 0.0f, 5.0f))
+        {
+            scene.tone_map_options().contrast = value;
+        }
+    }
+
+    {
+        auto value = scene.tone_map_options().linear_section_start;
+        if (::ImGui::SliderFloat("linear section start", &value, 0.0f, 1.0f))
+        {
+            scene.tone_map_options().linear_section_start = value;
+        }
+    }
+
+    {
+        auto value = scene.tone_map_options().linear_section_length;
+        if (::ImGui::SliderFloat("linear section length", &value, 0.0f, 1.0f))
+        {
+            scene.tone_map_options().linear_section_length = value;
+        }
+    }
+
+    {
+        auto value = scene.tone_map_options().black_tightness;
+        if (::ImGui::SliderFloat("black tightness", &value, 0.0f, 3.0f))
+        {
+            scene.tone_map_options().black_tightness = value;
+        }
+    }
+
+    {
+        auto value = scene.tone_map_options().pedestal;
+        if (::ImGui::SliderFloat("pedastal", &value, 0.0f, 1.0f))
+        {
+            scene.tone_map_options().pedestal = value;
+        }
+    }
+
+    {
+        auto value = scene.tone_map_options().gamma;
+        if (::ImGui::SliderFloat("gamma", &value, 0.0f, 5.0f))
+        {
+            scene.tone_map_options().gamma = value;
+        }
+    }
+
     const auto mesh_names_cstr = mesh_manager_.mesh_names() |
                                  std::views::transform([](const auto &e) { return e.c_str(); }) |
                                  std::ranges::to<std::vector>();

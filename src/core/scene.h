@@ -31,6 +31,17 @@ struct LightData
     std::vector<PointLight> lights;
 };
 
+struct ToneMapOptions
+{
+    float max_brightness;
+    float contrast;
+    float linear_section_start;
+    float linear_section_length;
+    float black_tightness;
+    float pedestal;
+    float gamma;
+};
+
 class Scene
 {
   public:
@@ -39,7 +50,8 @@ class Scene
         MaterialManager &material_manager,
         TextureManager &texture_manager,
         Camera camera,
-        LightData lights);
+        LightData lights,
+        ToneMapOptions tone_map_options);
 
     constexpr auto intersect_ray(const Ray &ray) -> std::optional<IntersectionResult>;
 
@@ -84,6 +96,11 @@ class Scene
         lights_.lights.push_back(std::move(light));
     }
 
+    constexpr auto &tone_map_options(this auto &&self)
+    {
+        return self.tone_map_options_;
+    }
+
   private:
     std::vector<Entity> entities_;
     std::vector<Entity> entity_cache_;
@@ -92,6 +109,7 @@ class Scene
     TextureManager &texture_manager_;
     Camera camera_;
     LightData lights_;
+    ToneMapOptions tone_map_options_;
 };
 
 constexpr auto Scene::intersect_ray(const Ray &ray) -> std::optional<IntersectionResult>

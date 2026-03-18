@@ -15,7 +15,8 @@ Scene::Scene(
     MaterialManager &material_manager,
     TextureManager &texture_manager,
     Camera camera,
-    LightData lights)
+    LightData lights,
+    ToneMapOptions tone_map_options)
     : entities_{}
     , entity_cache_{}
     , mesh_manager_{mesh_manager}
@@ -23,6 +24,7 @@ Scene::Scene(
     , texture_manager_{texture_manager}
     , camera_{std::move(camera)}
     , lights_{std::move(lights)}
+    , tone_map_options_{std::move(tone_map_options)}
 {
 }
 
