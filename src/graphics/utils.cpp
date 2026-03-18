@@ -67,15 +67,15 @@ auto to_native(const ::aiVector3D &v) -> ufps::Vector3
     return {v.x, v.y, v.z};
 }
 
-auto channels_to_format(int num_channels) -> ufps::TextureFormat
+auto channels_to_format(int num_channels, bool is_srgb) -> ufps::TextureFormat
 {
     switch (num_channels)
     {
         using enum ufps::TextureFormat;
 
         case 1: return RED;
-        case 3: return RGB;
-        case 4: return RGBA;
+        case 3: return is_srgb ? SRGB : RGB;
+        case 4: return is_srgb ? SRGBA : RGBA;
     }
 
     throw ufps::Exception("unsupported channel count: {}", num_channels);
@@ -94,7 +94,7 @@ auto get_texture_filename(::aiMaterial const *material, ::aiTextureType type) ->
 
 namespace ufps
 {
-auto load_texture(DataBufferView image_data) -> TextureData
+auto load_texture(DataBufferView image_data, bool is_srgb) -> TextureData
 {
     auto width = int{};
     auto height = int{};
@@ -116,7 +116,7 @@ auto load_texture(DataBufferView image_data) -> TextureData
     return {
         .width = static_cast<std::uint32_t>(width),
         .height = static_cast<std::uint32_t>(height),
-        .format = channels_to_format(num_channels),
+        .format = channels_to_format(num_channels, is_srgb),
         .data = {{ptr, ptr + width * height * num_channels}}};
 }
 
@@ -185,9 +185,11 @@ auto load_model(DataBufferView model_data, ResourceLoader &resource_loader)
 
         const auto load_tex = [material, &resource_loader](::aiTextureType type) -> std::optional<TextureData>
         {
+            const auto is_srgb = type == ::aiTextureType_BASE_COLOR;
+
             return get_texture_filename(material, type)
-                .transform([&resource_loader](const auto &e)
-                           { return load_texture(resource_loader.load_data_buffer(e)); });
+                .transform([&resource_loader, is_srgb](const auto &e)
+                           { return load_texture(resource_loader.load_data_buffer(e), is_srgb); });
         };
 
         models.push_back({

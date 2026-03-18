@@ -13,7 +13,9 @@ enum class TextureFormat
 {
     RED,
     RGB,
+    SRGB,
     RGBA,
+    SRGBA,
     RGB16F,
     DEPTH24
 };
@@ -33,7 +35,9 @@ inline auto to_string(TextureFormat format) -> std::string
         using enum TextureFormat;
         case RED: return "RED";
         case RGB: return "RGB";
+        case SRGB: return "SRGB";
         case RGBA: return "RGBA";
+        case SRGBA: return "SRGBA";
         case RGB16F: return "RGB16F";
         case DEPTH24: return "DEPTH24";
         default: return "<UNKNOWN>";

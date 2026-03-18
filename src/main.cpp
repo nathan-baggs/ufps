@@ -173,16 +173,16 @@ int main()
     auto textures = std::vector<ufps::Texture>{};
 
     const auto diamond_floor_albedo_data = resource_loader->load_data_buffer("textures\\diamond_floor_albedo.png");
-    const auto diamond_floor_albedo = ufps::load_texture(diamond_floor_albedo_data);
+    const auto diamond_floor_albedo = ufps::load_texture(diamond_floor_albedo_data, true);
     const auto sampler = ufps::Sampler{ufps::FilterType::LINEAR, ufps::FilterType::LINEAR, "simple_sampler"};
     textures.push_back(ufps::Texture{diamond_floor_albedo, "diamond_floor_albedo", sampler});
 
     const auto diamond_floor_normal_data = resource_loader->load_data_buffer("textures\\diamond_floor_normal.png");
-    const auto diamond_floor_normal = ufps::load_texture(diamond_floor_normal_data);
+    const auto diamond_floor_normal = ufps::load_texture(diamond_floor_normal_data, false);
     textures.push_back(ufps::Texture{diamond_floor_normal, "diamond_floor_normal", sampler});
 
     const auto diamond_floor_specular_data = resource_loader->load_data_buffer("textures\\diamond_floor_specular.png");
-    const auto diamond_floor_specular = ufps::load_texture(diamond_floor_specular_data);
+    const auto diamond_floor_specular = ufps::load_texture(diamond_floor_specular_data, false);
     textures.push_back(ufps::Texture{diamond_floor_specular, "diamond_floor_specular", sampler});
 
     auto mesh_manager = ufps::MeshManager{};
