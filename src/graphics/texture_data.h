@@ -26,6 +26,7 @@ struct TextureData
     std::uint32_t height;
     TextureFormat format;
     std::optional<DataBuffer> data;
+    bool is_compressed;
 };
 
 inline auto to_string(TextureFormat format) -> std::string
