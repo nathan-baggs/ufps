@@ -1,7 +1,8 @@
 #include "graphics/texture.h"
 
-#include <GL/gl.h>
 #include <string>
+
+#include <GL/gl.h>
 
 #include "graphics/opengl.h"
 #include "graphics/sampler.h"
@@ -9,6 +10,7 @@
 #include "third_party/opengl/glext.h"
 #include "utils/exception.h"
 #include "utils/formatter.h"
+#include "utils/log.h"
 
 namespace
 {
@@ -46,16 +48,34 @@ Texture::Texture(const TextureData &texture, const std::string &name, const Samp
     ::glTextureStorage2D(handle_, 1, to_opengl(texture.format, true), texture.width, texture.height);
     if (const auto &data = texture.data; data)
     {
-        ::glTextureSubImage2D(
-            handle_,
-            0,
-            0,
-            0,
-            texture.width,
-            texture.height,
-            to_opengl(texture.format, false),
-            GL_UNSIGNED_BYTE,
-            data->data());
+        if (texture.is_compressed)
+        {
+            log::info("loading compressed texture");
+            ::glCompressedTextureSubImage2D(
+                handle_,
+                0,
+                0,
+                0,
+                texture.width,
+                texture.height,
+                GL_COMPRESSED_SRGB_ALPHA_BPTC_UNORM,
+                data->size(),
+                data->data());
+        }
+        else
+        {
+            log::info("loading uncompressed texture");
+            ::glTextureSubImage2D(
+                handle_,
+                0,
+                0,
+                0,
+                texture.width,
+                texture.height,
+                to_opengl(texture.format, false),
+                GL_UNSIGNED_BYTE,
+                data->data());
+        }
     }
 
     bindless_handle_ = ::glGetTextureSamplerHandleARB(handle_, sampler.native_handle());
