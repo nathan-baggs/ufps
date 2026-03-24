@@ -57,6 +57,7 @@
     DO(::PFNGLTEXTURESTORAGE2DPROC, glTextureStorage2D)                                                                \
     DO(::PFNGLTEXTURESTORAGE2DMULTISAMPLEPROC, glTextureStorage2DMultisample)                                          \
     DO(::PFNGLTEXTURESUBIMAGE2DPROC, glTextureSubImage2D)                                                              \
+    DO(::PFNGLCOMPRESSEDTEXTURESUBIMAGE2DPROC, glCompressedTextureSubImage2D)                                          \
     DO(::PFNGLTEXTURESUBIMAGE3DPROC, glTextureSubImage3D)                                                              \
     DO(::PFNGLCREATESAMPLERSPROC, glCreateSamplers)                                                                    \
     DO(::PFNGLDELETESAMPLERSPROC, glDeleteSamplers)                                                                    \
