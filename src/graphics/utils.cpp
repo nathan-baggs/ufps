@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <cstdint>
 #include <filesystem>
 #include <memory>
@@ -7,6 +8,8 @@
 #include <tuple>
 #include <utility>
 #include <vector>
+
+#include <windows.h>
 
 #include <assimp/DefaultLogger.hpp>
 #include <assimp/Importer.hpp>
@@ -32,6 +35,36 @@
 
 namespace
 {
+
+struct DDS_PIXELFORMAT
+{
+    DWORD dwSize;
+    DWORD dwFlags;
+    DWORD dwFourCC;
+    DWORD dwRGBBitCount;
+    DWORD dwRBitMask;
+    DWORD dwGBitMask;
+    DWORD dwBBitMask;
+    DWORD dwABitMask;
+};
+
+struct DDS_HEADER
+{
+    DWORD dwSize;
+    DWORD dwFlags;
+    DWORD dwHeight;
+    DWORD dwWidth;
+    DWORD dwPitchOrLinearSize;
+    DWORD dwDepth;
+    DWORD dwMipMapCount;
+    DWORD dwReserved1[11];
+    DDS_PIXELFORMAT ddspf;
+    DWORD dwCaps;
+    DWORD dwCaps2;
+    DWORD dwCaps3;
+    DWORD dwCaps4;
+    DWORD dwReserved2;
+};
 
 template <ufps::log::Level L>
 class SimpleAssimpLogStream : public ::Assimp::LogStream
@@ -87,7 +120,8 @@ auto get_texture_filename(::aiMaterial const *material, ::aiTextureType type) ->
     material->GetTexture(type, 0u, &path_str);
     const auto path = std::filesystem::path{path_str.C_Str()};
 
-    return path.empty() ? std::nullopt : std::optional{std::format("textures\\{}", path.filename().string())};
+    return path.empty() ? std::nullopt
+                        : std::optional{std::format("textures\\{}.dds", path.filename().stem().string())};
 }
 
 }
@@ -100,24 +134,56 @@ auto load_texture(DataBufferView image_data, bool is_srgb) -> TextureData
     auto height = int{};
     auto num_channels = int{};
 
-    auto raw_data = std::unique_ptr<::stbi_uc, void (*)(void *)>{
-        ::stbi_load_from_memory(
-            reinterpret_cast<const ::stbi_uc *>(image_data.data()),
-            image_data.size(),
-            &width,
-            &height,
-            &num_channels,
-            0),
-        ::stbi_image_free};
-    ensure(raw_data, "failed to parse texture data");
+    static constexpr std::byte dds_magic[] = {
+        static_cast<std::byte>(0x44),
+        static_cast<std::byte>(0x44),
+        static_cast<std::byte>(0x53),
+        static_cast<std::byte>(0x20),
+    };
 
-    const auto *ptr = reinterpret_cast<const std::byte *>(raw_data.get());
+    if (std::ranges::equal(dds_magic, image_data | std::views::take(sizeof(dds_magic))))
+    {
+        log::info("handling dds");
 
-    return {
-        .width = static_cast<std::uint32_t>(width),
-        .height = static_cast<std::uint32_t>(height),
-        .format = channels_to_format(num_channels, is_srgb),
-        .data = {{ptr, ptr + width * height * num_channels}}};
+        auto dds_header = DDS_HEADER{};
+        std::memcpy(&dds_header, image_data.data() + sizeof(dds_magic), sizeof(dds_header));
+
+        ensure(dds_header.dwSize == sizeof(dds_header), "invalid dds_header size: {}", dds_header.dwSize);
+
+        return {
+            .width = static_cast<std::uint32_t>(dds_header.dwWidth),
+            .height = static_cast<std::uint32_t>(dds_header.dwHeight),
+            .format = channels_to_format(dds_header.ddspf.dwRGBBitCount / 8u, is_srgb),
+            .data =
+                image_data | std::views::drop(sizeof(dds_magic) + sizeof(dds_header)) | std::ranges::to<std::vector>(),
+            .is_compressed = true,
+        };
+    }
+    else
+    {
+        log::info("handling png");
+
+        auto raw_data = std::unique_ptr<::stbi_uc, void (*)(void *)>{
+            ::stbi_load_from_memory(
+                reinterpret_cast<const ::stbi_uc *>(image_data.data()),
+                image_data.size(),
+                &width,
+                &height,
+                &num_channels,
+                0),
+            ::stbi_image_free};
+        ensure(raw_data, "failed to parse texture data");
+
+        const auto *ptr = reinterpret_cast<const std::byte *>(raw_data.get());
+
+        return {
+            .width = static_cast<std::uint32_t>(width),
+            .height = static_cast<std::uint32_t>(height),
+            .format = channels_to_format(num_channels, is_srgb),
+            .data = {{ptr, ptr + width * height * num_channels}},
+            .is_compressed = false,
+        };
+    }
 }
 
 auto load_model(DataBufferView model_data, ResourceLoader &resource_loader)
