@@ -354,7 +354,7 @@ auto DebugRenderer::post_render(Scene &scene) -> void
 
     {
         auto value = scene.tone_map_options().pedestal;
-        if (::ImGui::SliderFloat("pedastal", &value, 0.0f, 1.0f))
+        if (::ImGui::SliderFloat("pedestal", &value, 0.0f, 1.0f))
         {
             scene.tone_map_options().pedestal = value;
         }
