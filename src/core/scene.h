@@ -42,6 +42,13 @@ struct ToneMapOptions
     float gamma;
 };
 
+struct SSAOOptions
+{
+    std::uint32_t sample_count = 64u;
+    float radius = 0.75f;
+    float bias = 0.025f;
+};
+
 class Scene
 {
   public:
@@ -51,7 +58,8 @@ class Scene
         TextureManager &texture_manager,
         Camera camera,
         LightData lights,
-        ToneMapOptions tone_map_options);
+        ToneMapOptions tone_map_options,
+        SSAOOptions ssao_options);
 
     constexpr auto intersect_ray(const Ray &ray) -> std::optional<IntersectionResult>;
 
@@ -101,6 +109,11 @@ class Scene
         return self.tone_map_options_;
     }
 
+    constexpr auto &ssao_options(this auto &&self)
+    {
+        return self.ssao_options_;
+    }
+
   private:
     std::vector<Entity> entities_;
     std::vector<Entity> entity_cache_;
@@ -110,6 +123,7 @@ class Scene
     Camera camera_;
     LightData lights_;
     ToneMapOptions tone_map_options_;
+    SSAOOptions ssao_options_;
 };
 
 constexpr auto Scene::intersect_ray(const Ray &ray) -> std::optional<IntersectionResult>

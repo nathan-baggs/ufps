@@ -503,6 +503,14 @@ auto DebugRenderer::post_render(Scene &scene) -> void
     ::ImGui::Begin("render_targets");
     static constexpr auto width = 175.0f;
     const auto aspect_ratio = static_cast<float>(window_.render_width()) / static_cast<float>(window_.render_height());
+
+    ::ImGui::Image(
+        scene.texture_manager().texture(ssao_rt_.first_colour_attachment_index)->native_handle(),
+        ::ImVec2(width * aspect_ratio, width),
+        ::ImVec2(0.0f, 1.0f),
+        ::ImVec2(1.0f, 0.0f));
+    ::ImGui::SameLine();
+
     for (auto i = 0u; i < gbuffer_rt_.colour_attachment_count; ++i)
     {
         const auto tex = scene.texture_manager().texture(gbuffer_rt_.first_colour_attachment_index + i);
@@ -510,11 +518,7 @@ auto DebugRenderer::post_render(Scene &scene) -> void
             tex->native_handle(), ::ImVec2(width * aspect_ratio, width), ::ImVec2(0.0f, 1.0f), ::ImVec2(1.0f, 0.0f));
         ::ImGui::SameLine();
     }
-    ::ImGui::Image(
-        scene.texture_manager().texture(gbuffer_rt_.depth_attachment_index)->native_handle(),
-        ::ImVec2(width * aspect_ratio, width),
-        ::ImVec2(0.0f, 1.0f),
-        ::ImVec2(1.0f, 0.0f));
+
     ::ImGui::End();
 
     if (!std::holds_alternative<std::monostate>(selected_))

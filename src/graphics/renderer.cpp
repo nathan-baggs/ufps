@@ -155,6 +155,13 @@ Renderer::Renderer(
           "shaders\\average_luminance.comp",
           "average_luminance_shader",
           "average_luminance_program")}
+    , ssao_program_{create_program(
+          resource_loader,
+          "shaders\\ssao.vert",
+          "ssao_vertex_shader",
+          "shaders\\ssao.frag",
+          "ssao_fragment_shader",
+          "ssao_program")}
     , fb_sampler_{FilterType::LINEAR, FilterType::LINEAR, "fb_sampler"}
     , gbuffer_rt_{create_render_target(
           4u,
@@ -176,9 +183,16 @@ Renderer::Renderer(
           window_.render_height(),
           fb_sampler_,
           texture_manager,
-          "tone_map"),},
-    mesh_manager_{mesh_manager},
-    final_fb_{}
+          "tone_map"),}
+    , ssao_rt_{create_render_target(
+          1u,
+          window_.render_width(),
+          window_.render_height(),
+          fb_sampler_,
+          texture_manager,
+          "ssao"),}
+    ,mesh_manager_{mesh_manager}
+    ,final_fb_{}
 {
     post_processing_command_buffer_.build(post_process_sprite_);
 
@@ -330,6 +344,28 @@ auto Renderer::render(Scene &scene) -> void
 
     ::glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT | GL_BUFFER_UPDATE_BARRIER_BIT);
 
+    ssao_rt_.fb.bind();
+    ::glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    ssao_program_.use();
+
+    ::glProgramUniform1ui(ssao_program_.native_handle(), 0u, gbuffer_rt_.first_colour_attachment_index + 1);
+    ::glProgramUniform1ui(ssao_program_.native_handle(), 1u, gbuffer_rt_.first_colour_attachment_index + 2);
+    ::glProgramUniform1f(ssao_program_.native_handle(), 2u, gbuffer_rt_.fb.width());
+    ::glProgramUniform1f(ssao_program_.native_handle(), 3u, gbuffer_rt_.fb.height());
+    ::glProgramUniform1ui(ssao_program_.native_handle(), 4u, scene.ssao_options().sample_count);
+    ::glProgramUniform1f(ssao_program_.native_handle(), 5u, scene.ssao_options().radius);
+    ::glProgramUniform1f(ssao_program_.native_handle(), 6u, scene.ssao_options().bias);
+    ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, vertex_buffer_handle);
+    ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, scene.texture_manager().native_handle());
+    ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, camera_buffer_.native_handle());
+    ::glBindBuffer(GL_DRAW_INDIRECT_BUFFER, post_processing_command_buffer_.native_handle());
+    ::glMultiDrawElementsIndirect(
+        GL_TRIANGLES,
+        GL_UNSIGNED_INT,
+        reinterpret_cast<const void *>(post_processing_command_buffer_.offset_bytes()),
+        1u,
+        0);
+
     tone_map_rt_.fb.bind();
     ::glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     tone_map_program_.use();
@@ -342,6 +378,7 @@ auto Renderer::render(Scene &scene) -> void
     ::glProgramUniform1f(tone_map_program_.native_handle(), 5u, scene.tone_map_options().black_tightness);
     ::glProgramUniform1f(tone_map_program_.native_handle(), 6u, scene.tone_map_options().pedestal);
     ::glProgramUniform1f(tone_map_program_.native_handle(), 7u, scene.tone_map_options().gamma);
+    ::glProgramUniform1ui(tone_map_program_.native_handle(), 8u, ssao_rt_.first_colour_attachment_index);
     ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, vertex_buffer_handle);
     ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, scene.texture_manager().native_handle());
     ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, average_luminance_buffer_.native_handle());

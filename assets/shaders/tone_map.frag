@@ -30,6 +30,7 @@ layout(location = 4) uniform float u_l;
 layout(location = 5) uniform float u_c;
 layout(location = 6) uniform float u_b;
 layout(location = 7) uniform float u_gamma;
+layout(location = 8) uniform uint u_ssao_index;
 
 layout(location = 0) in vec2 in_uv;
 
@@ -63,8 +64,9 @@ void main()
     in_colour *= (0.18 / max(average, 0.0001));
 
     vec3 tone_mapped_colour = uchimura(in_colour, u_P, u_a, u_m, u_l, u_c, u_b);
+    vec3 occlusion = texture(textures[u_ssao_index], in_uv).rgb;
 
-    vec3 gamma_corrected = pow(tone_mapped_colour, vec3(1.0 / u_gamma));
+    vec3 gamma_corrected = pow(tone_mapped_colour * occlusion, vec3(1.0 / u_gamma));
 
     out_colour = vec4(gamma_corrected, 1.0);
 }

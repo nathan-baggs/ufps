@@ -228,7 +228,8 @@ int main()
             .black_tightness = 1.33f,
             .pedestal = 0.0f,
             .gamma = 2.2f,
-        }};
+        },
+        {}};
 
     const auto models_to_load = std::vector{
         "models\\SM_Corner03_12_12_B_X.fbx"sv,
