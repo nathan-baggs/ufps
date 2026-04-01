@@ -284,12 +284,13 @@ auto Renderer::render(Scene &scene) -> void
     ::glClearNamedBufferData(
         luminance_histogram_buffer_.native_handle(), GL_R32UI, GL_RED_INTEGER, GL_UNSIGNED_INT, &zero);
 
-    ::glProgramUniform1ui(
-        luminance_histogram_program_.native_handle(), 0u, light_pass_rt_.first_colour_attachment_index);
     ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, scene.texture_manager().native_handle());
     ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, luminance_histogram_buffer_.native_handle());
-    ::glProgramUniform1f(luminance_histogram_program_.native_handle(), 1u, -10.0f);
-    ::glProgramUniform1f(luminance_histogram_program_.native_handle(), 2u, 2.0f);
+
+    ::glProgramUniform1ui(
+        luminance_histogram_program_.native_handle(), 0u, light_pass_rt_.first_colour_attachment_index);
+    ::glProgramUniform1f(luminance_histogram_program_.native_handle(), 1u, -3.0f);
+    ::glProgramUniform1f(luminance_histogram_program_.native_handle(), 2u, 1.0f);
 
     ::glDispatchCompute(
         static_cast<std::uint32_t>(light_pass_rt_.fb.width() + 15) / 16,
