@@ -1,5 +1,6 @@
 #include "graphics/renderer.h"
 
+#include <cmath>
 #include <cstdint>
 #include <optional>
 #include <ranges>
@@ -122,6 +123,7 @@ Renderer::Renderer(
     , light_buffer_{sizeof(LightData), "light_buffer"}
     , object_data_buffer_{sizeof(ObjectData), "object_data_buffer"}
     , luminance_histogram_buffer_{sizeof(std::uint32_t) * 256, "luminance_histogram_buffer"}
+    , average_luminance_buffer_{sizeof(float), "average_luminance_buffer"}
     , gbuffer_program_{create_program(
           resource_loader,
           "shaders\\gbuffer.vert",
@@ -148,6 +150,11 @@ Renderer::Renderer(
           "shaders\\luminance_histogram.comp",
           "luminance_histogram_shader",
           "luminance_histogram_program")}
+    , average_luminance_program_{create_program(
+          resource_loader,
+          "shaders\\average_luminance.comp",
+          "average_luminance_shader",
+          "average_luminance_program")}
     , fb_sampler_{FilterType::LINEAR, FilterType::LINEAR, "fb_sampler"}
     , gbuffer_rt_{create_render_target(
           4u,
@@ -183,6 +190,8 @@ Renderer::Renderer(
 
 auto Renderer::render(Scene &scene) -> void
 {
+    static auto delta_time = 1.0f / 60000.0f;
+
     gbuffer_rt_.fb.bind();
     ::glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -287,15 +296,40 @@ auto Renderer::render(Scene &scene) -> void
     ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, scene.texture_manager().native_handle());
     ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, luminance_histogram_buffer_.native_handle());
 
+    static constexpr auto min_log_luminance = -3.0f;
+    static constexpr auto max_log_luminance = 1.0f;
+
     ::glProgramUniform1ui(
         luminance_histogram_program_.native_handle(), 0u, light_pass_rt_.first_colour_attachment_index);
-    ::glProgramUniform1f(luminance_histogram_program_.native_handle(), 1u, -3.0f);
-    ::glProgramUniform1f(luminance_histogram_program_.native_handle(), 2u, 1.0f);
+    ::glProgramUniform1f(luminance_histogram_program_.native_handle(), 1u, min_log_luminance);
+    ::glProgramUniform1f(
+        luminance_histogram_program_.native_handle(), 2u, 1.0f / (max_log_luminance - min_log_luminance));
 
     ::glDispatchCompute(
         static_cast<std::uint32_t>(light_pass_rt_.fb.width() + 15) / 16,
         static_cast<std::uint32_t>(light_pass_rt_.fb.height() + 15) / 16,
         1);
+
+    ::glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT | GL_BUFFER_UPDATE_BARRIER_BIT);
+
+    average_luminance_program_.use();
+
+    ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, luminance_histogram_buffer_.native_handle());
+    ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, average_luminance_buffer_.native_handle());
+
+    // min log lum
+    ::glProgramUniform1f(average_luminance_program_.native_handle(), 0u, min_log_luminance);
+    // log lum range
+    ::glProgramUniform1f(average_luminance_program_.native_handle(), 1u, max_log_luminance - min_log_luminance);
+    // time
+    ::glProgramUniform1f(
+        average_luminance_program_.native_handle(), 2u, std::clamp(1.0f - std::exp(-delta_time * 1.1f), 0.0f, 1.0f));
+    ::glProgramUniform1f(
+        average_luminance_program_.native_handle(),
+        3u,
+        static_cast<float>(light_pass_rt_.fb.width() * light_pass_rt_.fb.height()));
+
+    ::glDispatchCompute(1, 1, 1);
 
     ::glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT | GL_BUFFER_UPDATE_BARRIER_BIT);
 

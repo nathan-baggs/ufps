@@ -65,10 +65,12 @@ class Renderer
     MultiBuffer<PersistentBuffer> light_buffer_;
     MultiBuffer<PersistentBuffer> object_data_buffer_;
     Buffer luminance_histogram_buffer_;
+    Buffer average_luminance_buffer_;
     Program gbuffer_program_;
     Program light_pass_program_;
     Program tone_map_program_;
     Program luminance_histogram_program_;
+    Program average_luminance_program_;
     Sampler fb_sampler_;
     RenderTarget gbuffer_rt_;
     RenderTarget light_pass_rt_;
