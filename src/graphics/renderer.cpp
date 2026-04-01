@@ -190,7 +190,7 @@ Renderer::Renderer(
 
 auto Renderer::render(Scene &scene) -> void
 {
-    static auto delta_time = 1.0f / 60000.0f;
+    static auto delta_time = 1.0f / 60.0f;
 
     gbuffer_rt_.fb.bind();
     ::glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -317,13 +317,10 @@ auto Renderer::render(Scene &scene) -> void
     ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, luminance_histogram_buffer_.native_handle());
     ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, average_luminance_buffer_.native_handle());
 
-    // min log lum
     ::glProgramUniform1f(average_luminance_program_.native_handle(), 0u, min_log_luminance);
-    // log lum range
     ::glProgramUniform1f(average_luminance_program_.native_handle(), 1u, max_log_luminance - min_log_luminance);
-    // time
     ::glProgramUniform1f(
-        average_luminance_program_.native_handle(), 2u, std::clamp(1.0f - std::exp(-delta_time * 1.1f), 0.0f, 1.0f));
+        average_luminance_program_.native_handle(), 2u, std::clamp(1.0f - std::exp(-delta_time * 3.0f), 0.0f, 1.0f));
     ::glProgramUniform1f(
         average_luminance_program_.native_handle(),
         3u,
@@ -347,6 +344,7 @@ auto Renderer::render(Scene &scene) -> void
     ::glProgramUniform1f(tone_map_program_.native_handle(), 7u, scene.tone_map_options().gamma);
     ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, vertex_buffer_handle);
     ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, scene.texture_manager().native_handle());
+    ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, average_luminance_buffer_.native_handle());
     ::glBindBuffer(GL_DRAW_INDIRECT_BUFFER, post_processing_command_buffer_.native_handle());
     ::glMultiDrawElementsIndirect(
         GL_TRIANGLES,

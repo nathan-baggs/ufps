@@ -18,6 +18,10 @@ layout(binding = 1, std430) readonly buffer textures_buffer {
     sampler2D textures[];
 };
 
+layout(binding = 2, std430) readonly buffer average_buffer {
+    float average;
+};
+
 layout(location = 0) uniform uint u_input_tex_index;
 layout(location = 1) uniform float u_P;
 layout(location = 2) uniform float u_a;
@@ -55,6 +59,8 @@ vec3 uchimura(vec3 x, float P, float a, float m, float l, float c, float b)
 void main()
 {
     vec3 in_colour = texture(textures[u_input_tex_index], in_uv).rgb;
+
+    in_colour *= (0.18 / max(average, 0.0001));
 
     vec3 tone_mapped_colour = uchimura(in_colour, u_P, u_a, u_m, u_l, u_c, u_b);
 
