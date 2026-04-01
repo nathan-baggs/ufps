@@ -23,48 +23,18 @@
 #include "assimp/material.h"
 #include "assimp/mesh.h"
 #include "assimp/vector3.h"
+#include "graphics/dds.h"
 #include "graphics/mesh_data.h"
 #include "graphics/model_data.h"
 #include "graphics/texture_data.h"
 #include "graphics/utils.h"
 #include "resources/resource_loader.h"
 #include "utils/data_buffer.h"
-
 #include "utils/error.h"
 #include "utils/log.h"
 
 namespace
 {
-
-struct DDS_PIXELFORMAT
-{
-    DWORD dwSize;
-    DWORD dwFlags;
-    DWORD dwFourCC;
-    DWORD dwRGBBitCount;
-    DWORD dwRBitMask;
-    DWORD dwGBitMask;
-    DWORD dwBBitMask;
-    DWORD dwABitMask;
-};
-
-struct DDS_HEADER
-{
-    DWORD dwSize;
-    DWORD dwFlags;
-    DWORD dwHeight;
-    DWORD dwWidth;
-    DWORD dwPitchOrLinearSize;
-    DWORD dwDepth;
-    DWORD dwMipMapCount;
-    DWORD dwReserved1[11];
-    DDS_PIXELFORMAT ddspf;
-    DWORD dwCaps;
-    DWORD dwCaps2;
-    DWORD dwCaps3;
-    DWORD dwCaps4;
-    DWORD dwReserved2;
-};
 
 template <ufps::log::Level L>
 class SimpleAssimpLogStream : public ::Assimp::LogStream
@@ -143,25 +113,27 @@ auto load_texture(DataBufferView image_data, bool is_srgb) -> TextureData
 
     if (std::ranges::equal(dds_magic, image_data | std::views::take(sizeof(dds_magic))))
     {
-        log::info("handling dds");
-
         auto dds_header = DDS_HEADER{};
         std::memcpy(&dds_header, image_data.data() + sizeof(dds_magic), sizeof(dds_header));
 
         ensure(dds_header.dwSize == sizeof(dds_header), "invalid dds_header size: {}", dds_header.dwSize);
+        ensure(dds_header.ddspf.dwFourCC == 0x30315844, "not dx10 format");
+
+        auto dx10_header = DDS_HEADER_DXT10{};
+        std::memcpy(&dx10_header, image_data.data() + sizeof(dds_magic) + sizeof(dds_header), sizeof(dx10_header));
 
         return {
             .width = static_cast<std::uint32_t>(dds_header.dwWidth),
             .height = static_cast<std::uint32_t>(dds_header.dwHeight),
-            .format = channels_to_format(dds_header.ddspf.dwRGBBitCount / 8u, is_srgb),
-            .data =
-                image_data | std::views::drop(sizeof(dds_magic) + sizeof(dds_header)) | std::ranges::to<std::vector>(),
+            .format = TextureFormat::BC7,
+            .data = image_data | std::views::drop(sizeof(dds_magic) + sizeof(dds_header) + sizeof(dx10_header)) |
+                    std::ranges::to<std::vector>(),
             .is_compressed = true,
         };
     }
     else
     {
-        log::info("handling png");
+        log::warn("handling png");
 
         auto raw_data = std::unique_ptr<::stbi_uc, void (*)(void *)>{
             ::stbi_load_from_memory(

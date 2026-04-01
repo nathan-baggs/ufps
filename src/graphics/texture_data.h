@@ -17,7 +17,8 @@ enum class TextureFormat
     RGBA,
     SRGBA,
     RGB16F,
-    DEPTH24
+    DEPTH24,
+    BC7,
 };
 
 struct TextureData
@@ -41,6 +42,7 @@ inline auto to_string(TextureFormat format) -> std::string
         case SRGBA: return "SRGBA";
         case RGB16F: return "RGB16F";
         case DEPTH24: return "DEPTH24";
+        case BC7: return "BC7";
         default: return "<UNKNOWN>";
     }
 }

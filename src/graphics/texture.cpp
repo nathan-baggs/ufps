@@ -26,6 +26,7 @@ auto to_opengl(ufps::TextureFormat format, bool include_size) -> ::GLenum
         case SRGBA: return include_size ? GL_SRGB8_ALPHA8 : GL_RGBA;
         case RGB16F: return GL_RGB16F;
         case DEPTH24: return GL_DEPTH_COMPONENT24;
+        case BC7: return GL_COMPRESSED_RGBA_BPTC_UNORM;
     }
     throw ufps::Exception("unknown texture format: {}", format);
 }
@@ -50,21 +51,12 @@ Texture::Texture(const TextureData &texture, const std::string &name, const Samp
     {
         if (texture.is_compressed)
         {
-            log::info("loading compressed texture");
+            const auto size = ((width_ + 3u) / 4u) * ((height_ + 3) / 4u) * 16;
             ::glCompressedTextureSubImage2D(
-                handle_,
-                0,
-                0,
-                0,
-                texture.width,
-                texture.height,
-                GL_COMPRESSED_SRGB_ALPHA_BPTC_UNORM,
-                data->size(),
-                data->data());
+                handle_, 0, 0, 0, texture.width, texture.height, GL_COMPRESSED_RGBA_BPTC_UNORM, size, data->data());
         }
         else
         {
-            log::info("loading uncompressed texture");
             ::glTextureSubImage2D(
                 handle_,
                 0,
