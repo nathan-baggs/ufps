@@ -76,4 +76,24 @@ auto Program::native_handle() const -> ::GLuint
     return handle_;
 }
 
+auto Program::set_uniform(std::size_t index, std::uint32_t value) const -> void
+{
+    ::glProgramUniform1ui(handle_, index, value);
+}
+
+auto Program::set_uniform(std::size_t index, float value) const -> void
+{
+    ::glProgramUniform1f(handle_, index, value);
+}
+
+auto Program::set_uniform(std::size_t index, const Matrix4 &value) const -> void
+{
+    ::glProgramUniformMatrix4fv(handle_, index, 1u, GL_FALSE, value.data().data());
+}
+
+auto Program::set_uniform(std::size_t index, const Colour &value) const -> void
+{
+    ::glProgramUniform3f(handle_, index, value.r, value.g, value.b);
+}
+
 }

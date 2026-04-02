@@ -252,8 +252,7 @@ auto DebugRenderer::post_render(Scene &scene) -> void
         };
         debug_lines_.append_range(create_aabb_lines(debug_light_aabb, {}, {1.0f, 0.0f, 0.0f}));
 
-        ::glProgramUniformMatrix4fv(debug_light_program_.native_handle(), 0u, 1u, GL_FALSE, light_model.data().data());
-        ::glProgramUniform3f(debug_light_program_.native_handle(), 1u, light.colour.r, light.colour.g, light.colour.b);
+        debug_light_program_.set_uniforms(light_model, light.colour);
 
         ::glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, reinterpret_cast<const void *>(cube_indices_offset_bytes));
     }

@@ -281,10 +281,12 @@ auto Renderer::render(Scene &scene) -> void
         writer.write<PointLight>(lights.lights);
     }
 
-    ::glProgramUniform1ui(light_pass_program_.native_handle(), 0u, gbuffer_rt_.first_colour_attachment_index + 0u);
-    ::glProgramUniform1ui(light_pass_program_.native_handle(), 1u, gbuffer_rt_.first_colour_attachment_index + 1u);
-    ::glProgramUniform1ui(light_pass_program_.native_handle(), 2u, gbuffer_rt_.first_colour_attachment_index + 2u);
-    ::glProgramUniform1ui(light_pass_program_.native_handle(), 3u, gbuffer_rt_.first_colour_attachment_index + 3u);
+    light_pass_program_.set_uniforms(
+        gbuffer_rt_.first_colour_attachment_index + 0u,
+        gbuffer_rt_.first_colour_attachment_index + 1u,
+        gbuffer_rt_.first_colour_attachment_index + 2u,
+        gbuffer_rt_.first_colour_attachment_index + 3u);
+
     ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, vertex_buffer_handle);
     ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, scene.texture_manager().native_handle());
     ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, light_buffer_.native_handle());
@@ -313,11 +315,10 @@ auto Renderer::render(Scene &scene) -> void
     static constexpr auto min_log_luminance = -3.0f;
     static constexpr auto max_log_luminance = 1.0f;
 
-    ::glProgramUniform1ui(
-        luminance_histogram_program_.native_handle(), 0u, light_pass_rt_.first_colour_attachment_index);
-    ::glProgramUniform1f(luminance_histogram_program_.native_handle(), 1u, min_log_luminance);
-    ::glProgramUniform1f(
-        luminance_histogram_program_.native_handle(), 2u, 1.0f / (max_log_luminance - min_log_luminance));
+    luminance_histogram_program_.set_uniforms(
+        light_pass_rt_.first_colour_attachment_index,
+        min_log_luminance,
+        1.0f / (max_log_luminance - min_log_luminance));
 
     ::glDispatchCompute(
         static_cast<std::uint32_t>(light_pass_rt_.fb.width() + 15) / 16,
@@ -331,13 +332,10 @@ auto Renderer::render(Scene &scene) -> void
     ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, luminance_histogram_buffer_.native_handle());
     ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, average_luminance_buffer_.native_handle());
 
-    ::glProgramUniform1f(average_luminance_program_.native_handle(), 0u, min_log_luminance);
-    ::glProgramUniform1f(average_luminance_program_.native_handle(), 1u, max_log_luminance - min_log_luminance);
-    ::glProgramUniform1f(
-        average_luminance_program_.native_handle(), 2u, std::clamp(1.0f - std::exp(-delta_time * 3.0f), 0.0f, 1.0f));
-    ::glProgramUniform1f(
-        average_luminance_program_.native_handle(),
-        3u,
+    average_luminance_program_.set_uniforms(
+        min_log_luminance,
+        max_log_luminance - min_log_luminance,
+        std::clamp(1.0f - std::exp(-delta_time * 3.0f), 0.0f, 1.0f),
         static_cast<float>(light_pass_rt_.fb.width() * light_pass_rt_.fb.height()));
 
     ::glDispatchCompute(1, 1, 1);
@@ -348,13 +346,14 @@ auto Renderer::render(Scene &scene) -> void
     ::glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     ssao_program_.use();
 
-    ::glProgramUniform1ui(ssao_program_.native_handle(), 0u, gbuffer_rt_.first_colour_attachment_index + 1);
-    ::glProgramUniform1ui(ssao_program_.native_handle(), 1u, gbuffer_rt_.first_colour_attachment_index + 2);
-    ::glProgramUniform1f(ssao_program_.native_handle(), 2u, gbuffer_rt_.fb.width());
-    ::glProgramUniform1f(ssao_program_.native_handle(), 3u, gbuffer_rt_.fb.height());
-    ::glProgramUniform1ui(ssao_program_.native_handle(), 4u, scene.ssao_options().sample_count);
-    ::glProgramUniform1f(ssao_program_.native_handle(), 5u, scene.ssao_options().radius);
-    ::glProgramUniform1f(ssao_program_.native_handle(), 6u, scene.ssao_options().bias);
+    ssao_program_.set_uniforms(
+        gbuffer_rt_.first_colour_attachment_index + 1,
+        gbuffer_rt_.first_colour_attachment_index + 2,
+        static_cast<float>(gbuffer_rt_.fb.width()),
+        static_cast<float>(gbuffer_rt_.fb.height()),
+        scene.ssao_options().sample_count,
+        scene.ssao_options().radius,
+        scene.ssao_options().bias);
     ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, vertex_buffer_handle);
     ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, scene.texture_manager().native_handle());
     ::glBindBufferRange(
@@ -375,15 +374,16 @@ auto Renderer::render(Scene &scene) -> void
     ::glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     tone_map_program_.use();
 
-    ::glProgramUniform1ui(tone_map_program_.native_handle(), 0u, light_pass_rt_.first_colour_attachment_index);
-    ::glProgramUniform1f(tone_map_program_.native_handle(), 1u, scene.tone_map_options().max_brightness);
-    ::glProgramUniform1f(tone_map_program_.native_handle(), 2u, scene.tone_map_options().contrast);
-    ::glProgramUniform1f(tone_map_program_.native_handle(), 3u, scene.tone_map_options().linear_section_start);
-    ::glProgramUniform1f(tone_map_program_.native_handle(), 4u, scene.tone_map_options().linear_section_length);
-    ::glProgramUniform1f(tone_map_program_.native_handle(), 5u, scene.tone_map_options().black_tightness);
-    ::glProgramUniform1f(tone_map_program_.native_handle(), 6u, scene.tone_map_options().pedestal);
-    ::glProgramUniform1f(tone_map_program_.native_handle(), 7u, scene.tone_map_options().gamma);
-    ::glProgramUniform1ui(tone_map_program_.native_handle(), 8u, ssao_rt_.first_colour_attachment_index);
+    tone_map_program_.set_uniforms(
+        light_pass_rt_.first_colour_attachment_index,
+        scene.tone_map_options().max_brightness,
+        scene.tone_map_options().contrast,
+        scene.tone_map_options().linear_section_start,
+        scene.tone_map_options().linear_section_length,
+        scene.tone_map_options().black_tightness,
+        scene.tone_map_options().pedestal,
+        scene.tone_map_options().gamma,
+        ssao_rt_.first_colour_attachment_index);
     ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, vertex_buffer_handle);
     ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, scene.texture_manager().native_handle());
     ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, average_luminance_buffer_.native_handle());
