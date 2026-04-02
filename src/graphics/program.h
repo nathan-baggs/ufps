@@ -19,7 +19,9 @@ class Program
     Program(const Shader &vertex_shader, const Shader &fragment_shader, std::string_view name);
     Program(const Shader &compute_shader, std::string_view name);
 
-    auto use() const -> void;
+    auto bind() -> void;
+
+    auto unbind() -> void;
 
     auto native_handle() const -> ::GLuint;
 
@@ -40,6 +42,7 @@ class Program
 
   private:
     AutoRelease<::GLuint> handle_;
+    bool is_bound_;
 };
 
 }

@@ -209,7 +209,7 @@ auto Renderer::render(Scene &scene) -> void
     gbuffer_rt_.fb.bind();
     ::glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    gbuffer_program_.use();
+    gbuffer_program_.bind();
 
     camera_buffer_.write(scene.camera().data_view(), 0zu);
 
@@ -259,9 +259,10 @@ auto Renderer::render(Scene &scene) -> void
 
     light_buffer_.write(std::as_bytes(std::span<const LightData, 1zu>{&scene.lights(), 1zu}), 0zu);
 
+    gbuffer_program_.unbind();
     light_pass_rt_.fb.bind();
     ::glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    light_pass_program_.use();
+    light_pass_program_.bind();
 
     {
         const auto &lights = scene.lights();
@@ -304,7 +305,8 @@ auto Renderer::render(Scene &scene) -> void
         1u,
         0);
 
-    luminance_histogram_program_.use();
+    light_pass_program_.unbind();
+    luminance_histogram_program_.bind();
     const auto zero = ::GLuint{0};
     ::glClearNamedBufferData(
         luminance_histogram_buffer_.native_handle(), GL_R32UI, GL_RED_INTEGER, GL_UNSIGNED_INT, &zero);
@@ -327,7 +329,8 @@ auto Renderer::render(Scene &scene) -> void
 
     ::glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT | GL_BUFFER_UPDATE_BARRIER_BIT);
 
-    average_luminance_program_.use();
+    luminance_histogram_program_.unbind();
+    average_luminance_program_.bind();
 
     ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, luminance_histogram_buffer_.native_handle());
     ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, average_luminance_buffer_.native_handle());
@@ -344,7 +347,8 @@ auto Renderer::render(Scene &scene) -> void
 
     ssao_rt_.fb.bind();
     ::glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    ssao_program_.use();
+    average_luminance_program_.unbind();
+    ssao_program_.bind();
 
     ssao_program_.set_uniforms(
         gbuffer_rt_.first_colour_attachment_index + 1,
@@ -372,7 +376,8 @@ auto Renderer::render(Scene &scene) -> void
 
     tone_map_rt_.fb.bind();
     ::glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    tone_map_program_.use();
+    ssao_program_.unbind();
+    tone_map_program_.bind();
 
     tone_map_program_.set_uniforms(
         light_pass_rt_.first_colour_attachment_index,
@@ -396,6 +401,8 @@ auto Renderer::render(Scene &scene) -> void
         0);
 
     final_fb_ = &tone_map_rt_.fb;
+
+    tone_map_program_.unbind();
 
     post_render(scene);
 

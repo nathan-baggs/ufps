@@ -225,7 +225,7 @@ auto DebugRenderer::post_render(Scene &scene) -> void
         GL_DEPTH_BUFFER_BIT,
         GL_NEAREST);
 
-    debug_light_program_.use();
+    debug_light_program_.bind();
 
     const auto [vertex_buffer_handle, index_buffer_handle] = scene.mesh_manager().native_handle();
     ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, vertex_buffer_handle);
@@ -257,11 +257,13 @@ auto DebugRenderer::post_render(Scene &scene) -> void
         ::glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, reinterpret_cast<const void *>(cube_indices_offset_bytes));
     }
 
+    debug_light_program_.unbind();
+
     auto debug_line_count = 0zu;
 
     if (!debug_lines_.empty())
     {
-        debug_line_program_.use();
+        debug_line_program_.bind();
         debug_line_count = debug_lines_.size();
 
         resize_gpu_buffer(debug_lines_, debug_line_buffer_);
@@ -278,6 +280,7 @@ auto DebugRenderer::post_render(Scene &scene) -> void
         debug_lines_.clear();
 
         debug_line_buffer_.advance();
+        debug_line_program_.unbind();
     }
 
     auto &io = ::ImGui::GetIO();
