@@ -12,7 +12,8 @@ namespace ufps
 enum class ShaderType
 {
     VERTEX,
-    FRAGMENT
+    FRAGMENT,
+    COMPUTE
 };
 
 class Shader

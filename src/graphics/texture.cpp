@@ -1,13 +1,16 @@
 #include "graphics/texture.h"
 
-#include <GL/gl.h>
 #include <string>
+
+#include <GL/gl.h>
 
 #include "graphics/opengl.h"
 #include "graphics/sampler.h"
 #include "graphics/texture_data.h"
+#include "third_party/opengl/glext.h"
 #include "utils/exception.h"
 #include "utils/formatter.h"
+#include "utils/log.h"
 
 namespace
 {
@@ -18,9 +21,12 @@ auto to_opengl(ufps::TextureFormat format, bool include_size) -> ::GLenum
         using enum ufps::TextureFormat;
         case RED: return include_size ? GL_R8 : GL_RED;
         case RGB: return include_size ? GL_RGB8 : GL_RGB;
+        case SRGB: return include_size ? GL_SRGB8 : GL_RGB;
         case RGBA: return include_size ? GL_RGBA8 : GL_RGBA;
+        case SRGBA: return include_size ? GL_SRGB8_ALPHA8 : GL_RGBA;
         case RGB16F: return GL_RGB16F;
         case DEPTH24: return GL_DEPTH_COMPONENT24;
+        case BC7: return GL_COMPRESSED_RGBA_BPTC_UNORM;
     }
     throw ufps::Exception("unknown texture format: {}", format);
 }
@@ -43,16 +49,25 @@ Texture::Texture(const TextureData &texture, const std::string &name, const Samp
     ::glTextureStorage2D(handle_, 1, to_opengl(texture.format, true), texture.width, texture.height);
     if (const auto &data = texture.data; data)
     {
-        ::glTextureSubImage2D(
-            handle_,
-            0,
-            0,
-            0,
-            texture.width,
-            texture.height,
-            to_opengl(texture.format, false),
-            GL_UNSIGNED_BYTE,
-            data->data());
+        if (texture.is_compressed)
+        {
+            const auto size = ((width_ + 3u) / 4u) * ((height_ + 3) / 4u) * 16;
+            ::glCompressedTextureSubImage2D(
+                handle_, 0, 0, 0, texture.width, texture.height, GL_COMPRESSED_RGBA_BPTC_UNORM, size, data->data());
+        }
+        else
+        {
+            ::glTextureSubImage2D(
+                handle_,
+                0,
+                0,
+                0,
+                texture.width,
+                texture.height,
+                to_opengl(texture.format, false),
+                GL_UNSIGNED_BYTE,
+                data->data());
+        }
     }
 
     bindless_handle_ = ::glGetTextureSamplerHandleARB(handle_, sampler.native_handle());

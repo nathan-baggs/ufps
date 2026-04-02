@@ -23,7 +23,7 @@ jobs:
 
       - name: Build and package
         run: |
-          cmake -B build -DCMAKE_TOOLCHAIN_FILE=mingw_toolchain.cmake -G "Ninja Multi-Config"
+          cmake -B build -DCMAKE_TOOLCHAIN_FILE=mingw_toolchain.cmake -DUFPS_USE_EMEBDDED_RESOURCE_LOADER=1 -G "Ninja Multi-Config"
           cmake --build build --config Debug
           cd build && cpack . -C Debug
 

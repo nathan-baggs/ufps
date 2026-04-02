@@ -16,6 +16,7 @@ struct PointLight
     float colour[3];
     float attenuation[3];
     float specular_power;
+    float intensity;
 };
 
 layout(binding = 0, std430) readonly buffer vertices {
@@ -49,10 +50,15 @@ layout(location = 1) in vec2 in_uv;
 
 layout(location = 0) out vec4 out_colour;
 
-vec3 calculate_point_light(PointLight light, vec3 normal, vec3 frag_pos, vec3 albedo, float specular)
+vec3 calculate_point_light(
+    PointLight light,
+    vec3 normal,
+    vec3 frag_pos,
+    vec3 albedo,
+    float specular)
 {
     vec3 point_pos = vec3(light.position[0], light.position[1], light.position[2]);
-    vec3 point_colour = vec3(light.colour[0], light.colour[1], light.colour[2]);
+    vec3 point_colour = vec3(light.colour[0], light.colour[1], light.colour[2]) * vec3(light.intensity);
     vec3 point_attenuation = vec3(light.attenuation[0], light.attenuation[1], light.attenuation[2]);
 
     vec3 light_dir = normalize(point_pos - frag_pos);

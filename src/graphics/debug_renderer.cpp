@@ -1,5 +1,6 @@
 #include "graphics/debug_renderer.h"
 
+#include <algorithm>
 #include <cstring>
 #include <format>
 #include <optional>
@@ -224,7 +225,7 @@ auto DebugRenderer::post_render(Scene &scene) -> void
         GL_DEPTH_BUFFER_BIT,
         GL_NEAREST);
 
-    debug_light_program_.use();
+    debug_light_program_.bind();
 
     const auto [vertex_buffer_handle, index_buffer_handle] = scene.mesh_manager().native_handle();
     ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, vertex_buffer_handle);
@@ -251,17 +252,18 @@ auto DebugRenderer::post_render(Scene &scene) -> void
         };
         debug_lines_.append_range(create_aabb_lines(debug_light_aabb, {}, {1.0f, 0.0f, 0.0f}));
 
-        ::glProgramUniformMatrix4fv(debug_light_program_.native_handle(), 0u, 1u, GL_FALSE, light_model.data().data());
-        ::glProgramUniform3f(debug_light_program_.native_handle(), 1u, light.colour.r, light.colour.g, light.colour.b);
+        debug_light_program_.set_uniforms(light_model, light.colour);
 
         ::glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, reinterpret_cast<const void *>(cube_indices_offset_bytes));
     }
+
+    debug_light_program_.unbind();
 
     auto debug_line_count = 0zu;
 
     if (!debug_lines_.empty())
     {
-        debug_line_program_.use();
+        debug_line_program_.bind();
         debug_line_count = debug_lines_.size();
 
         resize_gpu_buffer(debug_lines_, debug_line_buffer_);
@@ -278,6 +280,7 @@ auto DebugRenderer::post_render(Scene &scene) -> void
         debug_lines_.clear();
 
         debug_line_buffer_.advance();
+        debug_line_program_.unbind();
     }
 
     auto &io = ::ImGui::GetIO();
@@ -307,9 +310,135 @@ auto DebugRenderer::post_render(Scene &scene) -> void
                 .constant_attenuation = 1.0f,
                 .linear_attenuation = 0.007f,
                 .quadratic_attenuation = 0.0002f,
-                .specular_power = 32.0f});
+                .specular_power = 32.0f,
+                .intensity = 1.0f});
         selected_ = &scene.lights().lights.back();
     }
+
+    ::ImGui::Text("tone map options");
+
+    {
+        auto value = scene.tone_map_options().max_brightness;
+        if (::ImGui::SliderFloat("maximum brightness", &value, 0.0f, 100.0f))
+        {
+            scene.tone_map_options().max_brightness = value;
+        }
+    }
+
+    {
+        auto value = scene.tone_map_options().contrast;
+        if (::ImGui::SliderFloat("contrast", &value, 0.0f, 5.0f))
+        {
+            scene.tone_map_options().contrast = value;
+        }
+    }
+
+    {
+        auto value = scene.tone_map_options().linear_section_start;
+        if (::ImGui::SliderFloat("linear section start", &value, 0.0f, 1.0f))
+        {
+            scene.tone_map_options().linear_section_start = value;
+        }
+    }
+
+    {
+        auto value = scene.tone_map_options().linear_section_length;
+        if (::ImGui::SliderFloat("linear section length", &value, 0.0f, 1.0f))
+        {
+            scene.tone_map_options().linear_section_length = value;
+        }
+    }
+
+    {
+        auto value = scene.tone_map_options().black_tightness;
+        if (::ImGui::SliderFloat("black tightness", &value, 0.0f, 3.0f))
+        {
+            scene.tone_map_options().black_tightness = value;
+        }
+    }
+
+    {
+        auto value = scene.tone_map_options().pedestal;
+        if (::ImGui::SliderFloat("pedestal", &value, 0.0f, 1.0f))
+        {
+            scene.tone_map_options().pedestal = value;
+        }
+    }
+
+    {
+        auto value = scene.tone_map_options().gamma;
+        if (::ImGui::SliderFloat("gamma", &value, 0.0f, 5.0f))
+        {
+            scene.tone_map_options().gamma = value;
+        }
+    }
+
+    ::ImGui::Text("ssao options");
+
+    {
+        auto value = static_cast<int>(scene.ssao_options().sample_count);
+        if (::ImGui::SliderInt("sample_count", &value, 1, 64))
+        {
+            scene.ssao_options().sample_count = value;
+        }
+    }
+
+    {
+        auto value = scene.ssao_options().radius;
+        if (::ImGui::SliderFloat("radius", &value, 0.1f, 2.0f))
+        {
+            scene.ssao_options().radius = value;
+        }
+    }
+
+    {
+        auto value = scene.ssao_options().bias;
+        if (::ImGui::SliderFloat("bias", &value, 0.01f, 0.1f))
+        {
+            scene.ssao_options().bias = value;
+        }
+    }
+
+    ::ImGui::Text("exposure options");
+
+    {
+        auto value = scene.exposure_options().min_log_luminance;
+        if (::ImGui::SliderFloat("min_log_luminance", &value, -10.0f, 10.0f))
+        {
+            scene.exposure_options().min_log_luminance = value;
+        }
+    }
+
+    {
+        auto value = scene.exposure_options().max_log_luminance;
+        if (::ImGui::SliderFloat("max_log_luminance", &value, -10.0f, 10.0f))
+        {
+            scene.exposure_options().max_log_luminance = value;
+        }
+    }
+
+    auto average_luminance = 0.0f;
+    ::glGetNamedBufferSubData(
+        average_luminance_buffer_.native_handle(), 0, sizeof(average_luminance), &average_luminance);
+
+    ::ImGui::LabelText("average luminance", "%f", average_luminance);
+
+    std::uint32_t histogram[256]{};
+    ::glGetNamedBufferSubData(luminance_histogram_buffer_.native_handle(), 0, sizeof(histogram), &histogram);
+
+    const auto scaled_histogram =
+        histogram | std::views::transform([](const auto e) { return std::log2(static_cast<float>(e) + 1.0f); }) |
+        std::ranges::to<std::vector>();
+
+    ::ImGui::PlotHistogram(
+        "luminance",
+        scaled_histogram.data(),
+        256,
+        0,
+        nullptr,
+        0.0f,
+        std::ranges::max(scaled_histogram),
+        ::ImVec2(::ImGui::GetContentRegionAvail().x, 150.0f));
 
     const auto mesh_names_cstr = mesh_manager_.mesh_names() |
                                  std::views::transform([](const auto &e) { return e.c_str(); }) |
@@ -423,6 +552,14 @@ auto DebugRenderer::post_render(Scene &scene) -> void
     ::ImGui::Begin("render_targets");
     static constexpr auto width = 175.0f;
     const auto aspect_ratio = static_cast<float>(window_.render_width()) / static_cast<float>(window_.render_height());
+
+    ::ImGui::Image(
+        scene.texture_manager().texture(ssao_rt_.first_colour_attachment_index)->native_handle(),
+        ::ImVec2(width * aspect_ratio, width),
+        ::ImVec2(0.0f, 1.0f),
+        ::ImVec2(1.0f, 0.0f));
+    ::ImGui::SameLine();
+
     for (auto i = 0u; i < gbuffer_rt_.colour_attachment_count; ++i)
     {
         const auto tex = scene.texture_manager().texture(gbuffer_rt_.first_colour_attachment_index + i);
@@ -430,11 +567,7 @@ auto DebugRenderer::post_render(Scene &scene) -> void
             tex->native_handle(), ::ImVec2(width * aspect_ratio, width), ::ImVec2(0.0f, 1.0f), ::ImVec2(1.0f, 0.0f));
         ::ImGui::SameLine();
     }
-    ::ImGui::Image(
-        scene.texture_manager().texture(gbuffer_rt_.depth_attachment_index)->native_handle(),
-        ::ImVec2(width * aspect_ratio, width),
-        ::ImVec2(0.0f, 1.0f),
-        ::ImVec2(1.0f, 0.0f));
+
     ::ImGui::End();
 
     if (!std::holds_alternative<std::monostate>(selected_))
@@ -508,6 +641,12 @@ auto DebugRenderer::post_render(Scene &scene) -> void
                 light->constant_attenuation = atten[0];
                 light->linear_attenuation = atten[1];
                 light->quadratic_attenuation = atten[2];
+            }
+
+            auto intensity = light->intensity;
+            if (::ImGui::SliderFloat("intensity", &intensity, 0.0f, 100.0f))
+            {
+                light->intensity = intensity;
             }
 
             auto transform = Matrix4{light->position};

@@ -5,6 +5,7 @@
 #include <string_view>
 
 #include "graphics/opengl.h"
+#include "third_party/opengl/glext.h"
 #include "utils/auto_release.h"
 #include "utils/error.h"
 #include "utils/exception.h"
@@ -20,6 +21,7 @@ auto to_native(ufps::ShaderType type) -> ::GLenum
         using enum ufps::ShaderType;
         case VERTEX: return GL_VERTEX_SHADER;
         case FRAGMENT: return GL_FRAGMENT_SHADER;
+        case COMPUTE: return GL_COMPUTE_SHADER;
     }
 
     throw ufps::Exception("unknown shader type: {}", std::to_underlying(type));
@@ -70,6 +72,7 @@ auto to_string(ShaderType obj) -> std::string
         using enum ufps::ShaderType;
         case VERTEX: return "VERTEX";
         case FRAGMENT: return "FRAGMENT";
+        case COMPUTE: return "COMPUTE";
     }
 
     throw ufps::Exception("unknown shader type: {}", std::to_underlying(obj));

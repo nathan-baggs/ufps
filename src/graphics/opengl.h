@@ -34,10 +34,12 @@
     DO(::PFNGLUNIFORM1IPROC, glUniform1i)                                                                              \
     DO(::PFNGLUNIFORM1FPROC, glUniform1f)                                                                              \
     DO(::PFNGLPROGRAMUNIFORM1UIPROC, glProgramUniform1ui)                                                              \
+    DO(::PFNGLPROGRAMUNIFORM1FPROC, glProgramUniform1f)                                                                \
     DO(::PFNGLPROGRAMUNIFORM3FPROC, glProgramUniform3f)                                                                \
     DO(::PFNGLPROGRAMUNIFORMMATRIX4FVPROC, glProgramUniformMatrix4fv)                                                  \
     DO(::PFNGLCREATEBUFFERSPROC, glCreateBuffers)                                                                      \
     DO(::PFNGLNAMEDBUFFERSTORAGEPROC, glNamedBufferStorage)                                                            \
+    DO(::PFNGLCLEARNAMEDBUFFERDATAPROC, glClearNamedBufferData)                                                        \
     DO(::PFNGLCREATEVERTEXARRAYSPROC, glCreateVertexArrays)                                                            \
     DO(::PFNGLVERTEXARRAYBINDVERTEXBUFFEREXTPROC, glVertexArrayVertexBuffer)                                           \
     DO(::PFNGLENABLEVERTEXARRAYATTRIBPROC, glEnableVertexArrayAttrib)                                                  \
@@ -55,6 +57,7 @@
     DO(::PFNGLTEXTURESTORAGE2DPROC, glTextureStorage2D)                                                                \
     DO(::PFNGLTEXTURESTORAGE2DMULTISAMPLEPROC, glTextureStorage2DMultisample)                                          \
     DO(::PFNGLTEXTURESUBIMAGE2DPROC, glTextureSubImage2D)                                                              \
+    DO(::PFNGLCOMPRESSEDTEXTURESUBIMAGE2DPROC, glCompressedTextureSubImage2D)                                          \
     DO(::PFNGLTEXTURESUBIMAGE3DPROC, glTextureSubImage3D)                                                              \
     DO(::PFNGLCREATESAMPLERSPROC, glCreateSamplers)                                                                    \
     DO(::PFNGLDELETESAMPLERSPROC, glDeleteSamplers)                                                                    \
@@ -83,6 +86,9 @@
     DO(::PFNGLMULTIDRAWARRAYSINDIRECTPROC, glMultiDrawArraysIndirect)                                                  \
     DO(::PFNGLMULTIDRAWELEMENTSINDIRECTPROC, glMultiDrawElementsIndirect)                                              \
     DO(::PFNGLMAPNAMEDBUFFERRANGEPROC, glMapNamedBufferRange)                                                          \
+    DO(::PFNGLDISPATCHCOMPUTEPROC, glDispatchCompute)                                                                  \
+    DO(::PFNGLMEMORYBARRIERPROC, glMemoryBarrier)                                                                      \
+    DO(::PFNGLGETNAMEDBUFFERSUBDATAPROC, glGetNamedBufferSubData)                                                      \
     DO(::PFNGLUNMAPNAMEDBUFFERPROC, glUnmapNamedBuffer)
 
 #define DO_DEFINE(TYPE, NAME) inline TYPE NAME;

@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <cstdint>
 #include <filesystem>
 #include <memory>
@@ -7,6 +8,8 @@
 #include <tuple>
 #include <utility>
 #include <vector>
+
+#include <windows.h>
 
 #include <assimp/DefaultLogger.hpp>
 #include <assimp/Importer.hpp>
@@ -20,13 +23,13 @@
 #include "assimp/material.h"
 #include "assimp/mesh.h"
 #include "assimp/vector3.h"
+#include "graphics/dds.h"
 #include "graphics/mesh_data.h"
 #include "graphics/model_data.h"
 #include "graphics/texture_data.h"
 #include "graphics/utils.h"
 #include "resources/resource_loader.h"
 #include "utils/data_buffer.h"
-
 #include "utils/error.h"
 #include "utils/log.h"
 
@@ -67,15 +70,15 @@ auto to_native(const ::aiVector3D &v) -> ufps::Vector3
     return {v.x, v.y, v.z};
 }
 
-auto channels_to_format(int num_channels) -> ufps::TextureFormat
+auto channels_to_format(int num_channels, bool is_srgb) -> ufps::TextureFormat
 {
     switch (num_channels)
     {
         using enum ufps::TextureFormat;
 
         case 1: return RED;
-        case 3: return RGB;
-        case 4: return RGBA;
+        case 3: return is_srgb ? SRGB : RGB;
+        case 4: return is_srgb ? SRGBA : RGBA;
     }
 
     throw ufps::Exception("unsupported channel count: {}", num_channels);
@@ -87,37 +90,72 @@ auto get_texture_filename(::aiMaterial const *material, ::aiTextureType type) ->
     material->GetTexture(type, 0u, &path_str);
     const auto path = std::filesystem::path{path_str.C_Str()};
 
-    return path.empty() ? std::nullopt : std::optional{std::format("textures\\{}", path.filename().string())};
+    return path.empty() ? std::nullopt
+                        : std::optional{std::format("textures\\{}.dds", path.filename().stem().string())};
 }
 
 }
 
 namespace ufps
 {
-auto load_texture(DataBufferView image_data) -> TextureData
+auto load_texture(DataBufferView image_data, bool is_srgb) -> TextureData
 {
     auto width = int{};
     auto height = int{};
     auto num_channels = int{};
 
-    auto raw_data = std::unique_ptr<::stbi_uc, void (*)(void *)>{
-        ::stbi_load_from_memory(
-            reinterpret_cast<const ::stbi_uc *>(image_data.data()),
-            image_data.size(),
-            &width,
-            &height,
-            &num_channels,
-            0),
-        ::stbi_image_free};
-    ensure(raw_data, "failed to parse texture data");
+    static constexpr std::byte dds_magic[] = {
+        static_cast<std::byte>(0x44),
+        static_cast<std::byte>(0x44),
+        static_cast<std::byte>(0x53),
+        static_cast<std::byte>(0x20),
+    };
 
-    const auto *ptr = reinterpret_cast<const std::byte *>(raw_data.get());
+    if (std::ranges::equal(dds_magic, image_data | std::views::take(sizeof(dds_magic))))
+    {
+        auto dds_header = DDS_HEADER{};
+        std::memcpy(&dds_header, image_data.data() + sizeof(dds_magic), sizeof(dds_header));
 
-    return {
-        .width = static_cast<std::uint32_t>(width),
-        .height = static_cast<std::uint32_t>(height),
-        .format = channels_to_format(num_channels),
-        .data = {{ptr, ptr + width * height * num_channels}}};
+        ensure(dds_header.dwSize == sizeof(dds_header), "invalid dds_header size: {}", dds_header.dwSize);
+        ensure(dds_header.ddspf.dwFourCC == 0x30315844, "not dx10 format");
+
+        auto dx10_header = DDS_HEADER_DXT10{};
+        std::memcpy(&dx10_header, image_data.data() + sizeof(dds_magic) + sizeof(dds_header), sizeof(dx10_header));
+
+        return {
+            .width = static_cast<std::uint32_t>(dds_header.dwWidth),
+            .height = static_cast<std::uint32_t>(dds_header.dwHeight),
+            .format = TextureFormat::BC7,
+            .data = image_data | std::views::drop(sizeof(dds_magic) + sizeof(dds_header) + sizeof(dx10_header)) |
+                    std::ranges::to<std::vector>(),
+            .is_compressed = true,
+        };
+    }
+    else
+    {
+        log::warn("handling png");
+
+        auto raw_data = std::unique_ptr<::stbi_uc, void (*)(void *)>{
+            ::stbi_load_from_memory(
+                reinterpret_cast<const ::stbi_uc *>(image_data.data()),
+                image_data.size(),
+                &width,
+                &height,
+                &num_channels,
+                0),
+            ::stbi_image_free};
+        ensure(raw_data, "failed to parse texture data");
+
+        const auto *ptr = reinterpret_cast<const std::byte *>(raw_data.get());
+
+        return {
+            .width = static_cast<std::uint32_t>(width),
+            .height = static_cast<std::uint32_t>(height),
+            .format = channels_to_format(num_channels, is_srgb),
+            .data = {{ptr, ptr + width * height * num_channels}},
+            .is_compressed = false,
+        };
+    }
 }
 
 auto load_model(DataBufferView model_data, ResourceLoader &resource_loader)
@@ -185,9 +223,11 @@ auto load_model(DataBufferView model_data, ResourceLoader &resource_loader)
 
         const auto load_tex = [material, &resource_loader](::aiTextureType type) -> std::optional<TextureData>
         {
+            const auto is_srgb = type == ::aiTextureType_BASE_COLOR;
+
             return get_texture_filename(material, type)
-                .transform([&resource_loader](const auto &e)
-                           { return load_texture(resource_loader.load_data_buffer(e)); });
+                .transform([&resource_loader, is_srgb](const auto &e)
+                           { return load_texture(resource_loader.load_data_buffer(e), is_srgb); });
         };
 
         models.push_back({

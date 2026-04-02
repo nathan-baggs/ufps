@@ -173,16 +173,16 @@ int main()
     auto textures = std::vector<ufps::Texture>{};
 
     const auto diamond_floor_albedo_data = resource_loader->load_data_buffer("textures\\diamond_floor_albedo.png");
-    const auto diamond_floor_albedo = ufps::load_texture(diamond_floor_albedo_data);
+    const auto diamond_floor_albedo = ufps::load_texture(diamond_floor_albedo_data, true);
     const auto sampler = ufps::Sampler{ufps::FilterType::LINEAR, ufps::FilterType::LINEAR, "simple_sampler"};
     textures.push_back(ufps::Texture{diamond_floor_albedo, "diamond_floor_albedo", sampler});
 
     const auto diamond_floor_normal_data = resource_loader->load_data_buffer("textures\\diamond_floor_normal.png");
-    const auto diamond_floor_normal = ufps::load_texture(diamond_floor_normal_data);
+    const auto diamond_floor_normal = ufps::load_texture(diamond_floor_normal_data, false);
     textures.push_back(ufps::Texture{diamond_floor_normal, "diamond_floor_normal", sampler});
 
     const auto diamond_floor_specular_data = resource_loader->load_data_buffer("textures\\diamond_floor_specular.png");
-    const auto diamond_floor_specular = ufps::load_texture(diamond_floor_specular_data);
+    const auto diamond_floor_specular = ufps::load_texture(diamond_floor_specular_data, false);
     textures.push_back(ufps::Texture{diamond_floor_specular, "diamond_floor_specular", sampler});
 
     auto mesh_manager = ufps::MeshManager{};
@@ -213,13 +213,25 @@ int main()
          0.1f,
          1000.0f},
         {.ambient = ufps::Colour{.r = 0.5f, .g = 0.5f, .b = 0.5f},
-         .lights = {
-             {.position = {},
-              .colour = {.r = 1.0f, .g = 1.0f, .b = 1.0f},
-              .constant_attenuation = 1.0f,
-              .linear_attenuation = 0.007f,
-              .quadratic_attenuation = 0.0002f,
-              .specular_power = 32.0f}}}};
+         .lights =
+             {{.position = {},
+               .colour = {.r = 1.0f, .g = 1.0f, .b = 1.0f},
+               .constant_attenuation = 1.0f,
+               .linear_attenuation = 0.007f,
+               .quadratic_attenuation = 0.0002f,
+               .specular_power = 32.0f,
+               .intensity = 1.0f}}},
+        {
+            .max_brightness = 1.0f,
+            .contrast = 1.0f,
+            .linear_section_start = 0.22f,
+            .linear_section_length = 0.4f,
+            .black_tightness = 1.33f,
+            .pedestal = 0.0f,
+            .gamma = 2.2f,
+        },
+        {},
+        {}};
 
     const auto models_to_load = std::vector{
         "models\\SM_Corner03_12_12_B_X.fbx"sv,

@@ -1,0 +1,47 @@
+#version 460 core
+
+#define NUM_BINS 256
+
+layout(local_size_x = 256, local_size_y = 1, local_size_z = 1) in;
+
+layout(binding = 0, std430) buffer histogram_data {
+        uint histograms[NUM_BINS];
+};
+
+layout(binding = 1, std430) buffer average_data {
+        float average;
+};
+
+shared uint shared_histogram[NUM_BINS];
+
+layout(location = 0) uniform float u_min_log_lum;
+layout(location = 1) uniform float u_log_lum_range;
+layout(location = 2) uniform float u_time;
+layout(location = 3) uniform float u_num_pixels;
+
+void main()
+{
+        uint count_for_bin = histograms[gl_LocalInvocationIndex];
+        shared_histogram[gl_LocalInvocationIndex] = count_for_bin * gl_LocalInvocationIndex;
+
+        barrier();
+
+        for (uint cutoff = (NUM_BINS >> 1); cutoff > 0; cutoff >>= 1)
+        {
+                if (gl_LocalInvocationIndex < cutoff)
+                {
+                        shared_histogram[gl_LocalInvocationIndex] += shared_histogram[gl_LocalInvocationIndex + cutoff];
+                }
+
+                barrier();
+        }
+
+        if (gl_GlobalInvocationID == 0)
+        {
+                float weighted_log_average = (shared_histogram[0] / max(u_num_pixels - float(count_for_bin), 1.0)) - 1.0;
+                float weighted_avg_lum = exp2(((weighted_log_average / 254.0) * u_log_lum_range) + u_min_log_lum);
+
+                float lum_last_frame = average;
+                average = lum_last_frame + (weighted_avg_lum - lum_last_frame) * u_time;
+        }
+}

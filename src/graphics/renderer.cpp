@@ -1,5 +1,6 @@
 #include "graphics/renderer.h"
 
+#include <cmath>
 #include <cstdint>
 #include <optional>
 #include <ranges>
@@ -32,6 +33,23 @@ using namespace std::literals;
 namespace
 {
 
+template <class T>
+struct AutoBind
+{
+    AutoBind(T &obj)
+        : obj{obj}
+    {
+        obj.bind();
+    }
+
+    ~AutoBind()
+    {
+        obj.unbind();
+    }
+
+    T &obj;
+};
+
 auto create_render_target(
     std::uint32_t colour_attachment_count,
     std::uint32_t width,
@@ -45,6 +63,7 @@ auto create_render_target(
         .height = height,
         .format = ufps::TextureFormat::RGB16F,
         .data = std::nullopt,
+        .is_compressed = false,
     };
 
     auto colour_attachements =
@@ -64,6 +83,7 @@ auto create_render_target(
         .height = height,
         .format = ufps::TextureFormat::DEPTH24,
         .data = std::nullopt,
+        .is_compressed = false,
     };
     auto depth_texture = ufps::Texture{depth_texture_data, std::format("{}_depth_texture", name), sampler};
     const auto depth_texture_index = texture_manager.add(std::move(depth_texture));
@@ -119,6 +139,8 @@ Renderer::Renderer(
     , camera_buffer_{sizeof(CameraData), "camera_buffer"}
     , light_buffer_{sizeof(LightData), "light_buffer"}
     , object_data_buffer_{sizeof(ObjectData), "object_data_buffer"}
+    , luminance_histogram_buffer_{sizeof(std::uint32_t) * 256, "luminance_histogram_buffer"}
+    , average_luminance_buffer_{sizeof(float), "average_luminance_buffer"}
     , gbuffer_program_{create_program(
           resource_loader,
           "shaders\\gbuffer.vert",
@@ -133,6 +155,30 @@ Renderer::Renderer(
           "shaders\\light_pass.frag",
           "light_pass_fragment_shader",
           "light_pass_program")}
+    , tone_map_program_{create_program(
+          resource_loader,
+          "shaders\\tone_map.vert",
+          "tone_map_vertex_shader",
+          "shaders\\tone_map.frag",
+          "tone_map_fragment_shader",
+          "tone_map_program")}
+    , luminance_histogram_program_{create_program(
+          resource_loader,
+          "shaders\\luminance_histogram.comp",
+          "luminance_histogram_shader",
+          "luminance_histogram_program")}
+    , average_luminance_program_{create_program(
+          resource_loader,
+          "shaders\\average_luminance.comp",
+          "average_luminance_shader",
+          "average_luminance_program")}
+    , ssao_program_{create_program(
+          resource_loader,
+          "shaders\\ssao.vert",
+          "ssao_vertex_shader",
+          "shaders\\ssao.frag",
+          "ssao_fragment_shader",
+          "ssao_program")}
     , fb_sampler_{FilterType::LINEAR, FilterType::LINEAR, "fb_sampler"}
     , gbuffer_rt_{create_render_target(
           4u,
@@ -147,8 +193,23 @@ Renderer::Renderer(
           window_.render_height(),
           fb_sampler_,
           texture_manager,
-          "light_pass"),},
-    mesh_manager_{mesh_manager}
+          "light_pass"),}
+    , tone_map_rt_{create_render_target(
+          1u,
+          window_.render_width(),
+          window_.render_height(),
+          fb_sampler_,
+          texture_manager,
+          "tone_map"),}
+    , ssao_rt_{create_render_target(
+          1u,
+          window_.render_width(),
+          window_.render_height(),
+          fb_sampler_,
+          texture_manager,
+          "ssao"),}
+    ,mesh_manager_{mesh_manager}
+    ,final_fb_{}
 {
     post_processing_command_buffer_.build(post_process_sprite_);
 
@@ -160,12 +221,77 @@ Renderer::Renderer(
 
 auto Renderer::render(Scene &scene) -> void
 {
+    camera_buffer_.write(scene.camera().data_view(), 0zu);
+    light_buffer_.write(std::as_bytes(std::span<const LightData, 1zu>{&scene.lights(), 1zu}), 0zu);
+
+    execute_gbuffer_pass(scene);
+    execute_lighting_pass(scene);
+    execute_luminance_histogram_pass(scene);
+    execute_average_luminance_pass(scene);
+    execute_ssao_pass(scene);
+    execute_tone_mapping_pass(scene);
+
+    final_fb_ = &tone_map_rt_.fb;
+
+    post_render(scene);
+
+    command_buffer_.advance();
+    camera_buffer_.advance();
+    light_buffer_.advance();
+    object_data_buffer_.advance();
+}
+
+auto Renderer::post_render(Scene &) -> void
+{
+    final_fb_->unbind();
+
+    ::glBlitNamedFramebuffer(
+        final_fb_->native_handle(),
+        0u,
+        0u,
+        0u,
+        final_fb_->width(),
+        final_fb_->height(),
+        0u,
+        0u,
+        final_fb_->width(),
+        final_fb_->height(),
+        GL_COLOR_BUFFER_BIT,
+        GL_NEAREST);
+}
+
+auto Renderer::create_program(
+    ufps::ResourceLoader &resource_loader,
+    std::string_view vertex_path,
+    std::string_view vertex_name,
+    std::string_view fragment_path,
+    std::string_view fragment_name,
+    std::string_view program_name) -> ufps::Program
+{
+    const auto sample_vert =
+        ufps::Shader{resource_loader.load_string(vertex_path), ufps::ShaderType::VERTEX, vertex_name};
+    const auto sample_frag =
+        ufps::Shader{resource_loader.load_string(fragment_path), ufps::ShaderType::FRAGMENT, fragment_name};
+    return ufps::Program{sample_vert, sample_frag, program_name};
+}
+
+auto Renderer::create_program(
+    ufps::ResourceLoader &resource_loader,
+    std::string_view compute_path,
+    std::string_view compute_name,
+    std::string_view program_name) -> ufps::Program
+{
+    const auto compute_shader =
+        ufps::Shader{resource_loader.load_string(compute_path), ufps::ShaderType::COMPUTE, compute_name};
+    return ufps::Program{compute_shader, program_name};
+}
+
+auto Renderer::execute_gbuffer_pass(Scene &scene) -> void
+{
     gbuffer_rt_.fb.bind();
     ::glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    gbuffer_program_.use();
-
-    camera_buffer_.write(scene.camera().data_view(), 0zu);
+    const auto auto_bind = AutoBind{gbuffer_program_};
 
     const auto [vertex_buffer_handle, index_buffer_handle] = scene.mesh_manager().native_handle();
     ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, vertex_buffer_handle);
@@ -210,12 +336,14 @@ auto Renderer::render(Scene &scene) -> void
         reinterpret_cast<const void *>(command_buffer_.offset_bytes()),
         command_count,
         0);
+}
 
-    light_buffer_.write(std::as_bytes(std::span<const LightData, 1zu>{&scene.lights(), 1zu}), 0zu);
-
+auto Renderer::execute_lighting_pass(Scene &scene) -> void
+{
     light_pass_rt_.fb.bind();
     ::glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    light_pass_program_.use();
+
+    const auto auto_bind = AutoBind{light_pass_program_};
 
     {
         const auto &lights = scene.lights();
@@ -235,10 +363,13 @@ auto Renderer::render(Scene &scene) -> void
         writer.write<PointLight>(lights.lights);
     }
 
-    ::glProgramUniform1ui(light_pass_program_.native_handle(), 0u, gbuffer_rt_.first_colour_attachment_index + 0u);
-    ::glProgramUniform1ui(light_pass_program_.native_handle(), 1u, gbuffer_rt_.first_colour_attachment_index + 1u);
-    ::glProgramUniform1ui(light_pass_program_.native_handle(), 2u, gbuffer_rt_.first_colour_attachment_index + 2u);
-    ::glProgramUniform1ui(light_pass_program_.native_handle(), 3u, gbuffer_rt_.first_colour_attachment_index + 3u);
+    light_pass_program_.set_uniforms(
+        gbuffer_rt_.first_colour_attachment_index + 0u,
+        gbuffer_rt_.first_colour_attachment_index + 1u,
+        gbuffer_rt_.first_colour_attachment_index + 2u,
+        gbuffer_rt_.first_colour_attachment_index + 3u);
+
+    const auto [vertex_buffer_handle, index_buffer_handle] = scene.mesh_manager().native_handle();
     ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, vertex_buffer_handle);
     ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, scene.texture_manager().native_handle());
     ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, light_buffer_.native_handle());
@@ -255,46 +386,114 @@ auto Renderer::render(Scene &scene) -> void
         reinterpret_cast<const void *>(post_processing_command_buffer_.offset_bytes()),
         1u,
         0);
-
-    post_render(scene);
-
-    command_buffer_.advance();
-    camera_buffer_.advance();
-    light_buffer_.advance();
-    object_data_buffer_.advance();
 }
 
-auto Renderer::post_render(Scene &) -> void
+auto Renderer::execute_luminance_histogram_pass(Scene &scene) -> void
 {
-    light_pass_rt_.fb.unbind();
+    const auto auto_bind = AutoBind{luminance_histogram_program_};
 
-    ::glBlitNamedFramebuffer(
-        light_pass_rt_.fb.native_handle(),
-        0u,
-        0u,
-        0u,
-        light_pass_rt_.fb.width(),
-        light_pass_rt_.fb.height(),
-        0u,
-        0u,
-        light_pass_rt_.fb.width(),
-        light_pass_rt_.fb.height(),
-        GL_COLOR_BUFFER_BIT,
-        GL_NEAREST);
+    const auto zero = ::GLuint{0};
+    ::glClearNamedBufferData(
+        luminance_histogram_buffer_.native_handle(), GL_R32UI, GL_RED_INTEGER, GL_UNSIGNED_INT, &zero);
+
+    ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, scene.texture_manager().native_handle());
+    ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, luminance_histogram_buffer_.native_handle());
+
+    luminance_histogram_program_.set_uniforms(
+        light_pass_rt_.first_colour_attachment_index,
+        scene.exposure_options().min_log_luminance,
+        1.0f / (scene.exposure_options().max_log_luminance - scene.exposure_options().min_log_luminance));
+
+    ::glDispatchCompute(
+        static_cast<std::uint32_t>(light_pass_rt_.fb.width() + 15) / 16,
+        static_cast<std::uint32_t>(light_pass_rt_.fb.height() + 15) / 16,
+        1);
+
+    ::glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT | GL_BUFFER_UPDATE_BARRIER_BIT);
 }
 
-auto Renderer::create_program(
-    ufps::ResourceLoader &resource_loader,
-    std::string_view vertex_path,
-    std::string_view vertex_name,
-    std::string_view fragment_path,
-    std::string_view fragment_name,
-    std::string_view program_name) -> ufps::Program
+auto Renderer::execute_average_luminance_pass(Scene &scene) -> void
 {
-    const auto sample_vert =
-        ufps::Shader{resource_loader.load_string(vertex_path), ufps::ShaderType::VERTEX, vertex_name};
-    const auto sample_frag =
-        ufps::Shader{resource_loader.load_string(fragment_path), ufps::ShaderType::FRAGMENT, fragment_name};
-    return ufps::Program{sample_vert, sample_frag, program_name};
+    static auto delta_time = 1.0f / 60.0f;
+
+    const auto auto_bind = AutoBind{average_luminance_program_};
+
+    ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, luminance_histogram_buffer_.native_handle());
+    ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, average_luminance_buffer_.native_handle());
+
+    average_luminance_program_.set_uniforms(
+        scene.exposure_options().min_log_luminance,
+        scene.exposure_options().max_log_luminance - scene.exposure_options().min_log_luminance,
+        std::clamp(1.0f - std::exp(-delta_time * 3.0f), 0.0f, 1.0f),
+        static_cast<float>(light_pass_rt_.fb.width() * light_pass_rt_.fb.height()));
+
+    ::glDispatchCompute(1, 1, 1);
+
+    ::glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT | GL_BUFFER_UPDATE_BARRIER_BIT);
 }
+
+auto Renderer::execute_ssao_pass(Scene &scene) -> void
+{
+    ssao_rt_.fb.bind();
+    ::glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    const auto auto_bind = AutoBind{ssao_program_};
+
+    const auto [vertex_buffer_handle, index_buffer_handle] = scene.mesh_manager().native_handle();
+    ssao_program_.set_uniforms(
+        gbuffer_rt_.first_colour_attachment_index + 1,
+        gbuffer_rt_.first_colour_attachment_index + 2,
+        static_cast<float>(gbuffer_rt_.fb.width()),
+        static_cast<float>(gbuffer_rt_.fb.height()),
+        scene.ssao_options().sample_count,
+        scene.ssao_options().radius,
+        scene.ssao_options().bias);
+    ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, vertex_buffer_handle);
+    ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, scene.texture_manager().native_handle());
+    ::glBindBufferRange(
+        GL_SHADER_STORAGE_BUFFER,
+        2,
+        camera_buffer_.native_handle(),
+        camera_buffer_.frame_offset_bytes(),
+        sizeof(CameraData));
+    ::glBindBuffer(GL_DRAW_INDIRECT_BUFFER, post_processing_command_buffer_.native_handle());
+    ::glMultiDrawElementsIndirect(
+        GL_TRIANGLES,
+        GL_UNSIGNED_INT,
+        reinterpret_cast<const void *>(post_processing_command_buffer_.offset_bytes()),
+        1u,
+        0);
+}
+
+auto Renderer::execute_tone_mapping_pass(Scene &scene) -> void
+{
+    const auto [vertex_buffer_handle, index_buffer_handle] = scene.mesh_manager().native_handle();
+
+    tone_map_rt_.fb.bind();
+    ::glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    const auto auto_bind = AutoBind{tone_map_program_};
+
+    tone_map_program_.set_uniforms(
+        light_pass_rt_.first_colour_attachment_index,
+        scene.tone_map_options().max_brightness,
+        scene.tone_map_options().contrast,
+        scene.tone_map_options().linear_section_start,
+        scene.tone_map_options().linear_section_length,
+        scene.tone_map_options().black_tightness,
+        scene.tone_map_options().pedestal,
+        scene.tone_map_options().gamma,
+        ssao_rt_.first_colour_attachment_index);
+    ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, vertex_buffer_handle);
+    ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, scene.texture_manager().native_handle());
+    ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, average_luminance_buffer_.native_handle());
+    ::glBindBuffer(GL_DRAW_INDIRECT_BUFFER, post_processing_command_buffer_.native_handle());
+    ::glMultiDrawElementsIndirect(
+        GL_TRIANGLES,
+        GL_UNSIGNED_INT,
+        reinterpret_cast<const void *>(post_processing_command_buffer_.offset_bytes()),
+        1u,
+        0);
+}
+
 }
