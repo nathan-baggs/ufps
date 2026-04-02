@@ -79,5 +79,13 @@ class Renderer
     RenderTarget ssao_rt_;
     MeshManager &mesh_manager_;
     FrameBuffer *final_fb_;
+
+  private:
+    auto execute_gbuffer_pass(Scene &scene) -> void;
+    auto execute_lighting_pass(Scene &scene) -> void;
+    auto execute_luminance_histogram_pass(Scene &scene) -> void;
+    auto execute_average_luminance_pass(Scene &scene) -> void;
+    auto execute_ssao_pass(Scene &scene) -> void;
+    auto execute_tone_mapping_pass(Scene &scene) -> void;
 };
 }

@@ -33,6 +33,23 @@ using namespace std::literals;
 namespace
 {
 
+template <class T>
+struct AutoBind
+{
+    AutoBind(T &obj)
+        : obj{obj}
+    {
+        obj.bind();
+    }
+
+    ~AutoBind()
+    {
+        obj.unbind();
+    }
+
+    T &obj;
+};
+
 auto create_render_target(
     std::uint32_t colour_attachment_count,
     std::uint32_t width,
@@ -204,205 +221,17 @@ Renderer::Renderer(
 
 auto Renderer::render(Scene &scene) -> void
 {
-    static auto delta_time = 1.0f / 60.0f;
-
-    gbuffer_rt_.fb.bind();
-    ::glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-    gbuffer_program_.bind();
-
     camera_buffer_.write(scene.camera().data_view(), 0zu);
-
-    const auto [vertex_buffer_handle, index_buffer_handle] = scene.mesh_manager().native_handle();
-    ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, vertex_buffer_handle);
-    ::glBindBufferRange(
-        GL_SHADER_STORAGE_BUFFER,
-        1,
-        camera_buffer_.native_handle(),
-        camera_buffer_.frame_offset_bytes(),
-        sizeof(CameraData));
-    ::glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffer_handle);
-
-    const auto command_count = command_buffer_.build(scene);
-    ::glBindBuffer(GL_DRAW_INDIRECT_BUFFER, command_buffer_.native_handle());
-
-    auto object_data = std::vector<ObjectData>{};
-
-    for (const auto &entity : scene.entities())
-    {
-        object_data.append_range(
-            entity.render_entities() | std::views::transform(
-                                           [&entity](const auto &e)
-                                           {
-                                               return ObjectData{
-                                                   .model = entity.transform(),
-                                                   .material_id_index = e.material_index(),
-                                                   .padding = {},
-                                               };
-                                           }));
-    }
-
-    resize_gpu_buffer(object_data, object_data_buffer_);
-    object_data_buffer_.write(std::as_bytes(std::span{object_data.data(), object_data.size()}), 0zu);
-    ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, object_data_buffer_.native_handle());
-
-    ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, scene.material_manager().native_handle());
-
-    ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 4, scene.texture_manager().native_handle());
-
-    ::glMultiDrawElementsIndirect(
-        GL_TRIANGLES,
-        GL_UNSIGNED_INT,
-        reinterpret_cast<const void *>(command_buffer_.offset_bytes()),
-        command_count,
-        0);
-
     light_buffer_.write(std::as_bytes(std::span<const LightData, 1zu>{&scene.lights(), 1zu}), 0zu);
 
-    gbuffer_program_.unbind();
-    light_pass_rt_.fb.bind();
-    ::glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    light_pass_program_.bind();
-
-    {
-        const auto &lights = scene.lights();
-
-        const auto buffer_size_bytes =
-            sizeof(lights.ambient) + sizeof(std::uint32_t) + sizeof(PointLight) * lights.lights.size();
-        if (light_buffer_.size() < buffer_size_bytes)
-        {
-            light_buffer_ = {buffer_size_bytes, light_buffer_.name()};
-            // opengl barrier incase gpu using previous frame
-            ::glFinish();
-        }
-
-        auto writer = BufferWriter{light_buffer_};
-        writer.write(lights.ambient);
-        writer.write(static_cast<std::uint32_t>(lights.lights.size()));
-        writer.write<PointLight>(lights.lights);
-    }
-
-    light_pass_program_.set_uniforms(
-        gbuffer_rt_.first_colour_attachment_index + 0u,
-        gbuffer_rt_.first_colour_attachment_index + 1u,
-        gbuffer_rt_.first_colour_attachment_index + 2u,
-        gbuffer_rt_.first_colour_attachment_index + 3u);
-
-    ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, vertex_buffer_handle);
-    ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, scene.texture_manager().native_handle());
-    ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, light_buffer_.native_handle());
-    ::glBindBufferRange(
-        GL_SHADER_STORAGE_BUFFER,
-        3,
-        camera_buffer_.native_handle(),
-        camera_buffer_.frame_offset_bytes(),
-        sizeof(CameraData));
-    ::glBindBuffer(GL_DRAW_INDIRECT_BUFFER, post_processing_command_buffer_.native_handle());
-    ::glMultiDrawElementsIndirect(
-        GL_TRIANGLES,
-        GL_UNSIGNED_INT,
-        reinterpret_cast<const void *>(post_processing_command_buffer_.offset_bytes()),
-        1u,
-        0);
-
-    light_pass_program_.unbind();
-    luminance_histogram_program_.bind();
-    const auto zero = ::GLuint{0};
-    ::glClearNamedBufferData(
-        luminance_histogram_buffer_.native_handle(), GL_R32UI, GL_RED_INTEGER, GL_UNSIGNED_INT, &zero);
-
-    ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, scene.texture_manager().native_handle());
-    ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, luminance_histogram_buffer_.native_handle());
-
-    static constexpr auto min_log_luminance = -3.0f;
-    static constexpr auto max_log_luminance = 1.0f;
-
-    luminance_histogram_program_.set_uniforms(
-        light_pass_rt_.first_colour_attachment_index,
-        min_log_luminance,
-        1.0f / (max_log_luminance - min_log_luminance));
-
-    ::glDispatchCompute(
-        static_cast<std::uint32_t>(light_pass_rt_.fb.width() + 15) / 16,
-        static_cast<std::uint32_t>(light_pass_rt_.fb.height() + 15) / 16,
-        1);
-
-    ::glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT | GL_BUFFER_UPDATE_BARRIER_BIT);
-
-    luminance_histogram_program_.unbind();
-    average_luminance_program_.bind();
-
-    ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, luminance_histogram_buffer_.native_handle());
-    ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, average_luminance_buffer_.native_handle());
-
-    average_luminance_program_.set_uniforms(
-        min_log_luminance,
-        max_log_luminance - min_log_luminance,
-        std::clamp(1.0f - std::exp(-delta_time * 3.0f), 0.0f, 1.0f),
-        static_cast<float>(light_pass_rt_.fb.width() * light_pass_rt_.fb.height()));
-
-    ::glDispatchCompute(1, 1, 1);
-
-    ::glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT | GL_BUFFER_UPDATE_BARRIER_BIT);
-
-    ssao_rt_.fb.bind();
-    ::glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    average_luminance_program_.unbind();
-    ssao_program_.bind();
-
-    ssao_program_.set_uniforms(
-        gbuffer_rt_.first_colour_attachment_index + 1,
-        gbuffer_rt_.first_colour_attachment_index + 2,
-        static_cast<float>(gbuffer_rt_.fb.width()),
-        static_cast<float>(gbuffer_rt_.fb.height()),
-        scene.ssao_options().sample_count,
-        scene.ssao_options().radius,
-        scene.ssao_options().bias);
-    ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, vertex_buffer_handle);
-    ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, scene.texture_manager().native_handle());
-    ::glBindBufferRange(
-        GL_SHADER_STORAGE_BUFFER,
-        2,
-        camera_buffer_.native_handle(),
-        camera_buffer_.frame_offset_bytes(),
-        sizeof(CameraData));
-    ::glBindBuffer(GL_DRAW_INDIRECT_BUFFER, post_processing_command_buffer_.native_handle());
-    ::glMultiDrawElementsIndirect(
-        GL_TRIANGLES,
-        GL_UNSIGNED_INT,
-        reinterpret_cast<const void *>(post_processing_command_buffer_.offset_bytes()),
-        1u,
-        0);
-
-    tone_map_rt_.fb.bind();
-    ::glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    ssao_program_.unbind();
-    tone_map_program_.bind();
-
-    tone_map_program_.set_uniforms(
-        light_pass_rt_.first_colour_attachment_index,
-        scene.tone_map_options().max_brightness,
-        scene.tone_map_options().contrast,
-        scene.tone_map_options().linear_section_start,
-        scene.tone_map_options().linear_section_length,
-        scene.tone_map_options().black_tightness,
-        scene.tone_map_options().pedestal,
-        scene.tone_map_options().gamma,
-        ssao_rt_.first_colour_attachment_index);
-    ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, vertex_buffer_handle);
-    ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, scene.texture_manager().native_handle());
-    ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, average_luminance_buffer_.native_handle());
-    ::glBindBuffer(GL_DRAW_INDIRECT_BUFFER, post_processing_command_buffer_.native_handle());
-    ::glMultiDrawElementsIndirect(
-        GL_TRIANGLES,
-        GL_UNSIGNED_INT,
-        reinterpret_cast<const void *>(post_processing_command_buffer_.offset_bytes()),
-        1u,
-        0);
+    execute_gbuffer_pass(scene);
+    execute_lighting_pass(scene);
+    execute_luminance_histogram_pass(scene);
+    execute_average_luminance_pass(scene);
+    execute_ssao_pass(scene);
+    execute_tone_mapping_pass(scene);
 
     final_fb_ = &tone_map_rt_.fb;
-
-    tone_map_program_.unbind();
 
     post_render(scene);
 
@@ -456,4 +285,215 @@ auto Renderer::create_program(
         ufps::Shader{resource_loader.load_string(compute_path), ufps::ShaderType::COMPUTE, compute_name};
     return ufps::Program{compute_shader, program_name};
 }
+
+auto Renderer::execute_gbuffer_pass(Scene &scene) -> void
+{
+    gbuffer_rt_.fb.bind();
+    ::glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    const auto auto_bind = AutoBind{gbuffer_program_};
+
+    const auto [vertex_buffer_handle, index_buffer_handle] = scene.mesh_manager().native_handle();
+    ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, vertex_buffer_handle);
+    ::glBindBufferRange(
+        GL_SHADER_STORAGE_BUFFER,
+        1,
+        camera_buffer_.native_handle(),
+        camera_buffer_.frame_offset_bytes(),
+        sizeof(CameraData));
+    ::glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffer_handle);
+
+    const auto command_count = command_buffer_.build(scene);
+    ::glBindBuffer(GL_DRAW_INDIRECT_BUFFER, command_buffer_.native_handle());
+
+    auto object_data = std::vector<ObjectData>{};
+
+    for (const auto &entity : scene.entities())
+    {
+        object_data.append_range(
+            entity.render_entities() | std::views::transform(
+                                           [&entity](const auto &e)
+                                           {
+                                               return ObjectData{
+                                                   .model = entity.transform(),
+                                                   .material_id_index = e.material_index(),
+                                                   .padding = {},
+                                               };
+                                           }));
+    }
+
+    resize_gpu_buffer(object_data, object_data_buffer_);
+    object_data_buffer_.write(std::as_bytes(std::span{object_data.data(), object_data.size()}), 0zu);
+    ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, object_data_buffer_.native_handle());
+
+    ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, scene.material_manager().native_handle());
+
+    ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 4, scene.texture_manager().native_handle());
+
+    ::glMultiDrawElementsIndirect(
+        GL_TRIANGLES,
+        GL_UNSIGNED_INT,
+        reinterpret_cast<const void *>(command_buffer_.offset_bytes()),
+        command_count,
+        0);
+}
+
+auto Renderer::execute_lighting_pass(Scene &scene) -> void
+{
+    light_pass_rt_.fb.bind();
+    ::glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    const auto auto_bind = AutoBind{light_pass_program_};
+
+    {
+        const auto &lights = scene.lights();
+
+        const auto buffer_size_bytes =
+            sizeof(lights.ambient) + sizeof(std::uint32_t) + sizeof(PointLight) * lights.lights.size();
+        if (light_buffer_.size() < buffer_size_bytes)
+        {
+            light_buffer_ = {buffer_size_bytes, light_buffer_.name()};
+            // opengl barrier incase gpu using previous frame
+            ::glFinish();
+        }
+
+        auto writer = BufferWriter{light_buffer_};
+        writer.write(lights.ambient);
+        writer.write(static_cast<std::uint32_t>(lights.lights.size()));
+        writer.write<PointLight>(lights.lights);
+    }
+
+    light_pass_program_.set_uniforms(
+        gbuffer_rt_.first_colour_attachment_index + 0u,
+        gbuffer_rt_.first_colour_attachment_index + 1u,
+        gbuffer_rt_.first_colour_attachment_index + 2u,
+        gbuffer_rt_.first_colour_attachment_index + 3u);
+
+    const auto [vertex_buffer_handle, index_buffer_handle] = scene.mesh_manager().native_handle();
+    ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, vertex_buffer_handle);
+    ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, scene.texture_manager().native_handle());
+    ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, light_buffer_.native_handle());
+    ::glBindBufferRange(
+        GL_SHADER_STORAGE_BUFFER,
+        3,
+        camera_buffer_.native_handle(),
+        camera_buffer_.frame_offset_bytes(),
+        sizeof(CameraData));
+    ::glBindBuffer(GL_DRAW_INDIRECT_BUFFER, post_processing_command_buffer_.native_handle());
+    ::glMultiDrawElementsIndirect(
+        GL_TRIANGLES,
+        GL_UNSIGNED_INT,
+        reinterpret_cast<const void *>(post_processing_command_buffer_.offset_bytes()),
+        1u,
+        0);
+}
+
+auto Renderer::execute_luminance_histogram_pass(Scene &scene) -> void
+{
+    const auto auto_bind = AutoBind{luminance_histogram_program_};
+
+    const auto zero = ::GLuint{0};
+    ::glClearNamedBufferData(
+        luminance_histogram_buffer_.native_handle(), GL_R32UI, GL_RED_INTEGER, GL_UNSIGNED_INT, &zero);
+
+    ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, scene.texture_manager().native_handle());
+    ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, luminance_histogram_buffer_.native_handle());
+
+    luminance_histogram_program_.set_uniforms(
+        light_pass_rt_.first_colour_attachment_index,
+        scene.exposure_options().min_log_luminance,
+        1.0f / (scene.exposure_options().max_log_luminance - scene.exposure_options().min_log_luminance));
+
+    ::glDispatchCompute(
+        static_cast<std::uint32_t>(light_pass_rt_.fb.width() + 15) / 16,
+        static_cast<std::uint32_t>(light_pass_rt_.fb.height() + 15) / 16,
+        1);
+
+    ::glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT | GL_BUFFER_UPDATE_BARRIER_BIT);
+}
+
+auto Renderer::execute_average_luminance_pass(Scene &scene) -> void
+{
+    static auto delta_time = 1.0f / 60.0f;
+
+    const auto auto_bind = AutoBind{average_luminance_program_};
+
+    ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, luminance_histogram_buffer_.native_handle());
+    ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, average_luminance_buffer_.native_handle());
+
+    average_luminance_program_.set_uniforms(
+        scene.exposure_options().min_log_luminance,
+        scene.exposure_options().max_log_luminance - scene.exposure_options().min_log_luminance,
+        std::clamp(1.0f - std::exp(-delta_time * 3.0f), 0.0f, 1.0f),
+        static_cast<float>(light_pass_rt_.fb.width() * light_pass_rt_.fb.height()));
+
+    ::glDispatchCompute(1, 1, 1);
+
+    ::glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT | GL_BUFFER_UPDATE_BARRIER_BIT);
+}
+
+auto Renderer::execute_ssao_pass(Scene &scene) -> void
+{
+    ssao_rt_.fb.bind();
+    ::glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    const auto auto_bind = AutoBind{ssao_program_};
+
+    const auto [vertex_buffer_handle, index_buffer_handle] = scene.mesh_manager().native_handle();
+    ssao_program_.set_uniforms(
+        gbuffer_rt_.first_colour_attachment_index + 1,
+        gbuffer_rt_.first_colour_attachment_index + 2,
+        static_cast<float>(gbuffer_rt_.fb.width()),
+        static_cast<float>(gbuffer_rt_.fb.height()),
+        scene.ssao_options().sample_count,
+        scene.ssao_options().radius,
+        scene.ssao_options().bias);
+    ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, vertex_buffer_handle);
+    ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, scene.texture_manager().native_handle());
+    ::glBindBufferRange(
+        GL_SHADER_STORAGE_BUFFER,
+        2,
+        camera_buffer_.native_handle(),
+        camera_buffer_.frame_offset_bytes(),
+        sizeof(CameraData));
+    ::glBindBuffer(GL_DRAW_INDIRECT_BUFFER, post_processing_command_buffer_.native_handle());
+    ::glMultiDrawElementsIndirect(
+        GL_TRIANGLES,
+        GL_UNSIGNED_INT,
+        reinterpret_cast<const void *>(post_processing_command_buffer_.offset_bytes()),
+        1u,
+        0);
+}
+
+auto Renderer::execute_tone_mapping_pass(Scene &scene) -> void
+{
+    const auto [vertex_buffer_handle, index_buffer_handle] = scene.mesh_manager().native_handle();
+
+    tone_map_rt_.fb.bind();
+    ::glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    const auto auto_bind = AutoBind{tone_map_program_};
+
+    tone_map_program_.set_uniforms(
+        light_pass_rt_.first_colour_attachment_index,
+        scene.tone_map_options().max_brightness,
+        scene.tone_map_options().contrast,
+        scene.tone_map_options().linear_section_start,
+        scene.tone_map_options().linear_section_length,
+        scene.tone_map_options().black_tightness,
+        scene.tone_map_options().pedestal,
+        scene.tone_map_options().gamma,
+        ssao_rt_.first_colour_attachment_index);
+    ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, vertex_buffer_handle);
+    ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, scene.texture_manager().native_handle());
+    ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, average_luminance_buffer_.native_handle());
+    ::glBindBuffer(GL_DRAW_INDIRECT_BUFFER, post_processing_command_buffer_.native_handle());
+    ::glMultiDrawElementsIndirect(
+        GL_TRIANGLES,
+        GL_UNSIGNED_INT,
+        reinterpret_cast<const void *>(post_processing_command_buffer_.offset_bytes()),
+        1u,
+        0);
+}
+
 }
