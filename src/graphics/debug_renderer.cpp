@@ -312,6 +312,8 @@ auto DebugRenderer::post_render(Scene &scene) -> void
         selected_ = &scene.lights().lights.back();
     }
 
+    ::ImGui::Text("tone map options");
+
     {
         auto value = scene.tone_map_options().max_brightness;
         if (::ImGui::SliderFloat("maximum brightness", &value, 0.0f, 100.0f))
@@ -365,6 +367,32 @@ auto DebugRenderer::post_render(Scene &scene) -> void
         if (::ImGui::SliderFloat("gamma", &value, 0.0f, 5.0f))
         {
             scene.tone_map_options().gamma = value;
+        }
+    }
+
+    ::ImGui::Text("ssao options");
+
+    {
+        auto value = static_cast<int>(scene.ssao_options().sample_count);
+        if (::ImGui::SliderInt("sample_count", &value, 1, 64))
+        {
+            scene.ssao_options().sample_count = value;
+        }
+    }
+
+    {
+        auto value = scene.ssao_options().radius;
+        if (::ImGui::SliderFloat("radius", &value, 0.1f, 2.0f))
+        {
+            scene.ssao_options().radius = value;
+        }
+    }
+
+    {
+        auto value = scene.ssao_options().bias;
+        if (::ImGui::SliderFloat("bias", &value, 0.01f, 0.1f))
+        {
+            scene.ssao_options().bias = value;
         }
     }
 
