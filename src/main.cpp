@@ -229,6 +229,7 @@ int main()
             .pedestal = 0.0f,
             .gamma = 2.2f,
         },
+        {},
         {}};
 
     const auto models_to_load = std::vector{

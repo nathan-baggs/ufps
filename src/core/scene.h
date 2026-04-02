@@ -49,6 +49,12 @@ struct SSAOOptions
     float bias = 0.025f;
 };
 
+struct ExposureOptions
+{
+    float min_log_luminance = -3.0f;
+    float max_log_luminance = 1.0f;
+};
+
 class Scene
 {
   public:
@@ -59,7 +65,8 @@ class Scene
         Camera camera,
         LightData lights,
         ToneMapOptions tone_map_options,
-        SSAOOptions ssao_options);
+        SSAOOptions ssao_options,
+        ExposureOptions exposure_options);
 
     constexpr auto intersect_ray(const Ray &ray) -> std::optional<IntersectionResult>;
 
@@ -114,6 +121,11 @@ class Scene
         return self.ssao_options_;
     }
 
+    constexpr auto &exposure_options(this auto &&self)
+    {
+        return self.exposure_options_;
+    }
+
   private:
     std::vector<Entity> entities_;
     std::vector<Entity> entity_cache_;
@@ -124,6 +136,7 @@ class Scene
     LightData lights_;
     ToneMapOptions tone_map_options_;
     SSAOOptions ssao_options_;
+    ExposureOptions exposure_options_;
 };
 
 constexpr auto Scene::intersect_ray(const Ray &ray) -> std::optional<IntersectionResult>
