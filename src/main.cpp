@@ -219,7 +219,8 @@ int main()
                .constant_attenuation = 1.0f,
                .linear_attenuation = 0.007f,
                .quadratic_attenuation = 0.0002f,
-               .specular_power = 32.0f}}},
+               .specular_power = 32.0f,
+               .intensity = 1.0f}}},
         {
             .max_brightness = 1.0f,
             .contrast = 1.0f,

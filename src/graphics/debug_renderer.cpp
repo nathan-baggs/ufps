@@ -310,7 +310,8 @@ auto DebugRenderer::post_render(Scene &scene) -> void
                 .constant_attenuation = 1.0f,
                 .linear_attenuation = 0.007f,
                 .quadratic_attenuation = 0.0002f,
-                .specular_power = 32.0f});
+                .specular_power = 32.0f,
+                .intensity = 1.0f});
         selected_ = &scene.lights().lights.back();
     }
 
@@ -395,6 +396,24 @@ auto DebugRenderer::post_render(Scene &scene) -> void
         if (::ImGui::SliderFloat("bias", &value, 0.01f, 0.1f))
         {
             scene.ssao_options().bias = value;
+        }
+    }
+
+    ::ImGui::Text("exposure options");
+
+    {
+        auto value = scene.exposure_options().min_log_luminance;
+        if (::ImGui::SliderFloat("min_log_luminance", &value, -10.0f, 10.0f))
+        {
+            scene.exposure_options().min_log_luminance = value;
+        }
+    }
+
+    {
+        auto value = scene.exposure_options().max_log_luminance;
+        if (::ImGui::SliderFloat("max_log_luminance", &value, -10.0f, 10.0f))
+        {
+            scene.exposure_options().max_log_luminance = value;
         }
     }
 
@@ -622,6 +641,12 @@ auto DebugRenderer::post_render(Scene &scene) -> void
                 light->constant_attenuation = atten[0];
                 light->linear_attenuation = atten[1];
                 light->quadratic_attenuation = atten[2];
+            }
+
+            auto intensity = light->intensity;
+            if (::ImGui::SliderFloat("intensity", &intensity, 0.0f, 100.0f))
+            {
+                light->intensity = intensity;
             }
 
             auto transform = Matrix4{light->position};
