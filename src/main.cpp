@@ -196,10 +196,6 @@ int main()
     auto renderer = ufps::DebugRenderer{window, *resource_loader, texture_manager, mesh_manager};
     auto debug_mode = false;
 
-    const auto material_index_red = material_manager.add(tex_index, tex_index + 1u, tex_index + 2u);
-    const auto material_index_blue = material_manager.add(tex_index, tex_index + 1u, tex_index + 2u);
-    const auto material_index_green = material_manager.add(tex_index, tex_index + 1u, tex_index + 2u);
-
     auto scene = ufps::Scene{
         mesh_manager,
         material_manager,

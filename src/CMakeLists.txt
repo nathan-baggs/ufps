@@ -23,6 +23,21 @@ add_subdirectory(utils)
 add_executable(ufps
   main.cpp
 )
+target_compile_options(ufps PRIVATE
+  -Wall
+  -Wextra
+  -pedantic
+  -Werror
+  -Wconversion-null
+  -Wmissing-declarations
+  -Woverlength-strings
+  -Wpointer-arith
+  -Wunused-local-typedefs
+  -Wunused-result
+  -Wvarargs
+  -Wvla
+  -Wwrite-strings
+)
 
 install(TARGETS ufps DESTINATION bin)
 
