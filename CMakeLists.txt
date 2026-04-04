@@ -61,6 +61,7 @@ FetchContent_MakeAvailable(assimp)
 target_compile_options(assimp PRIVATE -Wno-error=maybe-uninitialized)
 
 add_subdirectory(src)
+add_subdirectory(tools)
 
 enable_testing()
 include(CTest)
