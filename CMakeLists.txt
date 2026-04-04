@@ -58,6 +58,7 @@ FetchContent_Declare(
 	GIT_REPOSITORY https://github.com/assimp/assimp
 	GIT_TAG v6.0.4)
 FetchContent_MakeAvailable(assimp)
+target_compile_options(assimp PRIVATE -Wno-error=maybe-uninitialized)
 
 add_subdirectory(src)
 

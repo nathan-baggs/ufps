@@ -5,7 +5,7 @@ ARG PKG_CONFIG_VERSION=0.29.2
 ARG CMAKE_VERSION=4.1.2
 ARG BINUTILS_VERSION=2.45
 ARG MINGW_VERSION=13.0.0
-ARG GCC_VERSION=15.2.0
+ARG GCC_VERSION=trunk
 ARG NASM_VERSION=3.01
 ARG NVCC_VERSION=13.0.2
 ARG LLVM_VERSION=21.1.0  
@@ -64,26 +64,30 @@ RUN wget -q https://sourceforge.net/projects/mingw-w64/files/mingw-w64/mingw-w64
     && make install \
     && cd ..
 
-RUN wget -q https://ftp.gnu.org/gnu/gcc/gcc-${GCC_VERSION}/gcc-${GCC_VERSION}.tar.xz -O - | tar -xJ \
+RUN if [ "${GCC_VERSION}" = "trunk" ]; then \
+        git clone --depth 1 git://gcc.gnu.org/git/gcc.git gcc-${GCC_VERSION}; \
+    else \
+        wget -q https://ftp.gnu.org/gnu/gcc/gcc-${GCC_VERSION}/gcc-${GCC_VERSION}.tar.xz -O - | tar -xJ; \
+    fi \
     && mkdir gcc \
     && cd gcc \
     && ../gcc-${GCC_VERSION}/configure \
-        --prefix=/usr/local \
-        --target=x86_64-w64-mingw32 \
-        --enable-languages=c,c++ \
-        --disable-shared \
-        --enable-static \
-        --enable-threads=posix \
-        --with-system-zlib \
-        --enable-libgomp \
-        --enable-libatomic \
-        --enable-graphite \
-        --disable-libstdcxx-pch \
-        --disable-libstdcxx-debug \
-        --disable-multilib \
-        --disable-lto \
-        --disable-nls \
-        --disable-werror \
+    --prefix=/usr/local \
+    --target=x86_64-w64-mingw32 \
+    --enable-languages=c,c++ \
+    --disable-shared \
+    --enable-static \
+    --enable-threads=posix \
+    --with-system-zlib \
+    --enable-libgomp \
+    --enable-libatomic \
+    --enable-graphite \
+    --disable-libstdcxx-pch \
+    --disable-libstdcxx-debug \
+    --disable-multilib \
+    --disable-lto \
+    --disable-nls \
+    --disable-werror \
     && make -j`nproc` all-gcc \
     && make install-gcc \
     && cd ..
@@ -123,19 +127,6 @@ RUN wget -q https://github.com/Kitware/CMake/releases/download/v${CMAKE_VERSION}
     && make install \
     && cd .. \
     && rm -r cmake-${CMAKE_VERSION}
-
-RUN wget -q https://github.com/llvm/llvm-project/releases/download/llvmorg-${LLVM_VERSION}/llvm-project-${LLVM_VERSION}.src.tar.xz -O - | tar -xJ \
-    && cd llvm-project-${LLVM_VERSION}.src \
-    && mkdir build \
-    && cd build \
-    && cmake -G Ninja ../llvm \
-        -DCMAKE_BUILD_TYPE=Release \
-        -DCMAKE_INSTALL_PREFIX=/usr/local \
-        -DLLVM_ENABLE_PROJECTS="lld" \
-    && ninja lld \
-    && ninja install \
-    && cd ../.. \
-    && rm -r llvm-project-${LLVM_VERSION}.src
 
 RUN wget -q https://www.nasm.us/pub/nasm/releasebuilds/${NASM_VERSION}/nasm-${NASM_VERSION}.tar.xz -O - | tar -xJ \
     && cd nasm-${NASM_VERSION} \
