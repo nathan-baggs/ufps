@@ -1,5 +1,6 @@
 #include "graphics/renderer.h"
 
+#include <GL/gl.h>
 #include <cmath>
 #include <cstdint>
 #include <optional>
@@ -451,6 +452,16 @@ auto Renderer::execute_average_luminance_pass(Scene &scene) -> void
 
 auto Renderer::execute_ssao_pass(Scene &scene) -> void
 {
+    if (!scene.ssao_options().enabled)
+    {
+        ::glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
+        ssao_blur_rt_.fb.bind();
+        ::glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        ::glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+
+        return;
+    }
+
     ::glViewport(0, 0, ssao_rt_.fb.width(), ssao_rt_.fb.height());
 
     const auto [vertex_buffer_handle, index_buffer_handle] = scene.mesh_manager().native_handle();

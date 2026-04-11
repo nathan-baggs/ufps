@@ -382,6 +382,14 @@ auto DebugRenderer::post_render(Scene &scene) -> void
     ::ImGui::Text("ssao options");
 
     {
+        auto value = scene.ssao_options().enabled;
+        if (::ImGui::Checkbox("enabled", &value))
+        {
+            scene.ssao_options().enabled = value;
+        }
+    }
+
+    {
         auto value = static_cast<int>(scene.ssao_options().sample_count);
         if (::ImGui::SliderInt("sample_count", &value, 1, 64))
         {
