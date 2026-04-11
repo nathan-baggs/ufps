@@ -32,7 +32,7 @@ jobs:
         run: |
           pkg=$(ls build/ufps-*-win64.zip | head -n1)
           echo "artifact=$pkg" >> $GITHUB_OUTPUT
-          version=$(basename "$pkg" | sed -E 's/^ufps-([0-9]+\.[0-9]+\.[0-9]+)-win64\.zip$/\1/')
+          version=$(basename "$pkg" | sed -E 's/^ufps-([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+)-win64\.zip$/\1/')
           echo "version=$version" >> $GITHUB_OUTPUT
 
       - name: Gather changelog from PR

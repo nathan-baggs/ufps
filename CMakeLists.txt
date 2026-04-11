@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.22)
 
 project(
   ufps
-  VERSION "0.0.27"
+  VERSION "2026.04.11.0"
   DESCRIPTION "a sweet fps game"
   LANGUAGES C CXX
 )

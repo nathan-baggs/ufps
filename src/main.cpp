@@ -331,7 +331,7 @@ int main()
     // Daz_Da_Cat: You can't handle the Daz!
     ::CoInitializeEx(nullptr, COINIT_MULTITHREADED);
 
-    ufps::log::info("μfps version: {}.{}.{}", ufps::version::major, ufps::version::minor, ufps::version::patch);
+    ufps::log::info("μfps version: {}.{}.{}.{}", ufps::version::year, ufps::version::month, ufps::version::day, ufps::version::tweak);
     ufps::log::info("{}", ufps::system_info());
 
     auto window = ufps::Window{ufps::WindowMode::WINDOWED, 1920u, 1080u, 1920u, 0u};

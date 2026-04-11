@@ -5,9 +5,10 @@
 namespace ufps::version
 {
 // clang-format off
-static constexpr auto major = @ufps_VERSION_MAJOR@;
-static constexpr auto minor = @ufps_VERSION_MINOR@;
-static constexpr auto patch = @ufps_VERSION_PATCH@;
+static constexpr auto year = @ufps_VERSION_MAJOR@;
+static constexpr auto month = @ufps_VERSION_MINOR@;
+static constexpr auto day = @ufps_VERSION_PATCH@;
+static constexpr auto tweak = @ufps_VERSION_TWEAK@;
 // clang-format on
 }
 
