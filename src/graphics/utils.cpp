@@ -158,8 +158,7 @@ auto load_texture(DataBufferView image_data, bool is_srgb) -> TextureData
     }
 }
 
-auto load_model(DataBufferView model_data, ResourceLoader &resource_loader)
-    -> std::tuple<std::string, std::vector<ModelData>>
+auto load_model(DataBufferView model_data) -> std::tuple<std::string, std::vector<ModelData>>
 {
     [[maybe_unused]] static auto *logger = []
     {
@@ -167,9 +166,9 @@ auto load_model(DataBufferView model_data, ResourceLoader &resource_loader)
         auto *logger = ::Assimp::DefaultLogger::get();
 
         logger->attachStream(new SimpleAssimpLogStream<ufps::log::Level::ERR>{}, ::Assimp::Logger::Err);
-        logger->attachStream(new SimpleAssimpLogStream<ufps::log::Level::DEBUG>{}, ::Assimp::Logger::Debugging);
+        // logger->attachStream(new SimpleAssimpLogStream<ufps::log::Level::DEBUG>{}, ::Assimp::Logger::Debugging);
         logger->attachStream(new SimpleAssimpLogStream<ufps::log::Level::WARN>{}, ::Assimp::Logger::Warn);
-        logger->attachStream(new SimpleAssimpLogStream<ufps::log::Level::INFO>{}, ::Assimp::Logger::Info);
+        // logger->attachStream(new SimpleAssimpLogStream<ufps::log::Level::INFO>{}, ::Assimp::Logger::Info);
 
         return logger;
     }();
@@ -186,14 +185,17 @@ auto load_model(DataBufferView model_data, ResourceLoader &resource_loader)
     const auto materials = std::span<::aiMaterial *>(scene->mMaterials, scene->mMaterials + scene->mNumMaterials);
     log::info("found {} meshes, {} materials", std::ranges::size(loaded_meshes), std::ranges::size(materials));
 
-    ensure(
-        std::ranges::size(loaded_meshes) == std::ranges::size(materials), "mismatch mesh/material count in model file");
-
     auto models = std::vector<ModelData>{};
 
     for (const auto &[index, mesh] : loaded_meshes | std::views::enumerate)
     {
         log::info("found mesh: {}", mesh->mName.C_Str());
+
+        if (index >= scene->mNumMaterials)
+        {
+            log::warn("mesh {} has invalid material index: {}", mesh->mName.C_Str(), index);
+            continue;
+        }
 
         const auto *material = scene->mMaterials[index];
         const auto base_colour_count = material->GetTextureCount(::aiTextureType_BASE_COLOR);
@@ -221,24 +223,15 @@ auto load_model(DataBufferView model_data, ResourceLoader &resource_loader)
                                   { return std::span<std::uint32_t>{e.mIndices, e.mIndices + e.mNumIndices}; }) |
             std::views::join | std::ranges::to<std::vector>();
 
-        const auto load_tex = [material, &resource_loader](::aiTextureType type) -> std::optional<TextureData>
-        {
-            const auto is_srgb = type == ::aiTextureType_BASE_COLOR;
-
-            return get_texture_filename(material, type)
-                .transform([&resource_loader, is_srgb](const auto &e)
-                           { return load_texture(resource_loader.load_data_buffer(e), is_srgb); });
-        };
-
         models.push_back({
             .mesh_data =
                 MeshData{
                     .vertices = vertices(positions, normals, tangents, bitangents, uvs),
                     .indices = std::move(indices),
                 },
-            .albedo = load_tex(::aiTextureType_BASE_COLOR),
-            .normal = load_tex(::aiTextureType_NORMAL_CAMERA),
-            .specular = load_tex(::aiTextureType_METALNESS),
+            .albedo = get_texture_filename(material, ::aiTextureType_BASE_COLOR),
+            .normal = get_texture_filename(material, ::aiTextureType_NORMAL_CAMERA),
+            .specular = get_texture_filename(material, ::aiTextureType_METALNESS),
         });
     }
 

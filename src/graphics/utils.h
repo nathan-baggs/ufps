@@ -55,7 +55,6 @@ auto resize_gpu_buffer(const std::vector<T> &cpu_buffer, Buffer &gpu_buffer)
 
 auto load_texture(DataBufferView image_data, bool is_srgb) -> TextureData;
 
-auto load_model(DataBufferView model_data, ResourceLoader &resource_loader)
-    -> std::tuple<std::string, std::vector<ModelData>>;
+auto load_model(DataBufferView model_data) -> std::tuple<std::string, std::vector<ModelData>>;
 
 }
