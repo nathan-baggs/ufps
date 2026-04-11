@@ -126,7 +126,7 @@ void main()
 
     const vec2 uv = vec2(in_uv.x, 1.0 - in_uv.y);
 
-    vec3 normal = normalize((view * vec4(texture(textures[u_normal_tex_index], in_uv).xyz, 1.0)).xyz);
+    vec3 normal = normalize((view * vec4(texture(textures[u_normal_tex_index], in_uv).xyz, 0.0)).xyz);
     vec3 frag_pos = (view * vec4(texture(textures[u_position_tex_index], in_uv).xyz, 1.0)).xyz;
 
     const vec2 size = vec2(u_width, u_height);
@@ -150,12 +150,6 @@ void main()
         vec4 offset = projection * vec4(sample_pos, 1.0f);
         offset.xyz /= offset.w;
         offset.xyz = offset.xyz * 0.5f + 0.5f;
-
-        const vec3 sample_normal = normalize((view * vec4(texture(textures[u_normal_tex_index], offset.xy).rgb, 1.0f)).xyz);
-        if (dot(normal, sample_normal) > 0.99f)
-        {
-            continue;
-        }
 
         const float sample_depth = (view * vec4(texture(textures[u_position_tex_index], vec2(offset.x, offset.y)).xyz, 1.0)).z;
         const float range_check = smoothstep(0.0, 1.0, u_radius / abs(frag_pos.z - sample_depth));

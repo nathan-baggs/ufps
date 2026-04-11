@@ -1,5 +1,5 @@
 #version 460 core
-    
+
 struct VertexData
 {
     float position[3];
@@ -80,10 +80,10 @@ vec2 get_uv(uint index)
         data[index].uv[1]);
 }
 
-layout (location = 0) out flat uint out_material_index;
-layout (location = 1) out vec2 out_uv;
-layout (location = 2) out vec4 out_frag_position;
-layout (location = 3) out mat3 out_tbn;
+layout(location = 0) out flat uint out_material_index;
+layout(location = 1) out vec2 out_uv;
+layout(location = 2) out vec4 out_frag_position;
+layout(location = 3) out mat3 out_tbn;
 
 void main()
 {
@@ -94,10 +94,8 @@ void main()
     out_material_index = object_data[gl_DrawID].material_index;
     out_uv = get_uv(gl_VertexID);
 
-    vec3 t = normalize(vec3(object_data[gl_DrawID].model * vec4(get_tangent(gl_VertexID), 0.0)));
-    vec3 b = normalize(vec3(object_data[gl_DrawID].model * vec4(get_bitangent(gl_VertexID), 0.0)));
-    vec3 n = normalize(vec3(object_data[gl_DrawID].model * vec4(get_normal(gl_VertexID), 0.0)));
+    vec3 t = normalize(normal_mat * get_tangent(gl_VertexID));
+    vec3 b = normalize(normal_mat * get_bitangent(gl_VertexID));
+    vec3 n = normalize(normal_mat * get_normal(gl_VertexID));
     out_tbn = mat3(t, b, n);
 }
-
-
