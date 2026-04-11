@@ -18,6 +18,10 @@ class EmbeddedResourceLoader : public ResourceLoader
     ~EmbeddedResourceLoader() override = default;
     auto load_string(std::string_view name) -> std::string override;
     auto load_data_buffer(std::string_view name) -> DataBuffer override;
+    auto resources(std::string_view) -> std::vector<std::string> override
+    {
+        return {};
+    }
 
   private:
     StringMap<std::span<const std::uint8_t>> lookup_;

@@ -19,6 +19,7 @@ class FileResourceLoader : public ResourceLoader
 
     auto load_string(std::string_view name) -> std::string override;
     auto load_data_buffer(std::string_view name) -> DataBuffer override;
+    auto resources(std::string_view type) -> std::vector<std::string> override;
 
   private:
     std::vector<std::filesystem::path> roots_;
