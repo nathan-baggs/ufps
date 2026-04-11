@@ -62,6 +62,17 @@ auto TextureManager::texture(std::uint32_t index) const -> const Texture *
     return std::addressof(textures_[index]);
 }
 
+auto TextureManager::try_get_texture_index(std::string_view name) const -> std::optional<std::uint32_t>
+{
+    auto iter = std::ranges::find_if(textures_, [name](const auto &t) { return t.name() == name; });
+    if (iter == std::ranges::cend(textures_))
+    {
+        return std::nullopt;
+    }
+
+    return static_cast<std::uint32_t>(std::distance(std::ranges::cbegin(textures_), iter));
+}
+
 auto TextureManager::textures(const std::vector<std::uint32_t> &indices) const -> std::vector<const Texture *>
 {
     return indices | //
