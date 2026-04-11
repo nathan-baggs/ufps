@@ -37,6 +37,7 @@ layout(location = 4) uniform uint u_sample_count;
 layout(location = 5) uniform float u_radius;
 layout(location = 6) uniform float u_bias;
 layout(location = 7) uniform float u_power;
+layout(location = 8) uniform uint u_noise_tex_index;
 
 layout(location = 0) in vec2 in_uv;
 
@@ -44,25 +45,6 @@ layout(location = 0) out vec4 frag_colour;
 
 void main()
 {
-    const vec3 noise_data[] = {
-            vec3(-0.595906, -0.156549, 0.0f),
-            vec3(-0.631204, -0.049680, 0.0f),
-            vec3(0.850768, -0.577690, 0.0f),
-            vec3(-0.576086, 0.813602, 0.0f),
-            vec3(0.585386, 0.520160, 0.0f),
-            vec3(0.542889, -0.034259, 0.0f),
-            vec3(-0.338602, -0.899637, 0.0f),
-            vec3(0.298322, -0.040603, 0.0f),
-            vec3(-0.345729, 0.861361, 0.0f),
-            vec3(0.729817, -0.604520, 0.0f),
-            vec3(0.258031, 0.804646, 0.0f),
-            vec3(0.487633, -0.194988, 0.0f),
-            vec3(-0.104914, -0.366919, 0.0f),
-            vec3(-0.478404, 0.212103, 0.0f),
-            vec3(-0.598677, -0.779258, 0.0f),
-            vec3(0.837367, 0.120391, 0.0f)
-        };
-
     const vec2 uv = vec2(in_uv.x, 1.0 - in_uv.y);
 
     vec3 normal = normalize((view * vec4(texture(textures[u_normal_tex_index], in_uv).xyz, 0.0)).xyz);
@@ -73,7 +55,8 @@ void main()
     const int x = int(uv.x * size.x) % 4;
     const int y = int(uv.y * size.y) % 4;
     const int index = (y * 4) + x;
-    const vec3 rand = normalize(noise_data[index]);
+    const vec2 noise_scale = vec2(u_width / 4.0, u_height / 4.0);
+    const vec3 rand = normalize(texture(textures[u_noise_tex_index], noise_scale).xyz);
 
     const vec3 tangent = normalize(rand - normal * dot(rand, normal));
     const vec3 bitangent = cross(normal, tangent);

@@ -123,6 +123,40 @@ auto create_sprite(ufps::MeshManager &mesh_manager) -> ufps::Entity
     return {"post_process_sprite", {{mesh_views.front(), 0u, mesh_manager}}, {}};
 }
 
+auto create_ssao_noise_texture(ufps::TextureManager &texture_manager, const ufps::Sampler &sampler) -> std::uint32_t
+{
+    auto generator = std::mt19937{std::random_device{}()};
+    auto distribution = std::uniform_real_distribution<float>{-1.0f, 1.0f};
+
+    auto ssao_noise_data = ufps::DataBuffer{};
+
+    for (auto i = 0u; i < 16u; ++i)
+    {
+        const auto x = distribution(generator);
+        const auto y = distribution(generator);
+        const auto z = 0.0f;
+
+        ssao_noise_data.push_back(static_cast<std::byte>((x * 0.5f + 0.5f) * 255.0f));
+        ssao_noise_data.push_back(static_cast<std::byte>((y * 0.5f + 0.5f) * 255.0f));
+        ssao_noise_data.push_back(static_cast<std::byte>((z * 0.5f + 0.5f) * 255.0f));
+    }
+
+    const auto ssao_noise_texture_data = ufps::TextureData{
+        .width = 4,
+        .height = 4,
+        .format = ufps::TextureFormat::RGB,
+        .data = ssao_noise_data,
+        .is_compressed = false,
+    };
+
+    auto tex = ufps::Texture{
+        ssao_noise_texture_data,
+        "ssao_noise_texture",
+        sampler,
+    };
+
+    return texture_manager.add(std::move(tex));
+}
 }
 
 namespace ufps
@@ -189,6 +223,8 @@ Renderer::Renderer(
           "shaders\\ssao_blur.frag",
           "ssao_blur_fragment_shader",
           "ssao_blur_program")}
+    , ssao_noise_sampler_{FilterType::NEAREST, FilterType::NEAREST, WrapMode::REPEAT, WrapMode::REPEAT, "ssao_noise_sampler"}
+    , ssao_noise_texture_{create_ssao_noise_texture(texture_manager, ssao_noise_sampler_)}
     , fb_sampler_{FilterType::LINEAR, FilterType::LINEAR, WrapMode::CLAMP_TO_EDGE, WrapMode::CLAMP_TO_EDGE, "fb_sampler"}
     , gbuffer_rt_{create_render_target(
           4u,
@@ -504,7 +540,8 @@ auto Renderer::execute_ssao_pass(Scene &scene) -> void
             scene.ssao_options().sample_count,
             scene.ssao_options().radius,
             scene.ssao_options().bias,
-            scene.ssao_options().power);
+            scene.ssao_options().power,
+            ssao_noise_texture_);
         ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, vertex_buffer_handle);
         ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, scene.texture_manager().native_handle());
         ::glBindBufferRange(

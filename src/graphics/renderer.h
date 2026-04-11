@@ -74,6 +74,8 @@ class Renderer
     Program average_luminance_program_;
     Program ssao_program_;
     Program ssao_blur_program_;
+    Sampler ssao_noise_sampler_;
+    std::uint32_t ssao_noise_texture_;
     Sampler fb_sampler_;
     RenderTarget gbuffer_rt_;
     RenderTarget light_pass_rt_;

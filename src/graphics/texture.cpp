@@ -58,16 +58,12 @@ Texture::Texture(const TextureData &texture, const std::string &name, const Samp
         }
         else
         {
+            const auto type = texture.format == TextureFormat::R16F || texture.format == TextureFormat::RGB16F
+                                  ? GL_FLOAT
+                                  : GL_UNSIGNED_BYTE;
+
             ::glTextureSubImage2D(
-                handle_,
-                0,
-                0,
-                0,
-                texture.width,
-                texture.height,
-                to_opengl(texture.format, false),
-                GL_UNSIGNED_BYTE,
-                data->data());
+                handle_, 0, 0, 0, texture.width, texture.height, to_opengl(texture.format, false), type, data->data());
         }
     }
 
