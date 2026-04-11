@@ -350,7 +350,12 @@ int main()
             std::vector<std::filesystem::path>{"assets", "secret-assets", "build\\build_assets"});
     }
 
-    const auto sampler = ufps::Sampler{ufps::FilterType::LINEAR, ufps::FilterType::LINEAR, "simple_sampler"};
+    const auto sampler = ufps::Sampler{
+        ufps::FilterType::LINEAR,
+        ufps::FilterType::LINEAR,
+        ufps::WrapMode::REPEAT,
+        ufps::WrapMode::REPEAT,
+        "simple_sampler"};
 
     auto mesh_manager = ufps::MeshManager{
         ufps::decompress(resource_loader->load_data_buffer("blobs\\vertex_data.bin")),

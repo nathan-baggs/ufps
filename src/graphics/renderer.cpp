@@ -188,7 +188,7 @@ Renderer::Renderer(
           "shaders\\ssao_blur.frag",
           "ssao_blur_fragment_shader",
           "ssao_blur_program")}
-    , fb_sampler_{FilterType::LINEAR, FilterType::LINEAR, "fb_sampler"}
+    , fb_sampler_{FilterType::LINEAR, FilterType::LINEAR, WrapMode::CLAMP_TO_EDGE, WrapMode::CLAMP_TO_EDGE, "fb_sampler"}
     , gbuffer_rt_{create_render_target(
           4u,
           window_.render_width(),

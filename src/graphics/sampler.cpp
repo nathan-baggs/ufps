@@ -25,6 +25,19 @@ auto to_opengl(ufps::FilterType filter_type) -> ::GLenum
     throw ufps::Exception("unknown filter_type: {}", filter_type);
 }
 
+auto to_opengl(ufps::WrapMode wrap_mode) -> ::GLenum
+{
+    switch (wrap_mode)
+    {
+        using enum ufps::WrapMode;
+
+        case REPEAT: return GL_REPEAT;
+        case CLAMP_TO_EDGE: return GL_CLAMP_TO_EDGE;
+        case MIRRORED_REPEAT: return GL_MIRRORED_REPEAT;
+    }
+
+    throw ufps::Exception("unknown wrap_mode: {}", wrap_mode);
+}
 }
 
 namespace ufps
@@ -33,6 +46,8 @@ namespace ufps
 Sampler::Sampler(
     FilterType min_filter,
     FilterType mag_filter,
+    WrapMode wrap_s,
+    WrapMode wrap_t,
     const std::string &name,
     std::optional<float> anisotropy_samples)
     : handle_{0u, [](auto sampler) { ::glDeleteSamplers(1, &sampler); }}
@@ -43,6 +58,8 @@ Sampler::Sampler(
 
     ::glSamplerParameteri(handle_, GL_TEXTURE_MIN_FILTER, to_opengl(min_filter));
     ::glSamplerParameteri(handle_, GL_TEXTURE_MAG_FILTER, to_opengl(mag_filter));
+    ::glSamplerParameteri(handle_, GL_TEXTURE_WRAP_S, to_opengl(wrap_s));
+    ::glSamplerParameteri(handle_, GL_TEXTURE_WRAP_T, to_opengl(wrap_t));
 
     if (anisotropy_samples)
     {
