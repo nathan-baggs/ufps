@@ -84,6 +84,10 @@ constexpr const std::uint8_t ssao_frag[] = {
 #embed "../../assets/shaders/ssao.frag"
 };
 
+constexpr const std::uint8_t ssao_blur_frag[] = {
+#embed "../../assets/shaders/ssao_blur.frag"
+};
+
 constexpr const std::uint8_t ssao_vert[] = {
 #embed "../../assets/shaders/ssao.vert"
 };
@@ -130,6 +134,7 @@ EmbeddedResourceLoader::EmbeddedResourceLoader()
         {"shaders\\simple.frag", std::span{simple_frag, sizeof(simple_frag)}},
         {"shaders\\simple.vert", std::span{simple_vert, sizeof(simple_vert)}},
         {"shaders\\ssao.frag", std::span{ssao_frag, sizeof(ssao_frag)}},
+        {"shaders\\ssao_blur.frag", std::span{ssao_blur_frag, sizeof(ssao_blur_frag)}},
         {"shaders\\ssao.vert", std::span{ssao_vert, sizeof(ssao_vert)}},
         {"shaders\\tone_map.frag", std::span{tone_map_frag, sizeof(tone_map_frag)}},
         {"shaders\\tone_map.vert", std::span{tone_map_vert, sizeof(tone_map_vert)}},

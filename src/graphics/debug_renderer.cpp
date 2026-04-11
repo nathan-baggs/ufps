@@ -562,7 +562,7 @@ auto DebugRenderer::post_render(Scene &scene) -> void
     const auto aspect_ratio = static_cast<float>(window_.render_width()) / static_cast<float>(window_.render_height());
 
     ::ImGui::Image(
-        scene.texture_manager().texture(ssao_rt_.first_colour_attachment_index)->native_handle(),
+        scene.texture_manager().texture(ssao_blur_rt_.first_colour_attachment_index)->native_handle(),
         ::ImVec2(width * aspect_ratio, width),
         ::ImVec2(0.0f, 1.0f),
         ::ImVec2(1.0f, 0.0f));
