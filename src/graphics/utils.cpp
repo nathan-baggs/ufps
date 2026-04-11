@@ -1,3 +1,4 @@
+#include "graphics/texture.h"
 #include <algorithm>
 #include <cstdint>
 #include <filesystem>
@@ -94,6 +95,15 @@ auto get_texture_filename(::aiMaterial const *material, ::aiTextureType type) ->
                         : std::optional{std::format("textures\\{}.dds", path.filename().stem().string())};
 }
 
+auto to_native_format(::DXGI_FORMAT format) -> ufps::TextureFormat
+{
+    switch (format)
+    {
+        case DXGI_FORMAT_BC7_UNORM: return ufps::TextureFormat::BC7;
+        case DXGI_FORMAT_BC7_UNORM_SRGB: return ufps::TextureFormat::BC7_SRGB;
+        default: throw ufps::Exception("unsupported dxgi format: {}", std::to_underlying(format));
+    }
+}
 }
 
 namespace ufps
@@ -117,19 +127,35 @@ auto load_texture(DataBufferView image_data, bool is_srgb) -> TextureData
         std::memcpy(&dds_header, image_data.data() + sizeof(dds_magic), sizeof(dds_header));
 
         ensure(dds_header.dwSize == sizeof(dds_header), "invalid dds_header size: {}", dds_header.dwSize);
-        ensure(dds_header.ddspf.dwFourCC == 0x30315844, "not dx10 format");
+        if (dds_header.ddspf.dwFourCC == 0x30315844)
+        {
+            auto dx10_header = DDS_HEADER_DXT10{};
+            std::memcpy(&dx10_header, image_data.data() + sizeof(dds_magic) + sizeof(dds_header), sizeof(dx10_header));
 
-        auto dx10_header = DDS_HEADER_DXT10{};
-        std::memcpy(&dx10_header, image_data.data() + sizeof(dds_magic) + sizeof(dds_header), sizeof(dx10_header));
-
-        return {
-            .width = static_cast<std::uint32_t>(dds_header.dwWidth),
-            .height = static_cast<std::uint32_t>(dds_header.dwHeight),
-            .format = TextureFormat::BC7,
-            .data = image_data | std::views::drop(sizeof(dds_magic) + sizeof(dds_header) + sizeof(dx10_header)) |
-                    std::ranges::to<std::vector>(),
-            .is_compressed = true,
-        };
+            return {
+                .width = static_cast<std::uint32_t>(dds_header.dwWidth),
+                .height = static_cast<std::uint32_t>(dds_header.dwHeight),
+                .format = to_native_format(dx10_header.dxgiFormat),
+                .data = image_data | std::views::drop(sizeof(dds_magic) + sizeof(dds_header) + sizeof(dx10_header)) |
+                        std::ranges::to<std::vector>(),
+                .is_compressed = true,
+            };
+        }
+        else if (dds_header.ddspf.dwFourCC == 0x55354342)
+        {
+            return {
+                .width = static_cast<std::uint32_t>(dds_header.dwWidth),
+                .height = static_cast<std::uint32_t>(dds_header.dwHeight),
+                .format = TextureFormat::BC5U,
+                .data = image_data | std::views::drop(sizeof(dds_magic) + sizeof(dds_header)) |
+                        std::ranges::to<std::vector>(),
+                .is_compressed = true,
+            };
+        }
+        else
+        {
+            throw ufps::Exception("unsupported dds format: {}", dds_header.ddspf.dwFourCC);
+        }
     }
     else
     {
