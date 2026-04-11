@@ -13,7 +13,7 @@ run: build
 	./build/src/Debug/ufps.exe
 
 resources: build
-	./build/tools/Debug/resource_packer.exe
+	./build/tools/Debug/resource_packer.exe ./build/ ./assets ./secret-assets
 
 tests: build
 	./build/tests/Debug/unit_tests.exe --gtest_color=yes
