@@ -6,6 +6,10 @@ on:
     types:
       - completed
 
+permissions:
+  contents: write
+  pull-requests: read
+
 jobs:
   build-tools:
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
@@ -146,7 +150,7 @@ jobs:
           body: ${{ steps.changelog.outputs.msg }}
           files: ${{ steps.version.outputs.artifact }}
         env:
-          GITHUB_TOKEN: ${{ secrets.GH_PAT }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Check Discord Option
         id: discord_check
