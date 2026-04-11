@@ -6,6 +6,9 @@ docker-image:
 config:
 	docker run --rm -u $(shell id -u):$(shell id -g) -v "$(PWD)":"$(PWD)" -w "$(PWD)" custom-mingw64 cmake -B build -DCMAKE_TOOLCHAIN_FILE=mingw_toolchain.cmake -G "Ninja Multi-Config"
 
+config-ci:
+	docker run --rm -u $(shell id -u):$(shell id -g) -v "$(PWD)":"$(PWD)" -w "$(PWD)" custom-mingw64 cmake -B build -DUFPS_USE_EMBEDDED_RESOURCE_LOADER=ON -DCMAKE_TOOLCHAIN_FILE=mingw_toolchain.cmake -G "Ninja Multi-Config"
+
 build:
 	docker run --rm -u $(shell id -u):$(shell id -g) -v "$(PWD)":"$(PWD)" -w "$(PWD)" custom-mingw64 cmake --build build --config Debug
 
@@ -20,6 +23,15 @@ tests: build
 
 pack: build
 	docker run --rm -u $(shell id -u):$(shell id -g) -v "$(PWD)":"$(PWD)" -w "$(PWD)/build" custom-mingw64 cpack . -C Debug
+
+ci: 
+	$(MAKE) config
+	$(MAKE) resources
+	rm -rf build/CMake*
+	$(MAKE) config-ci
+	$(MAKE) build
+	$(MAKE) tests
+	$(MAKE) pack
 
 sysroot:
 	docker run --rm -v "$(PWD)/sysroot":/out custom-mingw64 bash -c "cp -r /usr/local/x86_64-w64-mingw32/include /out/ && cp -r /usr/local/x86_64-w64-mingw32/include/c++ /out/ || true"

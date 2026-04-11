@@ -57,7 +57,10 @@ FetchContent_Declare(
 	assimp
 	GIT_REPOSITORY https://github.com/assimp/assimp
 	GIT_TAG v6.0.4)
-FetchContent_MakeAvailable(assimp)
+if (NOT assimp_POPULATED)
+	FetchContent_Populate(assimp)
+	add_subdirectory(${assimp_SOURCE_DIR} ${assimp_BINARY_DIR} EXCLUDE_FROM_ALL)
+endif()
 target_compile_options(assimp PRIVATE -Wno-error=maybe-uninitialized)
 
 FetchContent_Declare(
