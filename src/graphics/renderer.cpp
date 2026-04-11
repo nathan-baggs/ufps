@@ -204,8 +204,8 @@ Renderer::Renderer(
           "tone_map"),}
     , ssao_rt_{create_render_target(
           1u,
-          window_.render_width(),
-          window_.render_height(),
+          window_.render_width() / 2u,
+          window_.render_height() / 2u,
           fb_sampler_,
           texture_manager,
           "ssao",
@@ -436,6 +436,8 @@ auto Renderer::execute_average_luminance_pass(Scene &scene) -> void
 
 auto Renderer::execute_ssao_pass(Scene &scene) -> void
 {
+    ::glViewport(0, 0, ssao_rt_.fb.width(), ssao_rt_.fb.height());
+
     ssao_rt_.fb.bind();
     ::glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -465,6 +467,8 @@ auto Renderer::execute_ssao_pass(Scene &scene) -> void
         reinterpret_cast<const void *>(post_processing_command_buffer_.offset_bytes()),
         1u,
         0);
+
+    ::glViewport(0, 0, window_.render_width(), window_.render_height());
 }
 
 auto Renderer::execute_tone_mapping_pass(Scene &scene) -> void
