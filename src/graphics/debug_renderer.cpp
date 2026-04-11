@@ -413,6 +413,14 @@ auto DebugRenderer::post_render(Scene &scene) -> void
         }
     }
 
+    {
+        auto value = scene.ssao_options().power;
+        if (::ImGui::SliderFloat("power", &value, 1.0f, 4.0f))
+        {
+            scene.ssao_options().power = value;
+        }
+    }
+
     ::ImGui::Text("exposure options");
 
     {

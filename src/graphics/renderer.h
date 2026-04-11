@@ -66,6 +66,7 @@ class Renderer
     MultiBuffer<PersistentBuffer> object_data_buffer_;
     Buffer luminance_histogram_buffer_;
     Buffer average_luminance_buffer_;
+    Buffer ssao_samples_buffer_;
     Program gbuffer_program_;
     Program light_pass_program_;
     Program tone_map_program_;

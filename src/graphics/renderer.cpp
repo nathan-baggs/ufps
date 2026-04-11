@@ -1,9 +1,9 @@
 #include "graphics/renderer.h"
 
-#include <GL/gl.h>
 #include <cmath>
 #include <cstdint>
 #include <optional>
+#include <random>
 #include <ranges>
 #include <span>
 #include <string_view>
@@ -143,6 +143,7 @@ Renderer::Renderer(
     , object_data_buffer_{sizeof(ObjectData), "object_data_buffer"}
     , luminance_histogram_buffer_{sizeof(std::uint32_t) * 256, "luminance_histogram_buffer"}
     , average_luminance_buffer_{sizeof(float), "average_luminance_buffer"}
+    , ssao_samples_buffer_{sizeof(Vector4) * 64, "ssao_samples_buffer"}
     , gbuffer_program_{create_program(
           resource_loader,
           "shaders\\gbuffer.vert",
@@ -235,6 +236,29 @@ Renderer::Renderer(
     ::glBindVertexArray(dummy_vao_);
 
     // ac15CR: this code is not reasonable... but our discord is: https://discord.gg/9FkkMgXSUV
+
+    auto generator = std::mt19937{std::random_device{}()};
+    auto distribution = std::uniform_real_distribution<float>{0.0f, 1.0f};
+
+    auto ssao_samples = std::vector<Vector4>{};
+    for (auto i = 0u; i < 64u; ++i)
+    {
+        auto sample = Vector3{
+            distribution(generator) * 2.0f - 1.0f,
+            distribution(generator) * 2.0f - 1.0f,
+            distribution(generator),
+        };
+        sample = Vector3::normalise(sample);
+        sample *= distribution(generator);
+
+        auto scale = static_cast<float>(i) / 64.0f;
+        scale = std::lerp(0.1f, 1.0f, scale * scale);
+        sample *= scale;
+
+        ssao_samples.push_back(Vector4{sample, 0.0f});
+    }
+
+    ssao_samples_buffer_.write(std::as_bytes(std::span{ssao_samples.data(), ssao_samples.size()}), 0u);
 }
 
 auto Renderer::render(Scene &scene) -> void
@@ -479,7 +503,8 @@ auto Renderer::execute_ssao_pass(Scene &scene) -> void
             static_cast<float>(gbuffer_rt_.fb.height()),
             scene.ssao_options().sample_count,
             scene.ssao_options().radius,
-            scene.ssao_options().bias);
+            scene.ssao_options().bias,
+            scene.ssao_options().power);
         ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, vertex_buffer_handle);
         ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, scene.texture_manager().native_handle());
         ::glBindBufferRange(
@@ -488,6 +513,7 @@ auto Renderer::execute_ssao_pass(Scene &scene) -> void
             camera_buffer_.native_handle(),
             camera_buffer_.frame_offset_bytes(),
             sizeof(CameraData));
+        ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, ssao_samples_buffer_.native_handle());
         ::glBindBuffer(GL_DRAW_INDIRECT_BUFFER, post_processing_command_buffer_.native_handle());
         ::glMultiDrawElementsIndirect(
             GL_TRIANGLES,
