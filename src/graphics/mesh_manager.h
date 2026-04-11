@@ -9,6 +9,7 @@
 #include "graphics/mesh_data.h"
 #include "graphics/mesh_view.h"
 #include "graphics/vertex_data.h"
+#include "utils/data_buffer.h"
 #include "utils/string_map.h"
 
 namespace ufps
@@ -18,6 +19,17 @@ class MeshManager
 {
   public:
     MeshManager();
+
+    MeshManager(
+        std::vector<VertexData> vertex_data,
+        std::vector<std::uint32_t> index_data,
+        StringMap<std::vector<MeshView>> mesh_lookup);
+
+    MeshManager(
+        DataBufferView raw_vertex_data,
+        DataBufferView raw_index_data,
+        StringMap<std::vector<MeshView>> mesh_lookup);
+
     auto load(std::string_view name, std::span<const MeshData> mesh_data) -> std::span<const MeshView>;
 
     auto mesh(std::string_view name) -> std::span<const MeshView>;

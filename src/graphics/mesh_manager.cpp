@@ -22,6 +22,46 @@ MeshManager::MeshManager()
 {
 }
 
+MeshManager::MeshManager(
+    std::vector<VertexData> vertex_data,
+    std::vector<std::uint32_t> index_data,
+    StringMap<std::vector<MeshView>> mesh_lookup)
+    : vertex_data_cpu_{std::move(vertex_data)}
+    , index_data_cpu_{std::move(index_data)}
+    , vertex_data_gpu_{sizeof(VertexData), "vertex_mesh_data"}
+    , index_data_gpu_{sizeof(std::uint32_t), "index_mesh_data"}
+    , mesh_lookup_{std::move(mesh_lookup)}
+{
+    resize_gpu_buffer(vertex_data_cpu_, vertex_data_gpu_);
+    const auto vertex_data_view = DataBufferView{
+        reinterpret_cast<const std::byte *>(vertex_data_cpu_.data()), vertex_data_cpu_.size() * sizeof(VertexData)};
+    vertex_data_gpu_.write(vertex_data_view, 0u);
+
+    resize_gpu_buffer(index_data_cpu_, index_data_gpu_);
+    const auto index_data_view = DataBufferView{
+        reinterpret_cast<const std::byte *>(index_data_cpu_.data()), index_data_cpu_.size() * sizeof(std::uint32_t)};
+    index_data_gpu_.write(index_data_view, 0u);
+}
+
+MeshManager::MeshManager(
+        DataBufferView raw_vertex_data,
+        DataBufferView raw_index_data,
+        StringMap<std::vector<MeshView>> mesh_lookup)
+    : vertex_data_cpu_{reinterpret_cast<const VertexData *>(raw_vertex_data.data()),
+                       reinterpret_cast<const VertexData *>(raw_vertex_data.data() + raw_vertex_data.size())}
+    , index_data_cpu_{reinterpret_cast<const std::uint32_t *>(raw_index_data.data()),
+                      reinterpret_cast<const std::uint32_t *>(raw_index_data.data() + raw_index_data.size())}
+    , vertex_data_gpu_{sizeof(VertexData), "vertex_mesh_data"}
+    , index_data_gpu_{sizeof(std::uint32_t), "index_mesh_data"}
+    , mesh_lookup_{std::move(mesh_lookup)}
+{
+    resize_gpu_buffer(vertex_data_cpu_, vertex_data_gpu_);
+    vertex_data_gpu_.write(raw_vertex_data, 0u);
+
+    resize_gpu_buffer(index_data_cpu_, index_data_gpu_);
+    index_data_gpu_.write(raw_index_data, 0u);
+}
+
 auto MeshManager::load(std::string_view name, std::span<const MeshData> meshes) -> std::span<const MeshView>
 {
     expect(!mesh_lookup_.contains(name), "{} mesh exists", name);
