@@ -165,5 +165,5 @@ void main()
     occlusion = 1.0f - (occlusion / u_sample_count);
     occlusion = pow(occlusion, 2.0);
 
-    frag_colour = vec4(occlusion, occlusion, occlusion, 1.0f);
+    frag_colour = vec4(occlusion, 0.0, 0.0, 1.0);
 }

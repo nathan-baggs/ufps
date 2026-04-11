@@ -56,12 +56,13 @@ auto create_render_target(
     std::uint32_t height,
     ufps::Sampler &sampler,
     ufps::TextureManager &texture_manager,
-    std::string_view name) -> ufps::RenderTarget
+    std::string_view name,
+    ufps::TextureFormat format = ufps::TextureFormat::RGB16F) -> ufps::RenderTarget
 {
     const auto colour_attachment_texture_data = ufps::TextureData{
         .width = width,
         .height = height,
-        .format = ufps::TextureFormat::RGB16F,
+        .format = format,
         .data = std::nullopt,
         .is_compressed = false,
     };
@@ -207,7 +208,8 @@ Renderer::Renderer(
           window_.render_height(),
           fb_sampler_,
           texture_manager,
-          "ssao"),}
+          "ssao",
+          TextureFormat::R16F),}
     ,mesh_manager_{mesh_manager}
     ,final_fb_{}
 {
