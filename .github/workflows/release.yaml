@@ -23,7 +23,12 @@ jobs:
 
       - name: Build and package
         run: |
-          make ci
+          cmake -B build -DCMAKE_TOOLCHAIN_FILE=mingw_toolchain.cmake -G "Ninja Multi-Config"
+          ./build/tools/Debug/resource_packer.exe ./build/ ./assets ./secret-assets
+          rm -rf build/CMake*
+          cmake -B build -DCMAKE_TOOLCHAIN_FILE=mingw_toolchain.cmake -DUFPS_USE_EMBEDDED_RSOURCE_LOADER=ON -G "Ninja Multi-Config"
+          cmake --build build --config Debug
+          cd build && cpack . -C Debug
 
       - name: Locate package and extract version
         id: version
