@@ -7,7 +7,7 @@ on:
       - completed
 
 jobs:
-  build-and-release:
+  build-tools:
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     container:
@@ -21,13 +21,66 @@ jobs:
       - name: Allow safe Git directory
         run: git config --global --add safe.directory $GITHUB_WORKSPACE
 
-      - name: Build and package
+      - name: Build resource packer
         run: |
           cmake -B build -DCMAKE_TOOLCHAIN_FILE=mingw_toolchain.cmake -G "Ninja Multi-Config"
-          cmake --build build --config Debug
-          ./build/tools/Debug/resource_packer.exe ./build/ ./assets ./secret-assets
-          rm -rf build/CMake*
-          cmake -B build -DCMAKE_TOOLCHAIN_FILE=mingw_toolchain.cmake -DUFPS_USE_EMBEDDED_RSOURCE_LOADER=ON -G "Ninja Multi-Config"
+          cmake --build build --config Debug --target resource_packer
+
+      - name: Upload resource packer
+        uses: actions/upload-artifact@v4
+        with:
+          name: resource-packer
+          path: build/tools/Debug/resource_packer.exe
+
+  pack-resources:
+    runs-on: windows-latest
+    needs: build-tools
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: 'true'
+          token: ${{ secrets.SUBMODULE_TOKEN }}
+
+      - name: Download resource packer
+        uses: actions/download-artifact@v4
+        with:
+          name: resource-packer
+          path: build/tools/Debug
+
+      - name: Run resource packer
+        run: |
+          .\build\tools\Debug\resource_packer.exe .\build\ .\assets .\secret-assets
+        shell: cmd
+
+      - name: Upload generated assets
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-assets
+          path: build/build_assets
+
+  build-and-release:
+    runs-on: ubuntu-latest
+    needs: pack-resources
+    container:
+      image: ghcr.io/nathan-baggs/custom-mingw64:latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: 'true'
+          token: ${{ secrets.SUBMODULE_TOKEN }}
+
+      - name: Allow safe Git directory
+        run: git config --global --add safe.directory $GITHUB_WORKSPACE
+
+      - name: Download generated assets
+        uses: actions/download-artifact@v4
+        with:
+          name: build-assets
+          path: build/build_assets
+
+      - name: Build and package
+        run: |
+          cmake -B build -DCMAKE_TOOLCHAIN_FILE=mingw_toolchain.cmake -DUFPS_USE_EMBEDDED_RESOURCE_LOADER=ON -G "Ninja Multi-Config"
           cmake --build build --config Debug
           cd build && cpack . -C Debug
 
