@@ -331,7 +331,12 @@ int main()
     // Daz_Da_Cat: You can't handle the Daz!
     ::CoInitializeEx(nullptr, COINIT_MULTITHREADED);
 
-    ufps::log::info("μfps version: {}.{}.{}.{}", ufps::version::year, ufps::version::month, ufps::version::day, ufps::version::tweak);
+    ufps::log::info(
+        "μfps version: {}.{}.{}.{}",
+        ufps::version::year,
+        ufps::version::month,
+        ufps::version::day,
+        ufps::version::tweak);
     ufps::log::info("{}", ufps::system_info());
 
     auto window = ufps::Window{ufps::WindowMode::WINDOWED, 1920u, 1080u, 1920u, 0u};
@@ -402,11 +407,6 @@ int main()
         {},
         {}};
 
-    // const auto models_to_load = std::vector{
-    //     "models\\SM_Corner03_12_12_B_X.fbx"sv,
-    //     "models\\SM_Corner01_8_8_X.fbx"sv,
-    // };
-    //
     const auto material_lookup = build_materials(*resource_loader, texture_manager, material_manager, sampler);
 
     for (const auto &[name, materials] : material_lookup)
@@ -422,56 +422,6 @@ int main()
                                std::ranges::to<std::vector>();
         scene.cache_entity(name, {std::string{name}, std::move(render_entities), {}});
     }
-
-    // for (const auto &model_to_load : models_to_load)
-    // {
-    //     auto mesh_data = std::vector<ufps::MeshData>{};
-    //     auto materials = std::vector<std::uint32_t>{};
-    //     auto mesh_views = std::span<const ::ufps::MeshView>{};
-    //
-    //     const auto &[name, models] =
-    //         ufps::load_model(resource_loader->load_data_buffer(model_to_load), *resource_loader);
-    //
-    //     for (const auto &[index, model] : models | std::views::enumerate)
-    //     {
-    //         auto albedo_index = tex_index;
-    //         if (const auto &a = model.albedo; a)
-    //         {
-    //             auto albedo = ufps::Texture{*model.albedo, std::format("{}_albedo", name), sampler};
-    //             albedo_index = texture_manager.add(std::move(albedo));
-    //         }
-    //
-    //         auto normal_index = tex_index + 1u;
-    //         if (const auto &n = model.normal; n)
-    //         {
-    //             auto normal = ufps::Texture{*model.normal, std::format("{}_normal", name), sampler};
-    //             normal_index = texture_manager.add(std::move(normal));
-    //         }
-    //
-    //         auto specular_index = tex_index + 2u;
-    //         if (const auto &s = model.specular; s)
-    //         {
-    //             auto specular = ufps::Texture{*model.specular, std::format("{}_specular", name), sampler};
-    //             specular_index = texture_manager.add(std::move(specular));
-    //         }
-    //
-    //         materials.push_back(material_manager.add(albedo_index, normal_index, specular_index));
-    //         mesh_data.push_back(model.mesh_data);
-    //     }
-    //
-    //     mesh_views = mesh_manager.load(name, std::span<const ufps::MeshData>{mesh_data});
-    //
-    //     auto render_entities = std::views::zip(mesh_views, materials) |
-    //                            std::views::transform(
-    //                                [&mesh_manager](const auto &e)
-    //                                {
-    //                                    const auto &[mesh_view, material] = e;
-    //                                    return ufps::RenderEntity(mesh_view, material, mesh_manager);
-    //                                }) |
-    //                            std::ranges::to<std::vector>();
-    //     ufps::log::debug("adding {} to cache", name);
-    //     scene.cache_entity(name, {std::string{name}, std::move(render_entities), {}});
-    // }
 
     scene.create_entity("SM_Corner01_8_8_X");
 
