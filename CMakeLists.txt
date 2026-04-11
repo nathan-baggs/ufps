@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.22)
 
 project(
   ufps
-  VERSION "0.0.27"
+  VERSION "2026.04.11.0"
   DESCRIPTION "a sweet fps game"
   LANGUAGES C CXX
 )
@@ -57,9 +57,34 @@ FetchContent_Declare(
 	assimp
 	GIT_REPOSITORY https://github.com/assimp/assimp
 	GIT_TAG v6.0.4)
-FetchContent_MakeAvailable(assimp)
+if (NOT assimp_POPULATED)
+	FetchContent_Populate(assimp)
+	add_subdirectory(${assimp_SOURCE_DIR} ${assimp_BINARY_DIR} EXCLUDE_FROM_ALL)
+endif()
+target_compile_options(assimp PRIVATE -Wno-error=maybe-uninitialized)
+
+FetchContent_Declare(
+  yaml-cpp
+  GIT_REPOSITORY https://github.com/jbeder/yaml-cpp
+  GIT_TAG yaml-cpp-0.9.0)
+FetchContent_MakeAvailable(yaml-cpp)
+
+set(ZSTD_BUILD_STATIC ON)
+set(ZSTD_BUILD_SHARED OFF)
+
+FetchContent_Declare(
+	zstd
+	GIT_REPOSITORY https://github.com/facebook/zstd
+	GIT_TAG v1.5.7
+	SOURCE_SUBDIR build/cmake)
+FetchContent_GetProperties(zstd)
+if (NOT zstd_POPULATED)
+	FetchContent_Populate(zstd)
+	add_subdirectory(${zstd_SOURCE_DIR}/build/cmake ${zstd_BINARY_DIR} EXCLUDE_FROM_ALL)
+endif()
 
 add_subdirectory(src)
+add_subdirectory(tools)
 
 enable_testing()
 include(CTest)

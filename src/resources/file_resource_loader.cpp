@@ -2,6 +2,7 @@
 
 #include <cstddef>
 #include <filesystem>
+#include <ranges>
 #include <vector>
 
 #include <handleapi.h>
@@ -44,8 +45,6 @@ auto load(const std::filesystem::path &path)
     const auto size = ::GetFileSize(handle, nullptr);
     const auto *ptr = reinterpret_cast<T::value_type *>(map_view.get());
 
-    ufps::log::info("loaded resource: {} ({})", path.string(), size);
-
     return T{ptr, ptr + size};
 }
 }
@@ -55,6 +54,13 @@ namespace ufps
 FileResourceLoader::FileResourceLoader(const std::vector<std::filesystem::path> &roots)
     : roots_{roots}
 {
+    for (const auto &root : roots_)
+    {
+        if (!std::filesystem::exists(root))
+        {
+            throw Exception("resource root does not exist: {}", root.string());
+        }
+    }
 }
 
 auto FileResourceLoader::load_string(std::string_view name) -> std::string
@@ -83,5 +89,20 @@ auto FileResourceLoader::load_data_buffer(std::string_view name) -> DataBuffer
     }
 
     throw Exception("cannot find {}", name);
+}
+
+auto FileResourceLoader::resources(std::string_view type) -> std::vector<std::string>
+{
+    return roots_ |
+           std::views::transform(
+               [&](const auto &e)
+               {
+                   const auto dir_iter = std::filesystem::directory_iterator{e / type};
+                   return dir_iter | std::views::filter([&](const auto &e) { return e.is_regular_file(); }) |
+                          std::views::transform([&](const auto &e)
+                                                { return std::format("{}\\{}", type, e.path().filename().string()); }) |
+                          std::ranges::to<std::vector>();
+               }) |
+           std::views::join | std::ranges::to<std::vector>();
 }
 }

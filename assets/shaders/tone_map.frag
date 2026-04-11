@@ -64,7 +64,7 @@ void main()
     in_colour *= (0.18 / max(average, 0.0001));
 
     vec3 tone_mapped_colour = uchimura(in_colour, u_P, u_a, u_m, u_l, u_c, u_b);
-    vec3 occlusion = texture(textures[u_ssao_index], in_uv).rgb;
+    float occlusion = texture(textures[u_ssao_index], in_uv).r;
 
     vec3 gamma_corrected = pow(tone_mapped_colour * occlusion, vec3(1.0 / u_gamma));
 

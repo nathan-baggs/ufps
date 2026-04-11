@@ -44,9 +44,11 @@ struct ToneMapOptions
 
 struct SSAOOptions
 {
+    bool enabled = true;
     std::uint32_t sample_count = 64u;
     float radius = 0.75f;
     float bias = 0.025f;
+    float power = 2.0f;
 };
 
 struct ExposureOptions

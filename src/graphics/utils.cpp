@@ -1,3 +1,4 @@
+#include "graphics/texture.h"
 #include <algorithm>
 #include <cstdint>
 #include <filesystem>
@@ -94,6 +95,15 @@ auto get_texture_filename(::aiMaterial const *material, ::aiTextureType type) ->
                         : std::optional{std::format("textures\\{}.dds", path.filename().stem().string())};
 }
 
+auto to_native_format(::DXGI_FORMAT format) -> ufps::TextureFormat
+{
+    switch (format)
+    {
+        case DXGI_FORMAT_BC7_UNORM: return ufps::TextureFormat::BC7;
+        case DXGI_FORMAT_BC7_UNORM_SRGB: return ufps::TextureFormat::BC7_SRGB;
+        default: throw ufps::Exception("unsupported dxgi format: {}", std::to_underlying(format));
+    }
+}
 }
 
 namespace ufps
@@ -117,19 +127,35 @@ auto load_texture(DataBufferView image_data, bool is_srgb) -> TextureData
         std::memcpy(&dds_header, image_data.data() + sizeof(dds_magic), sizeof(dds_header));
 
         ensure(dds_header.dwSize == sizeof(dds_header), "invalid dds_header size: {}", dds_header.dwSize);
-        ensure(dds_header.ddspf.dwFourCC == 0x30315844, "not dx10 format");
+        if (dds_header.ddspf.dwFourCC == 0x30315844)
+        {
+            auto dx10_header = DDS_HEADER_DXT10{};
+            std::memcpy(&dx10_header, image_data.data() + sizeof(dds_magic) + sizeof(dds_header), sizeof(dx10_header));
 
-        auto dx10_header = DDS_HEADER_DXT10{};
-        std::memcpy(&dx10_header, image_data.data() + sizeof(dds_magic) + sizeof(dds_header), sizeof(dx10_header));
-
-        return {
-            .width = static_cast<std::uint32_t>(dds_header.dwWidth),
-            .height = static_cast<std::uint32_t>(dds_header.dwHeight),
-            .format = TextureFormat::BC7,
-            .data = image_data | std::views::drop(sizeof(dds_magic) + sizeof(dds_header) + sizeof(dx10_header)) |
-                    std::ranges::to<std::vector>(),
-            .is_compressed = true,
-        };
+            return {
+                .width = static_cast<std::uint32_t>(dds_header.dwWidth),
+                .height = static_cast<std::uint32_t>(dds_header.dwHeight),
+                .format = to_native_format(dx10_header.dxgiFormat),
+                .data = image_data | std::views::drop(sizeof(dds_magic) + sizeof(dds_header) + sizeof(dx10_header)) |
+                        std::ranges::to<std::vector>(),
+                .is_compressed = true,
+            };
+        }
+        else if (dds_header.ddspf.dwFourCC == 0x55354342)
+        {
+            return {
+                .width = static_cast<std::uint32_t>(dds_header.dwWidth),
+                .height = static_cast<std::uint32_t>(dds_header.dwHeight),
+                .format = TextureFormat::BC5U,
+                .data = image_data | std::views::drop(sizeof(dds_magic) + sizeof(dds_header)) |
+                        std::ranges::to<std::vector>(),
+                .is_compressed = true,
+            };
+        }
+        else
+        {
+            throw ufps::Exception("unsupported dds format: {}", dds_header.ddspf.dwFourCC);
+        }
     }
     else
     {
@@ -158,8 +184,7 @@ auto load_texture(DataBufferView image_data, bool is_srgb) -> TextureData
     }
 }
 
-auto load_model(DataBufferView model_data, ResourceLoader &resource_loader)
-    -> std::tuple<std::string, std::vector<ModelData>>
+auto load_model(DataBufferView model_data) -> std::tuple<std::string, std::vector<ModelData>>
 {
     [[maybe_unused]] static auto *logger = []
     {
@@ -167,9 +192,9 @@ auto load_model(DataBufferView model_data, ResourceLoader &resource_loader)
         auto *logger = ::Assimp::DefaultLogger::get();
 
         logger->attachStream(new SimpleAssimpLogStream<ufps::log::Level::ERR>{}, ::Assimp::Logger::Err);
-        logger->attachStream(new SimpleAssimpLogStream<ufps::log::Level::DEBUG>{}, ::Assimp::Logger::Debugging);
+        // logger->attachStream(new SimpleAssimpLogStream<ufps::log::Level::DEBUG>{}, ::Assimp::Logger::Debugging);
         logger->attachStream(new SimpleAssimpLogStream<ufps::log::Level::WARN>{}, ::Assimp::Logger::Warn);
-        logger->attachStream(new SimpleAssimpLogStream<ufps::log::Level::INFO>{}, ::Assimp::Logger::Info);
+        // logger->attachStream(new SimpleAssimpLogStream<ufps::log::Level::INFO>{}, ::Assimp::Logger::Info);
 
         return logger;
     }();
@@ -186,14 +211,17 @@ auto load_model(DataBufferView model_data, ResourceLoader &resource_loader)
     const auto materials = std::span<::aiMaterial *>(scene->mMaterials, scene->mMaterials + scene->mNumMaterials);
     log::info("found {} meshes, {} materials", std::ranges::size(loaded_meshes), std::ranges::size(materials));
 
-    ensure(
-        std::ranges::size(loaded_meshes) == std::ranges::size(materials), "mismatch mesh/material count in model file");
-
     auto models = std::vector<ModelData>{};
 
     for (const auto &[index, mesh] : loaded_meshes | std::views::enumerate)
     {
         log::info("found mesh: {}", mesh->mName.C_Str());
+
+        if (index >= scene->mNumMaterials)
+        {
+            log::warn("mesh {} has invalid material index: {}", mesh->mName.C_Str(), index);
+            continue;
+        }
 
         const auto *material = scene->mMaterials[index];
         const auto base_colour_count = material->GetTextureCount(::aiTextureType_BASE_COLOR);
@@ -221,24 +249,15 @@ auto load_model(DataBufferView model_data, ResourceLoader &resource_loader)
                                   { return std::span<std::uint32_t>{e.mIndices, e.mIndices + e.mNumIndices}; }) |
             std::views::join | std::ranges::to<std::vector>();
 
-        const auto load_tex = [material, &resource_loader](::aiTextureType type) -> std::optional<TextureData>
-        {
-            const auto is_srgb = type == ::aiTextureType_BASE_COLOR;
-
-            return get_texture_filename(material, type)
-                .transform([&resource_loader, is_srgb](const auto &e)
-                           { return load_texture(resource_loader.load_data_buffer(e), is_srgb); });
-        };
-
         models.push_back({
             .mesh_data =
                 MeshData{
                     .vertices = vertices(positions, normals, tangents, bitangents, uvs),
                     .indices = std::move(indices),
                 },
-            .albedo = load_tex(::aiTextureType_BASE_COLOR),
-            .normal = load_tex(::aiTextureType_NORMAL_CAMERA),
-            .specular = load_tex(::aiTextureType_METALNESS),
+            .albedo = get_texture_filename(material, ::aiTextureType_BASE_COLOR),
+            .normal = get_texture_filename(material, ::aiTextureType_NORMAL_CAMERA),
+            .specular = get_texture_filename(material, ::aiTextureType_METALNESS),
         });
     }
 

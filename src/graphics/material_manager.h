@@ -51,6 +51,12 @@ class MaterialManager
         return material_data_gpu_.native_handle();
     }
 
+    auto material(std::uint32_t index) const -> const MaterialData &
+    {
+        expect(index < material_data_cpu_.size(), "material index out of bounds: {}", index);
+        return material_data_cpu_[index];
+    }
+
   private:
     std::vector<MaterialData> material_data_cpu_;
     Buffer material_data_gpu_;

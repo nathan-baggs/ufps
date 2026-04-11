@@ -15,6 +15,7 @@ class ResourceLoader
 
     virtual auto load_string(std::string_view name) -> std::string = 0;
     virtual auto load_data_buffer(std::string_view name) -> DataBuffer = 0;
+    virtual auto resources(std::string_view type) -> std::vector<std::string> = 0;
 };
 
 }

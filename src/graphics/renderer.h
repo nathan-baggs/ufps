@@ -66,17 +66,22 @@ class Renderer
     MultiBuffer<PersistentBuffer> object_data_buffer_;
     Buffer luminance_histogram_buffer_;
     Buffer average_luminance_buffer_;
+    Buffer ssao_samples_buffer_;
     Program gbuffer_program_;
     Program light_pass_program_;
     Program tone_map_program_;
     Program luminance_histogram_program_;
     Program average_luminance_program_;
     Program ssao_program_;
+    Program ssao_blur_program_;
+    Sampler ssao_noise_sampler_;
+    std::uint32_t ssao_noise_texture_;
     Sampler fb_sampler_;
     RenderTarget gbuffer_rt_;
     RenderTarget light_pass_rt_;
     RenderTarget tone_map_rt_;
     RenderTarget ssao_rt_;
+    RenderTarget ssao_blur_rt_;
     MeshManager &mesh_manager_;
     FrameBuffer *final_fb_;
 

@@ -62,8 +62,9 @@ void main()
     uint normal_tex_index = material_data[in_material_index].normal_index;
     uint specular_tex_index = material_data[in_material_index].specular_index;
 
-    vec3 n = texture(textures[normal_tex_index], in_uv).xyz;
-    n = (n * 2.0) - 1.0;
+    vec3 n;
+    n.xy = texture(textures[normal_tex_index], in_uv).rg * 2.0 - 1.0;
+    n.z = sqrt(max(1.0 - dot(n.xy, n.xy), 0.0));
     n = normalize(in_tbn * n);
 
     out_colour = vec4(texture(textures[albedo_tex_index], in_uv).rgb, 1.0);
@@ -71,4 +72,3 @@ void main()
     out_pos = in_frag_position;
     out_specular = vec4(texture(textures[specular_tex_index], in_uv).r, 0.0, 0.0, 1.0);
 }
-

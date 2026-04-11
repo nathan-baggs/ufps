@@ -8,6 +8,8 @@
 
 #include <windows.h>
 
+#include <yaml-cpp/yaml.h>
+
 #include "config.h"
 #include "core/render_entity.h"
 #include "core/scene.h"
@@ -30,6 +32,7 @@
 #include "resources/file_resource_loader.h"
 #include "resources/resource_loader.h"
 #include "utils/data_buffer.h"
+#include "utils/decompress.h"
 #include "utils/formatter.h"
 #include "utils/log.h"
 #include "utils/system_info.h"
@@ -144,6 +147,182 @@ auto walk_direction(std::unordered_map<ufps::Key, bool> &key_state, const ufps::
     return ufps::Vector3::normalise(direction) * speed;
 }
 
+auto build_mesh_lookup(ufps::ResourceLoader &resource_loader) -> ufps::StringMap<std::vector<ufps::MeshView>>
+{
+    auto mesh_lookup = ufps::StringMap<std::vector<ufps::MeshView>>{};
+
+    const auto manifest_str = resource_loader.load_string("configs\\model_manifest.yaml");
+    const auto manifest = YAML::Load(manifest_str);
+
+    for (const auto &model : manifest)
+    {
+        const auto &name = model.first.as<std::string>();
+        const auto &sub_models = model.second;
+
+        if (!sub_models.IsDefined() || !sub_models.IsMap())
+        {
+            ufps::log::warn("invalid manifest entry for model {}", model.first.as<std::string>());
+            continue;
+        }
+
+        auto mesh_views = std::vector<ufps::MeshView>{};
+
+        for (const auto &sub_model : sub_models)
+        {
+            const auto sub_model_name = sub_model.first.as<std::string>();
+            const auto sub_model_data = sub_model.second;
+
+            if (!sub_model_data || !sub_model_data["vertex_count"] || !sub_model_data["vertex_offset"] ||
+                !sub_model_data["index_count"] || !sub_model_data["index_offset"])
+            {
+                ufps::log::warn("invalid manifest entry for model {}, submodel {}", name, sub_model_name);
+                continue;
+            }
+
+            const auto vertex_count = sub_model_data["vertex_count"].as<std::uint32_t>();
+            const auto vertex_offset = sub_model_data["vertex_offset"].as<std::uint32_t>();
+            const auto index_count = sub_model_data["index_count"].as<std::uint32_t>();
+            const auto index_offset = sub_model_data["index_offset"].as<std::uint32_t>();
+
+            mesh_views.push_back(
+                {.index_offset = index_offset,
+                 .index_count = index_count,
+                 .vertex_offset = vertex_offset,
+                 .vertex_count = vertex_count});
+        }
+
+        mesh_lookup.insert({name, std::move(mesh_views)});
+    }
+
+    return mesh_lookup;
+}
+
+auto load_texture_from_blob(
+    const YAML::Node &texture_manifest,
+    const std::vector<std::byte> &texture_blob,
+    const std::string &texture_name,
+    ufps::ResourceLoader &resource_loader,
+    ufps::TextureManager &texture_manager,
+    const ufps::Sampler &sampler) -> std::uint32_t
+{
+    if (!texture_manifest[texture_name] || !texture_manifest[texture_name]["offset"] ||
+        !texture_manifest[texture_name]["size"])
+    {
+
+        const auto texture_data = resource_loader.load_data_buffer(texture_name);
+        auto texture = ufps::load_texture(texture_data, true);
+        auto t = ufps::Texture{std::move(texture), texture_name, sampler};
+        return texture_manager.add(std::move(t));
+    }
+    else
+    {
+        const auto offset = texture_manifest[texture_name]["offset"].as<std::uint64_t>();
+        const auto size = texture_manifest[texture_name]["size"].as<std::uint64_t>();
+
+        const auto texture_data = ufps::DataBufferView{
+            texture_blob.data() + offset,
+            size,
+        };
+        auto texture = ufps::load_texture(texture_data, true);
+        auto t = ufps::Texture{std::move(texture), texture_name, sampler};
+        return texture_manager.add(std::move(t));
+    }
+}
+
+auto build_materials(
+    ufps::ResourceLoader &resource_loader,
+    ufps::TextureManager &texture_manager,
+    ufps::MaterialManager &material_manager,
+    const ufps::Sampler &sampler) -> ufps::StringMap<std::vector<std::uint32_t>>
+{
+    auto material_lookup = ufps::StringMap<std::vector<std::uint32_t>>{};
+
+    const auto model_manifest_str = resource_loader.load_string("configs\\model_manifest.yaml");
+    const auto model_manifest = YAML::Load(model_manifest_str);
+
+    const auto texture_blob = ufps::decompress(resource_loader.load_data_buffer("blobs\\texture_data.bin"));
+    const auto texture_manifest_str = resource_loader.load_string("configs\\texture_manifest.yaml");
+    const auto texture_manifest = YAML::Load(texture_manifest_str);
+
+    for (const auto &model : model_manifest)
+    {
+        const auto &name = model.first.as<std::string>();
+        const auto &sub_models = model.second;
+
+        if (!sub_models.IsDefined() || !sub_models.IsMap())
+        {
+            ufps::log::warn("invalid manifest entry for model {}", model.first.as<std::string>());
+            continue;
+        }
+
+        for (const auto &sub_model : sub_models)
+        {
+            const auto sub_model_name = sub_model.first.as<std::string>();
+            const auto sub_model_data = sub_model.second;
+
+            if (!sub_model_data || !sub_model_data["vertex_count"] || !sub_model_data["vertex_offset"] ||
+                !sub_model_data["index_count"] || !sub_model_data["index_offset"])
+            {
+                ufps::log::warn("invalid manifest entry for model {}, submodel {}", name, sub_model_name);
+                continue;
+            }
+
+            const auto albedo_name = sub_model_data["albedo_name"].as<std::string>();
+            const auto albedo_index = albedo_name.empty()
+                                          ? 0u
+                                          : *texture_manager.try_get_texture_index(albedo_name)
+                                                 .or_else(
+                                                     [&]
+                                                     {
+                                                         return std::make_optional(load_texture_from_blob(
+                                                             texture_manifest,
+                                                             texture_blob,
+                                                             albedo_name,
+                                                             resource_loader,
+                                                             texture_manager,
+                                                             sampler));
+                                                     });
+
+            const auto normal_name = sub_model_data["normal_name"].as<std::string>();
+            const auto normal_index = normal_name.empty()
+                                          ? 0u
+                                          : *texture_manager.try_get_texture_index(normal_name)
+                                                 .or_else(
+                                                     [&]
+                                                     {
+                                                         return std::make_optional(load_texture_from_blob(
+                                                             texture_manifest,
+                                                             texture_blob,
+                                                             normal_name,
+                                                             resource_loader,
+                                                             texture_manager,
+                                                             sampler));
+                                                     });
+
+            const auto specular_name = sub_model_data["specular_name"].as<std::string>();
+            const auto specular_index = specular_name.empty()
+                                            ? 0u
+                                            : *texture_manager.try_get_texture_index(specular_name)
+                                                   .or_else(
+                                                       [&]
+                                                       {
+                                                           return std::make_optional(load_texture_from_blob(
+                                                               texture_manifest,
+                                                               texture_blob,
+                                                               specular_name,
+                                                               resource_loader,
+                                                               texture_manager,
+                                                               sampler));
+                                                       });
+
+            const auto material_index = material_manager.add(albedo_index, normal_index, specular_index);
+            material_lookup[name].push_back(material_index);
+        }
+    }
+
+    return material_lookup;
+}
+
 }
 
 int main()
@@ -152,7 +331,12 @@ int main()
     // Daz_Da_Cat: You can't handle the Daz!
     ::CoInitializeEx(nullptr, COINIT_MULTITHREADED);
 
-    ufps::log::info("μfps version: {}.{}.{}", ufps::version::major, ufps::version::minor, ufps::version::patch);
+    ufps::log::info(
+        "μfps version: {}.{}.{}.{}",
+        ufps::version::year,
+        ufps::version::month,
+        ufps::version::day,
+        ufps::version::tweak);
     ufps::log::info("{}", ufps::system_info());
 
     auto window = ufps::Window{ufps::WindowMode::WINDOWED, 1920u, 1080u, 1920u, 0u};
@@ -167,38 +351,28 @@ int main()
     else
     {
         ufps::log::info("using file resource loader");
-        resource_loader =
-            std::make_unique<ufps::FileResourceLoader>(std::vector<std::filesystem::path>{"assets", "secret-assets"});
+        resource_loader = std::make_unique<ufps::FileResourceLoader>(
+            std::vector<std::filesystem::path>{"assets", "secret-assets", "build\\build_assets"});
     }
-    auto textures = std::vector<ufps::Texture>{};
 
-    const auto diamond_floor_albedo_data = resource_loader->load_data_buffer("textures\\diamond_floor_albedo.png");
-    const auto diamond_floor_albedo = ufps::load_texture(diamond_floor_albedo_data, true);
-    const auto sampler = ufps::Sampler{ufps::FilterType::LINEAR, ufps::FilterType::LINEAR, "simple_sampler"};
-    textures.push_back(ufps::Texture{diamond_floor_albedo, "diamond_floor_albedo", sampler});
+    const auto sampler = ufps::Sampler{
+        ufps::FilterType::LINEAR,
+        ufps::FilterType::LINEAR,
+        ufps::WrapMode::REPEAT,
+        ufps::WrapMode::REPEAT,
+        "simple_sampler"};
 
-    const auto diamond_floor_normal_data = resource_loader->load_data_buffer("textures\\diamond_floor_normal.png");
-    const auto diamond_floor_normal = ufps::load_texture(diamond_floor_normal_data, false);
-    textures.push_back(ufps::Texture{diamond_floor_normal, "diamond_floor_normal", sampler});
-
-    const auto diamond_floor_specular_data = resource_loader->load_data_buffer("textures\\diamond_floor_specular.png");
-    const auto diamond_floor_specular = ufps::load_texture(diamond_floor_specular_data, false);
-    textures.push_back(ufps::Texture{diamond_floor_specular, "diamond_floor_specular", sampler});
-
-    auto mesh_manager = ufps::MeshManager{};
+    auto mesh_manager = ufps::MeshManager{
+        ufps::decompress(resource_loader->load_data_buffer("blobs\\vertex_data.bin")),
+        ufps::decompress(resource_loader->load_data_buffer("blobs\\index_data.bin")),
+        build_mesh_lookup(*resource_loader)};
     auto material_manager = ufps::MaterialManager{};
     auto texture_manager = ufps::TextureManager{};
 
     mesh_manager.load("cube", std::vector{cube()});
 
-    const auto tex_index = texture_manager.add(std::move(textures));
-
     auto renderer = ufps::DebugRenderer{window, *resource_loader, texture_manager, mesh_manager};
     auto debug_mode = false;
-
-    const auto material_index_red = material_manager.add(tex_index, tex_index + 1u, tex_index + 2u);
-    const auto material_index_blue = material_manager.add(tex_index, tex_index + 1u, tex_index + 2u);
-    const auto material_index_green = material_manager.add(tex_index, tex_index + 1u, tex_index + 2u);
 
     auto scene = ufps::Scene{
         mesh_manager,
@@ -233,49 +407,11 @@ int main()
         {},
         {}};
 
-    const auto models_to_load = std::vector{
-        "models\\SM_Corner03_12_12_B_X.fbx"sv,
-        "models\\SM_Corner01_8_8_X.fbx"sv,
-    };
+    const auto material_lookup = build_materials(*resource_loader, texture_manager, material_manager, sampler);
 
-    for (const auto &model_to_load : models_to_load)
+    for (const auto &[name, materials] : material_lookup)
     {
-        auto mesh_data = std::vector<ufps::MeshData>{};
-        auto materials = std::vector<std::uint32_t>{};
-        auto mesh_views = std::span<const ::ufps::MeshView>{};
-
-        const auto &[name, models] =
-            ufps::load_model(resource_loader->load_data_buffer(model_to_load), *resource_loader);
-
-        for (const auto &[index, model] : models | std::views::enumerate)
-        {
-            auto albedo_index = tex_index;
-            if (const auto &a = model.albedo; a)
-            {
-                auto albedo = ufps::Texture{*model.albedo, std::format("{}_albedo", name), sampler};
-                albedo_index = texture_manager.add(std::move(albedo));
-            }
-
-            auto normal_index = tex_index + 1u;
-            if (const auto &n = model.normal; n)
-            {
-                auto normal = ufps::Texture{*model.normal, std::format("{}_normal", name), sampler};
-                normal_index = texture_manager.add(std::move(normal));
-            }
-
-            auto specular_index = tex_index + 2u;
-            if (const auto &s = model.specular; s)
-            {
-                auto specular = ufps::Texture{*model.specular, std::format("{}_specular", name), sampler};
-                specular_index = texture_manager.add(std::move(specular));
-            }
-
-            materials.push_back(material_manager.add(albedo_index, normal_index, specular_index));
-            mesh_data.push_back(model.mesh_data);
-        }
-
-        mesh_views = mesh_manager.load(name, std::span<const ufps::MeshData>{mesh_data});
-
+        const auto &mesh_views = mesh_manager.mesh(name);
         auto render_entities = std::views::zip(mesh_views, materials) |
                                std::views::transform(
                                    [&mesh_manager](const auto &e)
@@ -284,7 +420,6 @@ int main()
                                        return ufps::RenderEntity(mesh_view, material, mesh_manager);
                                    }) |
                                std::ranges::to<std::vector>();
-        ufps::log::debug("adding {} to cache", name);
         scene.cache_entity(name, {std::string{name}, std::move(render_entities), {}});
     }
 

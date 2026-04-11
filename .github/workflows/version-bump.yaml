@@ -18,57 +18,6 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Find merged PR for this commit
-        id: findpr
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const commit = context.sha;
-            const prs = await github.rest.repos.listPullRequestsAssociatedWithCommit({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              commit_sha: commit
-            });
-            if (!prs.data.length) {
-              core.setFailed(`No PR associated with commit ${commit}`);
-              return;
-            }
-            const mergedPr = prs.data.find(pr => pr.merged_at && pr.base.ref === 'main') || prs.data[0];
-            core.setOutput('pr_number', mergedPr.number);
-
-      - name: Get PR Body
-        id: prbody
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const pr_number = ${{ steps.findpr.outputs.pr_number }};
-            const { data: pr } = await github.rest.pulls.get({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              pull_number: pr_number
-            });
-            core.setOutput('body', pr.body);
-
-      - name: Determine version bump
-        id: bump
-        run: |
-          body="${{ steps.prbody.outputs.body }}"
-          major=$(echo "$body" | grep -Ei '^\s*-\s*\[[xX]\]\s*major' | wc -l)
-          minor=$(echo "$body" | grep -Ei '^\s*-\s*\[[xX]\]\s*minor' | wc -l)
-          patch=$(echo "$body" | grep -Ei '^\s*-\s*\[[xX]\]\s*patch' | wc -l)
-          sum=$((major + minor + patch))
-          if [ "$sum" -gt 1 ]; then
-            echo "::error::More than one version bump selected!"
-            exit 1
-          fi
-          if [ "$major" -eq 1 ]; then
-            echo "bump=major" >> $GITHUB_OUTPUT
-          elif [ "$minor" -eq 1 ]; then
-            echo "bump=minor" >> $GITHUB_OUTPUT
-          else
-            echo "bump=patch" >> $GITHUB_OUTPUT
-          fi
-
       - name: Set up Git User
         run: |
           git config user.name "github-actions[bot]"
@@ -78,27 +27,29 @@ jobs:
         id: version
         run: |
           cmkfile="CMakeLists.txt"
-          ver=$(grep -oP 'VERSION\s*"\K[0-9]+\.[0-9]+\.[0-9]+' "$cmkfile")
+          ver=$(grep -oP 'VERSION\s*"\K[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+' "$cmkfile")
           if [ -z "$ver" ]; then
             echo "::error::Could not find project version in $cmkfile"
             exit 1
           fi
-          IFS=. read -r major minor patch <<<"$ver"
-          bumptype="${{ steps.bump.outputs.bump }}"
-
-          if [ "$bumptype" = "major" ]; then
-            major=$((major + 1))
-            minor=0
-            patch=0
-          elif [ "$bumptype" = "minor" ]; then
-            minor=$((minor + 1))
-            patch=0
+          
+          IFS=. read -r old_year old_month old_day old_tweak <<<"$ver"
+          
+          # Get current UTC date
+          current_year=$(date -u +'%Y')
+          current_month=$(date -u +'%-m')
+          current_day=$(date -u +'%-d')
+          
+          if [ "$old_year" = "$current_year" ] && [ "$old_month" = "$current_month" ] && [ "$old_day" = "$current_day" ]; then
+            # Same day, increment tweak
+            new_tweak=$((old_tweak + 1))
           else
-            patch=$((patch + 1))
+            # New day, reset tweak
+            new_tweak=0
           fi
-
-          newver="${major}.${minor}.${patch}"
-          sed -i -E "0,/VERSION\s*\"[0-9]+\.[0-9]+\.[0-9]+\"/s//VERSION \"${newver}\"/" "$cmkfile"
+          
+          newver="${current_year}.${current_month}.${current_day}.${new_tweak}"
+          sed -i -E "0,/VERSION\s*\"[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+\"/s//VERSION \"${newver}\"/" "$cmkfile"
           echo "newver=$newver" >> $GITHUB_OUTPUT
           echo "version bumped, $ver -> $newver"
 

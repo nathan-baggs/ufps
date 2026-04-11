@@ -16,12 +16,21 @@ enum class FilterType
     NEAREST
 };
 
+enum class WrapMode
+{
+    REPEAT,
+    CLAMP_TO_EDGE,
+    MIRRORED_REPEAT
+};
+
 class Sampler
 {
   public:
     Sampler(
         FilterType min_filter,
         FilterType mag_filter,
+        WrapMode wrap_s,
+        WrapMode wrap_t,
         const std::string &name,
         std::optional<float> anisotropy_samples = std::nullopt);
 
@@ -47,4 +56,16 @@ inline auto to_string(FilterType filter_type) -> std::string
     }
 }
 
+inline auto to_string(WrapMode wrap_mode) -> std::string
+{
+    switch (wrap_mode)
+    {
+        using enum ufps::WrapMode;
+
+        case REPEAT: return "REPEAT";
+        case CLAMP_TO_EDGE: return "CLAMP_TO_EDGE";
+        case MIRRORED_REPEAT: return "MIRRORED_REPEAT";
+        default: return "<unknown>";
+    }
+}
 }

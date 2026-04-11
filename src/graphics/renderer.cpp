@@ -3,6 +3,7 @@
 #include <cmath>
 #include <cstdint>
 #include <optional>
+#include <random>
 #include <ranges>
 #include <span>
 #include <string_view>
@@ -56,12 +57,13 @@ auto create_render_target(
     std::uint32_t height,
     ufps::Sampler &sampler,
     ufps::TextureManager &texture_manager,
-    std::string_view name) -> ufps::RenderTarget
+    std::string_view name,
+    ufps::TextureFormat format = ufps::TextureFormat::RGB16F) -> ufps::RenderTarget
 {
     const auto colour_attachment_texture_data = ufps::TextureData{
         .width = width,
         .height = height,
-        .format = ufps::TextureFormat::RGB16F,
+        .format = format,
         .data = std::nullopt,
         .is_compressed = false,
     };
@@ -121,6 +123,40 @@ auto create_sprite(ufps::MeshManager &mesh_manager) -> ufps::Entity
     return {"post_process_sprite", {{mesh_views.front(), 0u, mesh_manager}}, {}};
 }
 
+auto create_ssao_noise_texture(ufps::TextureManager &texture_manager, const ufps::Sampler &sampler) -> std::uint32_t
+{
+    auto generator = std::mt19937{std::random_device{}()};
+    auto distribution = std::uniform_real_distribution<float>{-1.0f, 1.0f};
+
+    auto ssao_noise_data = ufps::DataBuffer{};
+
+    for (auto i = 0u; i < 16u; ++i)
+    {
+        const auto x = distribution(generator);
+        const auto y = distribution(generator);
+        const auto z = 0.0f;
+
+        ssao_noise_data.push_back(static_cast<std::byte>((x * 0.5f + 0.5f) * 255.0f));
+        ssao_noise_data.push_back(static_cast<std::byte>((y * 0.5f + 0.5f) * 255.0f));
+        ssao_noise_data.push_back(static_cast<std::byte>((z * 0.5f + 0.5f) * 255.0f));
+    }
+
+    const auto ssao_noise_texture_data = ufps::TextureData{
+        .width = 4,
+        .height = 4,
+        .format = ufps::TextureFormat::RGB,
+        .data = ssao_noise_data,
+        .is_compressed = false,
+    };
+
+    auto tex = ufps::Texture{
+        ssao_noise_texture_data,
+        "ssao_noise_texture",
+        sampler,
+    };
+
+    return texture_manager.add(std::move(tex));
+}
 }
 
 namespace ufps
@@ -141,6 +177,7 @@ Renderer::Renderer(
     , object_data_buffer_{sizeof(ObjectData), "object_data_buffer"}
     , luminance_histogram_buffer_{sizeof(std::uint32_t) * 256, "luminance_histogram_buffer"}
     , average_luminance_buffer_{sizeof(float), "average_luminance_buffer"}
+    , ssao_samples_buffer_{sizeof(Vector4) * 64, "ssao_samples_buffer"}
     , gbuffer_program_{create_program(
           resource_loader,
           "shaders\\gbuffer.vert",
@@ -179,7 +216,16 @@ Renderer::Renderer(
           "shaders\\ssao.frag",
           "ssao_fragment_shader",
           "ssao_program")}
-    , fb_sampler_{FilterType::LINEAR, FilterType::LINEAR, "fb_sampler"}
+    , ssao_blur_program_{create_program(
+          resource_loader,
+          "shaders\\ssao.vert",
+          "ssao_blur_vertex_shader",
+          "shaders\\ssao_blur.frag",
+          "ssao_blur_fragment_shader",
+          "ssao_blur_program")}
+    , ssao_noise_sampler_{FilterType::NEAREST, FilterType::NEAREST, WrapMode::REPEAT, WrapMode::REPEAT, "ssao_noise_sampler"}
+    , ssao_noise_texture_{create_ssao_noise_texture(texture_manager, ssao_noise_sampler_)}
+    , fb_sampler_{FilterType::LINEAR, FilterType::LINEAR, WrapMode::CLAMP_TO_EDGE, WrapMode::CLAMP_TO_EDGE, "fb_sampler"}
     , gbuffer_rt_{create_render_target(
           4u,
           window_.render_width(),
@@ -203,11 +249,20 @@ Renderer::Renderer(
           "tone_map"),}
     , ssao_rt_{create_render_target(
           1u,
-          window_.render_width(),
-          window_.render_height(),
+          window_.render_width() / 2u,
+          window_.render_height() / 2u,
           fb_sampler_,
           texture_manager,
-          "ssao"),}
+          "ssao",
+          TextureFormat::R16F),}
+    , ssao_blur_rt_{create_render_target(
+          1u,
+          window_.render_width() / 2u,
+          window_.render_height() / 2u,
+          fb_sampler_,
+          texture_manager,
+          "ssao_blur",
+          TextureFormat::R16F),}
     ,mesh_manager_{mesh_manager}
     ,final_fb_{}
 {
@@ -217,6 +272,29 @@ Renderer::Renderer(
     ::glBindVertexArray(dummy_vao_);
 
     // ac15CR: this code is not reasonable... but our discord is: https://discord.gg/9FkkMgXSUV
+
+    auto generator = std::mt19937{std::random_device{}()};
+    auto distribution = std::uniform_real_distribution<float>{0.0f, 1.0f};
+
+    auto ssao_samples = std::vector<Vector4>{};
+    for (auto i = 0u; i < 64u; ++i)
+    {
+        auto sample = Vector3{
+            distribution(generator) * 2.0f - 1.0f,
+            distribution(generator) * 2.0f - 1.0f,
+            distribution(generator),
+        };
+        sample = Vector3::normalise(sample);
+        sample *= distribution(generator);
+
+        auto scale = static_cast<float>(i) / 64.0f;
+        scale = std::lerp(0.1f, 1.0f, scale * scale);
+        sample *= scale;
+
+        ssao_samples.push_back(Vector4{sample, 0.0f});
+    }
+
+    ssao_samples_buffer_.write(std::as_bytes(std::span{ssao_samples.data(), ssao_samples.size()}), 0u);
 }
 
 auto Renderer::render(Scene &scene) -> void
@@ -434,35 +512,77 @@ auto Renderer::execute_average_luminance_pass(Scene &scene) -> void
 
 auto Renderer::execute_ssao_pass(Scene &scene) -> void
 {
-    ssao_rt_.fb.bind();
-    ::glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    if (!scene.ssao_options().enabled)
+    {
+        ::glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
+        ssao_blur_rt_.fb.bind();
+        ::glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        ::glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 
-    const auto auto_bind = AutoBind{ssao_program_};
+        return;
+    }
+
+    ::glViewport(0, 0, ssao_rt_.fb.width(), ssao_rt_.fb.height());
 
     const auto [vertex_buffer_handle, index_buffer_handle] = scene.mesh_manager().native_handle();
-    ssao_program_.set_uniforms(
-        gbuffer_rt_.first_colour_attachment_index + 1,
-        gbuffer_rt_.first_colour_attachment_index + 2,
-        static_cast<float>(gbuffer_rt_.fb.width()),
-        static_cast<float>(gbuffer_rt_.fb.height()),
-        scene.ssao_options().sample_count,
-        scene.ssao_options().radius,
-        scene.ssao_options().bias);
-    ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, vertex_buffer_handle);
-    ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, scene.texture_manager().native_handle());
-    ::glBindBufferRange(
-        GL_SHADER_STORAGE_BUFFER,
-        2,
-        camera_buffer_.native_handle(),
-        camera_buffer_.frame_offset_bytes(),
-        sizeof(CameraData));
-    ::glBindBuffer(GL_DRAW_INDIRECT_BUFFER, post_processing_command_buffer_.native_handle());
-    ::glMultiDrawElementsIndirect(
-        GL_TRIANGLES,
-        GL_UNSIGNED_INT,
-        reinterpret_cast<const void *>(post_processing_command_buffer_.offset_bytes()),
-        1u,
-        0);
+
+    {
+        ssao_rt_.fb.bind();
+        ::glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+        const auto auto_bind = AutoBind{ssao_program_};
+
+        ssao_program_.set_uniforms(
+            gbuffer_rt_.first_colour_attachment_index + 1,
+            gbuffer_rt_.first_colour_attachment_index + 2,
+            static_cast<float>(gbuffer_rt_.fb.width()),
+            static_cast<float>(gbuffer_rt_.fb.height()),
+            scene.ssao_options().sample_count,
+            scene.ssao_options().radius,
+            scene.ssao_options().bias,
+            scene.ssao_options().power,
+            ssao_noise_texture_);
+        ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, vertex_buffer_handle);
+        ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, scene.texture_manager().native_handle());
+        ::glBindBufferRange(
+            GL_SHADER_STORAGE_BUFFER,
+            2,
+            camera_buffer_.native_handle(),
+            camera_buffer_.frame_offset_bytes(),
+            sizeof(CameraData));
+        ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, ssao_samples_buffer_.native_handle());
+        ::glBindBuffer(GL_DRAW_INDIRECT_BUFFER, post_processing_command_buffer_.native_handle());
+        ::glMultiDrawElementsIndirect(
+            GL_TRIANGLES,
+            GL_UNSIGNED_INT,
+            reinterpret_cast<const void *>(post_processing_command_buffer_.offset_bytes()),
+            1u,
+            0);
+    }
+
+    {
+        ssao_blur_rt_.fb.bind();
+        ::glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+        const auto auto_bind = AutoBind{ssao_blur_program_};
+
+        ssao_blur_program_.set_uniforms(
+            ssao_rt_.first_colour_attachment_index,
+            gbuffer_rt_.depth_attachment_index,
+            static_cast<float>(ssao_rt_.fb.width()),
+            static_cast<float>(ssao_rt_.fb.height()));
+        ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, vertex_buffer_handle);
+        ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, scene.texture_manager().native_handle());
+        ::glBindBuffer(GL_DRAW_INDIRECT_BUFFER, post_processing_command_buffer_.native_handle());
+        ::glMultiDrawElementsIndirect(
+            GL_TRIANGLES,
+            GL_UNSIGNED_INT,
+            reinterpret_cast<const void *>(post_processing_command_buffer_.offset_bytes()),
+            1u,
+            0);
+    }
+
+    ::glViewport(0, 0, window_.render_width(), window_.render_height());
 }
 
 auto Renderer::execute_tone_mapping_pass(Scene &scene) -> void
@@ -483,7 +603,7 @@ auto Renderer::execute_tone_mapping_pass(Scene &scene) -> void
         scene.tone_map_options().black_tightness,
         scene.tone_map_options().pedestal,
         scene.tone_map_options().gamma,
-        ssao_rt_.first_colour_attachment_index);
+        ssao_blur_rt_.first_colour_attachment_index);
     ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, vertex_buffer_handle);
     ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, scene.texture_manager().native_handle());
     ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, average_luminance_buffer_.native_handle());
