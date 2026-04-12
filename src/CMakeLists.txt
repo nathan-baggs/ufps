@@ -18,6 +18,7 @@ add_subdirectory(core)
 add_subdirectory(events)
 add_subdirectory(graphics)
 add_subdirectory(resources)
+add_subdirectory(serialisation)
 add_subdirectory(utils)
 
 add_executable(ufps
