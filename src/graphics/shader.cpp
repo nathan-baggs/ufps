@@ -65,16 +65,4 @@ auto Shader::native_handle() const -> ::GLuint
     return handle_;
 }
 
-auto to_string(ShaderType obj) -> std::string
-{
-    switch (obj)
-    {
-        using enum ufps::ShaderType;
-        case VERTEX: return "VERTEX";
-        case FRAGMENT: return "FRAGMENT";
-        case COMPUTE: return "COMPUTE";
-    }
-
-    throw ufps::Exception("unknown shader type: {}", std::to_underlying(obj));
-}
 }

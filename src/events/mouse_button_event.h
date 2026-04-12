@@ -27,6 +27,4 @@ class MouseButtonEvent
     MouseButtonState state_;
 };
 
-auto to_string(MouseButtonState obj) -> std::string;
-
 }

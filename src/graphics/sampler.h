@@ -43,29 +43,4 @@ class Sampler
     std::string name_;
 };
 
-inline auto to_string(FilterType filter_type) -> std::string
-{
-    switch (filter_type)
-    {
-        using enum ufps::FilterType;
-
-        case LINEAR_MIPMAP: return "LINEAR_MIPMAP";
-        case LINEAR: return "LINEAR";
-        case NEAREST: return "NEAREST";
-        default: return "<unknown>";
-    }
-}
-
-inline auto to_string(WrapMode wrap_mode) -> std::string
-{
-    switch (wrap_mode)
-    {
-        using enum ufps::WrapMode;
-
-        case REPEAT: return "REPEAT";
-        case CLAMP_TO_EDGE: return "CLAMP_TO_EDGE";
-        case MIRRORED_REPEAT: return "MIRRORED_REPEAT";
-        default: return "<unknown>";
-    }
-}
 }

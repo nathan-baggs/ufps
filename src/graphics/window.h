@@ -60,15 +60,4 @@ class Window
     bool mouse_locked_;
 };
 
-inline auto to_string(WindowMode mode) -> std::string
-{
-    switch (mode)
-    {
-        using enum WindowMode;
-        case FULLSCREEN: return "FULLSCREEN";
-        case WINDOWED: return "WINDOWED";
-        default: return "<UNKNOWN>";
-    }
-}
-
 }

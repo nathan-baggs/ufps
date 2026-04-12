@@ -29,6 +29,4 @@ class Shader
     ShaderType type_;
 };
 
-auto to_string(ShaderType obj) -> std::string;
-
 }
