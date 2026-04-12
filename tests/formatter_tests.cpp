@@ -35,6 +35,12 @@ auto to_string(const ObjWithStringMemberAndFree &) -> std::string
     return "ObjWithStringMemberAndFree to_string free";
 }
 
+enum class MyEnum
+{
+    AAAA,
+    BBBB
+};
+
 }
 
 TEST(formatter, to_string_member)
@@ -62,4 +68,11 @@ TEST(formatter, to_string_member_and_free)
     std::string result = std::format("{}", obj);
 
     ASSERT_EQ(result, "ObjWithStringMemberAndFree to_string member");
+}
+
+TEST(formatter, reflect_enum)
+{
+    ASSERT_EQ(std::format("{}", MyEnum::AAAA), "AAAA");
+    ASSERT_EQ(std::format("{}", MyEnum::BBBB), "BBBB");
+    ASSERT_EQ(std::format("{}", MyEnum{0xff}), "<unknown>");
 }
