@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <cstring>
 #include <format>
+#include <fstream>
 #include <optional>
 #include <ranges>
 #include <string>
@@ -27,6 +28,7 @@
 #include "maths/transform.h"
 #include "maths/vector3.h"
 #include "maths/vector4.h"
+#include "serialisation/yaml_serialiser.h"
 #include "utils/log.h"
 
 namespace
@@ -306,6 +308,14 @@ auto DebugRenderer::post_render(Scene &scene) -> void
 
     ::ImGui::LabelText("FPS", "%0.1f", io.Framerate);
     ::ImGui::LabelText("Debug Lines", "%0.1f", static_cast<float>(debug_line_count));
+
+    if (::ImGui::Button("save"))
+    {
+        const auto scene_yaml = yaml::serialise(scene.description());
+        auto out = std::ofstream("scene.yaml");
+
+        out << scene_yaml;
+    }
 
     if (::ImGui::Button("add light"))
     {
