@@ -29,9 +29,10 @@ Description:
       lights:
         - PointLight:
             position:
-              x: 0.8988724
-              y: 1.7710187
-              z: 0
+              Vector3:
+                x: 0.8988724
+                y: 1.7710187
+                z: 0
             colour:
               Colour:
                 r: 1
@@ -44,9 +45,10 @@ Description:
             intensity: 5.988
         - PointLight:
             position:
-              x: -2.5456748
-              y: 0.6949511
-              z: -6.0471888e-05
+              Vector3:
+                x: -2.5456748
+                y: 0.6949511
+                z: -6.0471888e-05
             colour:
               Colour:
                 r: 0.22621734
