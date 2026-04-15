@@ -1,0 +1,59 @@
+Description:
+  tone_map_options:
+    ToneMapOptions:
+      max_brightness: 10.434
+      contrast: 1.425
+      linear_section_start: 0.347
+      linear_section_length: 0.475
+      black_tightness: 1.344
+      pedestal: 0
+      gamma: 1.941
+  ssao_options:
+    SSAOOptions:
+      enabled: true
+      sample_count: 64
+      radius: 0.75
+      bias: 0.039
+      power: 2
+  exposure_options:
+    ExposureOptions:
+      min_log_luminance: -1.208
+      max_log_luminance: 3.264
+  lights:
+    LightData:
+      ambient:
+        Colour:
+          r: 0
+          g: 0.63465965
+          b: 0.6960784
+      lights:
+        - PointLight:
+            position:
+              x: 0.8988724
+              y: 1.7710187
+              z: 0
+            colour:
+              Colour:
+                r: 1
+                g: 0
+                b: 0
+            constant_attenuation: 1
+            linear_attenuation: 0.007
+            quadratic_attenuation: 0.0002
+            specular_power: 32
+            intensity: 5.988
+        - PointLight:
+            position:
+              x: -2.5456748
+              y: 0.6949511
+              z: -6.0471888e-05
+            colour:
+              Colour:
+                r: 0.22621734
+                g: 0.836478
+                b: 0.3643896
+            constant_attenuation: 1
+            linear_attenuation: 0.007
+            quadratic_attenuation: 0.0002
+            specular_power: 32
+            intensity: 3.994
