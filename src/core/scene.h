@@ -60,6 +60,14 @@ struct ExposureOptions
 class Scene
 {
   public:
+    struct Description
+    {
+        ToneMapOptions tone_map_options;
+        SSAOOptions ssao_options;
+        ExposureOptions exposure_options;
+        LightData lights;
+    };
+
     Scene(
         MeshManager &mesh_manager,
         MaterialManager &material_manager,
@@ -69,6 +77,13 @@ class Scene
         ToneMapOptions tone_map_options,
         SSAOOptions ssao_options,
         ExposureOptions exposure_options);
+
+    Scene(
+        MeshManager &mesh_manager,
+        MaterialManager &material_manager,
+        TextureManager &texture_manager,
+        Camera camera,
+        const Description &description);
 
     constexpr auto intersect_ray(const Ray &ray) -> std::optional<IntersectionResult>;
 
@@ -126,6 +141,16 @@ class Scene
     constexpr auto &exposure_options(this auto &&self)
     {
         return self.exposure_options_;
+    }
+
+    constexpr auto description(this auto &&self) -> Description
+    {
+        return {
+            .tone_map_options = self.tone_map_options_,
+            .ssao_options = self.ssao_options_,
+            .exposure_options = self.exposure_options_,
+            .lights = self.lights_,
+        };
     }
 
   private:

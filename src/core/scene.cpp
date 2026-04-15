@@ -32,6 +32,25 @@ Scene::Scene(
 {
 }
 
+Scene::Scene(
+    MeshManager &mesh_manager,
+    MaterialManager &material_manager,
+    TextureManager &texture_manager,
+    Camera camera,
+    const Scene::Description &description)
+    : entities_{}
+    , entity_cache_{}
+    , mesh_manager_{mesh_manager}
+    , material_manager_{material_manager}
+    , texture_manager_{texture_manager}
+    , camera_{std::move(camera)}
+    , lights_{description.lights}
+    , tone_map_options_{description.tone_map_options}
+    , ssao_options_{description.ssao_options}
+    , exposure_options_{description.exposure_options}
+{
+}
+
 auto Scene::create_entity(std::string_view name) -> void
 {
     const auto cached = std::ranges::find_if(entity_cache_, [name](const auto &e) { return e.name() == name; });
