@@ -1,3 +1,4 @@
+#include <fstream>
 #include <memory>
 #include <numbers>
 #include <ranges>
@@ -31,6 +32,7 @@
 #include "resources/embedded_resource_loader.h"
 #include "resources/file_resource_loader.h"
 #include "resources/resource_loader.h"
+#include "serialisation/yaml_serialiser.h"
 #include "utils/data_buffer.h"
 #include "utils/decompress.h"
 #include "utils/formatter.h"
@@ -374,6 +376,12 @@ int main()
     auto renderer = ufps::DebugRenderer{window, *resource_loader, texture_manager, mesh_manager};
     auto debug_mode = false;
 
+    auto scene_description_yaml = std::ifstream{"scene.yaml"};
+    auto strm = std::stringstream{};
+    strm << scene_description_yaml.rdbuf();
+
+    const auto scene_description = ufps::yaml::deserialise<ufps::Scene::Description>(strm.str());
+
     auto scene = ufps::Scene{
         mesh_manager,
         material_manager,
@@ -386,26 +394,7 @@ int main()
          static_cast<float>(window.render_height()),
          0.1f,
          1000.0f},
-        {.ambient = ufps::Colour{.r = 0.5f, .g = 0.5f, .b = 0.5f},
-         .lights =
-             {{.position = {},
-               .colour = {.r = 1.0f, .g = 1.0f, .b = 1.0f},
-               .constant_attenuation = 1.0f,
-               .linear_attenuation = 0.007f,
-               .quadratic_attenuation = 0.0002f,
-               .specular_power = 32.0f,
-               .intensity = 1.0f}}},
-        {
-            .max_brightness = 1.0f,
-            .contrast = 1.0f,
-            .linear_section_start = 0.22f,
-            .linear_section_length = 0.4f,
-            .black_tightness = 1.33f,
-            .pedestal = 0.0f,
-            .gamma = 2.2f,
-        },
-        {},
-        {}};
+        scene_description};
 
     const auto material_lookup = build_materials(*resource_loader, texture_manager, material_manager, sampler);
 
