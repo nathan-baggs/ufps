@@ -34,7 +34,20 @@ struct Map
     std::unordered_map<std::string, int> a;
 };
 
-// arrays, arrays of structs, maps, maps of structs, nested structs, enums
+struct NestedStruct
+{
+    MultiMember m;
+};
+
+enum class Fruit
+{
+    APPLE
+};
+
+struct FruitStruct
+{
+    Fruit f;
+};
 
 TEST(yaml_serialisation, simple_struct)
 {
@@ -95,9 +108,12 @@ TEST(yaml_serialisation, array_of_member_struct)
     const auto expected =
         R"(ArrayOfStruct:
   v:
-    - a: 10
-    - a: 20
-    - a: 30)";
+    - Simple:
+        a: 10
+    - Simple:
+        a: 20
+    - Simple:
+        a: 30)";
 
     ASSERT_EQ(result, expected);
 }
@@ -119,6 +135,38 @@ TEST(yaml_serialisation, map_struct)
     2: 2
     3: 3
     1: 1)";
+
+    ASSERT_EQ(result, expected);
+}
+
+TEST(yaml_serialisation, nested_struct)
+{
+    const auto result = ufps::yaml::serialise(
+        NestedStruct{
+            .m = {
+                .a = 12,
+                .b = 3.1,
+                .c = "hello world",
+                .d = true,
+            }});
+    const auto expected =
+        R"(NestedStruct:
+  m:
+    MultiMember:
+      a: 12
+      b: 3.1
+      c: hello world
+      d: true)";
+
+    ASSERT_EQ(result, expected);
+}
+
+TEST(yaml_serialisation, enum_struct)
+{
+    const auto result = ufps::yaml::serialise(FruitStruct{.f = Fruit::APPLE});
+    const auto expected =
+        R"(FruitStruct:
+  f: APPLE)";
 
     ASSERT_EQ(result, expected);
 }

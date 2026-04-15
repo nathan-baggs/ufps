@@ -15,66 +15,75 @@ namespace impl
 {
 
 template <class T>
-auto serialise(T &obj) -> ::YAML::Node
+concept Class = std::is_aggregate_v<T> && std::is_class_v<T>;
+
+template <class T>
+concept BaseType = std::integral<T> || std::floating_point<T> || std::same_as<T, std::string>;
+
+template <class T>
+concept Map = std::ranges::range<T> && requires {
+    typename T::key_type;
+    typename T::mapped_type;
+};
+
+template <class T>
+concept Array = std::ranges::range<T> && !Map<T> && !std::same_as<T, std::string>;
+
+template <class T>
+concept Enum = std::is_enum_v<T>;
+
+template <Class T>
+auto do_serialise(const T &obj) -> ::YAML::Node;
+
+auto do_serialise(const BaseType auto &obj) -> ::YAML::Node
+{
+    return ::YAML::Node{obj};
+}
+
+template <Enum T>
+auto do_serialise(const T &obj) -> ::YAML::Node
 {
     auto node = ::YAML::Node{};
 
-    constexpr auto ctx = std::meta::access_context::current();
-    template for (constexpr auto e : std::define_static_array(std::meta::nonstatic_data_members_of(^^T, ctx)))
+    template for (constexpr auto e : std::define_static_array(std::meta::enumerators_of(^^T)))
     {
-        node[std::meta::identifier_of(e)] = obj.[:e:];
+        if (obj == [:e:])
+        {
+            node = std::meta::identifier_of(e);
+            return node;
+        }
+    }
+
+    node = "<unknown>";
+    return node;
+}
+
+auto do_serialise(const Array auto &obj) -> ::YAML::Node
+{
+    auto node = ::YAML::Node{};
+
+    for (const auto &e : obj)
+    {
+        node.push_back(do_serialise(e));
     }
 
     return node;
 }
 
-template <class T>
-struct SerialiseRange;
-
-template <class T>
-struct SerialiseRange<std::vector<T>>
+auto do_serialise(const Map auto &obj) -> ::YAML::Node
 {
-    auto operator()(::YAML::Node &node, const std::vector<T> &vec) -> void
-    {
-        for (const auto &v : vec)
-        {
-            if constexpr (std::integral<T> || std::floating_point<T> || std::same_as<T, std::string>)
-            {
-                node.push_back(v);
-            }
-            else
-            {
-                node.push_back(serialise(v));
-            }
-        }
-    }
-};
+    auto node = ::YAML::Node{};
 
-template <class K, class V>
-struct SerialiseRange<std::unordered_map<K, V>>
-{
-    auto operator()(::YAML::Node &node, const std::unordered_map<K, V> &map) -> void
+    for (const auto &[k, v] : obj)
     {
-        for (const auto &[k, v] : map)
-        {
-            node[k] = v;
-        }
+        node[k] = do_serialise(v);
     }
-};
 
-template <>
-struct SerialiseRange<std::string>
-{
-    auto operator()(::YAML::Node &node, const std::string &str) -> void
-    {
-        node = str;
-    }
-};
-
+    return node;
 }
 
-template <class T>
-auto serialise(T &&obj) -> std::string
+template <Class T>
+auto do_serialise(const T &obj) -> ::YAML::Node
 {
     auto node = ::YAML::Node{};
     auto members = ::YAML::Node{};
@@ -82,20 +91,19 @@ auto serialise(T &&obj) -> std::string
     constexpr auto ctx = std::meta::access_context::current();
     template for (constexpr auto e : std::define_static_array(std::meta::nonstatic_data_members_of(^^T, ctx)))
     {
-        if constexpr (std::ranges::range<typename[:std::meta::type_of(e):]>)
-        {
-            auto vec_node = ::YAML::Node{};
-            impl::SerialiseRange<typename[:std::meta::type_of(e):]>{}(vec_node, obj.[:e:]);
-
-            members[std::meta::identifier_of(e)] = std::move(vec_node);
-        }
-        else
-        {
-            members[std::meta::identifier_of(e)] = obj.[:e:];
-        }
+        members[std::meta::identifier_of(e)] = do_serialise(obj.[:e:]);
     }
 
     node[std::meta::identifier_of(^^T)] = members;
+
+    return node;
+}
+
+}
+
+auto serialise(const impl::Class auto &obj) -> std::string
+{
+    auto node = impl::do_serialise(obj);
 
     auto strm = std::stringstream{};
     strm << node;
