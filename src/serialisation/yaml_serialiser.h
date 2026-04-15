@@ -9,6 +9,7 @@
 
 #include <yaml-cpp/yaml.h>
 
+#include "maths/vector3.h"
 #include "utils/exception.h"
 
 namespace ufps::yaml
@@ -35,14 +36,28 @@ concept Array = std::ranges::range<T> && !Map<T> && !std::same_as<T, std::string
 template <class T>
 concept Enum = std::is_enum_v<T>;
 
+template <class T>
+concept IsVector3 = std::same_as<T, Vector3>;
+
 template <Class T>
 auto do_serialise(const T &obj) -> ::YAML::Node;
+auto do_serialise(const Vector3 &obj) -> ::YAML::Node;
 template <Class T>
 auto do_deserialise(const ::YAML::Node &node) -> T;
 
 auto do_serialise(const BaseType auto &obj) -> ::YAML::Node
 {
     return ::YAML::Node{obj};
+}
+
+inline auto do_serialise(const Vector3 &obj) -> ::YAML::Node
+{
+    auto node = ::YAML::Node{};
+    node["x"] = obj.x;
+    node["y"] = obj.y;
+    node["z"] = obj.z;
+
+    return node;
 }
 
 template <Enum T>
@@ -108,6 +123,12 @@ template <BaseType T>
 auto do_deserialise(const ::YAML::Node &node) -> T
 {
     return node.as<T>();
+}
+
+template <IsVector3>
+auto do_deserialise(const ::YAML::Node &node) -> Vector3
+{
+    return {node["x"].as<float>(), node["y"].as<float>(), node["z"].as<float>()};
 }
 
 template <Enum T>
