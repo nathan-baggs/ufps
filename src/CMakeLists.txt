@@ -18,6 +18,7 @@ add_subdirectory(core)
 add_subdirectory(events)
 add_subdirectory(graphics)
 add_subdirectory(resources)
+add_subdirectory(serialisation)
 add_subdirectory(utils)
 
 add_executable(ufps
@@ -42,6 +43,10 @@ target_compile_options(ufps PRIVATE
 install(TARGETS ufps DESTINATION bin)
 
 configure_file(${PROJECT_SOURCE_DIR}/src/config.h.in ${PROJECT_SOURCE_DIR}/src/config.h)
+
+target_compile_options(ufpslib PUBLIC
+  -freflection
+)
 
 target_compile_options(ufpslib PRIVATE
   -Wall

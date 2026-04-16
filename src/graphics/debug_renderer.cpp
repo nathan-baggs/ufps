@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <cstring>
 #include <format>
+#include <fstream>
 #include <optional>
 #include <ranges>
 #include <string>
@@ -27,6 +28,7 @@
 #include "maths/transform.h"
 #include "maths/vector3.h"
 #include "maths/vector4.h"
+#include "serialisation/yaml_serialiser.h"
 #include "utils/log.h"
 
 namespace
@@ -307,6 +309,14 @@ auto DebugRenderer::post_render(Scene &scene) -> void
     ::ImGui::LabelText("FPS", "%0.1f", io.Framerate);
     ::ImGui::LabelText("Debug Lines", "%0.1f", static_cast<float>(debug_line_count));
 
+    if (::ImGui::Button("save"))
+    {
+        const auto scene_yaml = yaml::serialise(scene.description());
+        auto out = std::ofstream("scene.yaml");
+
+        out << scene_yaml;
+    }
+
     if (::ImGui::Button("add light"))
     {
         scene.add(
@@ -462,7 +472,8 @@ auto DebugRenderer::post_render(Scene &scene) -> void
         std::ranges::max(scaled_histogram),
         ::ImVec2(::ImGui::GetContentRegionAvail().x, 150.0f));
 
-    const auto mesh_names = scene.mesh_manager().mesh_names();
+    auto mesh_names = scene.mesh_manager().mesh_names();
+    std::ranges::sort(mesh_names);
     const auto mesh_names_cstr = mesh_names |                                                     //
                                  std::views::filter([](const auto &e) { return !e.empty(); }) |   //
                                  std::views::transform([](const auto &e) { return e.c_str(); }) | //
@@ -486,6 +497,16 @@ auto DebugRenderer::post_render(Scene &scene) -> void
     {
         scene.create_entity(mesh_names_cstr[*mesh_selected_index]);
         selected_ = &scene.entities().back();
+    }
+
+    if (::ImGui::Button("delete"))
+    {
+        if (auto **selected_entity = std::get_if<Entity *>(&selected_))
+        {
+            auto *entity = *selected_entity;
+            scene.remove(*entity);
+            selected_ = std::monostate{};
+        }
     }
 
     for (auto &entity : scene.entities())

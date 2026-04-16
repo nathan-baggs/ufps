@@ -99,6 +99,7 @@ auto to_native_format(::DXGI_FORMAT format) -> ufps::TextureFormat
 {
     switch (format)
     {
+        case DXGI_FORMAT_BC5_UNORM: return ufps::TextureFormat::BC5U;
         case DXGI_FORMAT_BC7_UNORM: return ufps::TextureFormat::BC7;
         case DXGI_FORMAT_BC7_UNORM_SRGB: return ufps::TextureFormat::BC7_SRGB;
         default: throw ufps::Exception("unsupported dxgi format: {}", std::to_underlying(format));

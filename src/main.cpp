@@ -1,3 +1,4 @@
+#include <fstream>
 #include <memory>
 #include <numbers>
 #include <ranges>
@@ -31,6 +32,7 @@
 #include "resources/embedded_resource_loader.h"
 #include "resources/file_resource_loader.h"
 #include "resources/resource_loader.h"
+#include "serialisation/yaml_serialiser.h"
 #include "utils/data_buffer.h"
 #include "utils/decompress.h"
 #include "utils/formatter.h"
@@ -152,7 +154,7 @@ auto build_mesh_lookup(ufps::ResourceLoader &resource_loader) -> ufps::StringMap
     auto mesh_lookup = ufps::StringMap<std::vector<ufps::MeshView>>{};
 
     const auto manifest_str = resource_loader.load_string("configs\\model_manifest.yaml");
-    const auto manifest = YAML::Load(manifest_str);
+    const auto manifest = ::YAML::Load(manifest_str);
 
     for (const auto &model : manifest)
     {
@@ -374,40 +376,15 @@ int main()
     auto renderer = ufps::DebugRenderer{window, *resource_loader, texture_manager, mesh_manager};
     auto debug_mode = false;
 
-    auto scene = ufps::Scene{
-        mesh_manager,
-        material_manager,
-        texture_manager,
-        {{},
-         {0.0f, 0.0f, -1.0f},
-         {0.0f, 1.0f, 0.0f},
-         std::numbers::pi_v<float> / 4.0f,
-         static_cast<float>(window.render_width()),
-         static_cast<float>(window.render_height()),
-         0.1f,
-         1000.0f},
-        {.ambient = ufps::Colour{.r = 0.5f, .g = 0.5f, .b = 0.5f},
-         .lights =
-             {{.position = {},
-               .colour = {.r = 1.0f, .g = 1.0f, .b = 1.0f},
-               .constant_attenuation = 1.0f,
-               .linear_attenuation = 0.007f,
-               .quadratic_attenuation = 0.0002f,
-               .specular_power = 32.0f,
-               .intensity = 1.0f}}},
-        {
-            .max_brightness = 1.0f,
-            .contrast = 1.0f,
-            .linear_section_start = 0.22f,
-            .linear_section_length = 0.4f,
-            .black_tightness = 1.33f,
-            .pedestal = 0.0f,
-            .gamma = 2.2f,
-        },
-        {},
-        {}};
+    auto scene_description_yaml = std::ifstream{"scene.yaml"};
+    auto strm = std::stringstream{};
+    strm << scene_description_yaml.rdbuf();
+
+    const auto scene_description = ufps::yaml::deserialise<ufps::Scene::Description>(strm.str());
 
     const auto material_lookup = build_materials(*resource_loader, texture_manager, material_manager, sampler);
+
+    auto entity_cache = ufps::StringMap<ufps::Entity>{};
 
     for (const auto &[name, materials] : material_lookup)
     {
@@ -420,10 +397,23 @@ int main()
                                        return ufps::RenderEntity(mesh_view, material, mesh_manager);
                                    }) |
                                std::ranges::to<std::vector>();
-        scene.cache_entity(name, {std::string{name}, std::move(render_entities), {}});
+        entity_cache.insert({name, ufps::Entity{name, std::move(render_entities), {}}});
     }
 
-    scene.create_entity("SM_Corner01_8_8_X");
+    auto scene = ufps::Scene{
+        mesh_manager,
+        material_manager,
+        texture_manager,
+        {{},
+         {0.0f, 0.0f, -1.0f},
+         {0.0f, 1.0f, 0.0f},
+         std::numbers::pi_v<float> / 4.0f,
+         static_cast<float>(window.render_width()),
+         static_cast<float>(window.render_height()),
+         0.1f,
+         1000.0f},
+        scene_description,
+        entity_cache};
 
     auto key_state = std::unordered_map<ufps::Key, bool>{
         {ufps::Key::W, false}, {ufps::Key::A, false}, {ufps::Key::S, false}, {ufps::Key::D, false}};

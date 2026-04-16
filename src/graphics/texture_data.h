@@ -33,24 +33,4 @@ struct TextureData
     bool is_compressed;
 };
 
-inline auto to_string(TextureFormat format) -> std::string
-{
-    switch (format)
-    {
-        using enum TextureFormat;
-        case RED: return "RED";
-        case RGB: return "RGB";
-        case SRGB: return "SRGB";
-        case RGBA: return "RGBA";
-        case SRGBA: return "SRGBA";
-        case R16F: return "R16F";
-        case RGB16F: return "RGB16F";
-        case DEPTH24: return "DEPTH24";
-        case BC5U: return "BC5U";
-        case BC7: return "BC7";
-        case BC7_SRGB: return "BC7_SRGB";
-        default: return "<UNKNOWN>";
-    }
-}
-
 }

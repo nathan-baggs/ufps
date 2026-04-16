@@ -33,15 +33,4 @@ auto MouseButtonEvent::to_string() const -> std::string
     return std::format("MouseButtonEvent {} {} {}", state(), x(), y());
 }
 
-auto to_string(MouseButtonState obj) -> std::string
-{
-    switch (obj)
-    {
-        using enum ufps::MouseButtonState;
-        case UP: return "UP";
-        case DOWN: return "DOWN";
-        default: return "UNKNOWN";
-    }
-}
-
 }
