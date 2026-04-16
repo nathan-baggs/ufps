@@ -14,6 +14,7 @@
 #include "maths/ray.h"
 #include "maths/utils.h"
 #include "maths/vector4.h"
+#include "utils/string_map.h"
 
 namespace ufps
 {
@@ -66,6 +67,7 @@ class Scene
         SSAOOptions ssao_options;
         ExposureOptions exposure_options;
         LightData lights;
+        std::vector<Entity::Description> entities;
     };
 
     Scene(
@@ -76,14 +78,16 @@ class Scene
         LightData lights,
         ToneMapOptions tone_map_options,
         SSAOOptions ssao_options,
-        ExposureOptions exposure_options);
+        ExposureOptions exposure_options,
+        const StringMap<Entity> &entity_cache);
 
     Scene(
         MeshManager &mesh_manager,
         MaterialManager &material_manager,
         TextureManager &texture_manager,
         Camera camera,
-        const Description &description);
+        const Description &description,
+        const StringMap<Entity> &entity_cache);
 
     constexpr auto intersect_ray(const Ray &ray) -> std::optional<IntersectionResult>;
 
@@ -150,7 +154,8 @@ class Scene
             .ssao_options = self.ssao_options_,
             .exposure_options = self.exposure_options_,
             .lights = self.lights_,
-        };
+            .entities = self.entities_ | std::views::transform([](const auto &e) { return e.description(); }) |
+                        std::ranges::to<std::vector>()};
     }
 
   private:

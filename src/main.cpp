@@ -382,21 +382,9 @@ int main()
 
     const auto scene_description = ufps::yaml::deserialise<ufps::Scene::Description>(strm.str());
 
-    auto scene = ufps::Scene{
-        mesh_manager,
-        material_manager,
-        texture_manager,
-        {{},
-         {0.0f, 0.0f, -1.0f},
-         {0.0f, 1.0f, 0.0f},
-         std::numbers::pi_v<float> / 4.0f,
-         static_cast<float>(window.render_width()),
-         static_cast<float>(window.render_height()),
-         0.1f,
-         1000.0f},
-        scene_description};
-
     const auto material_lookup = build_materials(*resource_loader, texture_manager, material_manager, sampler);
+
+    auto entity_cache = ufps::StringMap<ufps::Entity>{};
 
     for (const auto &[name, materials] : material_lookup)
     {
@@ -409,10 +397,23 @@ int main()
                                        return ufps::RenderEntity(mesh_view, material, mesh_manager);
                                    }) |
                                std::ranges::to<std::vector>();
-        scene.cache_entity(name, {std::string{name}, std::move(render_entities), {}});
+        entity_cache.insert({name, ufps::Entity{name, std::move(render_entities), {}}});
     }
 
-    scene.create_entity("SM_Corner01_8_8_X");
+    auto scene = ufps::Scene{
+        mesh_manager,
+        material_manager,
+        texture_manager,
+        {{},
+         {0.0f, 0.0f, -1.0f},
+         {0.0f, 1.0f, 0.0f},
+         std::numbers::pi_v<float> / 4.0f,
+         static_cast<float>(window.render_width()),
+         static_cast<float>(window.render_height()),
+         0.1f,
+         1000.0f},
+        scene_description,
+        entity_cache};
 
     auto key_state = std::unordered_map<ufps::Key, bool>{
         {ufps::Key::W, false}, {ufps::Key::A, false}, {ufps::Key::S, false}, {ufps::Key::D, false}};
