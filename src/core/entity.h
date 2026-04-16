@@ -14,6 +14,13 @@ namespace ufps
 class Entity
 {
   public:
+    struct Description
+    {
+        std::string name;
+        Transform transform;
+        AABB aabb;
+    };
+
     Entity(std::string name, std::vector<RenderEntity> render_entities, Transform transform);
 
     auto name() const -> std::string;
@@ -21,6 +28,8 @@ class Entity
     auto transform() const -> const Transform &;
     auto set_transform(const Transform &transform) -> void;
     auto aabb() const -> const AABB &;
+
+    auto description() const -> Description;
 
   private:
     std::string name_;

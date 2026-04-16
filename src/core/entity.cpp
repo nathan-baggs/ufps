@@ -76,4 +76,13 @@ auto Entity::aabb() const -> const AABB &
     return aabb_;
 }
 
+auto Entity::description() const -> Entity::Description
+{
+    return {
+        .name = name_,
+        .transform = transform_,
+        .aabb = aabb_,
+    };
+}
+
 }
