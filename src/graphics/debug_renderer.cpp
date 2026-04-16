@@ -472,7 +472,8 @@ auto DebugRenderer::post_render(Scene &scene) -> void
         std::ranges::max(scaled_histogram),
         ::ImVec2(::ImGui::GetContentRegionAvail().x, 150.0f));
 
-    const auto mesh_names = scene.mesh_manager().mesh_names();
+    auto mesh_names = scene.mesh_manager().mesh_names();
+    std::ranges::sort(mesh_names);
     const auto mesh_names_cstr = mesh_names |                                                     //
                                  std::views::filter([](const auto &e) { return !e.empty(); }) |   //
                                  std::views::transform([](const auto &e) { return e.c_str(); }) | //
@@ -496,6 +497,16 @@ auto DebugRenderer::post_render(Scene &scene) -> void
     {
         scene.create_entity(mesh_names_cstr[*mesh_selected_index]);
         selected_ = &scene.entities().back();
+    }
+
+    if (::ImGui::Button("delete"))
+    {
+        if (auto **selected_entity = std::get_if<Entity *>(&selected_))
+        {
+            auto *entity = *selected_entity;
+            scene.remove(*entity);
+            selected_ = std::monostate{};
+        }
     }
 
     for (auto &entity : scene.entities())
