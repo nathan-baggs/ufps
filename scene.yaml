@@ -59,3 +59,132 @@ Description:
             quadratic_attenuation: 0.0002
             specular_power: 32
             intensity: 3.994
+  entities:
+    - Description:
+        name: SM_Corner01_8_8_X
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: 0
+                y: 0
+                z: 0
+            scale:
+              Vector3:
+                x: 1
+                y: 1
+                z: 1
+            rotation:
+              Quaternion:
+                x: 0
+                y: 0
+                z: 0
+                w: 1
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: -8.000499
+                y: -0.2937603
+                z: -8
+            max:
+              Vector3:
+                x: 8
+                y: 4.0000134
+                z: 8
+    - Description:
+        name: SM_Corridor022_08_02_Top_D_01
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: 0
+                y: 0
+                z: 11
+            scale:
+              Vector3:
+                x: 1
+                y: 1
+                z: 1
+            rotation:
+              Quaternion:
+                x: 0
+                y: 0
+                z: 0
+                w: 1
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: -5
+                y: 3
+                z: -2.0000002
+            max:
+              Vector3:
+                x: 5
+                y: 4.279462
+                z: 0
+    - Description:
+        name: SM_Corridor039_12_06_Top_B_02
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: 1
+                y: -3
+                z: 11
+            scale:
+              Vector3:
+                x: 1
+                y: 1
+                z: 1
+            rotation:
+              Quaternion:
+                x: 0
+                y: 0
+                z: 0
+                w: 1
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: -7
+                y: 3.999999
+                z: -1.5210224e-08
+            max:
+              Vector3:
+                x: 7
+                y: 6.999999
+                z: 6
+    - Description:
+        name: SM_ServiceTunnel06_04_V
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: 9
+                y: -4
+                z: 0
+            scale:
+              Vector3:
+                x: 1
+                y: 1
+                z: 1
+            rotation:
+              Quaternion:
+                x: 0
+                y: 0
+                z: 0
+                w: 1
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: -1.1539546
+                y: 0
+                z: -1.1721303
+            max:
+              Vector3:
+                x: 1.1539546
+                y: 4
+                z: 1.1721303
