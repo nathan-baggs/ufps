@@ -158,6 +158,14 @@ class Scene
                         std::ranges::to<std::vector>()};
     }
 
+    constexpr auto remove(const Entity &entity) -> void
+    {
+        const auto iter = std::ranges::find_if(entities_, [&entity](const auto &e) { return &e == &entity; });
+        expect(iter != std::ranges::cend(entities_), "entity not found");
+
+        entities_.erase(iter);
+    }
+
   private:
     std::vector<Entity> entities_;
     std::vector<Entity> entity_cache_;
