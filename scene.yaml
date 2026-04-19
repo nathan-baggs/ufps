@@ -59,6 +59,38 @@ Description:
             quadratic_attenuation: 0.0002
             specular_power: 32
             intensity: 3.994
+        - PointLight:
+            position:
+              Vector3:
+                x: -20.215778
+                y: 5.315446
+                z: -0.76703924
+            colour:
+              Colour:
+                r: 1
+                g: 1
+                b: 1
+            constant_attenuation: 1
+            linear_attenuation: 0.007
+            quadratic_attenuation: 0.0002
+            specular_power: 32
+            intensity: 6.389
+        - PointLight:
+            position:
+              Vector3:
+                x: 16.71976
+                y: 5.315446
+                z: -0.76703924
+            colour:
+              Colour:
+                r: 1
+                g: 1
+                b: 1
+            constant_attenuation: 1
+            linear_attenuation: 0.007
+            quadratic_attenuation: 0.0002
+            specular_power: 32
+            intensity: 6.389
   entities:
     - Description:
         name: SM_Corner01_8_8_X
@@ -93,57 +125,25 @@ Description:
                 y: 4.0000134
                 z: 8
     - Description:
-        name: SM_Corridor022_08_02_Top_D_01
-        transform:
-          Transform:
-            position:
-              Vector3:
-                x: 0
-                y: 0
-                z: 11
-            scale:
-              Vector3:
-                x: 1
-                y: 1
-                z: 1
-            rotation:
-              Quaternion:
-                x: 0
-                y: 0
-                z: 0
-                w: 1
-        aabb:
-          AABB:
-            min:
-              Vector3:
-                x: -5
-                y: 3
-                z: -2.0000002
-            max:
-              Vector3:
-                x: 5
-                y: 4.279462
-                z: 0
-    - Description:
         name: SM_Corridor039_12_06_Top_B_02
         transform:
           Transform:
             position:
               Vector3:
-                x: 1
-                y: -3
-                z: 11
+                x: -12.000024
+                y: 0
+                z: 1.04904175e-05
             scale:
               Vector3:
-                x: 1
+                x: 0.9999165
                 y: 1
-                z: 1
+                z: 0.9999165
             rotation:
               Quaternion:
                 x: 0
-                y: 0
+                y: -0.70710754
                 z: 0
-                w: 1
+                w: 0.707106
         aabb:
           AABB:
             min:
@@ -157,34 +157,354 @@ Description:
                 y: 6.999999
                 z: 6
     - Description:
-        name: SM_ServiceTunnel06_04_V
+        name: SM_Corridor045_04_04
         transform:
           Transform:
             position:
               Vector3:
-                x: 9
-                y: -4
-                z: 0
+                x: -11.999985
+                y: -1
+                z: 2.3841862e-06
             scale:
               Vector3:
-                x: 1
+                x: 0.9996431
                 y: 1
-                z: 1
+                z: 0.9996431
             rotation:
               Quaternion:
                 x: 0
-                y: 0
+                y: -0.70710754
                 z: 0
-                w: 1
+                w: 0.707106
         aabb:
           AABB:
             min:
               Vector3:
-                x: -1.1539546
-                y: 0
-                z: -1.1721303
+                x: -2.0646152
+                y: -2.9424907e-10
+                z: -4
             max:
               Vector3:
-                x: 1.1539546
-                y: 4
-                z: 1.1721303
+                x: 2.0646152
+                y: 2.0976985
+                z: 8.34465e-07
+    - Description:
+        name: SM_Corridor042_12_06_Bottom_B
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: -11.998637
+                y: 0
+                z: -0.0068274736
+            scale:
+              Vector3:
+                x: 1.0000066
+                y: 1
+                z: 1.0000066
+            rotation:
+              Quaternion:
+                x: 0
+                y: -0.7068654
+                z: 0
+                w: 0.7073481
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: -7
+                y: -0.2937603
+                z: 0
+            max:
+              Vector3:
+                x: 7.0794563
+                y: 3.9999998
+                z: 6
+    - Description:
+        name: SM_Corridor043_12_06_Bottom_B
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: -18.000008
+                y: 0
+                z: 2.2172928e-05
+            scale:
+              Vector3:
+                x: 0.99995834
+                y: 1
+                z: 0.99995834
+            rotation:
+              Quaternion:
+                x: 0
+                y: -0.7071081
+                z: 0
+                w: 0.70710546
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: -7.072682
+                y: -0.2937603
+                z: 0
+            max:
+              Vector3:
+                x: 7.0794563
+                y: 3.9999998
+                z: 6
+    - Description:
+        name: SM_Windows03_12_4
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: -23.998863
+                y: 1
+                z: -0.0034139156
+            scale:
+              Vector3:
+                x: 1.0000021
+                y: 1
+                z: 1.0000021
+            rotation:
+              Quaternion:
+                x: 0
+                y: 0.7072563
+                z: 0
+                w: 0.7069572
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: -7.0000005
+                y: -0.11926164
+                z: -0.36168748
+            max:
+              Vector3:
+                x: 7.0000005
+                y: 5
+                z: 0
+    - Description:
+        name: SM_Corridor036_12_06_Top_B_02
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: -18
+                y: 0
+                z: 0.00607574
+            scale:
+              Vector3:
+                x: 1.0000052
+                y: 1
+                z: 1.0000052
+            rotation:
+              Quaternion:
+                x: 0
+                y: -0.70698744
+                z: 0
+                w: 0.70722616
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: -7
+                y: 3.999999
+                z: -5.9604645e-08
+            max:
+              Vector3:
+                x: 7
+                y: 6.999999
+                z: 6
+    - Description:
+        name: SM_Corridor045_04_04
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: 8.000015
+                y: -1
+                z: 4.5299534e-05
+            scale:
+              Vector3:
+                x: 0.99960566
+                y: 1
+                z: 0.99960566
+            rotation:
+              Quaternion:
+                x: 0
+                y: -0.70710754
+                z: 0
+                w: 0.707106
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: -2.0646152
+                y: -2.9424907e-10
+                z: -4
+            max:
+              Vector3:
+                x: 2.0646152
+                y: 2.0976985
+                z: 8.34465e-07
+    - Description:
+        name: SM_Corridor042_12_06_Bottom_B
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: 18.001354
+                y: 0
+                z: -0.027308822
+            scale:
+              Vector3:
+                x: 1.0000066
+                y: 1
+                z: 1.0000066
+            rotation:
+              Quaternion:
+                x: 0
+                y: -0.7068654
+                z: 0
+                w: 0.7073481
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: -7
+                y: -0.2937603
+                z: 0
+            max:
+              Vector3:
+                x: 7.0794563
+                y: 3.9999998
+                z: 6
+    - Description:
+        name: SM_Corridor043_12_06_Bottom_B
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: 23.999992
+                y: 0
+                z: 0.00017738344
+            scale:
+              Vector3:
+                x: 0.99993575
+                y: 1
+                z: 0.99993575
+            rotation:
+              Quaternion:
+                x: 0
+                y: -0.7071081
+                z: 0
+                w: 0.70710546
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: -7.072682
+                y: -0.2937603
+                z: 0
+            max:
+              Vector3:
+                x: 7.0794563
+                y: 3.9999998
+                z: 6
+    - Description:
+        name: SM_Corridor039_12_06_Top_B_02
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: 17.999977
+                y: 0
+                z: 7.486344e-05
+            scale:
+              Vector3:
+                x: 0.99989927
+                y: 1
+                z: 0.99989927
+            rotation:
+              Quaternion:
+                x: 0
+                y: -0.70710754
+                z: 0
+                w: 0.707106
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: -7
+                y: 3.999999
+                z: -1.5210224e-08
+            max:
+              Vector3:
+                x: 7
+                y: 6.999999
+                z: 6
+    - Description:
+        name: SM_Corridor036_12_06_Top_B_02
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: 24
+                y: 0
+                z: -0.0081009865
+            scale:
+              Vector3:
+                x: 1.0000052
+                y: 1
+                z: 1.0000052
+            rotation:
+              Quaternion:
+                x: 0
+                y: -0.70698744
+                z: 0
+                w: 0.70722616
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: -7
+                y: 3.999999
+                z: -5.9604645e-08
+            max:
+              Vector3:
+                x: 7
+                y: 6.999999
+                z: 6
+    - Description:
+        name: SM_Windows03_12_4
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: 24.00113
+                y: 1
+                z: -0.023715734
+            scale:
+              Vector3:
+                x: 1.0000262
+                y: 1
+                z: 1.0000262
+            rotation:
+              Quaternion:
+                x: 0
+                y: -0.7067894
+                z: 0
+                w: 0.7074241
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: -7.0000005
+                y: -0.11926164
+                z: -0.36168748
+            max:
+              Vector3:
+                x: 7.0000005
+                y: 5
+                z: 0
