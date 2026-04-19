@@ -509,6 +509,25 @@ auto DebugRenderer::post_render(Scene &scene) -> void
         }
     }
 
+    ::ImGui::SameLine();
+
+    if (::ImGui::Button("duplicate"))
+    {
+        if (auto **selected_entity = std::get_if<Entity *>(&selected_))
+        {
+            auto *entity = *selected_entity;
+            auto *new_entity = scene.create_entity(entity->name());
+            new_entity->set_transform(entity->transform());
+            selected_ = new_entity;
+        }
+        else if (auto **selected_light = std::get_if<PointLight *>(&selected_))
+        {
+            auto *light = *selected_light;
+            scene.add(*light);
+            selected_ = &scene.lights().lights.back();
+        }
+    }
+
     for (auto &entity : scene.entities())
     {
         ::ImGui::CollapsingHeader(entity.name().c_str());
