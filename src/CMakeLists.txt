@@ -14,6 +14,7 @@ target_include_directories(imguilib PUBLIC ${imgui_SOURCE_DIR} ${imguizmo_SOURCE
 add_library(ufpslib STATIC
 )
 
+add_subdirectory(concurrency)
 add_subdirectory(core)
 add_subdirectory(events)
 add_subdirectory(graphics)
