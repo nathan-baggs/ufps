@@ -91,7 +91,7 @@ class Scene
 
     constexpr auto intersect_ray(const Ray &ray) -> std::optional<IntersectionResult>;
 
-    auto create_entity(std::string_view name) -> void;
+    auto create_entity(std::string_view name) -> Entity *;
 
     template <class Self>
     auto entities(this Self &&self)
