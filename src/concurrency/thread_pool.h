@@ -37,6 +37,5 @@ class ThreadPool
     Lock<> worker_lock_;
     CondVar worker_cv_;
     std::atomic<std::uint32_t> job_count_;
-    std::atomic<bool> jobs_complete_;
 };
 }

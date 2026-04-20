@@ -21,7 +21,6 @@ ThreadPool::ThreadPool(std::uint32_t worker_count)
     , worker_lock_{}
     , worker_cv_{}
     , job_count_{}
-    , jobs_complete_{true}
 {
     log::info("starting thread pool with {} workers", worker_count);
 
@@ -42,9 +41,8 @@ ThreadPool::~ThreadPool()
 
 auto ThreadPool::add(Job job) -> void
 {
-    job_queue_.push(std::move(job));
     ++job_count_;
-    jobs_complete_ = false;
+    job_queue_.push(std::move(job));
     worker_cv_.notify_one();
 }
 
@@ -74,12 +72,9 @@ auto ThreadPool::worker(std::stop_token stop_token) -> void
         }
 
         job();
-        --job_count_;
-
-        if (job_count_ == 0u)
+        if (--job_count_ == 0u)
         {
-            jobs_complete_ = true;
-            jobs_complete_.notify_one();
+            job_count_.notify_all();
         }
     }
 
@@ -88,9 +83,11 @@ auto ThreadPool::worker(std::stop_token stop_token) -> void
 
 auto ThreadPool::drain() const -> void
 {
-    while (job_count_ != 0u)
+    auto count = job_count_.load();
+    while (count != 0u)
     {
-        jobs_complete_.wait(false);
+        job_count_.wait(count);
+        count = job_count_.load();
     }
 }
 
