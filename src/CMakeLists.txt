@@ -39,6 +39,7 @@ target_compile_options(ufps PRIVATE
   -Wvarargs
   -Wvla
   -Wwrite-strings
+  -Wno-missing-declarations
 )
 
 install(TARGETS ufps DESTINATION bin)
