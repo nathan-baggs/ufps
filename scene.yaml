@@ -91,6 +91,22 @@ Description:
             quadratic_attenuation: 0.0002
             specular_power: 32
             intensity: 6.389
+        - PointLight:
+            position:
+              Vector3:
+                x: -8.574192
+                y: 3.1305306
+                z: -50.860172
+            colour:
+              Colour:
+                r: 1
+                g: 1
+                b: 1
+            constant_attenuation: 1
+            linear_attenuation: 0.007
+            quadratic_attenuation: 0.0002
+            specular_power: 32
+            intensity: 9.383
   entities:
     - Description:
         name: SM_Corner01_8_8_X
@@ -167,9 +183,9 @@ Description:
                 z: 2.3841862e-06
             scale:
               Vector3:
-                x: 0.9996431
+                x: 0.99963474
                 y: 1
-                z: 0.9996431
+                z: 0.99963474
             rotation:
               Quaternion:
                 x: 0
@@ -508,3 +524,323 @@ Description:
                 x: 7.0000005
                 y: 5
                 z: 0
+    - Description:
+        name: SM_Corridor019_06_08_B
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: 0
+                y: 0
+                z: -6
+            scale:
+              Vector3:
+                x: 1
+                y: 1
+                z: 1
+            rotation:
+              Quaternion:
+                x: 0
+                y: 0
+                z: 0
+                w: 1
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: -4.093223
+                y: -0.38264126
+                z: -8
+            max:
+              Vector3:
+                x: 4.104806
+                y: 4.4271092
+                z: 4.7683716e-07
+    - Description:
+        name: SM_Corridor018_06_08_B
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: 0
+                y: 0
+                z: -14
+            scale:
+              Vector3:
+                x: 1
+                y: 1
+                z: 1
+            rotation:
+              Quaternion:
+                x: 0
+                y: 0
+                z: 0
+                w: 1
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: -3.327793
+                y: -0.1192618
+                z: -8
+            max:
+              Vector3:
+                x: 4.081047
+                y: 4.279462
+                z: 3.7758843e-17
+    - Description:
+        name: SM_Corridor018_06_08_B
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: 0
+                y: 0
+                z: -22
+            scale:
+              Vector3:
+                x: 1
+                y: 1
+                z: 1
+            rotation:
+              Quaternion:
+                x: 0
+                y: 0
+                z: 0
+                w: 1
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: -3.327793
+                y: -0.1192618
+                z: -8
+            max:
+              Vector3:
+                x: 4.081047
+                y: 4.279462
+                z: 3.7758843e-17
+    - Description:
+        name: SM_Corridor018_06_08_B
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: 0
+                y: 0
+                z: -30
+            scale:
+              Vector3:
+                x: 1
+                y: 1
+                z: 1
+            rotation:
+              Quaternion:
+                x: 0
+                y: 0
+                z: 0
+                w: 1
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: -3.327793
+                y: -0.1192618
+                z: -8
+            max:
+              Vector3:
+                x: 4.081047
+                y: 4.279462
+                z: 3.7758843e-17
+    - Description:
+        name: SM_Corner06_12_12_B_L
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: -12
+                y: 0
+                z: -50
+            scale:
+              Vector3:
+                x: 1
+                y: 1
+                z: 1
+            rotation:
+              Quaternion:
+                x: 0
+                y: 0
+                z: 0
+                w: 1
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: -9.536743e-07
+                y: -0.38264126
+                z: -3.3277931
+            max:
+              Vector3:
+                x: 15.327793
+                y: 4.4271092
+                z: 12.000001
+    - Description:
+        name: SM_Windows05_6_4
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: -12.00001
+                y: 0
+                z: -50.00003
+            scale:
+              Vector3:
+                x: 0.9999408
+                y: 1
+                z: 0.9999408
+            rotation:
+              Quaternion:
+                x: 0
+                y: 0.7071084
+                z: 0
+                w: 0.70710516
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: -3.3277922
+                y: -0.11926164
+                z: -0.36168748
+            max:
+              Vector3:
+                x: 3.3277926
+                y: 4.279462
+                z: 0
+    - Description:
+        name: SM_Detail13
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: -3
+                y: 2
+                z: -20
+            scale:
+              Vector3:
+                x: 1
+                y: 1
+                z: 1
+            rotation:
+              Quaternion:
+                x: 0
+                y: 0
+                z: 0
+                w: 1
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: -0.0011047125
+                y: -0.0003068447
+                z: -0.21635056
+            max:
+              Vector3:
+                x: 0.13479376
+                y: 0.44238245
+                z: 0.21634865
+    - Description:
+        name: SM_Generator
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: -19
+                y: 0
+                z: 0
+            scale:
+              Vector3:
+                x: 3
+                y: 3
+                z: 3
+            rotation:
+              Quaternion:
+                x: 0
+                y: 0
+                z: 0
+                w: 1
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: -0.9403464
+                y: -0.06625354
+                z: -0.9868312
+            max:
+              Vector3:
+                x: 0.9403464
+                y: 1.4152939
+                z: 0.9868312
+    - Description:
+        name: SM_Monitor
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: -15
+                y: 1
+                z: -6
+            scale:
+              Vector3:
+                x: 0.99991655
+                y: 1
+                z: 0.99991655
+            rotation:
+              Quaternion:
+                x: 0
+                y: 0.7071084
+                z: 0
+                w: 0.70710516
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: -0.12734976
+                y: -0.36726955
+                z: -0.58520603
+            max:
+              Vector3:
+                x: 0.0049307793
+                y: 0.36726955
+                z: 0.58520603
+    - Description:
+        name: SM_Fan03
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: 23
+                y: 12
+                z: 0
+            scale:
+              Vector3:
+                x: 5
+                y: 4
+                z: 5
+            rotation:
+              Quaternion:
+                x: 0
+                y: 0
+                z: 0
+                w: 1
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: -1.4132903
+                y: -1.8423135
+                z: -0.654063
+            max:
+              Vector3:
+                x: -0.06586146
+                y: -1.536452
+                z: 0.654063
