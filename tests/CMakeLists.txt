@@ -11,6 +11,7 @@ add_executable(unit_tests
   matrix3_tests.cpp
   matrix4_tests.cpp
   multi_buffer_tests.cpp
+  task_tests.cpp
   thread_pool_tests.cpp
   thread_tests.cpp
   vector3_tests.cpp
