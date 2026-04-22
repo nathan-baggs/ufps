@@ -1,6 +1,7 @@
 #pragma once
 
 #include <atomic>
+#include <concepts>
 #include <cstdint>
 #include <queue>
 
@@ -9,15 +10,37 @@
 namespace ufps
 {
 
+namespace impl
+{
+template <class T>
+concept CanFront = requires(T t) { t.front(); };
+
+template <class T>
+concept CanTop = requires(T t) { t.top(); };
+
+}
+
 template <class T, class Q = std::queue<T>>
 class ConcurrentQueue
 {
   public:
     auto front() -> T
+        requires impl::CanFront<Q>
     {
         const auto lock = std::scoped_lock{lock_};
         --size_;
         auto obj = std::move(q_.front());
+        q_.pop();
+
+        return obj;
+    }
+
+    auto front() -> T
+        requires impl::CanTop<Q>
+    {
+        const auto lock = std::scoped_lock{lock_};
+        --size_;
+        auto obj = std::move(q_.top());
         q_.pop();
 
         return obj;
