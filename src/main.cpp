@@ -345,6 +345,17 @@ auto pulse_light(ufps::AwaitableManager &awaitable, ufps::PointLight *light) -> 
     }
 }
 
+auto flicker_light(ufps::AwaitableManager &awaitable, ufps::PointLight *light) -> ufps::EagerTask
+{
+    for (;;)
+    {
+        co_await awaitable(1s);
+        light->intensity = 0.0f;
+        co_await awaitable(100ms);
+        light->intensity = 5.0f;
+    }
+}
+
 int main()
 {
     // Daz_Da_Cat: First stream done.
@@ -439,6 +450,7 @@ int main()
         {ufps::Key::W, false}, {ufps::Key::A, false}, {ufps::Key::S, false}, {ufps::Key::D, false}};
 
     pulse_light(awaitable_manager, std::addressof(scene.lights().lights[0]));
+    flicker_light(awaitable_manager, std::addressof(scene.lights().lights[2]));
 
     while (running)
     {
