@@ -32,10 +32,10 @@ class ThreadPool
     auto worker(std::stop_token stop_token) -> void;
 
     std::uint32_t worker_count_;
-    std::vector<Thread> workers_;
     ConcurrentQueue<Job> job_queue_;
     Lock<> worker_lock_;
     CondVar worker_cv_;
     std::atomic<std::uint32_t> job_count_;
+    std::vector<Thread> workers_;
 };
 }

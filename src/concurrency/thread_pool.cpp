@@ -5,6 +5,7 @@
 #include <stop_token>
 #include <thread>
 
+#include "utils/formatter.h"
 #include "utils/log.h"
 
 namespace ufps
@@ -16,11 +17,11 @@ ThreadPool::ThreadPool()
 
 ThreadPool::ThreadPool(std::uint32_t worker_count)
     : worker_count_{worker_count}
-    , workers_{}
     , job_queue_{}
     , worker_lock_{}
     , worker_cv_{}
     , job_count_{}
+    , workers_{}
 {
     log::info("starting thread pool with {} workers", worker_count);
 
@@ -33,6 +34,8 @@ ThreadPool::ThreadPool(std::uint32_t worker_count)
 
 ThreadPool::~ThreadPool()
 {
+    log::info("stopping threads");
+
     for (auto &thread : workers_)
     {
         thread.request_stop();
