@@ -40,6 +40,19 @@ class ConcurrentQueue
         return size_;
     }
 
+    auto yield() -> Q
+    {
+        auto q = Q{};
+
+        {
+            const auto lock = std::scoped_lock{lock_};
+            std::ranges::swap(q, q_);
+            size_ = 0u;
+        }
+
+        return q;
+    }
+
   private:
     Q q_;
     Lock<> lock_;
