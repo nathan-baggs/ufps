@@ -1,90 +1,136 @@
 #pragma once
 
 #include <functional>
+#include <ranges>
 #include <utility>
 
 namespace ufps
 {
 
 template <class T, T Invalid = {}>
+    requires std::is_trivially_copyable_v<T>
 class AutoRelease
 {
   public:
-    AutoRelease()
-        : AutoRelease(Invalid, nullptr)
-    {
-    }
+    constexpr AutoRelease();
 
-    AutoRelease(T obj, std::function<void(T)> deleter)
-        : obj_(obj)
-        , deleter_(deleter)
-    {
-    }
+    constexpr AutoRelease(T obj, std::function<void(T)> deleter);
 
-    ~AutoRelease()
-    {
-        if ((obj_ != Invalid) && deleter_)
-        {
-            deleter_(obj_);
-        }
-    }
-
+    constexpr ~AutoRelease();
     AutoRelease(const AutoRelease &) = delete;
+
     auto operator=(const AutoRelease &) -> AutoRelease & = delete;
 
-    AutoRelease(AutoRelease &&other)
-        : AutoRelease()
-    {
-        swap(other);
-    }
+    constexpr AutoRelease(AutoRelease &&other);
 
-    auto operator=(AutoRelease &&other) -> AutoRelease &
-    {
-        AutoRelease new_obj{std::move(other)};
-        swap(new_obj);
+    constexpr auto operator=(AutoRelease &&other) -> AutoRelease &;
 
-        return *this;
-    }
+    constexpr auto swap(AutoRelease &other) noexcept -> void;
 
-    auto swap(AutoRelease &other) noexcept -> void
-    {
-        std::ranges::swap(obj_, other.obj_);
-        std::ranges::swap(deleter_, other.deleter_);
-    }
+    constexpr auto reset(T obj) -> void;
 
-    auto reset(T obj) -> void
-    {
-        if ((obj_ != Invalid) && deleter_)
-        {
-            deleter_(obj_);
-        }
+    constexpr T get() const;
 
-        obj_ = obj;
-    }
+    constexpr operator T() const;
 
-    T get() const
-    {
-        return obj_;
-    }
+    constexpr explicit operator bool() const;
 
-    operator T() const
-    {
-        return obj_;
-    }
-
-    explicit operator bool() const
-    {
-        return obj_ != Invalid;
-    }
-
-    T *operator&() noexcept
-    {
-        return std::addressof(obj_);
-    }
+    constexpr T *operator&() noexcept;
 
   private:
     T obj_;
     std::function<void(T)> deleter_;
 };
+
+template <class T, T Invalid>
+    requires std::is_trivially_copyable_v<T>
+constexpr AutoRelease<T, Invalid>::AutoRelease()
+    : AutoRelease(Invalid, nullptr)
+{
+}
+
+template <class T, T Invalid>
+    requires std::is_trivially_copyable_v<T>
+constexpr AutoRelease<T, Invalid>::AutoRelease(T obj, std::function<void(T)> deleter)
+    : obj_(obj)
+    , deleter_(deleter)
+{
+}
+
+template <class T, T Invalid>
+    requires std::is_trivially_copyable_v<T>
+constexpr AutoRelease<T, Invalid>::~AutoRelease()
+{
+    if ((obj_ != Invalid) && deleter_)
+    {
+        deleter_(obj_);
+    }
+}
+
+template <class T, T Invalid>
+    requires std::is_trivially_copyable_v<T>
+constexpr AutoRelease<T, Invalid>::AutoRelease(AutoRelease &&other)
+    : AutoRelease()
+{
+    swap(other);
+}
+
+template <class T, T Invalid>
+    requires std::is_trivially_copyable_v<T>
+constexpr auto AutoRelease<T, Invalid>::operator=(AutoRelease &&other) -> AutoRelease &
+{
+    AutoRelease new_obj{std::move(other)};
+    swap(new_obj);
+
+    return *this;
+}
+
+template <class T, T Invalid>
+    requires std::is_trivially_copyable_v<T>
+constexpr auto AutoRelease<T, Invalid>::swap(AutoRelease &other) noexcept -> void
+{
+    std::ranges::swap(obj_, other.obj_);
+    std::ranges::swap(deleter_, other.deleter_);
+}
+
+template <class T, T Invalid>
+    requires std::is_trivially_copyable_v<T>
+constexpr auto AutoRelease<T, Invalid>::reset(T obj) -> void
+{
+    if ((obj_ != Invalid) && deleter_)
+    {
+        deleter_(obj_);
+    }
+
+    obj_ = obj;
+}
+
+template <class T, T Invalid>
+    requires std::is_trivially_copyable_v<T>
+constexpr T AutoRelease<T, Invalid>::get() const
+{
+    return obj_;
+}
+
+template <class T, T Invalid>
+    requires std::is_trivially_copyable_v<T>
+constexpr AutoRelease<T, Invalid>::operator T() const
+{
+    return obj_;
+}
+
+template <class T, T Invalid>
+    requires std::is_trivially_copyable_v<T>
+constexpr AutoRelease<T, Invalid>::operator bool() const
+{
+    return obj_ != Invalid;
+}
+
+template <class T, T Invalid>
+    requires std::is_trivially_copyable_v<T>
+constexpr T *AutoRelease<T, Invalid>::operator&() noexcept
+{
+    return std::addressof(obj_);
+}
 
 }
