@@ -166,6 +166,14 @@ class Scene
         entities_.erase(iter);
     }
 
+    constexpr auto remove(const PointLight &light) -> void
+    {
+        const auto iter = std::ranges::find_if(lights_.lights, [&light](const auto &e) { return &e == &light; });
+        expect(iter != std::ranges::cend(lights_.lights), "light not found");
+
+        lights_.lights.erase(iter);
+    }
+
   private:
     std::vector<Entity> entities_;
     std::vector<Entity> entity_cache_;

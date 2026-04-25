@@ -507,6 +507,12 @@ auto DebugRenderer::post_render(Scene &scene) -> void
             scene.remove(*entity);
             selected_ = std::monostate{};
         }
+        if (auto **selected_entity = std::get_if<PointLight *>(&selected_))
+        {
+            auto *entity = *selected_entity;
+            scene.remove(*entity);
+            selected_ = std::monostate{};
+        }
     }
 
     ::ImGui::SameLine();
