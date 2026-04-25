@@ -3,18 +3,21 @@
 #include <filesystem>
 #include <format>
 #include <fstream>
+#include <mutex>
 #include <print>
 #include <source_location>
 #include <string>
 #include <string_view>
 #include <vector>
 
+#include "concurrency/lock.h"
 #include "config.h"
 
 namespace ufps::log
 {
 
 inline std::vector<std::string> history{};
+inline Lock history_lock{};
 
 namespace impl
 {
@@ -75,14 +78,18 @@ struct Print
         auto log_line = std::format(
             "[{}] {}:{} {}", c, path.filename().string(), loc.line(), std::format(msg, std::forward<Args>(args)...));
 
-        std::println("{}", log_line);
-
-        if constexpr (config::log_to_file)
         {
-            impl::log_file << log_line << std::endl;
-        }
+            const auto lock = std::scoped_lock(history_lock);
 
-        history.push_back(std::move(log_line));
+            std::println("{}", log_line);
+
+            if constexpr (config::log_to_file)
+            {
+                impl::log_file << log_line << std::endl;
+            }
+
+            history.push_back(std::move(log_line));
+        }
     }
 };
 

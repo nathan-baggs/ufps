@@ -4,6 +4,7 @@
 #include <ranges>
 #include <span>
 #include <string_view>
+#include <thread>
 #include <unordered_map>
 #include <variant>
 
@@ -12,6 +13,10 @@
 #include <yaml-cpp/yaml.h>
 
 #include "config.h"
+
+#include "concurrency/awaitable_manager.h"
+#include "concurrency/task.h"
+#include "concurrency/thread_pool.h"
 #include "core/render_entity.h"
 #include "core/scene.h"
 #include "events/key.h"
@@ -327,6 +332,30 @@ auto build_materials(
 
 }
 
+auto pulse_light(ufps::AwaitableManager &awaitable, ufps::PointLight *light) -> ufps::Task
+{
+    auto fake_time = 0.0f;
+
+    for (;;)
+    {
+        light->intensity = 5.0f + (10.0f * ((std::sin(fake_time) + 1.0f) / 2.0f));
+        fake_time += 0.1f;
+
+        co_await awaitable;
+    }
+}
+
+auto flicker_light(ufps::AwaitableManager &awaitable, ufps::PointLight *light) -> ufps::Task
+{
+    for (;;)
+    {
+        co_await awaitable(3s);
+        light->intensity = 0.0f;
+        co_await awaitable(100ms);
+        light->intensity = 15.0f;
+    }
+}
+
 int main()
 {
     // Daz_Da_Cat: First stream done.
@@ -364,6 +393,8 @@ int main()
         ufps::WrapMode::REPEAT,
         "simple_sampler"};
 
+    auto pool = ufps::ThreadPool{};
+    auto awaitable_manager = ufps::AwaitableManager{pool};
     auto mesh_manager = ufps::MeshManager{
         ufps::decompress(resource_loader->load_data_buffer("blobs\\vertex_data.bin")),
         ufps::decompress(resource_loader->load_data_buffer("blobs\\index_data.bin")),
@@ -418,6 +449,9 @@ int main()
     auto key_state = std::unordered_map<ufps::Key, bool>{
         {ufps::Key::W, false}, {ufps::Key::A, false}, {ufps::Key::S, false}, {ufps::Key::D, false}};
 
+    pulse_light(awaitable_manager, std::addressof(scene.lights().lights[0]));
+    flicker_light(awaitable_manager, std::addressof(scene.lights().lights[2]));
+
     while (running)
     {
         auto event = window.pump_event();
@@ -466,12 +500,18 @@ int main()
             event = window.pump_event();
         }
 
+        awaitable_manager.pump();
+        pool.drain();
+
         scene.camera().translate(walk_direction(key_state, scene.camera()));
 
         renderer.render(scene);
 
         window.swap();
     }
+
+    awaitable_manager.pump();
+    pool.drain();
 
     return 0;
 }

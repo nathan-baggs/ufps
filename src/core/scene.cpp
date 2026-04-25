@@ -72,13 +72,15 @@ Scene::Scene(
     }
 }
 
-auto Scene::create_entity(std::string_view name) -> void
+auto Scene::create_entity(std::string_view name) -> Entity *
 {
     const auto cached = std::ranges::find_if(entity_cache_, [name](const auto &e) { return e.name() == name; });
     expect(cached != std::ranges::cend(entity_cache_), "unknown entity: {}", name);
 
     auto &new_entity = entities_.emplace_back(*cached);
     new_entity.set_transform({});
+
+    return &new_entity;
 }
 
 auto Scene::cache_entity(std::string_view name, Entity entity) -> void

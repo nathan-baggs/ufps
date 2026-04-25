@@ -62,17 +62,23 @@ vec3 calculate_point_light(
     vec3 point_attenuation = vec3(light.attenuation[0], light.attenuation[1], light.attenuation[2]);
 
     vec3 light_dir = normalize(point_pos - frag_pos);
-    float diffuse = max(dot(normal, light_dir), 0.0);
-
     vec3 camera_pos = vec3(camera_position[0], camera_position[1], camera_position[2]);
+    vec3 view_dir = normalize(camera_pos - frag_pos);
 
-    vec3 reflect_dir = reflect(-light_dir, normal);
-    float spec = pow(max(dot(normalize(camera_pos - frag_pos), reflect_dir), 0.0), light.specular_power) * specular;
+    float diffuse_factor = max(dot(normal, light_dir), 0.0);
+    vec3 halfway_dir = normalize(light_dir + view_dir);
+
+    float spec_factor = pow(max(dot(normal, halfway_dir), 0.0), light.specular_power) * specular;
+
+    diffuse_factor *= (1.0 - spec_factor);
 
     float distance = length(point_pos - frag_pos);
     float att = 1.0 / (point_attenuation.x + (point_attenuation.y * distance) + (point_attenuation.z * (distance * distance)));
 
-    return ((diffuse + spec) * att) * point_colour * albedo;
+    vec3 diffuse_light = diffuse_factor * albedo;
+    vec3 specular_light = vec3(spec_factor); // Highlight remains the color of the light
+
+    return (diffuse_light + specular_light) * att * point_colour;
 }
 
 void main()
