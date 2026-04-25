@@ -23,7 +23,7 @@ concept IsBuffer = requires(T t, DataBufferView data, std::size_t offset) {
 };
 
 template <class... Args>
-auto vertices(Args &&...args) -> std::vector<ufps::VertexData>
+constexpr auto vertices(Args &&...args) -> std::vector<ufps::VertexData>
 {
     return std::views::zip_transform(
                []<class... A>(A &&...a) { return ufps::VertexData{std::forward<A>(a)...}; },
