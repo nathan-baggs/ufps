@@ -15,7 +15,6 @@ add_library(ufpslib STATIC
 )
 
 add_subdirectory(concurrency)
-add_subdirectory(events)
 add_subdirectory(graphics)
 add_subdirectory(resources)
 add_subdirectory(serialisation)
