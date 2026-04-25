@@ -100,6 +100,10 @@ constexpr const std::uint8_t tone_map_vert[] = {
 #embed "../../assets/shaders/tone_map.vert"
 };
 
+constexpr const std::uint8_t scene_config[] = {
+#embed "../../scene.yaml"
+};
+
 template <class T>
 auto to_container(std::span<const std::uint8_t> data) -> T
 {
@@ -116,10 +120,11 @@ namespace ufps
 EmbeddedResourceLoader::EmbeddedResourceLoader()
 {
     lookup_ = {
-        {"blobs\\vertex_data.bin", std::span{vertex_data_bin, sizeof(vertex_data_bin)}},
         {"blobs\\index_data.bin", std::span{index_data_bin, sizeof(index_data_bin)}},
-        {"configs\\model_manifest.yaml", std::span{model_manifest_yaml, sizeof(model_manifest_yaml)}},
         {"blobs\\texture_data.bin", std::span{texture_data_bin, sizeof(texture_data_bin)}},
+        {"blobs\\vertex_data.bin", std::span{vertex_data_bin, sizeof(vertex_data_bin)}},
+        {"configs\\model_manifest.yaml", std::span{model_manifest_yaml, sizeof(model_manifest_yaml)}},
+        {"configs\\scene.yaml", std::span{scene_config, sizeof(scene_config)}},
         {"configs\\texture_manifest.yaml", std::span{texture_manifest_yaml, sizeof(texture_manifest_yaml)}},
         {"shaders\\average_luminance.comp", std::span{average_luminance_comp, sizeof(average_luminance_comp)}},
         {"shaders\\debug_light.frag", std::span{debug_light_frag, sizeof(debug_light_frag)}},
@@ -134,8 +139,8 @@ EmbeddedResourceLoader::EmbeddedResourceLoader()
         {"shaders\\simple.frag", std::span{simple_frag, sizeof(simple_frag)}},
         {"shaders\\simple.vert", std::span{simple_vert, sizeof(simple_vert)}},
         {"shaders\\ssao.frag", std::span{ssao_frag, sizeof(ssao_frag)}},
-        {"shaders\\ssao_blur.frag", std::span{ssao_blur_frag, sizeof(ssao_blur_frag)}},
         {"shaders\\ssao.vert", std::span{ssao_vert, sizeof(ssao_vert)}},
+        {"shaders\\ssao_blur.frag", std::span{ssao_blur_frag, sizeof(ssao_blur_frag)}},
         {"shaders\\tone_map.frag", std::span{tone_map_frag, sizeof(tone_map_frag)}},
         {"shaders\\tone_map.vert", std::span{tone_map_vert, sizeof(tone_map_vert)}},
     };
