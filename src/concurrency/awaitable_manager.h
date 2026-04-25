@@ -6,6 +6,7 @@
 
 #include "concurrency/concurrent_queue.h"
 #include "concurrency/thread_pool.h"
+#include "utils/log.h"
 
 namespace ufps
 {
@@ -94,7 +95,16 @@ class AwaitableManager
             auto handle = std::move(to_process.front());
             to_process.pop();
 
-            pool_.add([handle = std::move(handle)] { handle.resume(); });
+            pool_.add(
+                [this, handle]
+                {
+                    handle.resume();
+                    if (last_exception)
+                    {
+                        ufps::log::error("unhandled exception in next tick awaitable");
+                        exception_queue_.push(std::exchange(last_exception, nullptr));
+                    }
+                });
         }
 
         while (!timer_queue_.empty())
@@ -102,7 +112,16 @@ class AwaitableManager
             auto timer_awaitable = timer_queue_.front();
             if (timer_awaitable.time_point <= std::chrono::steady_clock::now())
             {
-                pool_.add([handle = std::move(timer_awaitable.handle)] { handle.resume(); });
+                pool_.add(
+                    [this, handle = timer_awaitable.handle]
+                    {
+                        handle.resume();
+                        if (last_exception)
+                        {
+                            ufps::log::error("unhandled exception in timer awaitable");
+                            exception_queue_.push(std::exchange(last_exception, nullptr));
+                        }
+                    });
             }
             else
             {
@@ -110,7 +129,15 @@ class AwaitableManager
                 break;
             }
         }
+
+        if (!exception_queue_.empty())
+        {
+            auto exception = exception_queue_.front();
+            std::rethrow_exception(exception);
+        }
     }
+
+    inline thread_local static std::exception_ptr last_exception{};
 
   private:
     struct TimerAwaitable
@@ -129,6 +156,7 @@ class AwaitableManager
     ThreadPool &pool_;
     ConcurrentQueue<std::coroutine_handle<>> next_tick_queue_;
     ConcurrentQueue<TimerAwaitable, TimePriorityQueue> timer_queue_;
+    ConcurrentQueue<std::exception_ptr> exception_queue_;
 };
 
 }
