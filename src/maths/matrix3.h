@@ -87,7 +87,7 @@ class Matrix3
         return self.elements_[index];
     }
 
-    auto row(std::size_t index) const -> Vector3
+    constexpr auto row(std::size_t index) const -> Vector3
     {
         ensure(index <= 2, "index out of range");
 
