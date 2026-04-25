@@ -12,6 +12,13 @@
 
 using namespace std::literals;
 
+TEST(thread_pool, ctor)
+{
+    auto pool = ufps::ThreadPool{};
+
+    ASSERT_GT(pool.worker_count(), 0u);
+}
+
 TEST(thread_pool, simple)
 {
     auto thread_ids = std::vector<std::thread::id>(4u, std::this_thread::get_id());
