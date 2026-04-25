@@ -338,7 +338,7 @@ auto pulse_light(ufps::AwaitableManager &awaitable, ufps::PointLight *light) -> 
 
     for (;;)
     {
-        light->intensity = 10.0f * ((std::sin(fake_time) + 1.0f) / 2.0f);
+        light->intensity = 5.0f + (10.0f * ((std::sin(fake_time) + 1.0f) / 2.0f));
         fake_time += 0.1f;
 
         co_await awaitable;
@@ -349,10 +349,10 @@ auto flicker_light(ufps::AwaitableManager &awaitable, ufps::PointLight *light) -
 {
     for (;;)
     {
-        co_await awaitable(1s);
+        co_await awaitable(3s);
         light->intensity = 0.0f;
         co_await awaitable(100ms);
-        light->intensity = 5.0f;
+        light->intensity = 15.0f;
     }
 }
 
