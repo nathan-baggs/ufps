@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 
+#include "concurrency/awaitable_manager.h"
 #include "concurrency/task.h"
 
 auto eager(int *x) -> ufps::EagerTask
@@ -32,4 +33,15 @@ TEST(task, lazy)
     task.handle.resume();
 
     ASSERT_EQ(x, 1);
+}
+
+TEST(task, exception_captured)
+{
+    auto task = [] -> ufps::EagerTask
+    {
+        throw 1;
+        co_return;
+    }();
+
+    ASSERT_NE(ufps::AwaitableManager::last_exception, nullptr);
 }
