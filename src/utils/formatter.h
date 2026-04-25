@@ -24,14 +24,14 @@ namespace util
 struct ToStringCPO
 {
     template <HasToStringMember T>
-    auto operator()(T &&obj) const -> std::string
+    constexpr auto operator()(T &&obj) const -> std::string
     {
         return obj.to_string();
     }
 
     template <class T>
         requires(std::is_enum_v<T> && !HasToStringFree<T>)
-    auto operator()([[maybe_unused]] T obj) const -> std::string
+    constexpr auto operator()([[maybe_unused]] T obj) const -> std::string
     {
         template for (constexpr auto e : std::define_static_array(std::meta::enumerators_of(^^T)))
         {
@@ -45,7 +45,7 @@ struct ToStringCPO
 
     template <class T>
         requires(!HasToStringMember<T> && HasToStringFree<T>)
-    auto operator()(T &&obj) const -> std::string
+    constexpr auto operator()(T &&obj) const -> std::string
     {
         return to_string(obj);
     }
@@ -63,7 +63,7 @@ struct Formatter
         return std::ranges::begin(ctx);
     }
 
-    auto format(const T &obj, std::format_context &ctx) const
+    constexpr auto format(const T &obj, std::format_context &ctx) const
     {
         return std::format_to(ctx.out(), "{}", util::to_string(obj));
     }

@@ -356,7 +356,7 @@ auto flicker_light(ufps::AwaitableManager &awaitable, ufps::PointLight *light) -
     }
 }
 
-int main()
+int start()
 {
     // Daz_Da_Cat: First stream done.
     // Daz_Da_Cat: You can't handle the Daz!
@@ -407,9 +407,21 @@ int main()
     auto renderer = ufps::DebugRenderer{window, *resource_loader, texture_manager, mesh_manager};
     auto debug_mode = false;
 
-    auto scene_description_yaml = std::ifstream{"scene.yaml"};
     auto strm = std::stringstream{};
-    strm << scene_description_yaml.rdbuf();
+    auto scene_description_yaml = std::ifstream{"scene.yaml"};
+
+    if (scene_description_yaml.is_open())
+    {
+        strm << scene_description_yaml.rdbuf();
+    }
+    else
+    {
+        if constexpr (ufps::config::use_embedded_resouce_loader)
+        {
+            auto scene_description_str = resource_loader->load_string("configs\\scene.yaml");
+            strm << scene_description_str;
+        }
+    }
 
     const auto scene_description = ufps::yaml::deserialise<ufps::Scene::Description>(strm.str());
 
@@ -514,4 +526,27 @@ int main()
     pool.drain();
 
     return 0;
+}
+
+int main()
+{
+    try
+    {
+        return start();
+    }
+    catch (const ufps::Exception &e)
+    {
+        ufps::log::error("{}", e);
+        return -1;
+    }
+    catch (const std::exception &e)
+    {
+        ufps::log::error("{}", e.what());
+        return -1;
+    }
+    catch (...)
+    {
+        ufps::log::error("unhandled unknown exception");
+        return -1;
+    }
 }

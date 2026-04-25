@@ -34,13 +34,13 @@ struct LightData
 
 struct ToneMapOptions
 {
-    float max_brightness;
-    float contrast;
-    float linear_section_start;
-    float linear_section_length;
-    float black_tightness;
-    float pedestal;
-    float gamma;
+    float max_brightness = 5.0f;
+    float contrast = 1.0f;
+    float linear_section_start = 0.3f;
+    float linear_section_length = 0.5f;
+    float black_tightness = 0.0f;
+    float pedestal = 0.0f;
+    float gamma = 2.2f;
 };
 
 struct SSAOOptions
@@ -70,7 +70,7 @@ class Scene
         std::vector<Entity::Description> entities;
     };
 
-    Scene(
+    constexpr Scene(
         MeshManager &mesh_manager,
         MaterialManager &material_manager,
         TextureManager &texture_manager,
@@ -81,7 +81,7 @@ class Scene
         ExposureOptions exposure_options,
         const StringMap<Entity> &entity_cache);
 
-    Scene(
+    constexpr Scene(
         MeshManager &mesh_manager,
         MaterialManager &material_manager,
         TextureManager &texture_manager,
@@ -91,88 +91,36 @@ class Scene
 
     constexpr auto intersect_ray(const Ray &ray) -> std::optional<IntersectionResult>;
 
-    auto create_entity(std::string_view name) -> Entity *;
+    constexpr auto create_entity(std::string_view name) -> Entity *;
 
     template <class Self>
-    auto entities(this Self &&self)
-    {
-        using SpanType = std::conditional_t<std::is_const_v<std::remove_reference_t<Self>>, const Entity, Entity>;
-        return std::span<SpanType>{self.entities_.data(), self.entities_.data() + self.entities_.size()};
-    }
+    auto entities(this Self &&self);
 
-    auto cache_entity(std::string_view, Entity entity) -> void;
+    constexpr auto cache_entity(std::string_view name, Entity entity) -> void;
 
-    constexpr auto &camera(this auto &&self)
-    {
-        return self.camera_;
-    }
+    constexpr auto &camera(this auto &&self);
 
-    constexpr auto &lights(this auto &&self)
-    {
-        return self.lights_;
-    }
+    constexpr auto &lights(this auto &&self);
 
-    constexpr auto &mesh_manager(this auto &&self)
-    {
-        return self.mesh_manager_;
-    }
+    constexpr auto &mesh_manager(this auto &&self);
 
-    constexpr auto &material_manager(this auto &&self)
-    {
-        return self.material_manager_;
-    }
+    constexpr auto &material_manager(this auto &&self);
 
-    constexpr auto &texture_manager(this auto &&self)
-    {
-        return self.texture_manager_;
-    }
+    constexpr auto &texture_manager(this auto &&self);
 
-    constexpr auto add(PointLight light) -> void
-    {
-        lights_.lights.push_back(std::move(light));
-    }
+    constexpr auto add(PointLight light) -> void;
 
-    constexpr auto &tone_map_options(this auto &&self)
-    {
-        return self.tone_map_options_;
-    }
+    constexpr auto &tone_map_options(this auto &&self);
 
-    constexpr auto &ssao_options(this auto &&self)
-    {
-        return self.ssao_options_;
-    }
+    constexpr auto &ssao_options(this auto &&self);
 
-    constexpr auto &exposure_options(this auto &&self)
-    {
-        return self.exposure_options_;
-    }
+    constexpr auto &exposure_options(this auto &&self);
 
-    constexpr auto description(this auto &&self) -> Description
-    {
-        return {
-            .tone_map_options = self.tone_map_options_,
-            .ssao_options = self.ssao_options_,
-            .exposure_options = self.exposure_options_,
-            .lights = self.lights_,
-            .entities = self.entities_ | std::views::transform([](const auto &e) { return e.description(); }) |
-                        std::ranges::to<std::vector>()};
-    }
+    constexpr auto description(this auto &&self) -> Description;
 
-    constexpr auto remove(const Entity &entity) -> void
-    {
-        const auto iter = std::ranges::find_if(entities_, [&entity](const auto &e) { return &e == &entity; });
-        expect(iter != std::ranges::cend(entities_), "entity not found");
+    constexpr auto remove(const Entity &entity) -> void;
 
-        entities_.erase(iter);
-    }
-
-    constexpr auto remove(const PointLight &light) -> void
-    {
-        const auto iter = std::ranges::find_if(lights_.lights, [&light](const auto &e) { return &e == &light; });
-        expect(iter != std::ranges::cend(lights_.lights), "light not found");
-
-        lights_.lights.erase(iter);
-    }
+    constexpr auto remove(const PointLight &light) -> void;
 
   private:
     std::vector<Entity> entities_;
@@ -186,6 +134,67 @@ class Scene
     SSAOOptions ssao_options_;
     ExposureOptions exposure_options_;
 };
+
+constexpr Scene::Scene(
+    MeshManager &mesh_manager,
+    MaterialManager &material_manager,
+    TextureManager &texture_manager,
+    Camera camera,
+    LightData lights,
+    ToneMapOptions tone_map_options,
+    SSAOOptions ssao_options,
+    ExposureOptions exposure_options,
+    const StringMap<Entity> &entity_cache)
+    : entities_{}
+    , entity_cache_{}
+    , mesh_manager_{mesh_manager}
+    , material_manager_{material_manager}
+    , texture_manager_{texture_manager}
+    , camera_{std::move(camera)}
+    , lights_{std::move(lights)}
+    , tone_map_options_{std::move(tone_map_options)}
+    , ssao_options_{std::move(ssao_options)}
+    , exposure_options_{std::move(exposure_options)}
+{
+    for (const auto &[name, entity] : entity_cache)
+    {
+        cache_entity(name, entity);
+    }
+}
+
+constexpr Scene::Scene(
+    MeshManager &mesh_manager,
+    MaterialManager &material_manager,
+    TextureManager &texture_manager,
+    Camera camera,
+    const Description &description,
+    const StringMap<Entity> &entity_cache)
+    : entities_{}
+    , entity_cache_{}
+    , mesh_manager_{mesh_manager}
+    , material_manager_{material_manager}
+    , texture_manager_{texture_manager}
+    , camera_{std::move(camera)}
+    , lights_{description.lights}
+    , tone_map_options_{description.tone_map_options}
+    , ssao_options_{description.ssao_options}
+    , exposure_options_{description.exposure_options}
+{
+    for (const auto &[name, entity] : entity_cache)
+    {
+        cache_entity(name, entity);
+    }
+
+    for (const auto &entity_description : description.entities)
+    {
+        const auto cached = std::ranges::find_if(
+            entity_cache_, [&entity_description](const auto &e) { return e.name() == entity_description.name; });
+        expect(cached != std::ranges::cend(entity_cache_), "unknown entity: {}", entity_description.name);
+
+        auto &new_entity = entities_.emplace_back(*cached);
+        new_entity.set_transform(entity_description.transform);
+    }
+}
 
 constexpr auto Scene::intersect_ray(const Ray &ray) -> std::optional<IntersectionResult>
 {
@@ -235,6 +244,104 @@ constexpr auto Scene::intersect_ray(const Ray &ray) -> std::optional<Intersectio
     }
 
     return result;
+}
+
+constexpr auto Scene::create_entity(std::string_view name) -> Entity *
+{
+    const auto cached = std::ranges::find_if(entity_cache_, [name](const auto &e) { return e.name() == name; });
+    expect(cached != std::ranges::cend(entity_cache_), "unknown entity: {}", name);
+
+    auto &new_entity = entities_.emplace_back(*cached);
+    new_entity.set_transform({});
+
+    return &new_entity;
+}
+
+template <class Self>
+auto Scene::entities(this Self &&self)
+{
+    using SpanType = std::conditional_t<std::is_const_v<std::remove_reference_t<Self>>, const Entity, Entity>;
+    return std::span<SpanType>{self.entities_.data(), self.entities_.data() + self.entities_.size()};
+}
+
+constexpr auto Scene::cache_entity(std::string_view name, Entity entity) -> void
+{
+    const auto cached = std::ranges::find_if(entity_cache_, [name](const auto &e) { return e.name() == name; });
+    expect(cached == std::ranges::cend(entity_cache_), "{} already exists", name);
+
+    entity_cache_.push_back(std::move(entity));
+}
+
+constexpr auto &Scene::camera(this auto &&self)
+{
+    return self.camera_;
+}
+
+constexpr auto &Scene::lights(this auto &&self)
+{
+    return self.lights_;
+}
+
+constexpr auto &Scene::mesh_manager(this auto &&self)
+{
+    return self.mesh_manager_;
+}
+
+constexpr auto &Scene::material_manager(this auto &&self)
+{
+    return self.material_manager_;
+}
+
+constexpr auto &Scene::texture_manager(this auto &&self)
+{
+    return self.texture_manager_;
+}
+
+constexpr auto Scene::add(PointLight light) -> void
+{
+    lights_.lights.push_back(std::move(light));
+}
+
+constexpr auto &Scene::tone_map_options(this auto &&self)
+{
+    return self.tone_map_options_;
+}
+
+constexpr auto &Scene::ssao_options(this auto &&self)
+{
+    return self.ssao_options_;
+}
+
+constexpr auto &Scene::exposure_options(this auto &&self)
+{
+    return self.exposure_options_;
+}
+
+constexpr auto Scene::description(this auto &&self) -> Description
+{
+    return {
+        .tone_map_options = self.tone_map_options_,
+        .ssao_options = self.ssao_options_,
+        .exposure_options = self.exposure_options_,
+        .lights = self.lights_,
+        .entities = self.entities_ | std::views::transform([](const auto &e) { return e.description(); }) |
+                    std::ranges::to<std::vector>()};
+}
+
+constexpr auto Scene::remove(const Entity &entity) -> void
+{
+    const auto iter = std::ranges::find_if(entities_, [&entity](const auto &e) { return &e == &entity; });
+    expect(iter != std::ranges::cend(entities_), "entity not found");
+
+    entities_.erase(iter);
+}
+
+constexpr auto Scene::remove(const PointLight &light) -> void
+{
+    const auto iter = std::ranges::find_if(lights_.lights, [&light](const auto &e) { return &e == &light; });
+    expect(iter != std::ranges::cend(lights_.lights), "light not found");
+
+    lights_.lights.erase(iter);
 }
 
 }
