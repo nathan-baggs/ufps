@@ -32,7 +32,7 @@ struct Task
         auto unhandled_exception() -> void
         {
             ufps::log::error("unhandled exception in Task");
-            AwaitableManager::last_exception = std::current_exception();
+            AwaitableManager::last_exception() = std::current_exception();
         }
 
         auto get_return_object()

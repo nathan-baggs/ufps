@@ -99,10 +99,10 @@ class AwaitableManager
                 [this, handle]
                 {
                     handle.resume();
-                    if (last_exception)
+                    if (last_exception())
                     {
                         ufps::log::error("unhandled exception in next tick awaitable");
-                        exception_queue_.push(std::exchange(last_exception, nullptr));
+                        exception_queue_.push(std::exchange(last_exception(), nullptr));
                     }
                 });
         }
@@ -116,10 +116,10 @@ class AwaitableManager
                     [this, handle = timer_awaitable.handle]
                     {
                         handle.resume();
-                        if (last_exception)
+                        if (last_exception())
                         {
                             ufps::log::error("unhandled exception in timer awaitable");
-                            exception_queue_.push(std::exchange(last_exception, nullptr));
+                            exception_queue_.push(std::exchange(last_exception(), nullptr));
                         }
                     });
             }
@@ -137,7 +137,11 @@ class AwaitableManager
         }
     }
 
-    inline thread_local static std::exception_ptr last_exception{};
+    static std::exception_ptr &last_exception()
+    {
+        thread_local auto instance = std::exception_ptr{};
+        return instance;
+    }
 
   private:
     struct TimerAwaitable
