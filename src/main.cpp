@@ -332,7 +332,7 @@ auto build_materials(
 
 }
 
-auto pulse_light(ufps::AwaitableManager &awaitable, ufps::PointLight *light) -> ufps::EagerTask
+auto pulse_light(ufps::AwaitableManager &awaitable, ufps::PointLight *light) -> ufps::Task
 {
     auto fake_time = 0.0f;
 
@@ -345,7 +345,7 @@ auto pulse_light(ufps::AwaitableManager &awaitable, ufps::PointLight *light) -> 
     }
 }
 
-auto flicker_light(ufps::AwaitableManager &awaitable, ufps::PointLight *light) -> ufps::EagerTask
+auto flicker_light(ufps::AwaitableManager &awaitable, ufps::PointLight *light) -> ufps::Task
 {
     for (;;)
     {

@@ -16,7 +16,7 @@ TEST(awaitable_manager, await_next_tick)
 
     auto x = 0;
 
-    const auto coro = [](ufps::AwaitableManager &am, int &x) -> ufps::EagerTask
+    const auto coro = [](ufps::AwaitableManager &am, int &x) -> ufps::Task
     {
         co_await am;
         x = 1;
@@ -37,7 +37,7 @@ TEST(awaitable_manager, await_timer)
 
     auto x = std::atomic<int>{0};
 
-    const auto coro = [](ufps::AwaitableManager &am, std::atomic<int> &x) -> ufps::EagerTask
+    const auto coro = [](ufps::AwaitableManager &am, std::atomic<int> &x) -> ufps::Task
     {
         co_await am(500ms);
         x = 1;
@@ -61,7 +61,7 @@ TEST(awaitable_manager, next_tick_exception_captured)
     auto pool = ufps::ThreadPool{4u};
     auto am = ufps::AwaitableManager(pool);
 
-    const auto coro = [](ufps::AwaitableManager &am) -> ufps::EagerTask
+    const auto coro = [](ufps::AwaitableManager &am) -> ufps::Task
     {
         co_await am;
         throw 1;
@@ -78,7 +78,7 @@ TEST(awaitable_manager, timer_exception_captured)
     auto pool = ufps::ThreadPool{4u};
     auto am = ufps::AwaitableManager(pool);
 
-    const auto coro = [](ufps::AwaitableManager &am) -> ufps::EagerTask
+    const auto coro = [](ufps::AwaitableManager &am) -> ufps::Task
     {
         co_await am(500ms);
         throw 1;

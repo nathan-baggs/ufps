@@ -10,14 +10,13 @@
 namespace ufps
 {
 
-template <bool Eager>
 struct Task
 {
     struct promise_type
     {
-        auto initial_suspend()
+        auto initial_suspend() -> std::suspend_never
         {
-            return std::conditional_t<Eager, std::suspend_never, std::suspend_always>{};
+            return {};
         }
 
         auto final_suspend() noexcept -> std::suspend_never
@@ -43,8 +42,5 @@ struct Task
 
     std::coroutine_handle<promise_type> handle;
 };
-
-using EagerTask = Task<true>;
-using LazyTask = Task<false>;
 
 }

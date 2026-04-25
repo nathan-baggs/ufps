@@ -3,41 +3,22 @@
 #include "concurrency/awaitable_manager.h"
 #include "concurrency/task.h"
 
-auto eager(int *x) -> ufps::EagerTask
-{
-    *x = 1;
-    co_return;
-}
-
-auto lazy(int *x) -> ufps::LazyTask
-{
-    *x = 1;
-    co_return;
-}
-
-TEST(task, eager)
+TEST(task, simple)
 {
     auto x = int{};
-    eager(&x);
 
-    ASSERT_EQ(x, 1);
-}
-
-TEST(task, lazy)
-{
-    auto x = int{};
-    auto task = lazy(&x);
-
-    ASSERT_EQ(x, 0);
-
-    task.handle.resume();
+    const auto coro = [](int &x) -> ufps::Task
+    {
+        x = 1;
+        co_return;
+    }(x);
 
     ASSERT_EQ(x, 1);
 }
 
 TEST(task, exception_captured)
 {
-    auto task = [] -> ufps::EagerTask
+    auto task = [] -> ufps::Task
     {
         throw 1;
         co_return;
