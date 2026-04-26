@@ -151,7 +151,7 @@ auto resolve_wgl_functions(::HINSTANCE instance) -> void
     pfd.nVersion = 1;
     pfd.dwFlags = PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER;
     pfd.iPixelType = PFD_TYPE_RGBA;
-    pfd.cColorBits = 32;
+    pfd.cColorBits = 24;
     pfd.cAlphaBits = 8;
     pfd.cDepthBits = 24;
     pfd.cStencilBits = 8;
@@ -187,15 +187,11 @@ auto init_opengl(HDC dc) -> void
         WGL_PIXEL_TYPE_ARB,
         WGL_TYPE_RGBA_ARB,
         WGL_COLOR_BITS_ARB,
-        32,
+        24,
         WGL_DEPTH_BITS_ARB,
         24,
         WGL_STENCIL_BITS_ARB,
         8,
-        WGL_SAMPLE_BUFFERS_ARB,
-        GL_FALSE,
-        WGL_SAMPLES_ARB,
-        0,
         0};
 
     auto pixel_format = 0;
