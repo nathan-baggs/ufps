@@ -1,6 +1,7 @@
 #include <fstream>
 #include <memory>
 #include <numbers>
+#include <pthread.h>
 #include <ranges>
 #include <span>
 #include <string_view>
@@ -332,27 +333,54 @@ auto build_materials(
 
 }
 
-auto pulse_light(ufps::AwaitableManager &awaitable, ufps::PointLight *light) -> ufps::Task
+auto pulse_light(ufps::AwaitableManager &awaitable, ufps::PointLightHandle handle, ufps::Scene &scene) -> ufps::Task
 {
     auto fake_time = 0.0f;
 
     for (;;)
     {
-        light->intensity = 5.0f + (10.0f * ((std::sin(fake_time) + 1.0f) / 2.0f));
+        if (auto light = scene.lights().lights[handle]; light)
+        {
+            light->intensity = 5.0f + (10.0f * ((std::sin(fake_time) + 1.0f) / 2.0f));
+        }
+        else
+        {
+            ufps::log::info("ending pulse_light coroutine");
+            co_return;
+        }
         fake_time += 0.1f;
 
         co_await awaitable;
     }
 }
 
-auto flicker_light(ufps::AwaitableManager &awaitable, ufps::PointLight *light) -> ufps::Task
+auto flicker_light(ufps::AwaitableManager &awaitable, ufps::PointLightHandle handle, ufps::Scene &scene) -> ufps::Task
 {
     for (;;)
     {
         co_await awaitable(3s);
-        light->intensity = 0.0f;
+
+        if (auto light = scene.lights().lights[handle]; light)
+        {
+            light->intensity = 0.0f;
+        }
+        else
+        {
+            ufps::log::info("ending flicker_light coroutine");
+            co_return;
+        }
+
         co_await awaitable(100ms);
-        light->intensity = 15.0f;
+
+        if (auto light = scene.lights().lights[handle]; light)
+        {
+            light->intensity = 15.0f;
+        }
+        else
+        {
+            ufps::log::info("ending flicker_light coroutine");
+            co_return;
+        }
     }
 }
 
@@ -461,8 +489,10 @@ int start()
     auto key_state = std::unordered_map<ufps::Key, bool>{
         {ufps::Key::W, false}, {ufps::Key::A, false}, {ufps::Key::S, false}, {ufps::Key::D, false}};
 
-    pulse_light(awaitable_manager, std::addressof(scene.lights().lights[0]));
-    flicker_light(awaitable_manager, std::addressof(scene.lights().lights[2]));
+    const auto point_light_handles = scene.lights().lights.handles();
+
+    pulse_light(awaitable_manager, point_light_handles[0], scene);
+    flicker_light(awaitable_manager, point_light_handles[2], scene);
 
     while (running)
     {

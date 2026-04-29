@@ -300,7 +300,6 @@ Renderer::Renderer(
 auto Renderer::render(Scene &scene) -> void
 {
     camera_buffer_.write(scene.camera().data_view(), 0zu);
-    light_buffer_.write(std::as_bytes(std::span<const LightData, 1zu>{&scene.lights(), 1zu}), 0zu);
 
     execute_gbuffer_pass(scene);
     execute_lighting_pass(scene);
@@ -438,7 +437,7 @@ auto Renderer::execute_lighting_pass(Scene &scene) -> void
         auto writer = BufferWriter{light_buffer_};
         writer.write(lights.ambient);
         writer.write(static_cast<std::uint32_t>(lights.lights.size()));
-        writer.write<PointLight>(lights.lights);
+        writer.write(lights.lights.data());
     }
 
     light_pass_program_.set_uniforms(

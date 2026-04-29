@@ -18,7 +18,7 @@ namespace impl
 {
 
 template <class T>
-concept Class = !std::ranges::range<T> && std::is_class_v<T>;
+concept Class = !std::ranges::range<T> && std::is_class_v<T> && !(requires { typename T::handle_type; });
 
 template <class T>
 concept BaseType = std::integral<T> || std::floating_point<T> || std::same_as<T, std::string>;
@@ -31,6 +31,9 @@ concept Map = std::ranges::range<T> && requires {
 
 template <class T>
 concept Array = std::ranges::range<T> && !Map<T> && !std::same_as<T, std::string>;
+
+template <class T>
+concept Sparse = requires { typename T::handle_type; };
 
 template <class T>
 concept Enum = std::is_enum_v<T>;
@@ -83,6 +86,18 @@ auto do_serialise(const Map auto &obj) -> ::YAML::Node
     for (const auto &[k, v] : obj)
     {
         node[k] = do_serialise(v);
+    }
+
+    return node;
+}
+
+auto do_serialise(const Sparse auto &obj) -> ::YAML::Node
+{
+    auto node = ::YAML::Node{};
+
+    for (const auto &e : obj.data())
+    {
+        node.push_back(do_serialise(e));
     }
 
     return node;
@@ -150,6 +165,19 @@ auto do_deserialise(const ::YAML::Node &node) -> T
         const auto &key = p.first;
         const auto &value = p.second;
         obj[do_deserialise<typename T::key_type>(key)] = do_deserialise<typename T::mapped_type>(value);
+    }
+
+    return obj;
+}
+
+template <Sparse T>
+auto do_deserialise(const ::YAML::Node &node) -> T
+{
+    auto obj = T{};
+
+    for (const auto &e : node)
+    {
+        obj.emplace(do_deserialise<typename T::value_type>(e));
     }
 
     return obj;

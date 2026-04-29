@@ -38,7 +38,7 @@ class DebugRenderer : public Renderer
   private:
     bool enabled_;
     std::optional<MouseButtonEvent> click_;
-    std::variant<std::monostate, Entity *, PointLight *> selected_;
+    std::variant<std::monostate, Entity *, PointLightHandle> selected_;
     std::vector<LineData> debug_lines_;
     MultiBuffer<PersistentBuffer> debug_line_buffer_;
     Program debug_line_program_;

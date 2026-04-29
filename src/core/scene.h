@@ -7,6 +7,7 @@
 
 #include "core/camera.h"
 #include "core/entity.h"
+#include "core/sparse_set.h"
 #include "graphics/material_manager.h"
 #include "graphics/mesh_manager.h"
 #include "graphics/point_light.h"
@@ -19,6 +20,8 @@
 namespace ufps
 {
 
+using PointLightHandle = SparseSet<PointLight>::handle_type;
+
 struct IntersectionResult
 {
     Entity *entity;
@@ -29,7 +32,7 @@ struct IntersectionResult
 struct LightData
 {
     Colour ambient;
-    std::vector<PointLight> lights;
+    SparseSet<PointLight> lights;
 };
 
 struct ToneMapOptions
@@ -108,8 +111,6 @@ class Scene
 
     constexpr auto &texture_manager(this auto &&self);
 
-    constexpr auto add(PointLight light) -> void;
-
     constexpr auto &tone_map_options(this auto &&self);
 
     constexpr auto &ssao_options(this auto &&self);
@@ -120,7 +121,7 @@ class Scene
 
     constexpr auto remove(const Entity &entity) -> void;
 
-    constexpr auto remove(const PointLight &light) -> void;
+    constexpr auto remove(PointLightHandle light) -> void;
 
   private:
     std::vector<Entity> entities_;
@@ -297,11 +298,6 @@ constexpr auto &Scene::texture_manager(this auto &&self)
     return self.texture_manager_;
 }
 
-constexpr auto Scene::add(PointLight light) -> void
-{
-    lights_.lights.push_back(std::move(light));
-}
-
 constexpr auto &Scene::tone_map_options(this auto &&self)
 {
     return self.tone_map_options_;
@@ -336,12 +332,9 @@ constexpr auto Scene::remove(const Entity &entity) -> void
     entities_.erase(iter);
 }
 
-constexpr auto Scene::remove(const PointLight &light) -> void
+constexpr auto Scene::remove(PointLightHandle light) -> void
 {
-    const auto iter = std::ranges::find_if(lights_.lights, [&light](const auto &e) { return &e == &light; });
-    expect(iter != std::ranges::cend(lights_.lights), "light not found");
-
-    lights_.lights.erase(iter);
+    lights_.lights.remove(light);
 }
 
 }
