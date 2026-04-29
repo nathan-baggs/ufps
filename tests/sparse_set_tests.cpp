@@ -170,3 +170,36 @@ TEST(sparse_set, complexe_add_remove)
     ASSERT_TRUE(!s[h5]);
     ASSERT_TRUE(!s[h6]);
 }
+
+TEST(sparse_set, handles)
+{
+    auto s = ufps::SparseSet<int>{};
+    s.emplace(2);
+    s.emplace(20);
+    s.emplace(200);
+
+    const auto handles = s.handles();
+
+    ASSERT_EQ(std::ranges::size(handles), 3zu);
+    ASSERT_TRUE(!!s[handles[0]]);
+    ASSERT_EQ(*s[handles[0]], 2);
+    ASSERT_TRUE(!!s[handles[1]]);
+    ASSERT_EQ(*s[handles[1]], 20);
+    ASSERT_TRUE(!!s[handles[2]]);
+    ASSERT_EQ(*s[handles[2]], 200);
+}
+
+TEST(sparse_set, data)
+{
+    auto s = ufps::SparseSet<int>{};
+    s.emplace(2);
+    s.emplace(20);
+    s.emplace(200);
+
+    const auto data = s.data();
+
+    ASSERT_EQ(std::ranges::size(data), 3zu);
+    ASSERT_EQ(data[0], 2);
+    ASSERT_EQ(data[1], 20);
+    ASSERT_EQ(data[2], 200);
+}

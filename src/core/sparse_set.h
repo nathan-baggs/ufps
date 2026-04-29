@@ -95,6 +95,10 @@ class SparseSet
 
     constexpr auto empty() const -> bool;
 
+    constexpr auto handles() const -> std::vector<handle_type>;
+
+    constexpr auto data() const -> std::span<const T>;
+
   private:
     template <class U>
     using VectorRebind = std::vector<U, typename std::allocator_traits<Allocator>::template rebind_alloc<std::size_t>>;
@@ -154,6 +158,21 @@ constexpr auto SparseSet<T, Allocator>::remove(handle_type handle)
     {
         sparse_[std::ranges::size(sparse_) - 1zu] = dense_index;
     }
+}
+
+template <class T, class Allocator>
+constexpr auto SparseSet<T, Allocator>::handles() const -> std::vector<handle_type>
+{
+    return sparse_ |                                                                     //
+           std::views::filter([](const auto &e) { return e != handle_type::Invalid; }) | //
+           std::views::transform([](const auto &e) { return handle_type{e}; }) |         //
+           std::ranges::to<std::vector>();
+}
+
+template <class T, class Allocator>
+constexpr auto SparseSet<T, Allocator>::data() const -> std::span<const T>
+{
+    return data_;
 }
 
 }
