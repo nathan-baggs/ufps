@@ -174,25 +174,27 @@ constexpr auto SparseSet<T, Allocator>::remove(handle_type handle)
 
     if (!std::ranges::empty(dense_))
     {
-        sparse_[std::ranges::size(sparse_) - 1u].index_ = dense_index;
+        sparse_[dense_[dense_index]].index_ = dense_index;
     }
 }
 
 template <class T, class Allocator>
 constexpr auto SparseSet<T, Allocator>::handles() const -> std::vector<handle_type>
 {
-    const auto ret = std::views::enumerate(sparse_) |
-                     std::views::transform(
-                         [](const auto &e)
-                         {
-                             const auto &[index, handle] = e;
-                             const auto correct_index = handle.index_ == handle_type::Invalid ? handle.index_ : index;
-                             return handle_type{static_cast<std::uint32_t>(correct_index), handle.version_};
-                         }) |
-                     std::views::filter([](const auto &e) { return e.index_ != handle_type::Invalid; }) |
-                     std::ranges::to<std::vector>();
-
-    return ret;
+    // we use handle_type in two ways, to store an index into the dense array internally and as an index to the sparse
+    // array which we return to the user
+    // here we convert from the internal representation to the user-facing one by replacing the index with the correct
+    // one if it's valid and filtering out invalid handles
+    return std::views::enumerate(sparse_) |
+           std::views::transform(
+               [](const auto &e)
+               {
+                   const auto &[index, handle] = e;
+                   const auto correct_index = handle.index_ == handle_type::Invalid ? handle.index_ : index;
+                   return handle_type{static_cast<std::uint32_t>(correct_index), handle.version_};
+               }) |
+           std::views::filter([](const auto &e) { return e.index_ != handle_type::Invalid; }) |
+           std::ranges::to<std::vector>();
 }
 
 template <class T, class Allocator>
