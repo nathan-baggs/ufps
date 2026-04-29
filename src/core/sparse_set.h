@@ -19,21 +19,23 @@ class SparseSet
 {
     class Handle
     {
-        inline static constexpr auto Invalid = std::numeric_limits<std::size_t>::max();
+        inline static constexpr auto Invalid = std::numeric_limits<std::uint32_t>::max();
 
         constexpr Handle()
             : Handle(Invalid)
         {
         }
 
-        explicit constexpr Handle(std::size_t index)
+        explicit constexpr Handle(std::uint32_t index, std::uint32_t version)
             : index_{index}
+            , version_{version}
         {
         }
 
         constexpr auto operator<=>(const Handle &) const = default;
 
-        std::size_t index_;
+        std::uint32_t index_;
+        std::uint32_t version_;
 
         friend SparseSet;
     };
@@ -47,15 +49,28 @@ class SparseSet
     template <class... Args>
     constexpr auto emplace(Args &&...args) -> handle_type
     {
-        const auto dense_index = std::ranges::size(data_);
+        const auto dense_index = static_cast<std::uint32_t>(std::ranges::size(data_));
         data_.emplace_back(std::forward<Args>(args)...);
 
-        const auto sparse_index = std::ranges::size(sparse_);
-        sparse_.push_back(dense_index);
+        auto sparse_index = static_cast<std::uint32_t>(std::ranges::size(sparse_));
+        auto version = 0u;
+
+        if (!std::ranges::empty(free_))
+        {
+            sparse_index = free_.back();
+            sparse_[sparse_index].index_ = dense_index;
+            ++sparse_[sparse_index].version_;
+            version = sparse_[sparse_index].version_;
+            free_.pop_back();
+        }
+        else
+        {
+            sparse_.push_back(handle_type{dense_index, version});
+        }
 
         dense_.push_back(sparse_index);
 
-        return handle_type{sparse_index};
+        return handle_type{sparse_index, version};
     }
 
     template <class S>
@@ -75,13 +90,13 @@ class SparseSet
             return std::optional<RetType>{};
         }
 
-        const auto dense_index = self.sparse_[sparse_index];
+        const auto dense_index = self.sparse_[sparse_index].index_;
         if (dense_index >= std::ranges::size(self.dense_))
         {
             return std::optional<RetType>{};
         }
 
-        if (self.dense_[dense_index] != sparse_index)
+        if (self.dense_[dense_index] != sparse_index || handle.version_ != self.sparse_[sparse_index].version_)
         {
             return std::optional<RetType>{};
         }
@@ -101,10 +116,11 @@ class SparseSet
 
   private:
     template <class U>
-    using VectorRebind = std::vector<U, typename std::allocator_traits<Allocator>::template rebind_alloc<std::size_t>>;
-    VectorRebind<std::size_t> sparse_;
-    VectorRebind<std::size_t> dense_;
+    using VectorRebind = std::vector<U, typename std::allocator_traits<Allocator>::template rebind_alloc<U>>;
+    VectorRebind<handle_type> sparse_;
+    VectorRebind<std::uint32_t> dense_;
     std::vector<T, Allocator> data_;
+    VectorRebind<std::size_t> free_;
 };
 
 template <class T, class Allocator>
@@ -133,39 +149,40 @@ constexpr auto SparseSet<T, Allocator>::remove(handle_type handle)
     const auto sparse_index = handle.index_;
     ensure(sparse_index < std::ranges::size(sparse_), "invalid handle: {}", sparse_index);
 
-    const auto dense_index = sparse_[sparse_index];
+    const auto dense_index = sparse_[sparse_index].index_;
     ensure(dense_index < std::ranges::size(dense_), "invalid handle: {}", sparse_index);
 
     ensure(dense_[dense_index] == sparse_index, "invalid handle: {}", sparse_index);
 
-    if (dense_index == std::ranges::size(data_) - 1zu)
+    if (dense_index == std::ranges::size(data_) - 1u)
     {
         data_.pop_back();
         dense_.pop_back();
-        sparse_[sparse_index] = handle_type::Invalid;
+        sparse_[sparse_index].index_ = handle_type::Invalid;
+        free_.push_back(sparse_index);
 
         return;
     }
 
-    std::ranges::swap(data_[sparse_[sparse_index]], *(std::ranges::end(data_) - 1zu));
+    std::ranges::swap(data_[sparse_[sparse_index].index_], *(std::ranges::end(data_) - 1u));
     data_.pop_back();
-    std::ranges::swap(dense_[sparse_[sparse_index]], *(std::ranges::end(dense_) - 1zu));
+    std::ranges::swap(dense_[sparse_[sparse_index].index_], *(std::ranges::end(dense_) - 1u));
     dense_.pop_back();
 
-    sparse_[sparse_index] = handle_type::Invalid;
+    sparse_[sparse_index].index_ = handle_type::Invalid;
+    free_.push_back(sparse_index);
 
     if (!std::ranges::empty(dense_))
     {
-        sparse_[std::ranges::size(sparse_) - 1zu] = dense_index;
+        sparse_[std::ranges::size(sparse_) - 1u].index_ = dense_index;
     }
 }
 
 template <class T, class Allocator>
 constexpr auto SparseSet<T, Allocator>::handles() const -> std::vector<handle_type>
 {
-    return sparse_ |                                                                     //
-           std::views::filter([](const auto &e) { return e != handle_type::Invalid; }) | //
-           std::views::transform([](const auto &e) { return handle_type{e}; }) |         //
+    return sparse_ |                                                                            //
+           std::views::filter([](const auto &e) { return e.index_ != handle_type::Invalid; }) | //
            std::ranges::to<std::vector>();
 }
 

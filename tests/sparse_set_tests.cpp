@@ -139,7 +139,7 @@ TEST(sparse_set, double_remove)
     ASSERT_THROW(s.remove(h), ufps::Exception);
 }
 
-TEST(sparse_set, complexe_add_remove)
+TEST(sparse_set, complex_add_remove)
 {
     auto s = ufps::SparseSet<int>{};
     auto h1 = s.emplace(2);
@@ -202,4 +202,20 @@ TEST(sparse_set, data)
     ASSERT_EQ(data[0], 2);
     ASSERT_EQ(data[1], 20);
     ASSERT_EQ(data[2], 200);
+}
+
+TEST(sparse_set, reuse_handle)
+{
+    auto s = ufps::SparseSet<int>{};
+    s.emplace(2);
+    const auto h1 = s.emplace(20);
+    s.emplace(200);
+
+    s.remove(h1);
+
+    const auto h2 = s.emplace(2000);
+
+    ASSERT_TRUE(!s[h1]);
+    ASSERT_TRUE(!!s[h2]);
+    ASSERT_EQ(*s[h2], 2000);
 }
