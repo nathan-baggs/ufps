@@ -181,9 +181,18 @@ constexpr auto SparseSet<T, Allocator>::remove(handle_type handle)
 template <class T, class Allocator>
 constexpr auto SparseSet<T, Allocator>::handles() const -> std::vector<handle_type>
 {
-    return sparse_ |                                                                            //
-           std::views::filter([](const auto &e) { return e.index_ != handle_type::Invalid; }) | //
-           std::ranges::to<std::vector>();
+    const auto ret = std::views::enumerate(sparse_) |
+                     std::views::transform(
+                         [](const auto &e)
+                         {
+                             const auto &[index, handle] = e;
+                             const auto correct_index = handle.index_ == handle_type::Invalid ? handle.index_ : index;
+                             return handle_type{static_cast<std::uint32_t>(correct_index), handle.version_};
+                         }) |
+                     std::views::filter([](const auto &e) { return e.index_ != handle_type::Invalid; }) |
+                     std::ranges::to<std::vector>();
+
+    return ret;
 }
 
 template <class T, class Allocator>

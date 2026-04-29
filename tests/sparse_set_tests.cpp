@@ -189,6 +189,43 @@ TEST(sparse_set, handles)
     ASSERT_EQ(*s[handles[2]], 200);
 }
 
+TEST(sparse_set, handles_with_gap)
+{
+    auto s = ufps::SparseSet<int>{};
+    s.emplace(2);
+    const auto h = s.emplace(20);
+    s.emplace(200);
+
+    s.remove(h);
+
+    const auto handles = s.handles();
+
+    ASSERT_EQ(std::ranges::size(handles), 2zu);
+    ASSERT_TRUE(!!s[handles[0]]);
+    ASSERT_EQ(*s[handles[0]], 2);
+    ASSERT_TRUE(!!s[handles[1]]);
+    ASSERT_EQ(*s[handles[1]], 200);
+}
+
+TEST(sparse_set, handles_with_gap_end)
+{
+    auto s = ufps::SparseSet<int>{};
+    s.emplace(2);
+    s.emplace(20);
+    const auto h = s.emplace(200);
+
+    s.remove(h);
+
+    const auto handles = s.handles();
+
+    ASSERT_EQ(std::ranges::size(handles), 2zu);
+    ASSERT_TRUE(!!s[handles[0]]);
+    ASSERT_EQ(*s[handles[0]], 2);
+    ASSERT_TRUE(!!s[handles[1]]);
+    ASSERT_EQ(*s[handles[1]], 20);
+    ASSERT_TRUE(!s[h]);
+}
+
 TEST(sparse_set, data)
 {
     auto s = ufps::SparseSet<int>{};
