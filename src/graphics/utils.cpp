@@ -193,9 +193,7 @@ auto load_model(DataBufferView model_data) -> std::tuple<std::string, std::vecto
         auto *logger = ::Assimp::DefaultLogger::get();
 
         logger->attachStream(new SimpleAssimpLogStream<ufps::log::Level::ERR>{}, ::Assimp::Logger::Err);
-        // logger->attachStream(new SimpleAssimpLogStream<ufps::log::Level::DEBUG>{}, ::Assimp::Logger::Debugging);
         logger->attachStream(new SimpleAssimpLogStream<ufps::log::Level::WARN>{}, ::Assimp::Logger::Warn);
-        // logger->attachStream(new SimpleAssimpLogStream<ufps::log::Level::INFO>{}, ::Assimp::Logger::Info);
 
         return logger;
     }();
@@ -218,13 +216,13 @@ auto load_model(DataBufferView model_data) -> std::tuple<std::string, std::vecto
     {
         log::info("found mesh: {}", mesh->mName.C_Str());
 
-        if (index >= scene->mNumMaterials)
+        if (mesh->mMaterialIndex >= scene->mNumMaterials)
         {
             log::warn("mesh {} has invalid material index: {}", mesh->mName.C_Str(), index);
             continue;
         }
 
-        const auto *material = scene->mMaterials[index];
+        const auto *material = scene->mMaterials[mesh->mMaterialIndex];
         const auto base_colour_count = material->GetTextureCount(::aiTextureType_BASE_COLOR);
         if (base_colour_count != 1)
         {
