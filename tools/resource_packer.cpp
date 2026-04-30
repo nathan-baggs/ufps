@@ -88,35 +88,16 @@ auto main(int argc, char **argv) -> int
                     out << ::YAML::Key << "index_count" << ::YAML::Value << index_count;
                     out << ::YAML::Key << "index_offset" << ::YAML::Value << index_offset;
 
-                    if (model.albedo)
-                    {
-                        texture_names.insert(*model.albedo);
-                        out << ::YAML::Key << "albedo_name" << ::YAML::Value << *model.albedo;
-                    }
-                    else
-                    {
-                        out << ::YAML::Key << "albedo_name" << ::YAML::Value << "";
-                    }
+                    const auto albedo_name = model.albedo ? *model.albedo : "textures\\default_BaseColor.dds";
+                    texture_names.insert(albedo_name);
+                    out << ::YAML::Key << "albedo_name" << ::YAML::Value << albedo_name;
 
-                    if (model.normal)
-                    {
-                        texture_names.insert(*model.normal);
-                        out << ::YAML::Key << "normal_name" << ::YAML::Value << *model.normal;
-                    }
-                    else
-                    {
-                        out << ::YAML::Key << "normal_name" << ::YAML::Value << "";
-                    }
+                    const auto normal_name = model.normal ? *model.normal : "textures\\default_Normal.dds";
+                    texture_names.insert(normal_name);
+                    out << ::YAML::Key << "normal_name" << ::YAML::Value << normal_name;
 
-                    if (model.specular)
-                    {
-                        texture_names.insert(*model.specular);
-                        out << ::YAML::Key << "specular_name" << ::YAML::Value << *model.specular;
-                    }
-                    else
-                    {
-                        out << ::YAML::Key << "specular_name" << ::YAML::Value << "";
-                    }
+                    const auto specular_name = model.specular ? *model.specular : "textures\\default_Metallic.dds";
+                    out << ::YAML::Key << "specular_name" << ::YAML::Value << specular_name;
 
                     out << ::YAML::EndMap;
 
