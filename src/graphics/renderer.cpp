@@ -401,7 +401,12 @@ auto Renderer::execute_gbuffer_pass(Scene &scene) -> void
 
     resize_gpu_buffer(object_data, object_data_buffer_);
     object_data_buffer_.write(std::as_bytes(std::span{object_data.data(), object_data.size()}), 0zu);
-    ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, object_data_buffer_.native_handle());
+    ::glBindBufferRange(
+        GL_SHADER_STORAGE_BUFFER,
+        2,
+        object_data_buffer_.native_handle(),
+        object_data_buffer_.frame_offset_bytes(),
+        object_data_buffer_.size());
 
     ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, scene.material_manager().native_handle());
 
@@ -449,7 +454,12 @@ auto Renderer::execute_lighting_pass(Scene &scene) -> void
     const auto [vertex_buffer_handle, index_buffer_handle] = scene.mesh_manager().native_handle();
     ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, vertex_buffer_handle);
     ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, scene.texture_manager().native_handle());
-    ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, light_buffer_.native_handle());
+    ::glBindBufferRange(
+        GL_SHADER_STORAGE_BUFFER,
+        2,
+        light_buffer_.native_handle(),
+        light_buffer_.frame_offset_bytes(),
+        light_buffer_.size());
     ::glBindBufferRange(
         GL_SHADER_STORAGE_BUFFER,
         3,
