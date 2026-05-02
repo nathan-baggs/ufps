@@ -27,6 +27,8 @@ class Program
 
     auto set_uniform(std::size_t index, std::uint32_t value) const -> void;
 
+    auto set_uniform(std::size_t index, std::uint64_t value) const -> void;
+
     auto set_uniform(std::size_t index, float value) const -> void;
 
     auto set_uniform(std::size_t index, const Matrix4 &value) const -> void;

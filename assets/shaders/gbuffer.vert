@@ -85,9 +85,9 @@ void main()
     out_frag_position = object_data[gl_DrawID].model * vec4(get_position(gl_VertexID), 1.0);
     gl_Position = projection * view * out_frag_position;
 
-    out_albedo_bindless_handle = object_data[gl_DrawID].albedo_index;
-    out_normal_bindless_handle = object_data[gl_DrawID].normal_index;
-    out_specular_bindless_handle = object_data[gl_DrawID].specular_index;
+    out_albedo_bindless_handle = object_data[gl_DrawID].albedo_bindless_handle;
+    out_normal_bindless_handle = object_data[gl_DrawID].normal_bindless_handle;
+    out_specular_bindless_handle = object_data[gl_DrawID].specular_bindless_handle;
     out_uv = get_uv(gl_VertexID);
 
     vec3 t = normalize(normal_mat * get_tangent(gl_VertexID));
