@@ -5,15 +5,11 @@
 
 layout(local_size_x = 16, local_size_y = 16, local_size_z = 1) in;
 
-layout(binding = 0, std430) readonly buffer textures_buffer {
-        sampler2D textures[];
-};
-
-layout(binding = 1, std430) buffer histogram_data {
+layout(binding = 0, std430) buffer histogram_data {
         uint histograms[NUM_BINS];
 };
 
-layout(location = 0) uniform uint u_tex_index;
+layout(bindless_sampler, location = 0) uniform sampler2D u_texture;
 layout(location = 1) uniform float u_min_log_lum;
 layout(location = 2) uniform float u_inverse_log_lum_range;
 
@@ -37,11 +33,11 @@ void main()
         shared_histogram[gl_LocalInvocationIndex] = 0;
         barrier();
 
-        ivec2 tex_size = textureSize(textures[u_tex_index], 0);
+        ivec2 tex_size = textureSize(u_texture, 0);
 
         if (gl_GlobalInvocationID.x < tex_size.x && gl_GlobalInvocationID.y < tex_size.y)
         {
-                vec3 colour = texelFetch(textures[u_tex_index], ivec2(gl_GlobalInvocationID.xy), 0).rgb;
+                vec3 colour = texelFetch(u_texture, ivec2(gl_GlobalInvocationID.xy), 0).rgb;
                 uint bin_index = colour_to_bin(colour, u_min_log_lum, u_inverse_log_lum_range);
 
                 atomicAdd(shared_histogram[bin_index], 1);

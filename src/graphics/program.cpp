@@ -93,6 +93,12 @@ auto Program::set_uniform(std::size_t index, std::uint32_t value) const -> void
     ::glProgramUniform1ui(handle_, index, value);
 }
 
+auto Program::set_uniform(std::size_t index, std::uint64_t value) const -> void
+{
+    expect(is_bound_, "setting uniform on unbound program");
+    ::glProgramUniformHandleui64ARB(handle_, index, value);
+}
+
 auto Program::set_uniform(std::size_t index, float value) const -> void
 {
     expect(is_bound_, "setting uniform on unbound program");
