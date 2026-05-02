@@ -8,7 +8,6 @@
 #include "core/camera.h"
 #include "core/entity.h"
 #include "core/sparse_set.h"
-#include "graphics/material_manager.h"
 #include "graphics/mesh_manager.h"
 #include "graphics/point_light.h"
 #include "graphics/texture_manager.h"
@@ -75,7 +74,6 @@ class Scene
 
     constexpr Scene(
         MeshManager &mesh_manager,
-        MaterialManager &material_manager,
         TextureManager &texture_manager,
         Camera camera,
         LightData lights,
@@ -86,7 +84,6 @@ class Scene
 
     constexpr Scene(
         MeshManager &mesh_manager,
-        MaterialManager &material_manager,
         TextureManager &texture_manager,
         Camera camera,
         const Description &description,
@@ -107,8 +104,6 @@ class Scene
 
     constexpr auto &mesh_manager(this auto &&self);
 
-    constexpr auto &material_manager(this auto &&self);
-
     constexpr auto &texture_manager(this auto &&self);
 
     constexpr auto &tone_map_options(this auto &&self);
@@ -127,7 +122,6 @@ class Scene
     std::vector<Entity> entities_;
     std::vector<Entity> entity_cache_;
     MeshManager &mesh_manager_;
-    MaterialManager &material_manager_;
     TextureManager &texture_manager_;
     Camera camera_;
     LightData lights_;
@@ -138,7 +132,6 @@ class Scene
 
 constexpr Scene::Scene(
     MeshManager &mesh_manager,
-    MaterialManager &material_manager,
     TextureManager &texture_manager,
     Camera camera,
     LightData lights,
@@ -149,7 +142,6 @@ constexpr Scene::Scene(
     : entities_{}
     , entity_cache_{}
     , mesh_manager_{mesh_manager}
-    , material_manager_{material_manager}
     , texture_manager_{texture_manager}
     , camera_{std::move(camera)}
     , lights_{std::move(lights)}
@@ -165,7 +157,6 @@ constexpr Scene::Scene(
 
 constexpr Scene::Scene(
     MeshManager &mesh_manager,
-    MaterialManager &material_manager,
     TextureManager &texture_manager,
     Camera camera,
     const Description &description,
@@ -173,7 +164,6 @@ constexpr Scene::Scene(
     : entities_{}
     , entity_cache_{}
     , mesh_manager_{mesh_manager}
-    , material_manager_{material_manager}
     , texture_manager_{texture_manager}
     , camera_{std::move(camera)}
     , lights_{description.lights}
@@ -286,11 +276,6 @@ constexpr auto &Scene::lights(this auto &&self)
 constexpr auto &Scene::mesh_manager(this auto &&self)
 {
     return self.mesh_manager_;
-}
-
-constexpr auto &Scene::material_manager(this auto &&self)
-{
-    return self.material_manager_;
 }
 
 constexpr auto &Scene::texture_manager(this auto &&self)
