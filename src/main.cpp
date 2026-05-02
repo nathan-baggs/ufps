@@ -25,7 +25,6 @@
 #include "events/key_event.h"
 #include "graphics/colour.h"
 #include "graphics/debug_renderer.h"
-#include "graphics/material_manager.h"
 #include "graphics/mesh_data.h"
 #include "graphics/mesh_manager.h"
 #include "graphics/renderer.h"
@@ -321,7 +320,6 @@ int start()
         ufps::decompress(resource_loader->load_data_buffer("blobs\\vertex_data.bin")),
         ufps::decompress(resource_loader->load_data_buffer("blobs\\index_data.bin")),
         build_mesh_lookup(*resource_loader)};
-    auto material_manager = ufps::MaterialManager{};
 
     mesh_manager.load("cube", std::vector{cube()});
 
@@ -346,7 +344,6 @@ int start()
 
     auto scene = ufps::Scene{
         mesh_manager,
-        material_manager,
         texture_manager,
         {{},
          {0.0f, 0.0f, -1.0f},
