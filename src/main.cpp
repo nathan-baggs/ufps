@@ -209,9 +209,9 @@ auto build_entity_cache(
 
         for (const auto &[mesh_view, albedo, normal, specular] : manifests)
         {
-            const auto albedo_index = texture_manager.texture_index(albedo);
-            const auto normal_index = texture_manager.texture_index(normal);
-            const auto specular_index = texture_manager.texture_index(specular);
+            const auto albedo_index = texture_manager.bindless_handle(albedo);
+            const auto normal_index = texture_manager.bindless_handle(normal);
+            const auto specular_index = texture_manager.bindless_handle(specular);
 
             render_entities.push_back({mesh_view, albedo_index, normal_index, specular_index, mesh_manager});
         }

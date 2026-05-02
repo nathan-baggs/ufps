@@ -668,18 +668,16 @@ auto DebugRenderer::post_render(Scene &scene) -> void
 
             for (const auto &render_entity : entity->render_entities())
             {
-                const auto albedo_texture_index = render_entity.albedo_texture_index();
-                const auto normal_texture_index = render_entity.normal_texture_index();
-                const auto specular_texture_index = render_entity.specular_texture_index();
-
-                const auto *albedo_texture = scene.texture_manager().texture(albedo_texture_index);
+                const auto *albedo_texture =
+                    scene.texture_manager().texture(render_entity.albedo_texture_bindless_handle());
                 ::ImGui::Image(
                     albedo_texture->native_handle(),
                     ::ImVec2(64.0f, 64.0f),
                     ::ImVec2(0.0f, 1.0f),
                     ::ImVec2(1.0f, 0.0f));
 
-                const auto *normal_texture = scene.texture_manager().texture(normal_texture_index);
+                const auto *normal_texture =
+                    scene.texture_manager().texture(render_entity.normal_texture_bindless_handle());
                 ::ImGui::SameLine();
                 ::ImGui::Image(
                     normal_texture->native_handle(),
@@ -687,7 +685,8 @@ auto DebugRenderer::post_render(Scene &scene) -> void
                     ::ImVec2(0.0f, 1.0f),
                     ::ImVec2(1.0f, 0.0f));
 
-                const auto *specular_texture = scene.texture_manager().texture(specular_texture_index);
+                const auto *specular_texture =
+                    scene.texture_manager().texture(render_entity.specular_texture_bindless_handle());
                 ::ImGui::SameLine();
                 ::ImGui::Image(
                     specular_texture->native_handle(),

@@ -62,6 +62,21 @@ auto TextureManager::texture(std::uint32_t index) const -> const Texture *
     return std::addressof(textures_[index]);
 }
 
+auto TextureManager::texture(std::uint64_t bindless_handle) const -> const Texture *
+{
+    auto iter = std::ranges::find_if(cpu_buffer_, [bindless_handle](auto h) { return h == bindless_handle; });
+    expect(iter != std::ranges::cend(cpu_buffer_), "bindless handle {} not found", bindless_handle);
+
+    const auto index = std::distance(std::ranges::cbegin(cpu_buffer_), iter);
+    return std::addressof(textures_[index]);
+}
+
+auto TextureManager::bindless_handle(std::string_view name) const -> std::uint64_t
+{
+    const auto index = texture_index(name);
+    return cpu_buffer_[index];
+}
+
 auto TextureManager::try_get_texture_index(std::string_view name) const -> std::optional<std::uint32_t>
 {
     auto iter = std::ranges::find_if(textures_, [name](const auto &t) { return t.name() == name; });

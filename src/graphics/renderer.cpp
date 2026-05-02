@@ -400,10 +400,9 @@ auto Renderer::execute_gbuffer_pass(Scene &scene) -> void
                                            {
                                                return ObjectData{
                                                    .model = entity.transform(),
-                                                   .albedo_texture_index = e.albedo_texture_index(),
-                                                   .normal_texture_index = e.normal_texture_index(),
-                                                   .specular_texture_index = e.specular_texture_index(),
-                                                   .padding = {},
+                                                   .albedo_texture_index = e.albedo_texture_bindless_handle(),
+                                                   .normal_texture_index = e.normal_texture_bindless_handle(),
+                                                   .specular_texture_index = e.specular_texture_bindless_handle(),
                                                };
                                            }));
     }
@@ -416,8 +415,6 @@ auto Renderer::execute_gbuffer_pass(Scene &scene) -> void
         object_data_buffer_.native_handle(),
         object_data_buffer_.frame_offset_bytes(),
         object_data_buffer_.size());
-
-    ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 4, scene.texture_manager().native_handle());
 
     ::glMultiDrawElementsIndirect(
         GL_TRIANGLES,
