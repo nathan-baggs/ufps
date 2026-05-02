@@ -73,6 +73,14 @@ auto TextureManager::try_get_texture_index(std::string_view name) const -> std::
     return static_cast<std::uint32_t>(std::distance(std::ranges::cbegin(textures_), iter));
 }
 
+auto TextureManager::texture_index(std::string_view name) const -> std::uint32_t
+{
+    const auto index = try_get_texture_index(name);
+    expect(index.has_value(), "texture with name '{}' not found", name);
+
+    return *index;
+}
+
 auto TextureManager::textures(const std::vector<std::uint32_t> &indices) const -> std::vector<const Texture *>
 {
     return indices | //
