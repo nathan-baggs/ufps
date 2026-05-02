@@ -712,6 +712,28 @@ auto DebugRenderer::post_render(Scene &scene) -> void
                     ::ImVec2(64.0f, 64.0f),
                     ::ImVec2(0.0f, 1.0f),
                     ::ImVec2(1.0f, 0.0f));
+
+                const auto *ao_texture = scene.texture_manager().texture(render_entity.ao_texture_bindless_handle());
+                ::ImGui::Image(
+                    ao_texture->native_handle(), ::ImVec2(64.0f, 64.0f), ::ImVec2(0.0f, 1.0f), ::ImVec2(1.0f, 0.0f));
+
+                const auto *glossiness_texture =
+                    scene.texture_manager().texture(render_entity.glossiness_texture_bindless_handle());
+                ::ImGui::SameLine();
+                ::ImGui::Image(
+                    glossiness_texture->native_handle(),
+                    ::ImVec2(64.0f, 64.0f),
+                    ::ImVec2(0.0f, 1.0f),
+                    ::ImVec2(1.0f, 0.0f));
+
+                const auto *emissive_texture =
+                    scene.texture_manager().texture(render_entity.emissive_texture_bindless_handle());
+                ::ImGui::SameLine();
+                ::ImGui::Image(
+                    emissive_texture->native_handle(),
+                    ::ImVec2(64.0f, 64.0f),
+                    ::ImVec2(0.0f, 1.0f),
+                    ::ImVec2(1.0f, 0.0f));
             }
 
             const auto &camera_data = scene.camera().data();

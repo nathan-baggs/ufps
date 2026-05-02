@@ -136,6 +136,9 @@ auto create_sprite(ufps::MeshManager &mesh_manager, ufps::TextureManager &textur
           texture_manager.texture_index("textures\\default_BaseColor.dds"),
           texture_manager.texture_index("textures\\default_Normal.dds"),
           texture_manager.texture_index("textures\\default_Metallic.dds"),
+          texture_manager.texture_index("textures\\default_AO.dds"),
+          texture_manager.texture_index("textures\\default_Roughness.dds"),
+          texture_manager.texture_index("textures\\default_Emissive.dds"),
           mesh_manager}},
         {}};
 }

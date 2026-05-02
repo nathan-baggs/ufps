@@ -47,6 +47,9 @@ auto main(int argc, char **argv) -> int
             "textures\\default_BaseColor.dds",
             "textures\\default_Normal.dds",
             "textures\\default_Metallic.dds",
+            "textures\\default_AO.dds",
+            "textures\\default_Roughness.dds",
+            "textures\\default_Emissive.dds",
         };
 
         {
@@ -76,10 +79,18 @@ auto main(int argc, char **argv) -> int
                             const auto normal_name = model.normal ? *model.normal : "textures\\default_Normal.dds";
                             const auto specular_name =
                                 model.specular ? *model.specular : "textures\\default_Metallic.dds";
+                            const auto ao_name = model.ao ? *model.ao : "textures\\default_AO.dds";
+                            const auto glossiness_name =
+                                model.glossiness ? *model.glossiness : "textures\\default_Roughness.dds";
+                            const auto emissive_name =
+                                model.emissive ? *model.emissive : "textures\\default_Emissive.dds";
 
                             texture_names.insert(albedo_name);
                             texture_names.insert(normal_name);
                             texture_names.insert(specular_name);
+                            texture_names.insert(ao_name);
+                            texture_names.insert(glossiness_name);
+                            texture_names.insert(emissive_name);
 
                             const auto res = ufps::ModelManifest{
                                 .mesh_view =
@@ -92,6 +103,9 @@ auto main(int argc, char **argv) -> int
                                 .albedo_texture = albedo_name,
                                 .normal_texture = normal_name,
                                 .specular_texture = specular_name,
+                                .ao_texture = ao_name,
+                                .glossiness_texture = glossiness_name,
+                                .emissive_texture = emissive_name,
                             };
 
                             vertex_data.append_range(mesh_data.vertices);
