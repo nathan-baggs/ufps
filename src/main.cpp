@@ -194,36 +194,33 @@ auto build_mesh_lookup(ufps::ResourceLoader &resource_loader) -> ufps::StringMap
            std::ranges::to<ufps::StringMap<std::vector<ufps::MeshView>>>();
 }
 
-auto build_materials(
+auto build_entity_cache(
     ufps::ResourceLoader &resource_loader,
     ufps::TextureManager &texture_manager,
-    ufps::MaterialManager &material_manager) -> ufps::StringMap<std::vector<std::uint32_t>>
+    ufps::MeshManager &mesh_manager) -> ufps::StringMap<ufps::Entity>
 {
-    auto material_lookup = ufps::StringMap<std::vector<std::uint32_t>>{};
+    auto entity_cache = ufps::StringMap<ufps::Entity>{};
 
     const auto model_manifest_str = resource_loader.load_string("configs\\model_manifest.yaml");
     const auto model_manifest = ufps::yaml::deserialise<ufps::ModelManifestDescription>(model_manifest_str);
 
-    const auto texture_blob = ufps::decompress(resource_loader.load_data_buffer("blobs\\texture_data.bin"));
-    const auto texture_manifest_str = resource_loader.load_string("configs\\texture_manifest.yaml");
-    const auto texture_manifest = YAML::Load(texture_manifest_str);
-
-    for (const auto &[name, manifest] : model_manifest.models)
+    for (const auto &[name, manifests] : model_manifest.models)
     {
-        for (const auto &[mesh_view, albedo, normal, specular] : manifest)
+        auto render_entities = std::vector<ufps::RenderEntity>{};
+
+        for (const auto &[mesh_view, albedo, normal, specular] : manifests)
         {
             const auto albedo_index = texture_manager.texture_index(albedo);
             const auto normal_index = texture_manager.texture_index(normal);
             const auto specular_index = texture_manager.texture_index(specular);
 
-            const auto material_index = material_manager.add(albedo_index, normal_index, specular_index);
-            material_lookup[name].push_back(material_index);
+            render_entities.push_back({mesh_view, albedo_index, normal_index, specular_index, mesh_manager});
         }
+
+        entity_cache.insert({name, ufps::Entity{name, std::move(render_entities), {}}});
     }
 
-    return material_lookup;
-}
-
+    return entity_cache;
 }
 
 auto pulse_light(ufps::AwaitableManager &awaitable, ufps::PointLightHandle handle, ufps::Scene &scene) -> ufps::Task
@@ -275,6 +272,7 @@ auto flicker_light(ufps::AwaitableManager &awaitable, ufps::PointLightHandle han
             co_return;
         }
     }
+}
 }
 
 int start()
@@ -346,26 +344,6 @@ int start()
         }
     }
 
-    const auto scene_description = ufps::yaml::deserialise<ufps::Scene::Description>(strm.str());
-
-    const auto material_lookup = build_materials(*resource_loader, texture_manager, material_manager);
-
-    auto entity_cache = ufps::StringMap<ufps::Entity>{};
-
-    for (const auto &[name, materials] : material_lookup)
-    {
-        const auto &mesh_views = mesh_manager.mesh(name);
-        auto render_entities = std::views::zip(mesh_views, materials) |
-                               std::views::transform(
-                                   [&mesh_manager](const auto &e)
-                                   {
-                                       const auto &[mesh_view, material] = e;
-                                       return ufps::RenderEntity(mesh_view, material, mesh_manager);
-                                   }) |
-                               std::ranges::to<std::vector>();
-        entity_cache.insert({name, ufps::Entity{name, std::move(render_entities), {}}});
-    }
-
     auto scene = ufps::Scene{
         mesh_manager,
         material_manager,
@@ -378,8 +356,8 @@ int start()
          static_cast<float>(window.render_height()),
          0.1f,
          1000.0f},
-        scene_description,
-        entity_cache};
+        ufps::yaml::deserialise<ufps::Scene::Description>(strm.str()),
+        build_entity_cache(*resource_loader, texture_manager, mesh_manager)};
 
     auto key_state = std::unordered_map<ufps::Key, bool>{
         {ufps::Key::W, false}, {ufps::Key::A, false}, {ufps::Key::S, false}, {ufps::Key::D, false}};
