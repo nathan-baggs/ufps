@@ -116,11 +116,18 @@ auto sprite() -> ufps::MeshData
     return {.vertices = vertices(positions, positions, positions, positions, uvs), .indices = std::move(indices)};
 }
 
-auto create_sprite(ufps::MeshManager &mesh_manager) -> ufps::Entity
+auto create_sprite(ufps::MeshManager &mesh_manager, ufps::TextureManager &texture_manager) -> ufps::Entity
 {
     const auto mesh_data = std::vector{sprite()};
     const auto mesh_views = mesh_manager.load("sprite", mesh_data);
-    return {"post_process_sprite", {{mesh_views.front(), 0u, mesh_manager}}, {}};
+    return {
+        "post_process_sprite",
+        {{mesh_views.front(),
+          texture_manager.texture_index("textures\\default_BaseColor.dds"),
+          texture_manager.texture_index("textures\\default_Normal.dds"),
+          texture_manager.texture_index("textures\\default_Metallic.dds"),
+          mesh_manager}},
+        {}};
 }
 
 auto create_ssao_noise_texture(ufps::TextureManager &texture_manager, const ufps::Sampler &sampler) -> std::uint32_t
@@ -171,7 +178,7 @@ Renderer::Renderer(
     , dummy_vao_{0u, [](auto e) { ::glDeleteVertexArrays(1u, &e); }}
     , command_buffer_{"gbuffer_command_buffer"}
     , post_processing_command_buffer_{"post_processing_command_buffer"}
-    , post_process_sprite_{create_sprite(mesh_manager)}
+    , post_process_sprite_{create_sprite(mesh_manager, texture_manager)}
     , camera_buffer_{sizeof(CameraData), "camera_buffer"}
     , light_buffer_{sizeof(LightData), "light_buffer"}
     , object_data_buffer_{sizeof(ObjectData), "object_data_buffer"}
@@ -393,7 +400,9 @@ auto Renderer::execute_gbuffer_pass(Scene &scene) -> void
                                            {
                                                return ObjectData{
                                                    .model = entity.transform(),
-                                                   .material_id_index = e.material_index(),
+                                                   .albedo_texture_index = e.albedo_texture_index(),
+                                                   .normal_texture_index = e.normal_texture_index(),
+                                                   .specular_texture_index = e.specular_texture_index(),
                                                    .padding = {},
                                                };
                                            }));
@@ -407,8 +416,6 @@ auto Renderer::execute_gbuffer_pass(Scene &scene) -> void
         object_data_buffer_.native_handle(),
         object_data_buffer_.frame_offset_bytes(),
         object_data_buffer_.size());
-
-    ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, scene.material_manager().native_handle());
 
     ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 4, scene.texture_manager().native_handle());
 

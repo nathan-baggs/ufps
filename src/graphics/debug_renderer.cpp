@@ -668,40 +668,32 @@ auto DebugRenderer::post_render(Scene &scene) -> void
 
             for (const auto &render_entity : entity->render_entities())
             {
-                const auto material_index = render_entity.material_index();
-                const auto &material = scene.material_manager().material(material_index);
+                const auto albedo_texture_index = render_entity.albedo_texture_index();
+                const auto normal_texture_index = render_entity.normal_texture_index();
+                const auto specular_texture_index = render_entity.specular_texture_index();
 
-                const auto *albedo_texture = scene.texture_manager().texture(material.albedo_texture_index);
-                if (albedo_texture)
-                {
-                    ::ImGui::Image(
-                        albedo_texture->native_handle(),
-                        ::ImVec2(64.0f, 64.0f),
-                        ::ImVec2(0.0f, 1.0f),
-                        ::ImVec2(1.0f, 0.0f));
-                }
+                const auto *albedo_texture = scene.texture_manager().texture(albedo_texture_index);
+                ::ImGui::Image(
+                    albedo_texture->native_handle(),
+                    ::ImVec2(64.0f, 64.0f),
+                    ::ImVec2(0.0f, 1.0f),
+                    ::ImVec2(1.0f, 0.0f));
 
-                const auto *normal_texture = scene.texture_manager().texture(material.normal_texture_index);
-                if (normal_texture)
-                {
-                    ::ImGui::SameLine();
-                    ::ImGui::Image(
-                        normal_texture->native_handle(),
-                        ::ImVec2(64.0f, 64.0f),
-                        ::ImVec2(0.0f, 1.0f),
-                        ::ImVec2(1.0f, 0.0f));
-                }
+                const auto *normal_texture = scene.texture_manager().texture(normal_texture_index);
+                ::ImGui::SameLine();
+                ::ImGui::Image(
+                    normal_texture->native_handle(),
+                    ::ImVec2(64.0f, 64.0f),
+                    ::ImVec2(0.0f, 1.0f),
+                    ::ImVec2(1.0f, 0.0f));
 
-                const auto *specular_texture = scene.texture_manager().texture(material.specular_texture_index);
-                if (specular_texture)
-                {
-                    ::ImGui::SameLine();
-                    ::ImGui::Image(
-                        specular_texture->native_handle(),
-                        ::ImVec2(64.0f, 64.0f),
-                        ::ImVec2(0.0f, 1.0f),
-                        ::ImVec2(1.0f, 0.0f));
-                }
+                const auto *specular_texture = scene.texture_manager().texture(specular_texture_index);
+                ::ImGui::SameLine();
+                ::ImGui::Image(
+                    specular_texture->native_handle(),
+                    ::ImVec2(64.0f, 64.0f),
+                    ::ImVec2(0.0f, 1.0f),
+                    ::ImVec2(1.0f, 0.0f));
             }
 
             const auto &camera_data = scene.camera().data();

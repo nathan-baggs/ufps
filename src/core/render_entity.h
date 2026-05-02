@@ -47,21 +47,37 @@ constexpr auto calculate_aabb(ufps::MeshView mesh_view, const ufps::MeshManager 
 class RenderEntity
 {
   public:
-    constexpr RenderEntity(MeshView mesh_view, std::uint32_t material_index, const MeshManager &mesh_manager);
+    constexpr RenderEntity(
+        MeshView mesh_view,
+        std::uint32_t albedo_texture_index,
+        std::uint32_t normal_texture_index,
+        std::uint32_t specular_texture_index,
+        const MeshManager &mesh_manager);
 
     constexpr auto mesh_view() const -> MeshView;
-    constexpr auto material_index() const -> std::uint32_t;
+    constexpr auto albedo_texture_index() const -> std::uint32_t;
+    constexpr auto normal_texture_index() const -> std::uint32_t;
+    constexpr auto specular_texture_index() const -> std::uint32_t;
     constexpr auto aabb() const -> const AABB &;
 
   private:
     MeshView mesh_view_;
-    std::uint32_t material_index_;
+    std::uint32_t albedo_texture_index_;
+    std::uint32_t normal_texture_index_;
+    std::uint32_t specular_texture_index_;
     AABB aabb_;
 };
 
-constexpr RenderEntity::RenderEntity(MeshView mesh_view, std::uint32_t material_index, const MeshManager &mesh_manager)
+constexpr RenderEntity::RenderEntity(
+    MeshView mesh_view,
+    std::uint32_t albedo_texture_index,
+    std::uint32_t normal_texture_index,
+    std::uint32_t specular_texture_index,
+    const MeshManager &mesh_manager)
     : mesh_view_{mesh_view}
-    , material_index_{material_index}
+    , albedo_texture_index_{albedo_texture_index}
+    , normal_texture_index_{normal_texture_index}
+    , specular_texture_index_{specular_texture_index}
     , aabb_{impl::calculate_aabb(mesh_view_, mesh_manager)}
 {
 }
@@ -71,9 +87,19 @@ constexpr auto RenderEntity::mesh_view() const -> MeshView
     return mesh_view_;
 }
 
-constexpr auto RenderEntity::material_index() const -> std::uint32_t
+constexpr auto RenderEntity::albedo_texture_index() const -> std::uint32_t
 {
-    return material_index_;
+    return albedo_texture_index_;
+}
+
+constexpr auto RenderEntity::normal_texture_index() const -> std::uint32_t
+{
+    return normal_texture_index_;
+}
+
+constexpr auto RenderEntity::specular_texture_index() const -> std::uint32_t
+{
+    return specular_texture_index_;
 }
 
 constexpr auto RenderEntity::aabb() const -> const AABB &
