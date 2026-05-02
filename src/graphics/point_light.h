@@ -6,7 +6,7 @@
 namespace ufps
 {
 
-struct PointLight
+struct alignas(16) PointLight
 {
     Vector3 position;
     Colour colour;
@@ -17,6 +17,6 @@ struct PointLight
     float intensity;
 };
 
-static_assert(sizeof(PointLight) == sizeof(float) * 11);
+static_assert(sizeof(PointLight) == sizeof(float) * 12);
 
 }
