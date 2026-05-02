@@ -14,6 +14,9 @@ struct ModelManifest
     std::string albedo_texture;
     std::string normal_texture;
     std::string specular_texture;
+    std::string ao_texture;
+    std::string glossiness_texture;
+    std::string emissive_texture;
 };
 
 struct ModelManifestDescription

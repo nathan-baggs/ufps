@@ -14,6 +14,9 @@ struct ModelData
     std::optional<std::string> albedo;
     std::optional<std::string> normal;
     std::optional<std::string> specular;
+    std::optional<std::string> ao;
+    std::optional<std::string> glossiness;
+    std::optional<std::string> emissive;
 };
 
 }

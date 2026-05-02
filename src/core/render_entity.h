@@ -52,12 +52,18 @@ class RenderEntity
         std::uint64_t albedo_texture_bindless_handle,
         std::uint64_t normal_texture_bindless_handle,
         std::uint64_t specular_texture_bindless_handle,
+        std::uint64_t ao_texture_bindless_handle,
+        std::uint64_t glossiness_texture_bindless_handle,
+        std::uint64_t emissive_texture_bindless_handle,
         const MeshManager &mesh_manager);
 
     constexpr auto mesh_view() const -> MeshView;
     constexpr auto albedo_texture_bindless_handle() const -> std::uint64_t;
     constexpr auto normal_texture_bindless_handle() const -> std::uint64_t;
     constexpr auto specular_texture_bindless_handle() const -> std::uint64_t;
+    constexpr auto ao_texture_bindless_handle() const -> std::uint64_t;
+    constexpr auto glossiness_texture_bindless_handle() const -> std::uint64_t;
+    constexpr auto emissive_texture_bindless_handle() const -> std::uint64_t;
     constexpr auto aabb() const -> const AABB &;
 
   private:
@@ -65,6 +71,9 @@ class RenderEntity
     std::uint64_t albedo_texture_bindless_handle_;
     std::uint64_t normal_texture_bindless_handle_;
     std::uint64_t specular_texture_bindless_handle_;
+    std::uint64_t ao_texture_bindless_handle_;
+    std::uint64_t glossiness_texture_bindless_handle_;
+    std::uint64_t emissive_texture_bindless_handle_;
     AABB aabb_;
 };
 
@@ -73,11 +82,17 @@ constexpr RenderEntity::RenderEntity(
     std::uint64_t albedo_texture_bindless_handle,
     std::uint64_t normal_texture_bindless_handle,
     std::uint64_t specular_texture_bindless_handle,
+    std::uint64_t ao_texture_bindless_handle,
+    std::uint64_t glossiness_texture_bindless_handle,
+    std::uint64_t emissive_texture_bindless_handle,
     const MeshManager &mesh_manager)
     : mesh_view_{mesh_view}
     , albedo_texture_bindless_handle_{albedo_texture_bindless_handle}
     , normal_texture_bindless_handle_{normal_texture_bindless_handle}
     , specular_texture_bindless_handle_{specular_texture_bindless_handle}
+    , ao_texture_bindless_handle_{ao_texture_bindless_handle}
+    , glossiness_texture_bindless_handle_{glossiness_texture_bindless_handle}
+    , emissive_texture_bindless_handle_{emissive_texture_bindless_handle}
     , aabb_{impl::calculate_aabb(mesh_view_, mesh_manager)}
 {
 }
@@ -100,6 +115,21 @@ constexpr auto RenderEntity::normal_texture_bindless_handle() const -> std::uint
 constexpr auto RenderEntity::specular_texture_bindless_handle() const -> std::uint64_t
 {
     return specular_texture_bindless_handle_;
+}
+
+constexpr auto RenderEntity::ao_texture_bindless_handle() const -> std::uint64_t
+{
+    return ao_texture_bindless_handle_;
+}
+
+constexpr auto RenderEntity::glossiness_texture_bindless_handle() const -> std::uint64_t
+{
+    return glossiness_texture_bindless_handle_;
+}
+
+constexpr auto RenderEntity::emissive_texture_bindless_handle() const -> std::uint64_t
+{
+    return emissive_texture_bindless_handle_;
 }
 
 constexpr auto RenderEntity::aabb() const -> const AABB &

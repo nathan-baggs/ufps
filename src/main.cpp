@@ -207,13 +207,24 @@ auto build_entity_cache(
     {
         auto render_entities = std::vector<ufps::RenderEntity>{};
 
-        for (const auto &[mesh_view, albedo, normal, specular] : manifests)
+        for (const auto &[mesh_view, albedo, normal, specular, ao, glosiness, emissive] : manifests)
         {
             const auto albedo_index = texture_manager.bindless_handle(albedo);
             const auto normal_index = texture_manager.bindless_handle(normal);
             const auto specular_index = texture_manager.bindless_handle(specular);
+            const auto ao_index = texture_manager.bindless_handle(ao);
+            const auto glossiness_index = texture_manager.bindless_handle(glosiness);
+            const auto emissive_index = texture_manager.bindless_handle(emissive);
 
-            render_entities.push_back({mesh_view, albedo_index, normal_index, specular_index, mesh_manager});
+            render_entities.push_back(
+                {mesh_view,
+                 albedo_index,
+                 normal_index,
+                 specular_index,
+                 ao_index,
+                 glossiness_index,
+                 emissive_index,
+                 mesh_manager});
         }
 
         entity_cache.insert({name, ufps::Entity{name, std::move(render_entities), {}}});
