@@ -23,6 +23,10 @@ class TextureManager
 
     auto texture(std::uint32_t index) const -> const Texture *;
 
+    auto texture(std::uint64_t bindless_handle) const -> const Texture *;
+
+    auto bindless_handle(std::string_view name) const -> std::uint64_t;
+
     auto try_get_texture_index(std::string_view name) const -> std::optional<std::uint32_t>;
 
     auto texture_index(std::string_view name) const -> std::uint32_t;

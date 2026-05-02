@@ -49,35 +49,35 @@ class RenderEntity
   public:
     constexpr RenderEntity(
         MeshView mesh_view,
-        std::uint32_t albedo_texture_index,
-        std::uint32_t normal_texture_index,
-        std::uint32_t specular_texture_index,
+        std::uint64_t albedo_texture_bindless_handle,
+        std::uint64_t normal_texture_bindless_handle,
+        std::uint64_t specular_texture_bindless_handle,
         const MeshManager &mesh_manager);
 
     constexpr auto mesh_view() const -> MeshView;
-    constexpr auto albedo_texture_index() const -> std::uint32_t;
-    constexpr auto normal_texture_index() const -> std::uint32_t;
-    constexpr auto specular_texture_index() const -> std::uint32_t;
+    constexpr auto albedo_texture_bindless_handle() const -> std::uint64_t;
+    constexpr auto normal_texture_bindless_handle() const -> std::uint64_t;
+    constexpr auto specular_texture_bindless_handle() const -> std::uint64_t;
     constexpr auto aabb() const -> const AABB &;
 
   private:
     MeshView mesh_view_;
-    std::uint32_t albedo_texture_index_;
-    std::uint32_t normal_texture_index_;
-    std::uint32_t specular_texture_index_;
+    std::uint64_t albedo_texture_bindless_handle_;
+    std::uint64_t normal_texture_bindless_handle_;
+    std::uint64_t specular_texture_bindless_handle_;
     AABB aabb_;
 };
 
 constexpr RenderEntity::RenderEntity(
     MeshView mesh_view,
-    std::uint32_t albedo_texture_index,
-    std::uint32_t normal_texture_index,
-    std::uint32_t specular_texture_index,
+    std::uint64_t albedo_texture_bindless_handle,
+    std::uint64_t normal_texture_bindless_handle,
+    std::uint64_t specular_texture_bindless_handle,
     const MeshManager &mesh_manager)
     : mesh_view_{mesh_view}
-    , albedo_texture_index_{albedo_texture_index}
-    , normal_texture_index_{normal_texture_index}
-    , specular_texture_index_{specular_texture_index}
+    , albedo_texture_bindless_handle_{albedo_texture_bindless_handle}
+    , normal_texture_bindless_handle_{normal_texture_bindless_handle}
+    , specular_texture_bindless_handle_{specular_texture_bindless_handle}
     , aabb_{impl::calculate_aabb(mesh_view_, mesh_manager)}
 {
 }
@@ -87,19 +87,19 @@ constexpr auto RenderEntity::mesh_view() const -> MeshView
     return mesh_view_;
 }
 
-constexpr auto RenderEntity::albedo_texture_index() const -> std::uint32_t
+constexpr auto RenderEntity::albedo_texture_bindless_handle() const -> std::uint64_t
 {
-    return albedo_texture_index_;
+    return albedo_texture_bindless_handle_;
 }
 
-constexpr auto RenderEntity::normal_texture_index() const -> std::uint32_t
+constexpr auto RenderEntity::normal_texture_bindless_handle() const -> std::uint64_t
 {
-    return normal_texture_index_;
+    return normal_texture_bindless_handle_;
 }
 
-constexpr auto RenderEntity::specular_texture_index() const -> std::uint32_t
+constexpr auto RenderEntity::specular_texture_bindless_handle() const -> std::uint64_t
 {
-    return specular_texture_index_;
+    return specular_texture_bindless_handle_;
 }
 
 constexpr auto RenderEntity::aabb() const -> const AABB &
