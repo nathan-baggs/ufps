@@ -60,6 +60,12 @@ struct ExposureOptions
     float max_log_luminance = 1.0f;
 };
 
+struct FogOptions
+{
+    Colour colour = colours::black;
+    float density = 0.005f;
+};
+
 class Scene
 {
   public:
@@ -68,6 +74,7 @@ class Scene
         ToneMapOptions tone_map_options;
         SSAOOptions ssao_options;
         ExposureOptions exposure_options;
+        FogOptions fog_options;
         LightData lights;
         std::vector<Entity::Description> entities;
     };
@@ -80,6 +87,7 @@ class Scene
         ToneMapOptions tone_map_options,
         SSAOOptions ssao_options,
         ExposureOptions exposure_options,
+        FogOptions fog_options,
         const StringMap<Entity> &entity_cache);
 
     constexpr Scene(
@@ -112,6 +120,8 @@ class Scene
 
     constexpr auto &exposure_options(this auto &&self);
 
+    constexpr auto &fog_options(this auto &&self);
+
     constexpr auto description(this auto &&self) -> Description;
 
     constexpr auto remove(const Entity &entity) -> void;
@@ -128,6 +138,7 @@ class Scene
     ToneMapOptions tone_map_options_;
     SSAOOptions ssao_options_;
     ExposureOptions exposure_options_;
+    FogOptions fog_options_;
 };
 
 constexpr Scene::Scene(
@@ -138,6 +149,7 @@ constexpr Scene::Scene(
     ToneMapOptions tone_map_options,
     SSAOOptions ssao_options,
     ExposureOptions exposure_options,
+    FogOptions fog_options,
     const StringMap<Entity> &entity_cache)
     : entities_{}
     , entity_cache_{}
@@ -148,6 +160,7 @@ constexpr Scene::Scene(
     , tone_map_options_{std::move(tone_map_options)}
     , ssao_options_{std::move(ssao_options)}
     , exposure_options_{std::move(exposure_options)}
+    , fog_options_{fog_options}
 {
     for (const auto &[name, entity] : entity_cache)
     {
@@ -170,6 +183,7 @@ constexpr Scene::Scene(
     , tone_map_options_{description.tone_map_options}
     , ssao_options_{description.ssao_options}
     , exposure_options_{description.exposure_options}
+    , fog_options_{description.fog_options}
 {
     for (const auto &[name, entity] : entity_cache)
     {
@@ -298,12 +312,18 @@ constexpr auto &Scene::exposure_options(this auto &&self)
     return self.exposure_options_;
 }
 
+constexpr auto &Scene::fog_options(this auto &&self)
+{
+    return self.fog_options_;
+}
+
 constexpr auto Scene::description(this auto &&self) -> Description
 {
     return {
         .tone_map_options = self.tone_map_options_,
         .ssao_options = self.ssao_options_,
         .exposure_options = self.exposure_options_,
+        .fog_options = self.fog_options_,
         .lights = self.lights_,
         .entities = self.entities_ | std::views::transform([](const auto &e) { return e.description(); }) |
                     std::ranges::to<std::vector>()};
