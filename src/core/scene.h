@@ -66,6 +66,14 @@ struct FogOptions
     float density = 0.005f;
 };
 
+struct ChromaticAberrationOptions
+{
+    float red_offset = 0.009f;
+    float green_offset = 0.006f;
+    float blue_offset = -0.006f;
+    float strength = 0.5f;
+};
+
 class Scene
 {
   public:
@@ -75,6 +83,7 @@ class Scene
         SSAOOptions ssao_options;
         ExposureOptions exposure_options;
         FogOptions fog_options;
+        ChromaticAberrationOptions chromatic_aberration_options;
         LightData lights;
         std::vector<Entity::Description> entities;
     };
@@ -88,6 +97,7 @@ class Scene
         SSAOOptions ssao_options,
         ExposureOptions exposure_options,
         FogOptions fog_options,
+        ChromaticAberrationOptions chromatic_aberration_options,
         const StringMap<Entity> &entity_cache);
 
     constexpr Scene(
@@ -122,6 +132,8 @@ class Scene
 
     constexpr auto &fog_options(this auto &&self);
 
+    constexpr auto &chromatic_aberration_options(this auto &&self);
+
     constexpr auto description(this auto &&self) -> Description;
 
     constexpr auto remove(const Entity &entity) -> void;
@@ -139,6 +151,7 @@ class Scene
     SSAOOptions ssao_options_;
     ExposureOptions exposure_options_;
     FogOptions fog_options_;
+    ChromaticAberrationOptions chromatic_aberration_options_;
 };
 
 constexpr Scene::Scene(
@@ -150,6 +163,7 @@ constexpr Scene::Scene(
     SSAOOptions ssao_options,
     ExposureOptions exposure_options,
     FogOptions fog_options,
+    ChromaticAberrationOptions chromatic_aberration_options,
     const StringMap<Entity> &entity_cache)
     : entities_{}
     , entity_cache_{}
@@ -161,6 +175,8 @@ constexpr Scene::Scene(
     , ssao_options_{std::move(ssao_options)}
     , exposure_options_{std::move(exposure_options)}
     , fog_options_{fog_options}
+    , chromatic_aberration_options_{std::move(chromatic_aberration_options)}
+
 {
     for (const auto &[name, entity] : entity_cache)
     {
@@ -184,6 +200,7 @@ constexpr Scene::Scene(
     , ssao_options_{description.ssao_options}
     , exposure_options_{description.exposure_options}
     , fog_options_{description.fog_options}
+    , chromatic_aberration_options_{description.chromatic_aberration_options}
 {
     for (const auto &[name, entity] : entity_cache)
     {
@@ -317,6 +334,11 @@ constexpr auto &Scene::fog_options(this auto &&self)
     return self.fog_options_;
 }
 
+constexpr auto &Scene::chromatic_aberration_options(this auto &&self)
+{
+    return self.chromatic_aberration_options_;
+}
+
 constexpr auto Scene::description(this auto &&self) -> Description
 {
     return {
@@ -324,6 +346,7 @@ constexpr auto Scene::description(this auto &&self) -> Description
         .ssao_options = self.ssao_options_,
         .exposure_options = self.exposure_options_,
         .fog_options = self.fog_options_,
+        .chromatic_aberration_options = self.chromatic_aberration_options_,
         .lights = self.lights_,
         .entities = self.entities_ | std::views::transform([](const auto &e) { return e.description(); }) |
                     std::ranges::to<std::vector>()};
@@ -341,5 +364,4 @@ constexpr auto Scene::remove(PointLightHandle light) -> void
 {
     lights_.lights.remove(light);
 }
-
 }
