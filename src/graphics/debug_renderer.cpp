@@ -326,7 +326,6 @@ auto DebugRenderer::post_render(Scene &scene) -> void
                 .constant_attenuation = 1.0f,
                 .linear_attenuation = 0.007f,
                 .quadratic_attenuation = 0.0002f,
-                .specular_power = 32.0f,
                 .intensity = 1.0f});
         selected_ = handle;
     }
@@ -773,8 +772,6 @@ auto DebugRenderer::post_render(Scene &scene) -> void
             {
                 std::memcpy(&light->colour, colour, sizeof(colour));
             }
-
-            ::ImGui::SliderFloat("power", &light->specular_power, 0.0f, 100.0f);
 
             float atten[] = {light->constant_attenuation, light->linear_attenuation, light->quadratic_attenuation};
             if (::ImGui::SliderFloat3("attenuation", atten, 0.0f, 2.0f))

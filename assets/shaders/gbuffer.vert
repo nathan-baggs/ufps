@@ -15,6 +15,7 @@ struct ObjectData
     uvec2 albedo_bindless_handle;
     uvec2 normal_bindless_handle;
     uvec2 specular_bindless_handle;
+    uvec2 glossiness_bindless_handle;
 };
 
 layout(binding = 0, std430) readonly buffer vertices {
@@ -74,9 +75,10 @@ vec2 get_uv(uint index)
 layout(location = 0) out flat uvec2 out_albedo_bindless_handle;
 layout(location = 1) out flat uvec2 out_normal_bindless_handle;
 layout(location = 2) out flat uvec2 out_specular_bindless_handle;
-layout(location = 3) out vec2 out_uv;
-layout(location = 4) out vec4 out_frag_position;
-layout(location = 5) out mat3 out_tbn;
+layout(location = 3) out flat uvec2 out_glossiness_bindless_handle;
+layout(location = 4) out vec2 out_uv;
+layout(location = 5) out vec4 out_frag_position;
+layout(location = 6) out mat3 out_tbn;
 
 void main()
 {
@@ -88,6 +90,7 @@ void main()
     out_albedo_bindless_handle = object_data[gl_DrawID].albedo_bindless_handle;
     out_normal_bindless_handle = object_data[gl_DrawID].normal_bindless_handle;
     out_specular_bindless_handle = object_data[gl_DrawID].specular_bindless_handle;
+    out_glossiness_bindless_handle = object_data[gl_DrawID].glossiness_bindless_handle;
     out_uv = get_uv(gl_VertexID);
 
     vec3 t = normalize(normal_mat * get_tangent(gl_VertexID));

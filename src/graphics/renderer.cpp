@@ -417,6 +417,7 @@ auto Renderer::execute_gbuffer_pass(Scene &scene) -> void
                                                    .albedo_texture_index = e.albedo_texture_bindless_handle(),
                                                    .normal_texture_index = e.normal_texture_bindless_handle(),
                                                    .specular_texture_index = e.specular_texture_bindless_handle(),
+                                                   .glossiness_texture_index = e.glossiness_texture_bindless_handle(),
                                                };
                                            }));
     }

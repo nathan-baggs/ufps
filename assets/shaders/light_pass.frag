@@ -6,9 +6,8 @@ struct PointLight
     float position[3];
     float colour[3];
     float attenuation[3];
-    float specular_power;
     float intensity;
-    float pad;
+    float pad[2];
 };
 
 layout(binding = 1, std430) readonly buffer lights {
@@ -39,7 +38,8 @@ vec3 calculate_point_light(
     vec3 normal,
     vec3 frag_pos,
     vec3 albedo,
-    float specular)
+    float specular,
+    float glossiness)
 {
     vec3 point_pos = vec3(light.position[0], light.position[1], light.position[2]);
     vec3 point_colour = vec3(light.colour[0], light.colour[1], light.colour[2]) * vec3(light.intensity);
@@ -52,15 +52,18 @@ vec3 calculate_point_light(
     float diffuse_factor = max(dot(normal, light_dir), 0.0);
     vec3 halfway_dir = normalize(light_dir + view_dir);
 
-    float spec_factor = pow(max(dot(normal, halfway_dir), 0.0), light.specular_power) * specular;
+    float shininess = max(2.0 / pow(max(glossiness, 0.04), 4.0) - 2.0, 1.0);
 
-    diffuse_factor *= (1.0 - spec_factor);
+    float spec_factor = pow(max(dot(normal, halfway_dir), 0.0), shininess);
 
     float distance = length(point_pos - frag_pos);
     float att = 1.0 / (point_attenuation.x + (point_attenuation.y * distance) + (point_attenuation.z * (distance * distance)));
 
-    vec3 diffuse_light = diffuse_factor * albedo;
-    vec3 specular_light = vec3(spec_factor); // Highlight remains the color of the light
+    vec3 f_base = vec3(0.04);
+    vec3 specular_colour = mix(f_base, albedo, specular);
+
+    vec3 diffuse_light = diffuse_factor * albedo * (1.0 - specular);
+    vec3 specular_light = spec_factor * specular_colour;
 
     return (diffuse_light + specular_light) * att * point_colour;
 }
@@ -71,6 +74,7 @@ void main()
     vec3 normal = texture(normal_texture, in_uv).xyz;
     vec3 frag_pos = texture(position_texture, in_uv).xyz;
     float specular = texture(specular_texture, in_uv).r;
+    float glossiness = texture(specular_texture, in_uv).g;
 
     vec3 ambient = vec3(ambient_colour[0], ambient_colour[1], ambient_colour[2]);
 
@@ -78,7 +82,7 @@ void main()
 
     for (uint i = 0; i < num_point_lights; i++)
     {
-        result += calculate_point_light(point_lights[i], normal, frag_pos, albedo, specular);
+        result += calculate_point_light(point_lights[i], normal, frag_pos, albedo, specular, glossiness);
     }
 
     out_colour = vec4(result, 1.0);

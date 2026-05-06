@@ -13,7 +13,6 @@ struct alignas(16) PointLight
     float constant_attenuation;
     float linear_attenuation;
     float quadratic_attenuation;
-    float specular_power;
     float intensity;
 };
 
