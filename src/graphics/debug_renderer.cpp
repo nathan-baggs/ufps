@@ -449,6 +449,40 @@ auto DebugRenderer::post_render(Scene &scene) -> void
         }
     }
 
+    ::ImGui::Text("chromatic aberration options");
+
+    {
+        auto value = scene.chromatic_aberration_options().red_offset;
+        if (::ImGui::SliderFloat("red_offset", &value, -0.1f, 0.1f))
+        {
+            scene.chromatic_aberration_options().red_offset = value;
+        }
+    }
+
+    {
+        auto value = scene.chromatic_aberration_options().green_offset;
+        if (::ImGui::SliderFloat("green_offset", &value, -0.1f, 0.1f))
+        {
+            scene.chromatic_aberration_options().green_offset = value;
+        }
+    }
+
+    {
+        auto value = scene.chromatic_aberration_options().blue_offset;
+        if (::ImGui::SliderFloat("blue_offset", &value, -0.1f, 0.1f))
+        {
+            scene.chromatic_aberration_options().blue_offset = value;
+        }
+    }
+
+    {
+        auto value = scene.chromatic_aberration_options().strength;
+        if (::ImGui::SliderFloat("strength_offset", &value, 0.0f, 1.0f))
+        {
+            scene.chromatic_aberration_options().strength = value;
+        }
+    }
+
     ::ImGui::Text("exposure options");
 
     {

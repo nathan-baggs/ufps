@@ -244,6 +244,13 @@ Renderer::Renderer(
           "shaders\\ssao_blur.frag",
           "ssao_blur_fragment_shader",
           "ssao_blur_program")}
+    , chromatic_aberration_program_{create_program(
+          resource_loader,
+          "shaders\\chromatic_aberration.vert",
+          "chromatic_aberration_vertex_shader",
+          "shaders\\chromatic_aberration.frag",
+          "chromatic_aberration_fragment_shader",
+          "chromatic_aberration_program")}
     , ssao_noise_sampler_{FilterType::NEAREST, FilterType::NEAREST, WrapMode::REPEAT, WrapMode::REPEAT, "ssao_noise_sampler"}
     , ssao_noise_texture_bindless_handle_{create_ssao_noise_texture(texture_manager, ssao_noise_sampler_)}
     , fb_sampler_{FilterType::LINEAR, FilterType::LINEAR, WrapMode::CLAMP_TO_EDGE, WrapMode::CLAMP_TO_EDGE, "fb_sampler"}
@@ -284,6 +291,13 @@ Renderer::Renderer(
           texture_manager,
           "ssao_blur",
           TextureFormat::R16F),}
+    , chromatic_aberration_rt_{create_render_target(
+          1u,
+          window_.render_width(),
+          window_.render_height(),
+          fb_sampler_,
+          texture_manager,
+          "chromatic_aberration"),}
     ,mesh_manager_{mesh_manager}
     ,final_fb_{}
 {
@@ -328,8 +342,9 @@ auto Renderer::render(Scene &scene) -> void
     execute_average_luminance_pass(scene);
     execute_ssao_pass(scene);
     execute_tone_mapping_pass(scene);
+    execute_chromatic_aberration_pass(scene);
 
-    final_fb_ = &tone_map_rt_.fb;
+    final_fb_ = &chromatic_aberration_rt_.fb;
 
     post_render(scene);
 
@@ -639,6 +654,31 @@ auto Renderer::execute_tone_mapping_pass(Scene &scene) -> void
         camera_buffer_.native_handle(),
         camera_buffer_.frame_offset_bytes(),
         sizeof(CameraData));
+    ::glBindBuffer(GL_DRAW_INDIRECT_BUFFER, post_processing_command_buffer_.native_handle());
+    ::glMultiDrawElementsIndirect(
+        GL_TRIANGLES,
+        GL_UNSIGNED_INT,
+        reinterpret_cast<const void *>(post_processing_command_buffer_.offset_bytes()),
+        1u,
+        0);
+}
+
+auto Renderer::execute_chromatic_aberration_pass(Scene &scene) -> void
+{
+    const auto [vertex_buffer_handle, index_buffer_handle] = scene.mesh_manager().native_handle();
+
+    chromatic_aberration_rt_.fb.bind();
+    ::glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    const auto auto_bind = AutoBind{chromatic_aberration_program_};
+
+    chromatic_aberration_program_.set_uniforms(
+        tone_map_rt_.colour_texture_bindless_handle_0,
+        scene.chromatic_aberration_options().red_offset,
+        scene.chromatic_aberration_options().green_offset,
+        scene.chromatic_aberration_options().blue_offset,
+        scene.chromatic_aberration_options().strength);
+    ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, vertex_buffer_handle);
     ::glBindBuffer(GL_DRAW_INDIRECT_BUFFER, post_processing_command_buffer_.native_handle());
     ::glMultiDrawElementsIndirect(
         GL_TRIANGLES,

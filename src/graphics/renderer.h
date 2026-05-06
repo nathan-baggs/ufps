@@ -76,6 +76,7 @@ class Renderer
     Program average_luminance_program_;
     Program ssao_program_;
     Program ssao_blur_program_;
+    Program chromatic_aberration_program_;
     Sampler ssao_noise_sampler_;
     std::uint64_t ssao_noise_texture_bindless_handle_;
     Sampler fb_sampler_;
@@ -84,6 +85,7 @@ class Renderer
     RenderTarget tone_map_rt_;
     RenderTarget ssao_rt_;
     RenderTarget ssao_blur_rt_;
+    RenderTarget chromatic_aberration_rt_;
     MeshManager &mesh_manager_;
     FrameBuffer *final_fb_;
 
@@ -94,5 +96,6 @@ class Renderer
     auto execute_average_luminance_pass(Scene &scene) -> void;
     auto execute_ssao_pass(Scene &scene) -> void;
     auto execute_tone_mapping_pass(Scene &scene) -> void;
+    auto execute_chromatic_aberration_pass(Scene &scene) -> void;
 };
 }
