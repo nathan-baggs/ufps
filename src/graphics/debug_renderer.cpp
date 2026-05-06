@@ -430,6 +430,25 @@ auto DebugRenderer::post_render(Scene &scene) -> void
         }
     }
 
+    ::ImGui::Text("fog options");
+
+    {
+        float value[3]{};
+        std::memcpy(value, &scene.fog_options().colour, sizeof(value));
+        if (::ImGui::ColorPicker3("fog_colour", value))
+        {
+            std::memcpy(&scene.fog_options().colour, value, sizeof(value));
+        }
+    }
+
+    {
+        auto value = scene.fog_options().density;
+        if (::ImGui::SliderFloat("fog_density", &value, 0.0f, 0.2f))
+        {
+            scene.fog_options().density = value;
+        }
+    }
+
     ::ImGui::Text("exposure options");
 
     {

@@ -627,9 +627,18 @@ auto Renderer::execute_tone_mapping_pass(Scene &scene) -> void
         scene.tone_map_options().black_tightness,
         scene.tone_map_options().pedestal,
         scene.tone_map_options().gamma,
-        ssao_blur_rt_.colour_texture_bindless_handle_0);
+        ssao_blur_rt_.colour_texture_bindless_handle_0,
+        gbuffer_rt_.colour_texture_bindless_handle_2,
+        scene.fog_options().colour,
+        scene.fog_options().density);
     ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, vertex_buffer_handle);
     ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, average_luminance_buffer_.native_handle());
+    ::glBindBufferRange(
+        GL_SHADER_STORAGE_BUFFER,
+        2,
+        camera_buffer_.native_handle(),
+        camera_buffer_.frame_offset_bytes(),
+        sizeof(CameraData));
     ::glBindBuffer(GL_DRAW_INDIRECT_BUFFER, post_processing_command_buffer_.native_handle());
     ::glMultiDrawElementsIndirect(
         GL_TRIANGLES,
