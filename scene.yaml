@@ -27,6 +27,12 @@ Description:
           g: 0
           b: 0.14215684
       density: 0.054
+  chromatic_aberration_options:
+    ChromaticAberrationOptions:
+      red_offset: 0.009
+      green_offset: 0.006
+      blue_offset: -0.006
+      strength: 0.5
   lights:
     LightData:
       ambient:
@@ -49,7 +55,7 @@ Description:
             constant_attenuation: 1
             linear_attenuation: 0.007
             quadratic_attenuation: 0.0002
-            intensity: 5.0006557
+            intensity: 13.780919
         - PointLight:
             position:
               Vector3:
