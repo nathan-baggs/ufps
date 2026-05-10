@@ -1,5 +1,6 @@
 #include "graphics/renderer.h"
 
+#include <GL/gl.h>
 #include <chrono>
 #include <cmath>
 #include <cstdint>
@@ -88,6 +89,8 @@ auto create_render_target(
         colour_attachment_count > 2 ? texture_manager.texture(first_index + 2)->bindless_handle() : 0u;
     const auto colour_texture_bindless_handle_3 =
         colour_attachment_count > 3 ? texture_manager.texture(first_index + 3)->bindless_handle() : 0u;
+    const auto colour_texture_bindless_handle_4 =
+        colour_attachment_count > 4 ? texture_manager.texture(first_index + 4)->bindless_handle() : 0u;
 
     const auto depth_texture_data = ufps::TextureData{
         .width = width,
@@ -111,6 +114,7 @@ auto create_render_target(
         .colour_texture_bindless_handle_1 = colour_texture_bindless_handle_1,
         .colour_texture_bindless_handle_2 = colour_texture_bindless_handle_2,
         .colour_texture_bindless_handle_3 = colour_texture_bindless_handle_3,
+        .colour_texture_bindless_handle_4 = colour_texture_bindless_handle_4,
         .depth_texture_bindless_handle = texture_manager.texture(depth_texture_index)->bindless_handle(),
     };
 }
@@ -256,7 +260,7 @@ Renderer::Renderer(
     , ssao_noise_texture_bindless_handle_{create_ssao_noise_texture(texture_manager, ssao_noise_sampler_)}
     , fb_sampler_{FilterType::LINEAR, FilterType::LINEAR, WrapMode::CLAMP_TO_EDGE, WrapMode::CLAMP_TO_EDGE, "fb_sampler"}
     , gbuffer_rt_{create_render_target(
-          4u,
+          5u,
           window_.render_width(),
           window_.render_height(),
           fb_sampler_,
@@ -434,6 +438,8 @@ auto Renderer::execute_gbuffer_pass(Scene &scene) -> void
                                                    .normal_texture_index = e.normal_texture_bindless_handle(),
                                                    .specular_texture_index = e.specular_texture_bindless_handle(),
                                                    .glossiness_texture_index = e.glossiness_texture_bindless_handle(),
+                                                   .emissive_texture_index = e.emissive_texture_bindless_handle(),
+                                                   .emissive_strength = entity.emissive_strength(),
                                                };
                                            }));
     }
@@ -484,7 +490,8 @@ auto Renderer::execute_lighting_pass(Scene &scene) -> void
         gbuffer_rt_.colour_texture_bindless_handle_0,
         gbuffer_rt_.colour_texture_bindless_handle_1,
         gbuffer_rt_.colour_texture_bindless_handle_2,
-        gbuffer_rt_.colour_texture_bindless_handle_3);
+        gbuffer_rt_.colour_texture_bindless_handle_3,
+        gbuffer_rt_.colour_texture_bindless_handle_4);
 
     const auto [vertex_buffer_handle, index_buffer_handle] = scene.mesh_manager().native_handle();
     ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, vertex_buffer_handle);

@@ -14,6 +14,8 @@ struct alignas(16) ObjectData
     std::uint64_t normal_texture_index;
     std::uint64_t specular_texture_index;
     std::uint64_t glossiness_texture_index;
+    std::uint64_t emissive_texture_index;
+    float emissive_strength;
 };
 
 }

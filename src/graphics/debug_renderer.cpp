@@ -757,6 +757,14 @@ auto DebugRenderer::post_render(Scene &scene) -> void
             auto *entity = *selected_entity;
             ::ImGui::Text("entity: %s", entity->name().c_str());
 
+            {
+                auto value = entity->emissive_strength();
+                if (::ImGui::SliderFloat("emissive_strength", &value, 0.0f, 10.0f))
+                {
+                    entity->set_emissive_strength(value);
+                }
+            }
+
             auto transform = Matrix4{entity->transform()};
 
             ::ImGui::BeginTable(

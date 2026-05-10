@@ -26,6 +26,7 @@ struct RenderTarget
     std::uint64_t colour_texture_bindless_handle_1;
     std::uint64_t colour_texture_bindless_handle_2;
     std::uint64_t colour_texture_bindless_handle_3;
+    std::uint64_t colour_texture_bindless_handle_4;
     std::uint64_t depth_texture_bindless_handle;
 };
 
