@@ -6,6 +6,9 @@ layout(location = 1) uniform float u_red_offset;
 layout(location = 2) uniform float u_green_offset;
 layout(location = 3) uniform float u_blue_offset;
 layout(location = 4) uniform float u_strength;
+layout(location = 5) uniform vec3 u_vignette_colour;
+layout(location = 6) uniform float u_vignette_strength;
+layout(location = 7) uniform float u_vignette_feather;
 
 layout(location = 0) in vec2 in_uv;
 
@@ -24,7 +27,18 @@ vec3 chromatic_aberration()
     return vec3(red, green, blue);
 }
 
+vec3 vignette(vec3 colour)
+{
+    vec2 direction = in_uv - vec2(0.5f, 0.5f);
+    float dist = length(direction);
+    float vignette_amount = smoothstep(u_vignette_strength, u_vignette_strength + u_vignette_feather, dist);
+
+    return mix(colour, u_vignette_colour, vignette_amount);
+}
+
 void main()
 {
-    out_colour = vec4(chromatic_aberration(), 1.0);
+    vec3 colour = chromatic_aberration();
+    colour = vignette(colour);
+    out_colour = vec4(colour, 1.0);
 }

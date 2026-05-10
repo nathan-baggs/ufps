@@ -677,7 +677,10 @@ auto Renderer::execute_chromatic_aberration_pass(Scene &scene) -> void
         scene.chromatic_aberration_options().red_offset,
         scene.chromatic_aberration_options().green_offset,
         scene.chromatic_aberration_options().blue_offset,
-        scene.chromatic_aberration_options().strength);
+        scene.chromatic_aberration_options().strength,
+        scene.vignette_options().colour,
+        scene.vignette_options().strength,
+        scene.vignette_options().feather);
     ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, vertex_buffer_handle);
     ::glBindBuffer(GL_DRAW_INDIRECT_BUFFER, post_processing_command_buffer_.native_handle());
     ::glMultiDrawElementsIndirect(

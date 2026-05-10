@@ -483,6 +483,33 @@ auto DebugRenderer::post_render(Scene &scene) -> void
         }
     }
 
+    ::ImGui::Text("vignette options");
+
+    {
+        float value[3]{};
+        std::memcpy(value, &scene.vignette_options().colour, sizeof(value));
+        if (::ImGui::ColorPicker3("vignette_colour", value))
+        {
+            std::memcpy(&scene.vignette_options().colour, value, sizeof(value));
+        }
+    }
+
+    {
+        auto value = scene.vignette_options().strength;
+        if (::ImGui::SliderFloat("vignette_strength", &value, 0.0f, 1.0f))
+        {
+            scene.vignette_options().strength = value;
+        }
+    }
+
+    {
+        auto value = scene.vignette_options().feather;
+        if (::ImGui::SliderFloat("vignette_feather", &value, 0.0f, 1.0f))
+        {
+            scene.vignette_options().feather = value;
+        }
+    }
+
     ::ImGui::Text("exposure options");
 
     {
