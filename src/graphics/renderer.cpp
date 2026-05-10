@@ -1,5 +1,6 @@
 #include "graphics/renderer.h"
 
+#include <chrono>
 #include <cmath>
 #include <cstdint>
 #include <optional>
@@ -665,6 +666,10 @@ auto Renderer::execute_tone_mapping_pass(Scene &scene) -> void
 
 auto Renderer::execute_chromatic_aberration_pass(Scene &scene) -> void
 {
+    static const auto start = std::chrono::steady_clock::now();
+    const auto elapsed =
+        std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start);
+
     const auto [vertex_buffer_handle, index_buffer_handle] = scene.mesh_manager().native_handle();
 
     chromatic_aberration_rt_.fb.bind();
@@ -680,7 +685,9 @@ auto Renderer::execute_chromatic_aberration_pass(Scene &scene) -> void
         scene.chromatic_aberration_options().strength,
         scene.vignette_options().colour,
         scene.vignette_options().strength,
-        scene.vignette_options().feather);
+        scene.vignette_options().feather,
+        scene.film_grain_options().strength,
+        static_cast<float>(elapsed.count()));
     ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, vertex_buffer_handle);
     ::glBindBuffer(GL_DRAW_INDIRECT_BUFFER, post_processing_command_buffer_.native_handle());
     ::glMultiDrawElementsIndirect(

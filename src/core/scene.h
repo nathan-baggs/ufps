@@ -82,6 +82,11 @@ struct VignetteOptions
     float feather = 0.1f;
 };
 
+struct FilmGrainOptions
+{
+    float strength = 0.01f;
+};
+
 class Scene
 {
   public:
@@ -93,6 +98,7 @@ class Scene
         FogOptions fog_options;
         ChromaticAberrationOptions chromatic_aberration_options;
         VignetteOptions vignette_options;
+        FilmGrainOptions film_grain_options;
         LightData lights;
         std::vector<Entity::Description> entities;
     };
@@ -108,6 +114,7 @@ class Scene
         FogOptions fog_options,
         ChromaticAberrationOptions chromatic_aberration_options,
         VignetteOptions vignette_options,
+        FilmGrainOptions film_grain_options,
         const StringMap<Entity> &entity_cache);
 
     constexpr Scene(
@@ -146,6 +153,8 @@ class Scene
 
     constexpr auto &vignette_options(this auto &&self);
 
+    constexpr auto &film_grain_options(this auto &&self);
+
     constexpr auto description(this auto &&self) -> Description;
 
     constexpr auto remove(const Entity &entity) -> void;
@@ -165,6 +174,7 @@ class Scene
     FogOptions fog_options_;
     ChromaticAberrationOptions chromatic_aberration_options_;
     VignetteOptions vignette_options_;
+    FilmGrainOptions film_grain_options_;
 };
 
 constexpr Scene::Scene(
@@ -178,6 +188,7 @@ constexpr Scene::Scene(
     FogOptions fog_options,
     ChromaticAberrationOptions chromatic_aberration_options,
     VignetteOptions vignette_options,
+    FilmGrainOptions film_grain_options,
     const StringMap<Entity> &entity_cache)
     : entities_{}
     , entity_cache_{}
@@ -191,6 +202,7 @@ constexpr Scene::Scene(
     , fog_options_{fog_options}
     , chromatic_aberration_options_{std::move(chromatic_aberration_options)}
     , vignette_options_{std::move(vignette_options)}
+    , film_grain_options_{std::move(film_grain_options)}
 
 {
     for (const auto &[name, entity] : entity_cache)
@@ -217,6 +229,7 @@ constexpr Scene::Scene(
     , fog_options_{description.fog_options}
     , chromatic_aberration_options_{description.chromatic_aberration_options}
     , vignette_options_{description.vignette_options}
+    , film_grain_options_{description.film_grain_options}
 {
     for (const auto &[name, entity] : entity_cache)
     {
@@ -360,6 +373,11 @@ constexpr auto &Scene::vignette_options(this auto &&self)
     return self.vignette_options_;
 }
 
+constexpr auto &Scene::film_grain_options(this auto &&self)
+{
+    return self.film_grain_options_;
+}
+
 constexpr auto Scene::description(this auto &&self) -> Description
 {
     return {
@@ -369,6 +387,7 @@ constexpr auto Scene::description(this auto &&self) -> Description
         .fog_options = self.fog_options_,
         .chromatic_aberration_options = self.chromatic_aberration_options_,
         .vignette_options = self.vignette_options_,
+        .film_grain_options = self.film_grain_options_,
         .lights = self.lights_,
         .entities = self.entities_ | std::views::transform([](const auto &e) { return e.description(); }) |
                     std::ranges::to<std::vector>()};

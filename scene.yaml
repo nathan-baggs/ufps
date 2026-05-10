@@ -42,6 +42,9 @@ Description:
           b: 0
       strength: 0.509
       feather: 0.223
+  film_grain_options:
+    FilmGrainOptions:
+      strength: 0.01
   lights:
     LightData:
       ambient:

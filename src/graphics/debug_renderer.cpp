@@ -510,6 +510,16 @@ auto DebugRenderer::post_render(Scene &scene) -> void
         }
     }
 
+    ::ImGui::Text("film grain options");
+
+    {
+        auto value = scene.film_grain_options().strength;
+        if (::ImGui::SliderFloat("film_grain_strength", &value, 0.0f, 1.0f))
+        {
+            scene.film_grain_options().strength = value;
+        }
+    }
+
     ::ImGui::Text("exposure options");
 
     {

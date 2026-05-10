@@ -9,6 +9,8 @@ layout(location = 4) uniform float u_strength;
 layout(location = 5) uniform vec3 u_vignette_colour;
 layout(location = 6) uniform float u_vignette_strength;
 layout(location = 7) uniform float u_vignette_feather;
+layout(location = 8) uniform float u_film_grain_strength;
+layout(location = 9) uniform float u_frame_time;
 
 layout(location = 0) in vec2 in_uv;
 
@@ -36,9 +38,18 @@ vec3 vignette(vec3 colour)
     return mix(colour, u_vignette_colour, vignette_amount);
 }
 
+vec3 film_grain(vec3 colour)
+{
+    float rand = fract(10000 * sin((in_uv.x + in_uv.y * u_frame_time) * 3.14 / 180.0));
+    rand *= u_film_grain_strength;
+
+    return colour += rand;
+}
+
 void main()
 {
     vec3 colour = chromatic_aberration();
     colour = vignette(colour);
+    colour = film_grain(colour);
     out_colour = vec4(colour, 1.0);
 }
