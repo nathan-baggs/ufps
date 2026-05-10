@@ -27,6 +27,7 @@ layout(bindless_sampler, location = 0) uniform sampler2D albedo_texture;
 layout(bindless_sampler, location = 1) uniform sampler2D normal_texture;
 layout(bindless_sampler, location = 2) uniform sampler2D position_texture;
 layout(bindless_sampler, location = 3) uniform sampler2D specular_texture;
+layout(bindless_sampler, location = 4) uniform sampler2D emissive_texture;
 
 layout(location = 0) in vec4 in_frag_position;
 layout(location = 1) in vec2 in_uv;
@@ -84,6 +85,8 @@ void main()
     {
         result += calculate_point_light(point_lights[i], normal, frag_pos, albedo, specular, glossiness);
     }
+
+    result += texture(emissive_texture, in_uv).rgb;
 
     out_colour = vec4(result, 1.0);
 }

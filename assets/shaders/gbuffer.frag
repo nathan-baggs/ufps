@@ -5,14 +5,17 @@ layout(location = 0) in flat uvec2 in_albedo_tex_bindless_handle;
 layout(location = 1) in flat uvec2 in_normal_tex_bindless_handle;
 layout(location = 2) in flat uvec2 in_specular_tex_bindless_handle;
 layout(location = 3) in flat uvec2 in_glossiness_tex_bindless_handle;
-layout(location = 4) in vec2 in_uv;
-layout(location = 5) in vec4 in_frag_position;
-layout(location = 6) in mat3 in_tbn;
+layout(location = 4) in flat uvec2 in_emissive_tex_bindless_handle;
+layout(location = 5) in vec2 in_uv;
+layout(location = 6) in vec4 in_frag_position;
+layout(location = 7) in mat3 in_tbn;
+layout(location = 10) in flat float in_emissive_strength;
 
 layout(location = 0) out vec4 out_colour;
 layout(location = 1) out vec4 out_normal;
 layout(location = 2) out vec4 out_pos;
 layout(location = 3) out vec4 out_specular;
+layout(location = 4) out vec4 out_emissive;
 
 void main()
 {
@@ -29,4 +32,6 @@ void main()
     float glossiness = texture(sampler2D(in_glossiness_tex_bindless_handle), in_uv).r;
 
     out_specular = vec4(specular, glossiness, 0.0, 1.0);
+
+    out_emissive = vec4(texture(sampler2D(in_emissive_tex_bindless_handle), in_uv).rgb * in_emissive_strength, 1.0);
 }
