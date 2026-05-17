@@ -78,6 +78,9 @@ class Renderer
     Program ssao_program_;
     Program ssao_blur_program_;
     Program chromatic_aberration_program_;
+    Program bloom_downsample_program_;
+    Program bloom_upsample_program_;
+    Program bloom_mix_program_;
     Sampler ssao_noise_sampler_;
     std::uint64_t ssao_noise_texture_bindless_handle_;
     Sampler fb_sampler_;
@@ -87,12 +90,17 @@ class Renderer
     RenderTarget ssao_rt_;
     RenderTarget ssao_blur_rt_;
     RenderTarget chromatic_aberration_rt_;
+    std::vector<RenderTarget> bloom_mips_;
+    RenderTarget bloom_rt_;
     MeshManager &mesh_manager_;
     FrameBuffer *final_fb_;
+    float bloom_filter_radius_ = 0.005f;
+    float bloom_mix_amount_ = 0.04f;
 
   private:
     auto execute_gbuffer_pass(Scene &scene) -> void;
     auto execute_lighting_pass(Scene &scene) -> void;
+    auto execute_bloom_pass(Scene &scene) -> void;
     auto execute_luminance_histogram_pass(Scene &scene) -> void;
     auto execute_average_luminance_pass(Scene &scene) -> void;
     auto execute_ssao_pass(Scene &scene) -> void;

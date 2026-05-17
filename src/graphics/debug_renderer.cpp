@@ -388,6 +388,12 @@ auto DebugRenderer::post_render(Scene &scene) -> void
         }
     }
 
+    ::ImGui::Text("bloom options");
+    {
+        ::ImGui::SliderFloat("bloom_filter_radius", &bloom_filter_radius_, 0.0f, 0.1f);
+        ::ImGui::SliderFloat("bloom_mix", &bloom_mix_amount_, 0.0f, 1.0f);
+    }
+
     ::ImGui::Text("ssao options");
 
     {
@@ -708,9 +714,24 @@ auto DebugRenderer::post_render(Scene &scene) -> void
 
     ::ImGui::End();
 
-    ::ImGui::Begin("render_targets");
+    ::ImGui::Begin("bloom_mips");
+
     static constexpr auto width = 175.0f;
     const auto aspect_ratio = static_cast<float>(window_.render_width()) / static_cast<float>(window_.render_height());
+
+    for (const auto &mip : bloom_mips_)
+    {
+        ::ImGui::Image(
+            scene.texture_manager().texture(mip.colour_texture_bindless_handle_0)->native_handle(),
+            ::ImVec2(width * aspect_ratio, width),
+            ::ImVec2(0.0f, 1.0f),
+            ::ImVec2(1.0f, 0.0f));
+        ::ImGui::SameLine();
+    }
+
+    ::ImGui::End();
+
+    ::ImGui::Begin("render_targets");
 
     ::ImGui::Image(
         scene.texture_manager().texture(ssao_blur_rt_.colour_texture_bindless_handle_0)->native_handle(),
