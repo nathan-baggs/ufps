@@ -2,6 +2,7 @@
 
 #include <GL/gl.h>
 #include <string_view>
+#include <tuple>
 
 #include "graphics/opengl.h"
 #include "graphics/shader.h"
@@ -115,6 +116,12 @@ auto Program::set_uniform(std::size_t index, const Colour &value) const -> void
 {
     expect(is_bound_, "setting uniform on unbound program");
     ::glProgramUniform3f(handle_, index, value.r, value.g, value.b);
+}
+
+auto Program::set_uniform(std::size_t index, const std::tuple<float, float> &value) const -> void
+{
+    expect(is_bound_, "setting uniform on unbound program");
+    ::glProgramUniform2f(handle_, index, std::get<0>(value), std::get<1>(value));
 }
 
 }
