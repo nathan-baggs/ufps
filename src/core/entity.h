@@ -19,6 +19,7 @@ class Entity
     struct Description
     {
         std::string name;
+        float emissive_strength;
         Transform transform;
         AABB aabb;
     };
@@ -80,6 +81,7 @@ constexpr auto Entity::description() const -> Entity::Description
 {
     return {
         .name = name_,
+        .emissive_strength = emissive_strength_,
         .transform = transform_,
         .aabb = aabb_,
     };

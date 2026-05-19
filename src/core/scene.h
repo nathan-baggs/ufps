@@ -258,6 +258,7 @@ constexpr Scene::Scene(
 
         auto &new_entity = entities_.emplace_back(*cached);
         new_entity.set_transform(entity_description.transform);
+        new_entity.set_emissive_strength(entity_description.emissive_strength);
     }
 }
 

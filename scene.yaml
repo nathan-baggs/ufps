@@ -27,11 +27,6 @@ Description:
           g: 0
           b: 0.14215684
       density: 0.054
-  bloom_options:
-    BloomOptions:
-      filter_radius: 0.005
-      mix_amount: 0.04
-      threshold: 1.0
   chromatic_aberration_options:
     ChromaticAberrationOptions:
       red_offset: 0.009
@@ -50,6 +45,11 @@ Description:
   film_grain_options:
     FilmGrainOptions:
       strength: 0.01
+  bloom_options:
+    BloomOptions:
+      filter_radius: 0.005
+      mix_amount: 0.04
+      threshold: 1
   lights:
     LightData:
       ambient:
@@ -72,7 +72,7 @@ Description:
             constant_attenuation: 1
             linear_attenuation: 0.007
             quadratic_attenuation: 0.0002
-            intensity: 11.082265
+            intensity: 8.448465
         - PointLight:
             position:
               Vector3:
@@ -136,6 +136,7 @@ Description:
   entities:
     - Description:
         name: SM_Corner01_8_8_X
+        emissive_strength: 1
         transform:
           Transform:
             position:
@@ -168,6 +169,7 @@ Description:
                 z: 8
     - Description:
         name: SM_Corridor039_12_06_Top_B_02
+        emissive_strength: 1
         transform:
           Transform:
             position:
@@ -200,6 +202,7 @@ Description:
                 z: 6
     - Description:
         name: SM_Corridor045_04_04
+        emissive_strength: 1
         transform:
           Transform:
             position:
@@ -232,6 +235,7 @@ Description:
                 z: 8.34465e-07
     - Description:
         name: SM_Corridor042_12_06_Bottom_B
+        emissive_strength: 1
         transform:
           Transform:
             position:
@@ -264,6 +268,7 @@ Description:
                 z: 6
     - Description:
         name: SM_Corridor043_12_06_Bottom_B
+        emissive_strength: 1
         transform:
           Transform:
             position:
@@ -296,6 +301,7 @@ Description:
                 z: 6
     - Description:
         name: SM_Windows03_12_4
+        emissive_strength: 1
         transform:
           Transform:
             position:
@@ -328,6 +334,7 @@ Description:
                 z: 0
     - Description:
         name: SM_Corridor036_12_06_Top_B_02
+        emissive_strength: 1
         transform:
           Transform:
             position:
@@ -360,6 +367,7 @@ Description:
                 z: 6
     - Description:
         name: SM_Corridor045_04_04
+        emissive_strength: 1
         transform:
           Transform:
             position:
@@ -392,6 +400,7 @@ Description:
                 z: 8.34465e-07
     - Description:
         name: SM_Corridor042_12_06_Bottom_B
+        emissive_strength: 1
         transform:
           Transform:
             position:
@@ -424,6 +433,7 @@ Description:
                 z: 6
     - Description:
         name: SM_Corridor043_12_06_Bottom_B
+        emissive_strength: 1
         transform:
           Transform:
             position:
@@ -456,6 +466,7 @@ Description:
                 z: 6
     - Description:
         name: SM_Corridor039_12_06_Top_B_02
+        emissive_strength: 1
         transform:
           Transform:
             position:
@@ -488,6 +499,7 @@ Description:
                 z: 6
     - Description:
         name: SM_Corridor036_12_06_Top_B_02
+        emissive_strength: 1
         transform:
           Transform:
             position:
@@ -520,6 +532,7 @@ Description:
                 z: 6
     - Description:
         name: SM_Windows03_12_4
+        emissive_strength: 1
         transform:
           Transform:
             position:
@@ -552,6 +565,7 @@ Description:
                 z: 0
     - Description:
         name: SM_Corridor019_06_08_B
+        emissive_strength: 1
         transform:
           Transform:
             position:
@@ -584,6 +598,7 @@ Description:
                 z: 4.7683716e-07
     - Description:
         name: SM_Corridor018_06_08_B
+        emissive_strength: 1
         transform:
           Transform:
             position:
@@ -616,6 +631,7 @@ Description:
                 z: 3.7758843e-17
     - Description:
         name: SM_Corridor018_06_08_B
+        emissive_strength: 1
         transform:
           Transform:
             position:
@@ -648,6 +664,7 @@ Description:
                 z: 3.7758843e-17
     - Description:
         name: SM_Corridor018_06_08_B
+        emissive_strength: 1
         transform:
           Transform:
             position:
@@ -680,6 +697,7 @@ Description:
                 z: 3.7758843e-17
     - Description:
         name: SM_Corner06_12_12_B_L
+        emissive_strength: 1
         transform:
           Transform:
             position:
@@ -712,6 +730,7 @@ Description:
                 z: 12.000001
     - Description:
         name: SM_Windows05_6_4
+        emissive_strength: 1
         transform:
           Transform:
             position:
@@ -744,6 +763,7 @@ Description:
                 z: 0
     - Description:
         name: SM_Detail13
+        emissive_strength: 1
         transform:
           Transform:
             position:
@@ -776,6 +796,7 @@ Description:
                 z: 0.21634865
     - Description:
         name: SM_Generator
+        emissive_strength: 10
         transform:
           Transform:
             position:
@@ -808,6 +829,7 @@ Description:
                 z: 1.0975153
     - Description:
         name: SM_Monitor
+        emissive_strength: 1
         transform:
           Transform:
             position:
@@ -840,6 +862,7 @@ Description:
                 z: 0.58520603
     - Description:
         name: SM_Fan03
+        emissive_strength: 1
         transform:
           Transform:
             position:
