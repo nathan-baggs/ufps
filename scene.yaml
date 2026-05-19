@@ -47,9 +47,9 @@ Description:
       strength: 0.01
   bloom_options:
     BloomOptions:
-      filter_radius: 0.01
-      mix_amount: 0.094
-      threshold: 0.317
+      filter_radius: 0.014
+      mix_amount: 0.206
+      threshold: 0.488
   lights:
     LightData:
       ambient:
@@ -72,7 +72,7 @@ Description:
             constant_attenuation: 1
             linear_attenuation: 0.313
             quadratic_attenuation: 0.157
-            intensity: 4.4436455
+            intensity: 3.9308043
         - PointLight:
             position:
               Vector3:
