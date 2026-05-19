@@ -96,6 +96,7 @@ class Renderer
     FrameBuffer *final_fb_;
     float bloom_filter_radius_ = 0.005f;
     float bloom_mix_amount_ = 0.04f;
+    float bloom_threshold_ = 1.0f;
 
   private:
     auto execute_gbuffer_pass(Scene &scene) -> void;

@@ -577,7 +577,8 @@ auto Renderer::execute_bloom_pass([[maybe_unused]] Scene &scene) -> void
 
             ::glViewport(0, 0, mip.fb.width(), mip.fb.height());
 
-            bloom_downsample_program_.set_uniforms(src_handle, std::make_tuple(src_width, src_height));
+            bloom_downsample_program_.set_uniforms(
+                src_handle, std::make_tuple(src_width, src_height), bloom_threshold_);
 
             const auto [vertex_buffer_handle, index_buffer_handle] = scene.mesh_manager().native_handle();
             ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, vertex_buffer_handle);

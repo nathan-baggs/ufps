@@ -3,6 +3,7 @@
 
 layout(bindless_sampler, location = 0) uniform sampler2D u_input_texture;
 layout(location = 1) uniform vec2 u_src_resolution;
+layout(location = 2) uniform float u_threshold;
 
 layout(location = 0) in vec2 in_uv;
 
@@ -35,6 +36,9 @@ void main()
     colour += (a+c+g+i)*0.03125;
     colour += (b+d+f+h)*0.0625;
     colour += (j+k+l+m)*0.125;
+
+    float luminance = dot(colour, vec3(0.2126, 0.7152, 0.0722));
+    colour = luminance < u_threshold ? vec3(0.0f) : colour;
 
     out_colour = vec4(colour, 1.0);
 }

@@ -34,5 +34,5 @@ void main()
 
     vec3 light_pass_colour = texture(u_light_pass_texture, in_uv).rgb;
 
-    out_colour = vec4(mix(light_pass_colour, final_mip_colour, u_mix_amount), 1.0f);
+    out_colour = vec4(light_pass_colour + (final_mip_colour * u_mix_amount), 1.0f);
 }
