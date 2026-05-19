@@ -241,7 +241,7 @@ auto pulse_light(ufps::AwaitableManager &awaitable, ufps::PointLightHandle handl
     {
         if (auto light = scene.lights().lights[handle]; light)
         {
-            light->intensity = 5.0f + (10.0f * ((std::sin(fake_time) + 1.0f) / 2.0f));
+            light->intensity = 2.0f + (5.0f * ((std::sin(fake_time) + 1.0f) / 2.0f));
         }
         else
         {
