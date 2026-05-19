@@ -578,7 +578,7 @@ auto Renderer::execute_bloom_pass([[maybe_unused]] Scene &scene) -> void
             ::glViewport(0, 0, mip.fb.width(), mip.fb.height());
 
             bloom_downsample_program_.set_uniforms(
-                src_handle, std::make_tuple(src_width, src_height), bloom_threshold_);
+                src_handle, std::make_tuple(src_width, src_height), scene.bloom_options().threshold);
 
             const auto [vertex_buffer_handle, index_buffer_handle] = scene.mesh_manager().native_handle();
             ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, vertex_buffer_handle);
@@ -606,7 +606,7 @@ auto Renderer::execute_bloom_pass([[maybe_unused]] Scene &scene) -> void
 
             ::glViewport(0, 0, mip.fb.width(), mip.fb.height());
 
-            bloom_upsample_program_.set_uniforms(src_handle, bloom_filter_radius_);
+            bloom_upsample_program_.set_uniforms(src_handle, scene.bloom_options().filter_radius);
 
             const auto [vertex_buffer_handle, index_buffer_handle] = scene.mesh_manager().native_handle();
             ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, vertex_buffer_handle);
@@ -637,8 +637,8 @@ auto Renderer::execute_bloom_pass([[maybe_unused]] Scene &scene) -> void
         bloom_mix_program_.set_uniforms(
             mip.colour_texture_bindless_handle_0,
             light_pass_rt_.colour_texture_bindless_handle_0,
-            bloom_mix_amount_,
-            bloom_filter_radius_);
+            scene.bloom_options().mix_amount,
+            scene.bloom_options().filter_radius);
 
         const auto [vertex_buffer_handle, index_buffer_handle] = scene.mesh_manager().native_handle();
         ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, vertex_buffer_handle);

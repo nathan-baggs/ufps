@@ -27,6 +27,11 @@ Description:
           g: 0
           b: 0.14215684
       density: 0.054
+  bloom_options:
+    BloomOptions:
+      filter_radius: 0.005
+      mix_amount: 0.04
+      threshold: 1.0
   chromatic_aberration_options:
     ChromaticAberrationOptions:
       red_offset: 0.009

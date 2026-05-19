@@ -390,9 +390,9 @@ auto DebugRenderer::post_render(Scene &scene) -> void
 
     ::ImGui::Text("bloom options");
     {
-        ::ImGui::SliderFloat("bloom_filter_radius", &bloom_filter_radius_, 0.0f, 0.1f);
-        ::ImGui::SliderFloat("bloom_mix", &bloom_mix_amount_, 0.0f, 1.0f);
-        ::ImGui::SliderFloat("bloom_threshold", &bloom_threshold_, 0.0f, 10.0f);
+        ::ImGui::SliderFloat("bloom_filter_radius", &scene.bloom_options().filter_radius, 0.0f, 0.1f);
+        ::ImGui::SliderFloat("bloom_mix", &scene.bloom_options().mix_amount, 0.0f, 1.0f);
+        ::ImGui::SliderFloat("bloom_threshold", &scene.bloom_options().threshold, 0.0f, 10.0f);
     }
 
     ::ImGui::Text("ssao options");

@@ -87,6 +87,13 @@ struct FilmGrainOptions
     float strength = 0.01f;
 };
 
+struct BloomOptions
+{
+    float filter_radius = 0.005f;
+    float mix_amount = 0.04f;
+    float threshold = 1.0f;
+};
+
 class Scene
 {
   public:
@@ -99,6 +106,7 @@ class Scene
         ChromaticAberrationOptions chromatic_aberration_options;
         VignetteOptions vignette_options;
         FilmGrainOptions film_grain_options;
+        BloomOptions bloom_options;
         LightData lights;
         std::vector<Entity::Description> entities;
     };
@@ -115,6 +123,7 @@ class Scene
         ChromaticAberrationOptions chromatic_aberration_options,
         VignetteOptions vignette_options,
         FilmGrainOptions film_grain_options,
+        BloomOptions bloom_options,
         const StringMap<Entity> &entity_cache);
 
     constexpr Scene(
@@ -155,6 +164,8 @@ class Scene
 
     constexpr auto &film_grain_options(this auto &&self);
 
+    constexpr auto &bloom_options(this auto &&self);
+
     constexpr auto description(this auto &&self) -> Description;
 
     constexpr auto remove(const Entity &entity) -> void;
@@ -175,6 +186,7 @@ class Scene
     ChromaticAberrationOptions chromatic_aberration_options_;
     VignetteOptions vignette_options_;
     FilmGrainOptions film_grain_options_;
+    BloomOptions bloom_options_;
 };
 
 constexpr Scene::Scene(
@@ -189,6 +201,7 @@ constexpr Scene::Scene(
     ChromaticAberrationOptions chromatic_aberration_options,
     VignetteOptions vignette_options,
     FilmGrainOptions film_grain_options,
+    BloomOptions bloom_options,
     const StringMap<Entity> &entity_cache)
     : entities_{}
     , entity_cache_{}
@@ -203,6 +216,7 @@ constexpr Scene::Scene(
     , chromatic_aberration_options_{std::move(chromatic_aberration_options)}
     , vignette_options_{std::move(vignette_options)}
     , film_grain_options_{std::move(film_grain_options)}
+    , bloom_options_{std::move(bloom_options)}
 
 {
     for (const auto &[name, entity] : entity_cache)
@@ -378,6 +392,11 @@ constexpr auto &Scene::film_grain_options(this auto &&self)
     return self.film_grain_options_;
 }
 
+constexpr auto &Scene::bloom_options(this auto &&self)
+{
+    return self.bloom_options_;
+}
+
 constexpr auto Scene::description(this auto &&self) -> Description
 {
     return {
@@ -388,6 +407,7 @@ constexpr auto Scene::description(this auto &&self) -> Description
         .chromatic_aberration_options = self.chromatic_aberration_options_,
         .vignette_options = self.vignette_options_,
         .film_grain_options = self.film_grain_options_,
+        .bloom_options = self.bloom_options_,
         .lights = self.lights_,
         .entities = self.entities_ | std::views::transform([](const auto &e) { return e.description(); }) |
                     std::ranges::to<std::vector>()};
