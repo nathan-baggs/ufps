@@ -1,5 +1,8 @@
 # μfps
 
+
+![screenshot1](./media/screenshot1.png)
+
 A small FPS game written in modern C++ and OpenGL, from scratch, live.
 
 Feel free to join us on [Discord](https://discord.gg/9FkkMgXSUV) to discuss the project.
