@@ -326,7 +326,6 @@ auto DebugRenderer::post_render(Scene &scene) -> void
                 .constant_attenuation = 1.0f,
                 .linear_attenuation = 0.007f,
                 .quadratic_attenuation = 0.0002f,
-                .specular_power = 32.0f,
                 .intensity = 1.0f});
         selected_ = handle;
     }
@@ -389,6 +388,13 @@ auto DebugRenderer::post_render(Scene &scene) -> void
         }
     }
 
+    ::ImGui::Text("bloom options");
+    {
+        ::ImGui::SliderFloat("bloom_filter_radius", &scene.bloom_options().filter_radius, 0.0f, 0.1f);
+        ::ImGui::SliderFloat("bloom_mix", &scene.bloom_options().mix_amount, 0.0f, 1.0f);
+        ::ImGui::SliderFloat("bloom_threshold", &scene.bloom_options().threshold, 0.0f, 10.0f);
+    }
+
     ::ImGui::Text("ssao options");
 
     {
@@ -428,6 +434,96 @@ auto DebugRenderer::post_render(Scene &scene) -> void
         if (::ImGui::SliderFloat("power", &value, 1.0f, 4.0f))
         {
             scene.ssao_options().power = value;
+        }
+    }
+
+    ::ImGui::Text("fog options");
+
+    {
+        float value[3]{};
+        std::memcpy(value, &scene.fog_options().colour, sizeof(value));
+        if (::ImGui::ColorPicker3("fog_colour", value))
+        {
+            std::memcpy(&scene.fog_options().colour, value, sizeof(value));
+        }
+    }
+
+    {
+        auto value = scene.fog_options().density;
+        if (::ImGui::SliderFloat("fog_density", &value, 0.0f, 0.2f))
+        {
+            scene.fog_options().density = value;
+        }
+    }
+
+    ::ImGui::Text("chromatic aberration options");
+
+    {
+        auto value = scene.chromatic_aberration_options().red_offset;
+        if (::ImGui::SliderFloat("red_offset", &value, -0.1f, 0.1f))
+        {
+            scene.chromatic_aberration_options().red_offset = value;
+        }
+    }
+
+    {
+        auto value = scene.chromatic_aberration_options().green_offset;
+        if (::ImGui::SliderFloat("green_offset", &value, -0.1f, 0.1f))
+        {
+            scene.chromatic_aberration_options().green_offset = value;
+        }
+    }
+
+    {
+        auto value = scene.chromatic_aberration_options().blue_offset;
+        if (::ImGui::SliderFloat("blue_offset", &value, -0.1f, 0.1f))
+        {
+            scene.chromatic_aberration_options().blue_offset = value;
+        }
+    }
+
+    {
+        auto value = scene.chromatic_aberration_options().strength;
+        if (::ImGui::SliderFloat("strength_offset", &value, 0.0f, 1.0f))
+        {
+            scene.chromatic_aberration_options().strength = value;
+        }
+    }
+
+    ::ImGui::Text("vignette options");
+
+    {
+        float value[3]{};
+        std::memcpy(value, &scene.vignette_options().colour, sizeof(value));
+        if (::ImGui::ColorPicker3("vignette_colour", value))
+        {
+            std::memcpy(&scene.vignette_options().colour, value, sizeof(value));
+        }
+    }
+
+    {
+        auto value = scene.vignette_options().strength;
+        if (::ImGui::SliderFloat("vignette_strength", &value, 0.0f, 1.0f))
+        {
+            scene.vignette_options().strength = value;
+        }
+    }
+
+    {
+        auto value = scene.vignette_options().feather;
+        if (::ImGui::SliderFloat("vignette_feather", &value, 0.0f, 1.0f))
+        {
+            scene.vignette_options().feather = value;
+        }
+    }
+
+    ::ImGui::Text("film grain options");
+
+    {
+        auto value = scene.film_grain_options().strength;
+        if (::ImGui::SliderFloat("film_grain_strength", &value, 0.0f, 1.0f))
+        {
+            scene.film_grain_options().strength = value;
         }
     }
 
@@ -619,24 +715,58 @@ auto DebugRenderer::post_render(Scene &scene) -> void
 
     ::ImGui::End();
 
-    ::ImGui::Begin("render_targets");
+    ::ImGui::Begin("bloom_mips");
+
     static constexpr auto width = 175.0f;
     const auto aspect_ratio = static_cast<float>(window_.render_width()) / static_cast<float>(window_.render_height());
 
+    for (const auto &mip : bloom_mips_)
+    {
+        ::ImGui::Image(
+            scene.texture_manager().texture(mip.colour_texture_bindless_handle_0)->native_handle(),
+            ::ImVec2(width * aspect_ratio, width),
+            ::ImVec2(0.0f, 1.0f),
+            ::ImVec2(1.0f, 0.0f));
+        ::ImGui::SameLine();
+    }
+
+    ::ImGui::End();
+
+    ::ImGui::Begin("render_targets");
+
     ::ImGui::Image(
-        scene.texture_manager().texture(ssao_blur_rt_.first_colour_attachment_index)->native_handle(),
+        scene.texture_manager().texture(ssao_blur_rt_.colour_texture_bindless_handle_0)->native_handle(),
         ::ImVec2(width * aspect_ratio, width),
         ::ImVec2(0.0f, 1.0f),
         ::ImVec2(1.0f, 0.0f));
     ::ImGui::SameLine();
 
-    for (auto i = 0u; i < gbuffer_rt_.colour_attachment_count; ++i)
-    {
-        const auto tex = scene.texture_manager().texture(gbuffer_rt_.first_colour_attachment_index + i);
-        ::ImGui::Image(
-            tex->native_handle(), ::ImVec2(width * aspect_ratio, width), ::ImVec2(0.0f, 1.0f), ::ImVec2(1.0f, 0.0f));
-        ::ImGui::SameLine();
-    }
+    ::ImGui::Image(
+        scene.texture_manager().texture(gbuffer_rt_.colour_texture_bindless_handle_0)->native_handle(),
+        ::ImVec2(width * aspect_ratio, width),
+        ::ImVec2(0.0f, 1.0f),
+        ::ImVec2(1.0f, 0.0f));
+    ::ImGui::SameLine();
+
+    ::ImGui::Image(
+        scene.texture_manager().texture(gbuffer_rt_.colour_texture_bindless_handle_1)->native_handle(),
+        ::ImVec2(width * aspect_ratio, width),
+        ::ImVec2(0.0f, 1.0f),
+        ::ImVec2(1.0f, 0.0f));
+    ::ImGui::SameLine();
+
+    ::ImGui::Image(
+        scene.texture_manager().texture(gbuffer_rt_.colour_texture_bindless_handle_2)->native_handle(),
+        ::ImVec2(width * aspect_ratio, width),
+        ::ImVec2(0.0f, 1.0f),
+        ::ImVec2(1.0f, 0.0f));
+    ::ImGui::SameLine();
+
+    ::ImGui::Image(
+        scene.texture_manager().texture(gbuffer_rt_.colour_texture_bindless_handle_3)->native_handle(),
+        ::ImVec2(width * aspect_ratio, width),
+        ::ImVec2(0.0f, 1.0f),
+        ::ImVec2(1.0f, 0.0f));
 
     ::ImGui::End();
 
@@ -648,6 +778,14 @@ auto DebugRenderer::post_render(Scene &scene) -> void
         {
             auto *entity = *selected_entity;
             ::ImGui::Text("entity: %s", entity->name().c_str());
+
+            {
+                auto value = entity->emissive_strength();
+                if (::ImGui::SliderFloat("emissive_strength", &value, 0.0f, 10.0f))
+                {
+                    entity->set_emissive_strength(value);
+                }
+            }
 
             auto transform = Matrix4{entity->transform()};
 
@@ -668,40 +806,53 @@ auto DebugRenderer::post_render(Scene &scene) -> void
 
             for (const auto &render_entity : entity->render_entities())
             {
-                const auto material_index = render_entity.material_index();
-                const auto &material = scene.material_manager().material(material_index);
+                const auto *albedo_texture =
+                    scene.texture_manager().texture(render_entity.albedo_texture_bindless_handle());
+                ::ImGui::Image(
+                    albedo_texture->native_handle(),
+                    ::ImVec2(64.0f, 64.0f),
+                    ::ImVec2(0.0f, 1.0f),
+                    ::ImVec2(1.0f, 0.0f));
 
-                const auto *albedo_texture = scene.texture_manager().texture(material.albedo_texture_index);
-                if (albedo_texture)
-                {
-                    ::ImGui::Image(
-                        albedo_texture->native_handle(),
-                        ::ImVec2(64.0f, 64.0f),
-                        ::ImVec2(0.0f, 1.0f),
-                        ::ImVec2(1.0f, 0.0f));
-                }
+                const auto *normal_texture =
+                    scene.texture_manager().texture(render_entity.normal_texture_bindless_handle());
+                ::ImGui::SameLine();
+                ::ImGui::Image(
+                    normal_texture->native_handle(),
+                    ::ImVec2(64.0f, 64.0f),
+                    ::ImVec2(0.0f, 1.0f),
+                    ::ImVec2(1.0f, 0.0f));
 
-                const auto *normal_texture = scene.texture_manager().texture(material.normal_texture_index);
-                if (normal_texture)
-                {
-                    ::ImGui::SameLine();
-                    ::ImGui::Image(
-                        normal_texture->native_handle(),
-                        ::ImVec2(64.0f, 64.0f),
-                        ::ImVec2(0.0f, 1.0f),
-                        ::ImVec2(1.0f, 0.0f));
-                }
+                const auto *specular_texture =
+                    scene.texture_manager().texture(render_entity.specular_texture_bindless_handle());
+                ::ImGui::SameLine();
+                ::ImGui::Image(
+                    specular_texture->native_handle(),
+                    ::ImVec2(64.0f, 64.0f),
+                    ::ImVec2(0.0f, 1.0f),
+                    ::ImVec2(1.0f, 0.0f));
 
-                const auto *specular_texture = scene.texture_manager().texture(material.specular_texture_index);
-                if (specular_texture)
-                {
-                    ::ImGui::SameLine();
-                    ::ImGui::Image(
-                        specular_texture->native_handle(),
-                        ::ImVec2(64.0f, 64.0f),
-                        ::ImVec2(0.0f, 1.0f),
-                        ::ImVec2(1.0f, 0.0f));
-                }
+                const auto *ao_texture = scene.texture_manager().texture(render_entity.ao_texture_bindless_handle());
+                ::ImGui::Image(
+                    ao_texture->native_handle(), ::ImVec2(64.0f, 64.0f), ::ImVec2(0.0f, 1.0f), ::ImVec2(1.0f, 0.0f));
+
+                const auto *glossiness_texture =
+                    scene.texture_manager().texture(render_entity.glossiness_texture_bindless_handle());
+                ::ImGui::SameLine();
+                ::ImGui::Image(
+                    glossiness_texture->native_handle(),
+                    ::ImVec2(64.0f, 64.0f),
+                    ::ImVec2(0.0f, 1.0f),
+                    ::ImVec2(1.0f, 0.0f));
+
+                const auto *emissive_texture =
+                    scene.texture_manager().texture(render_entity.emissive_texture_bindless_handle());
+                ::ImGui::SameLine();
+                ::ImGui::Image(
+                    emissive_texture->native_handle(),
+                    ::ImVec2(64.0f, 64.0f),
+                    ::ImVec2(0.0f, 1.0f),
+                    ::ImVec2(1.0f, 0.0f));
             }
 
             const auto &camera_data = scene.camera().data();
@@ -741,8 +892,6 @@ auto DebugRenderer::post_render(Scene &scene) -> void
             {
                 std::memcpy(&light->colour, colour, sizeof(colour));
             }
-
-            ::ImGui::SliderFloat("power", &light->specular_power, 0.0f, 100.0f);
 
             float atten[] = {light->constant_attenuation, light->linear_attenuation, light->quadratic_attenuation};
             if (::ImGui::SliderFloat3("attenuation", atten, 0.0f, 2.0f))

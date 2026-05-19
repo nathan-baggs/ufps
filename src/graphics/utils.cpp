@@ -193,9 +193,7 @@ auto load_model(DataBufferView model_data) -> std::tuple<std::string, std::vecto
         auto *logger = ::Assimp::DefaultLogger::get();
 
         logger->attachStream(new SimpleAssimpLogStream<ufps::log::Level::ERR>{}, ::Assimp::Logger::Err);
-        // logger->attachStream(new SimpleAssimpLogStream<ufps::log::Level::DEBUG>{}, ::Assimp::Logger::Debugging);
         logger->attachStream(new SimpleAssimpLogStream<ufps::log::Level::WARN>{}, ::Assimp::Logger::Warn);
-        // logger->attachStream(new SimpleAssimpLogStream<ufps::log::Level::INFO>{}, ::Assimp::Logger::Info);
 
         return logger;
     }();
@@ -218,18 +216,27 @@ auto load_model(DataBufferView model_data) -> std::tuple<std::string, std::vecto
     {
         log::info("found mesh: {}", mesh->mName.C_Str());
 
-        if (index >= scene->mNumMaterials)
+        if (mesh->mMaterialIndex >= scene->mNumMaterials)
         {
             log::warn("mesh {} has invalid material index: {}", mesh->mName.C_Str(), index);
             continue;
         }
 
-        const auto *material = scene->mMaterials[index];
+        const auto *material = scene->mMaterials[mesh->mMaterialIndex];
         const auto base_colour_count = material->GetTextureCount(::aiTextureType_BASE_COLOR);
         if (base_colour_count != 1)
         {
             log::warn("unsupported base colour count: {}", base_colour_count);
             continue;
+        }
+
+        for (auto i = 0; i <= ::aiTextureType_GLTF_METALLIC_ROUGHNESS; ++i)
+        {
+            const auto count = material->GetTextureCount(static_cast<::aiTextureType>(i));
+            if (count >= 1)
+            {
+                ufps::log::debug("material {} has {} textures of type {}", material->GetName().C_Str(), count, i);
+            }
         }
 
         const auto positions = std::span<::aiVector3D>{mesh->mVertices, mesh->mVertices + mesh->mNumVertices} |
@@ -259,6 +266,9 @@ auto load_model(DataBufferView model_data) -> std::tuple<std::string, std::vecto
             .albedo = get_texture_filename(material, ::aiTextureType_BASE_COLOR),
             .normal = get_texture_filename(material, ::aiTextureType_NORMAL_CAMERA),
             .specular = get_texture_filename(material, ::aiTextureType_METALNESS),
+            .ao = get_texture_filename(material, ::aiTextureType_AMBIENT_OCCLUSION),
+            .glossiness = get_texture_filename(material, ::aiTextureType_DIFFUSE_ROUGHNESS),
+            .emissive = get_texture_filename(material, ::aiTextureType_EMISSION_COLOR),
         });
     }
 

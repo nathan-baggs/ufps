@@ -227,9 +227,6 @@ TEST(sparse_set, handles_complex)
     }
 
     const auto expected_values = std::vector<int>{200, 2000, 20000};
-    *s[handles[0]];
-    *s[handles[1]];
-    *s[handles[2]];
     const auto values =
         handles | std::views::transform([&s](const auto &h) { return *s[h]; }) | std::ranges::to<std::vector>();
 

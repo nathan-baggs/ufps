@@ -22,9 +22,12 @@ namespace ufps
 struct RenderTarget
 {
     FrameBuffer fb;
-    std::uint32_t colour_attachment_count;
-    std::uint32_t first_colour_attachment_index;
-    std::uint32_t depth_attachment_index;
+    std::uint64_t colour_texture_bindless_handle_0;
+    std::uint64_t colour_texture_bindless_handle_1;
+    std::uint64_t colour_texture_bindless_handle_2;
+    std::uint64_t colour_texture_bindless_handle_3;
+    std::uint64_t colour_texture_bindless_handle_4;
+    std::uint64_t depth_texture_bindless_handle;
 };
 
 class Renderer
@@ -74,23 +77,32 @@ class Renderer
     Program average_luminance_program_;
     Program ssao_program_;
     Program ssao_blur_program_;
+    Program chromatic_aberration_program_;
+    Program bloom_downsample_program_;
+    Program bloom_upsample_program_;
+    Program bloom_mix_program_;
     Sampler ssao_noise_sampler_;
-    std::uint32_t ssao_noise_texture_;
+    std::uint64_t ssao_noise_texture_bindless_handle_;
     Sampler fb_sampler_;
     RenderTarget gbuffer_rt_;
     RenderTarget light_pass_rt_;
     RenderTarget tone_map_rt_;
     RenderTarget ssao_rt_;
     RenderTarget ssao_blur_rt_;
+    RenderTarget chromatic_aberration_rt_;
+    std::vector<RenderTarget> bloom_mips_;
+    RenderTarget bloom_rt_;
     MeshManager &mesh_manager_;
     FrameBuffer *final_fb_;
 
   private:
     auto execute_gbuffer_pass(Scene &scene) -> void;
     auto execute_lighting_pass(Scene &scene) -> void;
+    auto execute_bloom_pass(Scene &scene) -> void;
     auto execute_luminance_histogram_pass(Scene &scene) -> void;
     auto execute_average_luminance_pass(Scene &scene) -> void;
     auto execute_ssao_pass(Scene &scene) -> void;
     auto execute_tone_mapping_pass(Scene &scene) -> void;
+    auto execute_chromatic_aberration_pass(Scene &scene) -> void;
 };
 }

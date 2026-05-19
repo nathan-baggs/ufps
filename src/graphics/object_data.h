@@ -7,11 +7,15 @@
 namespace ufps
 {
 
-struct ObjectData
+struct alignas(16) ObjectData
 {
     Matrix4 model;
-    std::uint32_t material_id_index;
-    std::uint32_t padding[3];
+    std::uint64_t albedo_texture_index;
+    std::uint64_t normal_texture_index;
+    std::uint64_t specular_texture_index;
+    std::uint64_t glossiness_texture_index;
+    std::uint64_t emissive_texture_index;
+    float emissive_strength;
 };
 
 }

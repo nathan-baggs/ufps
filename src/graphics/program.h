@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include <string_view>
+#include <tuple>
 #include <utility>
 
 #include "graphics/colour.h"
@@ -27,11 +28,15 @@ class Program
 
     auto set_uniform(std::size_t index, std::uint32_t value) const -> void;
 
+    auto set_uniform(std::size_t index, std::uint64_t value) const -> void;
+
     auto set_uniform(std::size_t index, float value) const -> void;
 
     auto set_uniform(std::size_t index, const Matrix4 &value) const -> void;
 
     auto set_uniform(std::size_t index, const Colour &value) const -> void;
+
+    auto set_uniform(std::size_t index, const std::tuple<float, float> &value) const -> void;
 
     template <class... Args>
     auto set_uniforms(Args &&...args) const -> void

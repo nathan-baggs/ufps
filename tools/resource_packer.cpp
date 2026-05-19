@@ -5,8 +5,10 @@
 
 #include <yaml-cpp/yaml.h>
 
+#include "core/manifest_descriptions.h"
 #include "graphics/utils.h"
 #include "resources/file_resource_loader.h"
+#include "serialisation/yaml_serialiser.h"
 #include "utils/compress.h"
 #include "utils/error.h"
 #include "utils/log.h"
@@ -41,14 +43,17 @@ auto main(int argc, char **argv) -> int
         auto vertex_data = std::vector<ufps::VertexData>{};
         auto index_data = std::vector<std::uint32_t>{};
 
-        auto texture_names = std::unordered_set<std::string>{};
+        auto texture_names = std::unordered_set<std::string>{
+            "textures\\default_BaseColor.dds",
+            "textures\\default_Normal.dds",
+            "textures\\default_Metallic.dds",
+            "textures\\default_AO.dds",
+            "textures\\default_Roughness.dds",
+            "textures\\default_Emissive.dds",
+        };
 
         {
-            const auto manifest_path = output_configs_dir / "model_manifest.yaml";
-            auto manifest_file = std::ofstream{manifest_path};
-
-            auto out = ::YAML::Emitter{manifest_file};
-            out << ::YAML::BeginMap;
+            auto manifest = ufps::ModelManifestDescription{};
 
             for (const auto &m : models)
             {
@@ -61,82 +66,69 @@ auto main(int argc, char **argv) -> int
                     continue;
                 }
 
-                out << ::YAML::Key << name << ::YAML::Value << ::YAML::BeginMap;
+                manifest.models[name] =
+                    sub_models |
+                    std::views::transform(
+                        [&](const auto &model)
+                        {
+                            const auto &mesh_data = model.mesh_data;
+                            const auto vertex_count = mesh_data.vertices.size();
+                            const auto index_count = mesh_data.indices.size();
 
-                for (const auto &[index, model] : sub_models | std::views::enumerate)
-                {
-                    const auto &mesh_data = model.mesh_data;
-                    const auto vertex_count = mesh_data.vertices.size();
-                    const auto index_count = mesh_data.indices.size();
+                            const auto albedo_name = model.albedo ? *model.albedo : "textures\\default_BaseColor.dds";
+                            const auto normal_name = model.normal ? *model.normal : "textures\\default_Normal.dds";
+                            const auto specular_name =
+                                model.specular ? *model.specular : "textures\\default_Metallic.dds";
+                            const auto ao_name = model.ao ? *model.ao : "textures\\default_AO.dds";
+                            const auto glossiness_name =
+                                model.glossiness ? *model.glossiness : "textures\\default_Roughness.dds";
+                            const auto emissive_name =
+                                model.emissive ? *model.emissive : "textures\\default_Emissive.dds";
 
-                    ufps::log::debug(
-                        "model: {}, submodel: {}, vertex count: {}, index count: {}, vertex offset: {}, index offset: "
-                        "{}",
-                        name,
-                        index,
-                        vertex_count,
-                        index_count,
-                        vertex_offset,
-                        index_offset);
+                            texture_names.insert(albedo_name);
+                            texture_names.insert(normal_name);
+                            texture_names.insert(specular_name);
+                            texture_names.insert(ao_name);
+                            texture_names.insert(glossiness_name);
+                            texture_names.insert(emissive_name);
 
-                    vertex_data.append_range(mesh_data.vertices);
-                    index_data.append_range(mesh_data.indices);
+                            const auto res = ufps::ModelManifest{
+                                .mesh_view =
+                                    {
+                                        .index_offset = static_cast<std::uint32_t>(index_offset),
+                                        .index_count = static_cast<std::uint32_t>(mesh_data.indices.size()),
+                                        .vertex_offset = static_cast<std::uint32_t>(vertex_offset),
+                                        .vertex_count = static_cast<std::uint32_t>(mesh_data.vertices.size()),
+                                    },
+                                .albedo_texture = albedo_name,
+                                .normal_texture = normal_name,
+                                .specular_texture = specular_name,
+                                .ao_texture = ao_name,
+                                .glossiness_texture = glossiness_name,
+                                .emissive_texture = emissive_name,
+                            };
 
-                    out << ::YAML::Key << std::format("submodel_{}", index) << ::YAML::Value << ::YAML::BeginMap;
-                    out << ::YAML::Key << "vertex_count" << ::YAML::Value << vertex_count;
-                    out << ::YAML::Key << "vertex_offset" << ::YAML::Value << vertex_offset;
-                    out << ::YAML::Key << "index_count" << ::YAML::Value << index_count;
-                    out << ::YAML::Key << "index_offset" << ::YAML::Value << index_offset;
+                            vertex_data.append_range(mesh_data.vertices);
+                            index_data.append_range(mesh_data.indices);
 
-                    if (model.albedo)
-                    {
-                        texture_names.insert(*model.albedo);
-                        out << ::YAML::Key << "albedo_name" << ::YAML::Value << *model.albedo;
-                    }
-                    else
-                    {
-                        out << ::YAML::Key << "albedo_name" << ::YAML::Value << "";
-                    }
+                            vertex_offset += vertex_count;
+                            index_offset += index_count;
 
-                    if (model.normal)
-                    {
-                        texture_names.insert(*model.normal);
-                        out << ::YAML::Key << "normal_name" << ::YAML::Value << *model.normal;
-                    }
-                    else
-                    {
-                        out << ::YAML::Key << "normal_name" << ::YAML::Value << "";
-                    }
-
-                    if (model.specular)
-                    {
-                        texture_names.insert(*model.specular);
-                        out << ::YAML::Key << "specular_name" << ::YAML::Value << *model.specular;
-                    }
-                    else
-                    {
-                        out << ::YAML::Key << "specular_name" << ::YAML::Value << "";
-                    }
-
-                    out << ::YAML::EndMap;
-
-                    vertex_offset += vertex_count;
-                    index_offset += index_count;
-                }
-
-                out << ::YAML::EndMap;
+                            return res;
+                        }) |
+                    std::ranges::to<std::vector>();
             }
+
+            const auto manifest_path = output_configs_dir / "model_manifest.yaml";
+            auto manifest_file = std::ofstream{manifest_path};
+            manifest_file << ufps::yaml::serialise(manifest);
         }
 
         ufps::log::info("finished packing models, packing textures");
         auto texture_blob = ufps::DataBuffer{};
 
         {
-            const auto manifest_path = output_configs_dir / "texture_manifest.yaml";
-            auto manifest_file = std::ofstream{manifest_path};
-
-            auto out = ::YAML::Emitter{manifest_file};
-            out << ::YAML::BeginMap;
+            auto manifest = ufps::TextureManifestDescription{};
 
             auto offset = 0zu;
 
@@ -149,15 +141,19 @@ auto main(int argc, char **argv) -> int
 
                 texture_blob.append_range(std::as_bytes(std::span{texture_data.data(), size}));
 
-                out << ::YAML::Key << t << ::YAML::Value << ::YAML::BeginMap;
-                out << ::YAML::Key << "offset" << ::YAML::Value << offset;
-                out << ::YAML::Key << "size" << ::YAML::Value << size;
-                out << ::YAML::EndMap;
+                manifest.textures[t] = {
+                    .offset = static_cast<std::uint32_t>(offset),
+                    .size = static_cast<std::uint32_t>(size),
+                    .is_srgb = t.contains("BaseColor"),
+                };
 
                 offset += size;
             }
 
-            out << ::YAML::EndMap;
+            const auto manifest_path = output_configs_dir / "texture_manifest.yaml";
+            auto manifest_file = std::ofstream{manifest_path};
+
+            manifest_file << ufps::yaml::serialise(manifest);
         }
 
         ufps::log::info("finished packing textures, writing to disk");

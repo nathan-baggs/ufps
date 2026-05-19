@@ -8,7 +8,7 @@
 #include "core/camera.h"
 #include "core/entity.h"
 #include "core/sparse_set.h"
-#include "graphics/material_manager.h"
+#include "graphics/colour.h"
 #include "graphics/mesh_manager.h"
 #include "graphics/point_light.h"
 #include "graphics/texture_manager.h"
@@ -61,6 +61,39 @@ struct ExposureOptions
     float max_log_luminance = 1.0f;
 };
 
+struct FogOptions
+{
+    Colour colour = colours::black;
+    float density = 0.005f;
+};
+
+struct ChromaticAberrationOptions
+{
+    float red_offset = 0.009f;
+    float green_offset = 0.006f;
+    float blue_offset = -0.006f;
+    float strength = 0.5f;
+};
+
+struct VignetteOptions
+{
+    Colour colour = colours::black;
+    float strength = 0.5f;
+    float feather = 0.1f;
+};
+
+struct FilmGrainOptions
+{
+    float strength = 0.01f;
+};
+
+struct BloomOptions
+{
+    float filter_radius = 0.005f;
+    float mix_amount = 0.04f;
+    float threshold = 1.0f;
+};
+
 class Scene
 {
   public:
@@ -69,24 +102,32 @@ class Scene
         ToneMapOptions tone_map_options;
         SSAOOptions ssao_options;
         ExposureOptions exposure_options;
+        FogOptions fog_options;
+        ChromaticAberrationOptions chromatic_aberration_options;
+        VignetteOptions vignette_options;
+        FilmGrainOptions film_grain_options;
+        BloomOptions bloom_options;
         LightData lights;
         std::vector<Entity::Description> entities;
     };
 
     constexpr Scene(
         MeshManager &mesh_manager,
-        MaterialManager &material_manager,
         TextureManager &texture_manager,
         Camera camera,
         LightData lights,
         ToneMapOptions tone_map_options,
         SSAOOptions ssao_options,
         ExposureOptions exposure_options,
+        FogOptions fog_options,
+        ChromaticAberrationOptions chromatic_aberration_options,
+        VignetteOptions vignette_options,
+        FilmGrainOptions film_grain_options,
+        BloomOptions bloom_options,
         const StringMap<Entity> &entity_cache);
 
     constexpr Scene(
         MeshManager &mesh_manager,
-        MaterialManager &material_manager,
         TextureManager &texture_manager,
         Camera camera,
         const Description &description,
@@ -107,8 +148,6 @@ class Scene
 
     constexpr auto &mesh_manager(this auto &&self);
 
-    constexpr auto &material_manager(this auto &&self);
-
     constexpr auto &texture_manager(this auto &&self);
 
     constexpr auto &tone_map_options(this auto &&self);
@@ -116,6 +155,16 @@ class Scene
     constexpr auto &ssao_options(this auto &&self);
 
     constexpr auto &exposure_options(this auto &&self);
+
+    constexpr auto &fog_options(this auto &&self);
+
+    constexpr auto &chromatic_aberration_options(this auto &&self);
+
+    constexpr auto &vignette_options(this auto &&self);
+
+    constexpr auto &film_grain_options(this auto &&self);
+
+    constexpr auto &bloom_options(this auto &&self);
 
     constexpr auto description(this auto &&self) -> Description;
 
@@ -127,35 +176,48 @@ class Scene
     std::vector<Entity> entities_;
     std::vector<Entity> entity_cache_;
     MeshManager &mesh_manager_;
-    MaterialManager &material_manager_;
     TextureManager &texture_manager_;
     Camera camera_;
     LightData lights_;
     ToneMapOptions tone_map_options_;
     SSAOOptions ssao_options_;
     ExposureOptions exposure_options_;
+    FogOptions fog_options_;
+    ChromaticAberrationOptions chromatic_aberration_options_;
+    VignetteOptions vignette_options_;
+    FilmGrainOptions film_grain_options_;
+    BloomOptions bloom_options_;
 };
 
 constexpr Scene::Scene(
     MeshManager &mesh_manager,
-    MaterialManager &material_manager,
     TextureManager &texture_manager,
     Camera camera,
     LightData lights,
     ToneMapOptions tone_map_options,
     SSAOOptions ssao_options,
     ExposureOptions exposure_options,
+    FogOptions fog_options,
+    ChromaticAberrationOptions chromatic_aberration_options,
+    VignetteOptions vignette_options,
+    FilmGrainOptions film_grain_options,
+    BloomOptions bloom_options,
     const StringMap<Entity> &entity_cache)
     : entities_{}
     , entity_cache_{}
     , mesh_manager_{mesh_manager}
-    , material_manager_{material_manager}
     , texture_manager_{texture_manager}
     , camera_{std::move(camera)}
     , lights_{std::move(lights)}
     , tone_map_options_{std::move(tone_map_options)}
     , ssao_options_{std::move(ssao_options)}
     , exposure_options_{std::move(exposure_options)}
+    , fog_options_{fog_options}
+    , chromatic_aberration_options_{std::move(chromatic_aberration_options)}
+    , vignette_options_{std::move(vignette_options)}
+    , film_grain_options_{std::move(film_grain_options)}
+    , bloom_options_{std::move(bloom_options)}
+
 {
     for (const auto &[name, entity] : entity_cache)
     {
@@ -165,7 +227,6 @@ constexpr Scene::Scene(
 
 constexpr Scene::Scene(
     MeshManager &mesh_manager,
-    MaterialManager &material_manager,
     TextureManager &texture_manager,
     Camera camera,
     const Description &description,
@@ -173,13 +234,16 @@ constexpr Scene::Scene(
     : entities_{}
     , entity_cache_{}
     , mesh_manager_{mesh_manager}
-    , material_manager_{material_manager}
     , texture_manager_{texture_manager}
     , camera_{std::move(camera)}
     , lights_{description.lights}
     , tone_map_options_{description.tone_map_options}
     , ssao_options_{description.ssao_options}
     , exposure_options_{description.exposure_options}
+    , fog_options_{description.fog_options}
+    , chromatic_aberration_options_{description.chromatic_aberration_options}
+    , vignette_options_{description.vignette_options}
+    , film_grain_options_{description.film_grain_options}
 {
     for (const auto &[name, entity] : entity_cache)
     {
@@ -194,6 +258,7 @@ constexpr Scene::Scene(
 
         auto &new_entity = entities_.emplace_back(*cached);
         new_entity.set_transform(entity_description.transform);
+        new_entity.set_emissive_strength(entity_description.emissive_strength);
     }
 }
 
@@ -288,11 +353,6 @@ constexpr auto &Scene::mesh_manager(this auto &&self)
     return self.mesh_manager_;
 }
 
-constexpr auto &Scene::material_manager(this auto &&self)
-{
-    return self.material_manager_;
-}
-
 constexpr auto &Scene::texture_manager(this auto &&self)
 {
     return self.texture_manager_;
@@ -313,12 +373,42 @@ constexpr auto &Scene::exposure_options(this auto &&self)
     return self.exposure_options_;
 }
 
+constexpr auto &Scene::fog_options(this auto &&self)
+{
+    return self.fog_options_;
+}
+
+constexpr auto &Scene::chromatic_aberration_options(this auto &&self)
+{
+    return self.chromatic_aberration_options_;
+}
+
+constexpr auto &Scene::vignette_options(this auto &&self)
+{
+    return self.vignette_options_;
+}
+
+constexpr auto &Scene::film_grain_options(this auto &&self)
+{
+    return self.film_grain_options_;
+}
+
+constexpr auto &Scene::bloom_options(this auto &&self)
+{
+    return self.bloom_options_;
+}
+
 constexpr auto Scene::description(this auto &&self) -> Description
 {
     return {
         .tone_map_options = self.tone_map_options_,
         .ssao_options = self.ssao_options_,
         .exposure_options = self.exposure_options_,
+        .fog_options = self.fog_options_,
+        .chromatic_aberration_options = self.chromatic_aberration_options_,
+        .vignette_options = self.vignette_options_,
+        .film_grain_options = self.film_grain_options_,
+        .bloom_options = self.bloom_options_,
         .lights = self.lights_,
         .entities = self.entities_ | std::views::transform([](const auto &e) { return e.description(); }) |
                     std::ranges::to<std::vector>()};
@@ -336,5 +426,4 @@ constexpr auto Scene::remove(PointLightHandle light) -> void
 {
     lights_.lights.remove(light);
 }
-
 }

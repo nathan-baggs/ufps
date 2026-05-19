@@ -12,14 +12,12 @@ struct VertexData
 struct ObjectData
 {
     mat4 model;
-    uint material_index;
-};
-
-struct MaterialData
-{
-    uint albedo_index;
-    uint normal_index;
-    uint specular_index;
+    uvec2 albedo_bindless_handle;
+    uvec2 normal_bindless_handle;
+    uvec2 specular_bindless_handle;
+    uvec2 glossiness_bindless_handle;
+    uvec2 emissive_bindless_handle;
+    float emissive_strength;
 };
 
 layout(binding = 0, std430) readonly buffer vertices {
@@ -35,10 +33,6 @@ layout(binding = 1, std430) readonly buffer camera {
 
 layout(binding = 2, std430) readonly buffer objects {
     ObjectData object_data[];
-};
-
-layout(binding = 3, std430) readonly buffer materials {
-    MaterialData material_data[];
 };
 
 vec3 get_position(uint index)
@@ -80,10 +74,15 @@ vec2 get_uv(uint index)
         data[index].uv[1]);
 }
 
-layout(location = 0) out flat uint out_material_index;
-layout(location = 1) out vec2 out_uv;
-layout(location = 2) out vec4 out_frag_position;
-layout(location = 3) out mat3 out_tbn;
+layout(location = 0) out flat uvec2 out_albedo_bindless_handle;
+layout(location = 1) out flat uvec2 out_normal_bindless_handle;
+layout(location = 2) out flat uvec2 out_specular_bindless_handle;
+layout(location = 3) out flat uvec2 out_glossiness_bindless_handle;
+layout(location = 4) out flat uvec2 out_emissive_bindless_handle;
+layout(location = 5) out vec2 out_uv;
+layout(location = 6) out vec4 out_frag_position;
+layout(location = 7) out mat3 out_tbn;
+layout(location = 10) out flat float out_emissive_strength;
 
 void main()
 {
@@ -91,11 +90,18 @@ void main()
 
     out_frag_position = object_data[gl_DrawID].model * vec4(get_position(gl_VertexID), 1.0);
     gl_Position = projection * view * out_frag_position;
-    out_material_index = object_data[gl_DrawID].material_index;
+
+    out_albedo_bindless_handle = object_data[gl_DrawID].albedo_bindless_handle;
+    out_normal_bindless_handle = object_data[gl_DrawID].normal_bindless_handle;
+    out_specular_bindless_handle = object_data[gl_DrawID].specular_bindless_handle;
+    out_glossiness_bindless_handle = object_data[gl_DrawID].glossiness_bindless_handle;
+    out_emissive_bindless_handle = object_data[gl_DrawID].emissive_bindless_handle;
     out_uv = get_uv(gl_VertexID);
 
     vec3 t = normalize(normal_mat * get_tangent(gl_VertexID));
     vec3 b = normalize(normal_mat * get_bitangent(gl_VertexID));
     vec3 n = normalize(normal_mat * get_normal(gl_VertexID));
     out_tbn = mat3(t, b, n);
+
+    out_emissive_strength = object_data[gl_DrawID].emissive_strength;
 }

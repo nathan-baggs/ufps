@@ -19,6 +19,7 @@ class Entity
     struct Description
     {
         std::string name;
+        float emissive_strength;
         Transform transform;
         AABB aabb;
     };
@@ -31,12 +32,15 @@ class Entity
     constexpr auto set_transform(const Transform &transform) -> void;
     constexpr auto aabb() const -> const AABB &;
     constexpr auto description() const -> Description;
+    constexpr auto emissive_strength() const -> float;
+    constexpr auto set_emissive_strength(float strength) -> void;
 
   private:
     std::string name_;
     std::vector<RenderEntity> render_entities_;
     Transform transform_;
     AABB aabb_;
+    float emissive_strength_;
 };
 
 constexpr Entity::Entity(std::string name, std::vector<RenderEntity> render_entities, Transform transform)
@@ -44,6 +48,7 @@ constexpr Entity::Entity(std::string name, std::vector<RenderEntity> render_enti
     , render_entities_{std::move(render_entities)}
     , transform_{std::move(transform)}
     , aabb_{create_aabb(render_entities_)}
+    , emissive_strength_{1.0f}
 {
 }
 
@@ -76,9 +81,20 @@ constexpr auto Entity::description() const -> Entity::Description
 {
     return {
         .name = name_,
+        .emissive_strength = emissive_strength_,
         .transform = transform_,
         .aabb = aabb_,
     };
+}
+
+constexpr auto Entity::emissive_strength() const -> float
+{
+    return emissive_strength_;
+}
+
+constexpr auto Entity::set_emissive_strength(float strength) -> void
+{
+    emissive_strength_ = strength;
 }
 
 }

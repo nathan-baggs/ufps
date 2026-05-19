@@ -1,49 +1,33 @@
 #version 460 core
 #extension GL_ARB_bindless_texture : require
 
-struct VertexData
-{
-    float position[3];
-    float normal[3];
-    float tangent[3];
-    float bitangent[3];
-    float uv[2];
-};
-
 struct PointLight
 {
     float position[3];
     float colour[3];
     float attenuation[3];
-    float specular_power;
     float intensity;
+    float pad[2];
 };
 
-layout(binding = 0, std430) readonly buffer vertices {
-    VertexData data[];
-};
-
-layout(binding = 1, std430) readonly buffer textures_buffer {
-    sampler2D textures[];
-};
-
-layout(binding = 2, std430) readonly buffer lights {
+layout(binding = 1, std430) readonly buffer lights {
     float ambient_colour[3];
     uint num_point_lights;
     PointLight point_lights[];
 };
 
-layout(binding = 3, std430) readonly buffer camera {
+layout(binding = 2, std430) readonly buffer camera {
     mat4 view;
     mat4 projection;
     float camera_position[3];
     float pad;
 };
 
-layout(location = 0) uniform uint albedo_tex_index;
-layout(location = 1) uniform uint normal_tex_index;
-layout(location = 2) uniform uint position_tex_index;
-layout(location = 3) uniform uint specular_tex_index;
+layout(bindless_sampler, location = 0) uniform sampler2D albedo_texture;
+layout(bindless_sampler, location = 1) uniform sampler2D normal_texture;
+layout(bindless_sampler, location = 2) uniform sampler2D position_texture;
+layout(bindless_sampler, location = 3) uniform sampler2D specular_texture;
+layout(bindless_sampler, location = 4) uniform sampler2D emissive_texture;
 
 layout(location = 0) in vec4 in_frag_position;
 layout(location = 1) in vec2 in_uv;
@@ -55,7 +39,8 @@ vec3 calculate_point_light(
     vec3 normal,
     vec3 frag_pos,
     vec3 albedo,
-    float specular)
+    float specular,
+    float glossiness)
 {
     vec3 point_pos = vec3(light.position[0], light.position[1], light.position[2]);
     vec3 point_colour = vec3(light.colour[0], light.colour[1], light.colour[2]) * vec3(light.intensity);
@@ -68,25 +53,29 @@ vec3 calculate_point_light(
     float diffuse_factor = max(dot(normal, light_dir), 0.0);
     vec3 halfway_dir = normalize(light_dir + view_dir);
 
-    float spec_factor = pow(max(dot(normal, halfway_dir), 0.0), light.specular_power) * specular;
+    float shininess = max(2.0 / pow(max(glossiness, 0.04), 4.0) - 2.0, 1.0);
 
-    diffuse_factor *= (1.0 - spec_factor);
+    float spec_factor = pow(max(dot(normal, halfway_dir), 0.0), shininess);
 
     float distance = length(point_pos - frag_pos);
     float att = 1.0 / (point_attenuation.x + (point_attenuation.y * distance) + (point_attenuation.z * (distance * distance)));
 
-    vec3 diffuse_light = diffuse_factor * albedo;
-    vec3 specular_light = vec3(spec_factor); // Highlight remains the color of the light
+    vec3 f_base = vec3(0.04);
+    vec3 specular_colour = mix(f_base, albedo, specular);
+
+    vec3 diffuse_light = diffuse_factor * albedo * (1.0 - specular);
+    vec3 specular_light = spec_factor * specular_colour;
 
     return (diffuse_light + specular_light) * att * point_colour;
 }
 
 void main()
 {
-    vec3 albedo = texture(textures[albedo_tex_index], in_uv).rgb;
-    vec3 normal = texture(textures[normal_tex_index], in_uv).xyz;
-    vec3 frag_pos = texture(textures[position_tex_index], in_uv).xyz;
-    float specular = texture(textures[specular_tex_index], in_uv).r;
+    vec3 albedo = texture(albedo_texture, in_uv).rgb;
+    vec3 normal = texture(normal_texture, in_uv).xyz;
+    vec3 frag_pos = texture(position_texture, in_uv).xyz;
+    float specular = texture(specular_texture, in_uv).r;
+    float glossiness = texture(specular_texture, in_uv).g;
 
     vec3 ambient = vec3(ambient_colour[0], ambient_colour[1], ambient_colour[2]);
 
@@ -94,8 +83,10 @@ void main()
 
     for (uint i = 0; i < num_point_lights; i++)
     {
-        result += calculate_point_light(point_lights[i], normal, frag_pos, albedo, specular);
+        result += calculate_point_light(point_lights[i], normal, frag_pos, albedo, specular, glossiness);
     }
+
+    result += texture(emissive_texture, in_uv).rgb;
 
     out_colour = vec4(result, 1.0);
 }
