@@ -16,6 +16,7 @@ add_library(ufpslib STATIC
 
 add_subdirectory(concurrency)
 add_subdirectory(graphics)
+add_subdirectory(memory)
 add_subdirectory(resources)
 add_subdirectory(serialisation)
 add_subdirectory(utils)
