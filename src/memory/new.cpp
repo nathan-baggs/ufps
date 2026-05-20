@@ -34,7 +34,17 @@ auto operator new(std::size_t count) -> void *
     return ptr;
 }
 
+auto operator new[](std::size_t count) -> void *
+{
+    return ::operator new(count);
+}
+
 auto operator delete(void *ptr) noexcept -> void
+{
+    ::HeapFree(heap(), 0, ptr);
+}
+
+auto operator delete[](void *ptr) noexcept -> void
 {
     ::HeapFree(heap(), 0, ptr);
 }
@@ -42,4 +52,18 @@ auto operator delete(void *ptr) noexcept -> void
 auto operator delete(void *ptr, std::size_t) noexcept -> void
 {
     ::operator delete(ptr);
+}
+
+auto operator delete[](void *ptr, std::size_t) noexcept -> void
+{
+    ::operator delete(ptr);
+}
+
+namespace ufps
+{
+auto allocation_size(void *ptr) -> std::size_t;
+auto allocation_size(void *ptr) -> std::size_t
+{
+    return ::HeapSize(heap(), 0, ptr);
+}
 }
