@@ -35,6 +35,7 @@
 #include "graphics/vertex_data.h"
 #include "graphics/window.h"
 #include "maths/vector3.h"
+#include "memory/metrics.h"
 #include "resources/embedded_resource_loader.h"
 #include "resources/file_resource_loader.h"
 #include "resources/resource_loader.h"
@@ -377,6 +378,8 @@ int start()
 
     while (running)
     {
+        const auto begin_frame_allocated_bytes = ufps::g_metrics.total_allocated_bytes.load(std::memory_order_relaxed);
+
         auto event = window.pump_event();
         while (event && running)
         {
@@ -431,6 +434,10 @@ int start()
         renderer.render(scene);
 
         window.swap();
+
+        const auto end_frame_allocated_bytes = ufps::g_metrics.total_allocated_bytes.load(std::memory_order_relaxed);
+        ufps::g_metrics.frame_allocated_bytes.store(
+            end_frame_allocated_bytes - begin_frame_allocated_bytes, std::memory_order_relaxed);
     }
 
     awaitable_manager.pump();
