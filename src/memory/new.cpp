@@ -1,10 +1,13 @@
 #include <cstddef>
+#include <heapapi.h>
 #include <memory>
 #include <new>
 #include <stdexcept>
 
 #include <windows.h>
 #include <winnt.h>
+
+#include "memory/metrics.h"
 
 namespace
 {
@@ -33,6 +36,13 @@ auto operator new(std::size_t count) -> void *
     {
         throw std::bad_alloc{};
     }
+
+    const auto real_allocation_size = ::HeapSize(heap(), 0, ptr);
+
+    ufps::g_metrics.total_allocation_count.fetch_add(1, std::memory_order_relaxed);
+    ufps::g_metrics.live_allocation_count.fetch_add(1, std::memory_order_relaxed);
+    ufps::g_metrics.total_allocated_bytes.fetch_add(real_allocation_size, std::memory_order_relaxed);
+    ufps::g_metrics.live_allocated_bytes.fetch_add(real_allocation_size, std::memory_order_relaxed);
 
     return ptr;
 }
@@ -75,6 +85,11 @@ auto operator new[](std::size_t count, std::align_val_t al) -> void *
 
 auto operator delete(void *ptr) noexcept -> void
 {
+    const auto real_allocation_size = ::HeapSize(heap(), 0, ptr);
+
+    ufps::g_metrics.live_allocation_count.fetch_sub(1, std::memory_order_relaxed);
+    ufps::g_metrics.live_allocated_bytes.fetch_sub(real_allocation_size, std::memory_order_relaxed);
+
     ::HeapFree(heap(), 0, ptr);
 }
 
