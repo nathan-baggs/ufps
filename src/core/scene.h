@@ -244,6 +244,7 @@ constexpr Scene::Scene(
     , chromatic_aberration_options_{description.chromatic_aberration_options}
     , vignette_options_{description.vignette_options}
     , film_grain_options_{description.film_grain_options}
+    , bloom_options_{description.bloom_options}
 {
     for (const auto &[name, entity] : entity_cache)
     {
