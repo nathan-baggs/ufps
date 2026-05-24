@@ -3,13 +3,20 @@
 #include <errhandlingapi.h>
 #include <exception>
 #include <format>
+#include <functional>
 #include <stdexcept>
+#include <stop_token>
 #include <string>
 #include <string_view>
 #include <thread>
+#include <tuple>
 
 #include <processthreadsapi.h>
 #include <windows.h>
+
+#include "utils/auto_release.h"
+#include "utils/exception.h"
+#include "utils/log.h"
 
 namespace ufps
 {
@@ -21,26 +28,51 @@ class Thread
     Thread(std::string_view name, F &&func, Args &&...args)
         : name_{name}
         , exception_{}
-        , thread_{
-              [this]<class... A>(std::stop_token stop_token, F &&func, A &&...a)
-              {
-                  try
-                  {
-                      func(stop_token, std::forward<A>(a)...);
-                  }
-                  catch (...)
-                  {
-                      exception_ = std::current_exception();
-                  }
-              },
-              std::forward<F>(func),
-              std::forward<Args>(args)...}
+        , stop_source_{}
+        , handle_{nullptr, [](auto) {}}
     {
+        auto *thread_data = new std::tuple{
+            auto(std::forward<F>(func)),
+            auto(stop_source_.get_token()),
+            std::addressof(exception_),
+            auto(std::forward<Args>(args))...};
+        using TupleType = std::remove_pointer_t<decltype(thread_data)>;
+
+        auto thread_data_ptr = std::unique_ptr<TupleType>(thread_data);
+
+        const auto new_thread = ::CreateThread(nullptr, 0zu, trampoline<TupleType>, thread_data_ptr.get(), 0, nullptr);
+        if (new_thread == NULL)
+        {
+            throw Exception("failed to create thread: {}", name);
+        }
+
+        handle_ = AutoRelease<HANDLE, nullptr>{
+            new_thread,
+            [](auto handle)
+            {
+                ::WaitForSingleObject(handle, INFINITE);
+                ::CloseHandle(handle);
+            }};
+
+        thread_data_ptr.release();
     }
+
+    ~Thread()
+    {
+        if (handle_ && stop_source_.stop_possible())
+        {
+            stop_source_.request_stop();
+        }
+    }
+
+    Thread(const Thread &) = delete;
+    auto operator=(const Thread &) -> Thread & = delete;
+    Thread(Thread &&) = default;
+    auto operator=(Thread &&) -> Thread & = default;
 
     auto request_stop() -> void
     {
-        thread_.request_stop();
+        stop_source_.request_stop();
     }
 
     auto name() const -> std::string_view
@@ -50,12 +82,12 @@ class Thread
 
     auto id() const
     {
-        return thread_.get_id();
+        return 0;
     }
 
     auto to_string() const -> std::string
     {
-        return std::format("thread: {} [{}]", name_, thread_.get_id());
+        return std::format("thread: {} [{}]", name_, id());
     }
 
     auto exception() const -> std::exception_ptr
@@ -64,9 +96,37 @@ class Thread
     }
 
   private:
+    template <class T>
+    static auto trampoline(void *data) -> ::DWORD
+    {
+        auto *thread_data = static_cast<T *>(data);
+        auto thread_data_ptr = std::unique_ptr<T>(thread_data);
+
+        auto ret_value = ::DWORD{};
+
+        std::apply(
+            [&ret_value]<class F, class... Args>(
+                F &&f, std::stop_token stop_token, std::exception_ptr *exception, Args &&...args)
+            {
+                try
+                {
+                    std::invoke(std::forward<F>(f), stop_token, std::forward<Args>(args)...);
+                }
+                catch (...)
+                {
+                    *exception = std::current_exception();
+                    ret_value = 1;
+                }
+            },
+            *thread_data_ptr);
+
+        return ret_value;
+    }
+
     std::string name_;
     std::exception_ptr exception_;
-    std::jthread thread_;
+    std::stop_source stop_source_;
+    AutoRelease<::HANDLE, nullptr> handle_;
 };
 
 }

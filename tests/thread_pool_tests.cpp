@@ -14,7 +14,7 @@ using namespace std::literals;
 
 TEST(thread_pool, ctor)
 {
-    auto pool = ufps::ThreadPool{};
+    auto pool = ufps::ThreadPool{4u};
 
     ASSERT_GT(pool.worker_count(), 0u);
 }
