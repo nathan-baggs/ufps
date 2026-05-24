@@ -1,3 +1,4 @@
+#include <atomic>
 #include <chrono>
 #include <thread>
 
@@ -53,4 +54,37 @@ TEST(thread, exception)
     std::this_thread::sleep_for(200ms);
 
     ASSERT_NE(thrd.exception(), nullptr);
+}
+
+TEST(thread, callstack)
+{
+    auto ready = std::atomic<bool>{false};
+
+    auto thrd = ufps::Thread{
+        "test_thread",
+        [&](std::stop_token stop_token)
+        {
+            [&]()
+            {
+                [&]()
+                {
+                    [&]()
+                    {
+                        ready = true;
+                        ready.notify_one();
+                        while (!stop_token.stop_requested())
+                        {
+                        }
+                    }();
+                }();
+            }();
+        }};
+
+    ready.wait(false);
+
+    const auto stack_trace = thrd.stack_trace();
+
+    ASSERT_GE(std::ranges::size(stack_trace), 4zu);
+
+    thrd.request_stop();
 }

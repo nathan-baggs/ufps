@@ -1,9 +1,9 @@
 #pragma once
 
-#include <errhandlingapi.h>
 #include <exception>
 #include <format>
 #include <functional>
+#include <inplace_vector>
 #include <stdexcept>
 #include <stop_token>
 #include <string>
@@ -13,8 +13,10 @@
 
 #include <processthreadsapi.h>
 #include <windows.h>
+#include <winnt.h>
 
 #include "utils/auto_release.h"
+#include "utils/error.h"
 #include "utils/exception.h"
 #include "utils/log.h"
 
@@ -88,6 +90,79 @@ class Thread
     auto to_string() const -> std::string
     {
         return std::format("thread: {} [{}]", name_, id());
+    }
+
+    auto stack_trace() -> std::inplace_vector<void *, 100>
+    {
+        auto callstack = std::inplace_vector<void *, 100>{};
+
+        auto thread_handle = AutoRelease<::HANDLE, nullptr>{nullptr, [](auto h) { ::CloseHandle(h); }};
+
+        ::SuspendThread(handle_);
+
+        // BEGIN DANGER ZONE
+
+        const auto success = [&, this]
+        {
+            thread_handle.reset(::OpenThread(THREAD_GET_CONTEXT, false, ::GetThreadId(handle_)));
+            if (!thread_handle)
+            {
+                return false;
+            }
+
+            auto context = ::CONTEXT{};
+            context.ContextFlags = CONTEXT_FULL;
+
+            if (::GetThreadContext(thread_handle, &context) == 0)
+            {
+                return false;
+            }
+
+            while (context.Rip != 0 && context.Rsp != 0)
+            {
+                if (callstack.try_push_back(reinterpret_cast<void *>(context.Rip)) == nullptr)
+                {
+                    return false;
+                }
+
+                auto table = ::UNWIND_HISTORY_TABLE{};
+                auto image_base = ::DWORD64{};
+                auto *func = ::RtlLookupFunctionEntry(context.Rip, &image_base, &table);
+
+                if (func == nullptr)
+                {
+                    const auto *rip_ptr = reinterpret_cast<const ::DWORD64 *>(context.Rsp);
+                    context.Rip = *rip_ptr;
+                    context.Rsp += sizeof(context.Rsp);
+                    continue;
+                }
+                else
+                {
+                    void *handler_data{};
+                    auto establisher_frame = ::DWORD64{};
+
+                    RtlVirtualUnwind(
+                        UNW_FLAG_NHANDLER,
+                        image_base,
+                        context.Rip,
+                        func,
+                        &context,
+                        &handler_data,
+                        &establisher_frame,
+                        nullptr);
+                }
+            }
+
+            return true;
+        }();
+
+        // END DANGER ZONE
+
+        ::ResumeThread(handle_);
+
+        ensure(success, "failed to get stack trace");
+
+        return callstack;
     }
 
     auto exception() const -> std::exception_ptr
