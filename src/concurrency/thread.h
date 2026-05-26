@@ -31,7 +31,13 @@ class Thread
         : name_{name}
         , exception_{}
         , stop_source_{}
-        , handle_{nullptr, [](auto) {}}
+        , handle_{
+              nullptr,
+              [](auto handle)
+              {
+                  ::WaitForSingleObject(handle, INFINITE);
+                  ::CloseHandle(handle);
+              }}
     {
         auto *thread_data = new std::tuple{
             auto(std::forward<F>(func)),
@@ -48,14 +54,7 @@ class Thread
             throw Exception("failed to create thread: {}", name);
         }
 
-        handle_ = AutoRelease<HANDLE, nullptr>{
-            new_thread,
-            [](auto handle)
-            {
-                ::WaitForSingleObject(handle, INFINITE);
-                ::CloseHandle(handle);
-            }};
-
+        handle_.reset(new_thread);
         thread_data_ptr.release();
     }
 
