@@ -1,12 +1,16 @@
 #include "concurrency/thread_pool.h"
 
 #include <algorithm>
+#include <chrono>
 #include <format>
+#include <processthreadsapi.h>
 #include <stop_token>
 #include <thread>
 
 #include "utils/formatter.h"
 #include "utils/log.h"
+
+using namespace std::literals;
 
 namespace ufps
 {
@@ -22,6 +26,9 @@ ThreadPool::ThreadPool(std::uint32_t worker_count)
     , worker_cv_{}
     , job_count_{}
     , workers_{}
+    , main_thread_{"main_thread", ::GetCurrentThread()}
+    , profiler_thread_{
+          {"profiler_thread", [this](std::stop_token stop_token) { profile_worker(std::move(stop_token)); }}}
 {
     log::info("starting thread pool with {} workers", worker_count);
 
@@ -35,6 +42,9 @@ ThreadPool::ThreadPool(std::uint32_t worker_count)
 ThreadPool::~ThreadPool()
 {
     log::info("stopping threads");
+
+    profiler_thread_->request_stop();
+    profiler_thread_.reset();
 
     for (auto &thread : workers_)
     {
@@ -82,6 +92,27 @@ auto ThreadPool::worker(std::stop_token stop_token) -> void
     }
 
     log::info("ending worker thread: {}", std::this_thread::get_id());
+}
+
+auto ThreadPool::profile_worker(std::stop_token stop_token) -> void
+{
+    log::info("starting profiler thread");
+
+    std::this_thread::sleep_for(500ms);
+
+    while (!stop_token.stop_requested())
+    {
+        for (auto &worker : workers_)
+        {
+            worker.stack_trace();
+        }
+
+        main_thread_.stack_trace();
+
+        std::this_thread::sleep_for(1ms);
+    }
+
+    log::info("ending profiler thread");
 }
 
 auto ThreadPool::drain() const -> void

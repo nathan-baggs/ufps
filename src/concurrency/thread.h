@@ -19,6 +19,7 @@
 #include "utils/error.h"
 #include "utils/exception.h"
 #include "utils/log.h"
+#include "utils/text_utils.h"
 
 namespace ufps
 {
@@ -26,6 +27,14 @@ namespace ufps
 class Thread
 {
   public:
+    Thread(std::string_view name, ::HANDLE handle)
+        : name_{name}
+        , exception_{}
+        , stop_source_{}
+        , handle_{handle, [](auto) {}}
+    {
+    }
+
     template <class F, class... Args>
     Thread(std::string_view name, F &&func, Args &&...args)
         : name_{name}
@@ -56,6 +65,10 @@ class Thread
 
         handle_.reset(new_thread);
         thread_data_ptr.release();
+
+        const auto wide_name = text_widen(name_);
+
+        ::SetThreadDescription(new_thread, wide_name.c_str());
     }
 
     ~Thread()

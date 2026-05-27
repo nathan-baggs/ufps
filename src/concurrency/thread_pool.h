@@ -3,6 +3,7 @@
 #include <atomic>
 #include <cstdint>
 #include <functional>
+#include <optional>
 #include <vector>
 
 #include "concurrency/concurrent_queue.h"
@@ -31,11 +32,15 @@ class ThreadPool
   private:
     auto worker(std::stop_token stop_token) -> void;
 
+    auto profile_worker(std::stop_token stop_token) -> void;
+
     std::uint32_t worker_count_;
     ConcurrentQueue<Job> job_queue_;
     Lock<> worker_lock_;
     CondVar worker_cv_;
     std::atomic<std::uint32_t> job_count_;
     std::vector<Thread> workers_;
+    Thread main_thread_;
+    std::optional<Thread> profiler_thread_;
 };
 }
