@@ -7,6 +7,7 @@ mark_as_advanced(BUILD_GMOCK BUILD_GTEST gtest_hide_internal_symbols)
 add_executable(unit_tests
   auto_release_tests.cpp
   awaitable_manager_tests.cpp
+  bounded_number_tests.cpp
   concurrent_queue_tests.cpp
   error_tests.cpp
   formatter_tests.cpp
