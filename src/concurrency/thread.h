@@ -99,7 +99,7 @@ class Thread
 
         ::SuspendThread(handle_);
 
-        // BEGIN DANGER ZONE
+        // BEGIN DANGER ZONE - https://www.youtube.com/watch?v=siwpn14IE7E
 
         const auto success = [&, this]
         {
@@ -140,7 +140,7 @@ class Thread
                     void *handler_data{};
                     auto establisher_frame = ::DWORD64{};
 
-                    RtlVirtualUnwind(
+                    ::RtlVirtualUnwind(
                         UNW_FLAG_NHANDLER,
                         image_base,
                         context.Rip,
