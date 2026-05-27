@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <atomic>
 #include <chrono>
 #include <thread>
@@ -5,6 +6,7 @@
 #include <gtest/gtest.h>
 
 #include "concurrency/thread.h"
+#include "utils/resolve_symbols.h"
 
 using namespace std::literals;
 
@@ -82,8 +84,10 @@ TEST(thread, callstack)
 
     ready.wait(false);
 
-    const auto stack_trace = thrd.stack_trace();
+    auto stack_trace = thrd.stack_trace();
+    ASSERT_GE(std::ranges::size(stack_trace), 4zu);
 
+    const auto symbols = ufps::resolve_symbols(stack_trace);
     ASSERT_GE(std::ranges::size(stack_trace), 4zu);
 
     thrd.request_stop();
