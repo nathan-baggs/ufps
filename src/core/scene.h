@@ -12,6 +12,7 @@
 #include "graphics/mesh_manager.h"
 #include "graphics/point_light.h"
 #include "graphics/texture_manager.h"
+#include "maths/bounded_number.h"
 #include "maths/ray.h"
 #include "maths/utils.h"
 #include "maths/vector4.h"
@@ -84,7 +85,7 @@ struct VignetteOptions
 
 struct FilmGrainOptions
 {
-    float strength = 0.01f;
+    BoundedFloat<0.0f, 1.0f> strength = 0.01f;
 };
 
 struct BloomOptions

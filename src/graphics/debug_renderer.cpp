@@ -4,6 +4,7 @@
 #include <cstring>
 #include <format>
 #include <fstream>
+#include <meta>
 #include <optional>
 #include <ranges>
 #include <string>
@@ -23,6 +24,7 @@
 #include "graphics/utils.h"
 #include "graphics/window.h"
 #include "maths/aabb.h"
+#include "maths/bounded_number.h"
 #include "maths/matrix4.h"
 #include "maths/ray.h"
 #include "maths/transform.h"
@@ -134,6 +136,33 @@ auto create_aabb_lines(const ufps::AABB &aabb, const ufps::Matrix4 &transform, c
         lines);
 
     return lines;
+}
+
+constexpr auto clean_name(std::string_view name) -> std::string
+{
+    return std::string{name.substr(name.find_last_of(":") + 1)};
+}
+
+template <float Min, float Max>
+auto create_debug_controller(const std::string &label, ufps::BoundedFloat<Min, Max> &value) -> void
+{
+    ::ImGui::SliderFloat(label.c_str(), &value, Min, Max);
+}
+
+template <class T>
+auto create_debug_controls(T &data) -> void
+{
+    const auto title = std::format("{} options", clean_name(std::meta::display_string_of(^^T)));
+
+    ::ImGui::Text(title.c_str());
+
+    constexpr auto ctx = std::meta::access_context::current();
+
+    template for (constexpr auto &member : std::define_static_array(std::meta::nonstatic_data_members_of(^^T, ctx)))
+    {
+        const auto label = clean_name(std::meta::display_string_of(member));
+        create_debug_controller(label, data.[:member:]);
+    }
 }
 
 }
@@ -518,15 +547,7 @@ auto DebugRenderer::post_render(Scene &scene) -> void
         }
     }
 
-    ::ImGui::Text("film grain options");
-
-    {
-        auto value = scene.film_grain_options().strength;
-        if (::ImGui::SliderFloat("film_grain_strength", &value, 0.0f, 1.0f))
-        {
-            scene.film_grain_options().strength = value;
-        }
-    }
+    create_debug_controls(scene.film_grain_options());
 
     ::ImGui::Text("exposure options");
 
