@@ -31,8 +31,10 @@ class Thread
         : name_{name}
         , exception_{}
         , stop_source_{}
-        , handle_{handle, [](auto) {}}
+        , handle_{handle, [](auto handle) { ::CloseHandle(handle); }}
     {
+        const auto wide_name = text_widen(name_);
+        ::SetThreadDescription(handle, wide_name.c_str());
     }
 
     template <class F, class... Args>

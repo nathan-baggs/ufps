@@ -12,6 +12,25 @@
 
 using namespace std::literals;
 
+namespace
+{
+
+auto current_thread_handle() -> ::HANDLE
+{
+    auto h = ::HANDLE{};
+
+    ufps::ensure(
+        ::DuplicateHandle(
+            ::GetCurrentProcess(), ::GetCurrentThread(), ::GetCurrentProcess(), &h, 0, FALSE, DUPLICATE_SAME_ACCESS) !=
+            0,
+        "failed to duplicate handle: {}",
+        ::GetLastError());
+
+    return h;
+}
+
+}
+
 namespace ufps
 {
 ThreadPool::ThreadPool()
@@ -26,7 +45,7 @@ ThreadPool::ThreadPool(std::uint32_t worker_count)
     , worker_cv_{}
     , job_count_{}
     , workers_{}
-    , main_thread_{"main_thread", ::GetCurrentThread()}
+    , main_thread_{"main_thread", current_thread_handle()}
     , profiler_thread_{
           {"profiler_thread", [this](std::stop_token stop_token) { profile_worker(std::move(stop_token)); }}}
 {
