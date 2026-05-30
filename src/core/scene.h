@@ -38,49 +38,49 @@ struct LightData
 
 struct ToneMapOptions
 {
-    float max_brightness = 5.0f;
-    float contrast = 1.0f;
-    float linear_section_start = 0.3f;
-    float linear_section_length = 0.5f;
-    float black_tightness = 0.0f;
-    float pedestal = 0.0f;
-    float gamma = 2.2f;
+    BoundedFloat<0.0f, 100.0f> max_brightness = 5.0f;
+    BoundedFloat<0.0f, 50.0f> contrast = 1.0f;
+    BoundedFloat<0.0f, 1.0f> linear_section_start = 0.3f;
+    BoundedFloat<0.0f, 1.0f> linear_section_length = 0.5f;
+    BoundedFloat<0.0f, 3.0f> black_tightness = 0.0f;
+    BoundedFloat<0.0f, 1.0f> pedestal = 0.0f;
+    BoundedFloat<0.0f, 5.0f> gamma = 2.2f;
 };
 
 struct SSAOOptions
 {
     bool enabled = true;
-    std::uint32_t sample_count = 64u;
-    float radius = 0.75f;
-    float bias = 0.025f;
-    float power = 2.0f;
+    BoundedUint32<1u, 64u> sample_count = 64u;
+    BoundedFloat<0.1f, 2.0f> radius = 0.75f;
+    BoundedFloat<0.01f, 0.1f> bias = 0.025f;
+    BoundedFloat<1.0f, 4.0f> power = 2.0f;
 };
 
 struct ExposureOptions
 {
-    float min_log_luminance = -3.0f;
-    float max_log_luminance = 1.0f;
+    BoundedFloat<-10.0f, 10.0f> min_log_luminance = -3.0f;
+    BoundedFloat<-10.0f, 10.0f> max_log_luminance = 1.0f;
 };
 
 struct FogOptions
 {
     Colour colour = colours::black;
-    float density = 0.005f;
+    BoundedFloat<0.0f, 0.2f> density = 0.005f;
 };
 
 struct ChromaticAberrationOptions
 {
-    float red_offset = 0.009f;
-    float green_offset = 0.006f;
-    float blue_offset = -0.006f;
-    float strength = 0.5f;
+    BoundedFloat<-0.1f, 0.1f> red_offset = 0.009f;
+    BoundedFloat<-0.1f, 0.1f> green_offset = 0.006f;
+    BoundedFloat<-0.1f, 0.1f> blue_offset = -0.006f;
+    BoundedFloat<0.0f, 1.0f> strength = 0.5f;
 };
 
 struct VignetteOptions
 {
     Colour colour = colours::black;
-    float strength = 0.5f;
-    float feather = 0.1f;
+    BoundedFloat<0.0f, 1.0f> strength = 0.5f;
+    BoundedFloat<0.0f, 1.0f> feather = 0.1f;
 };
 
 struct FilmGrainOptions
@@ -90,9 +90,9 @@ struct FilmGrainOptions
 
 struct BloomOptions
 {
-    float filter_radius = 0.005f;
-    float mix_amount = 0.04f;
-    float threshold = 1.0f;
+    BoundedFloat<0.0f, 0.1f> filter_radius = 0.005f;
+    BoundedFloat<0.0f, 1.0f> mix_amount = 0.04f;
+    BoundedFloat<0.0f, 10.0f> threshold = 1.0f;
 };
 
 class Scene

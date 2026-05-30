@@ -149,6 +149,33 @@ auto create_debug_controller(const std::string &label, ufps::BoundedFloat<Min, M
     ::ImGui::SliderFloat(label.c_str(), &value, Min, Max);
 }
 
+template <std::uint32_t Min, std::uint32_t Max>
+auto create_debug_controller(const std::string &label, ufps::BoundedUint32<Min, Max> &value) -> void
+{
+    auto v = static_cast<int>(*value);
+
+    if (::ImGui::SliderInt(label.c_str(), &v, Min, Max))
+    {
+        value = static_cast<std::uint32_t>(v);
+    }
+}
+
+auto create_debug_controller(const std::string &label, bool &value) -> void
+{
+    ::ImGui::Checkbox(label.c_str(), &value);
+}
+
+auto create_debug_controller(const std::string &label, ufps::Colour &value) -> void
+{
+    float v[3]{};
+    std::memcpy(v, &value, sizeof(v));
+
+    if (::ImGui::ColorPicker3(label.c_str(), v))
+    {
+        std::memcpy(&value, v, sizeof(value));
+    }
+}
+
 template <class T>
 auto create_debug_controls(T &data) -> void
 {
@@ -360,212 +387,14 @@ auto DebugRenderer::post_render(Scene &scene) -> void
         selected_ = handle;
     }
 
-    ::ImGui::Text("tone map options");
-
-    {
-        auto value = scene.tone_map_options().max_brightness;
-        if (::ImGui::SliderFloat("maximum brightness", &value, 0.0f, 100.0f))
-        {
-            scene.tone_map_options().max_brightness = value;
-        }
-    }
-
-    {
-        auto value = scene.tone_map_options().contrast;
-        if (::ImGui::SliderFloat("contrast", &value, 0.0f, 5.0f))
-        {
-            scene.tone_map_options().contrast = value;
-        }
-    }
-
-    {
-        auto value = scene.tone_map_options().linear_section_start;
-        if (::ImGui::SliderFloat("linear section start", &value, 0.0f, 1.0f))
-        {
-            scene.tone_map_options().linear_section_start = value;
-        }
-    }
-
-    {
-        auto value = scene.tone_map_options().linear_section_length;
-        if (::ImGui::SliderFloat("linear section length", &value, 0.0f, 1.0f))
-        {
-            scene.tone_map_options().linear_section_length = value;
-        }
-    }
-
-    {
-        auto value = scene.tone_map_options().black_tightness;
-        if (::ImGui::SliderFloat("black tightness", &value, 0.0f, 3.0f))
-        {
-            scene.tone_map_options().black_tightness = value;
-        }
-    }
-
-    {
-        auto value = scene.tone_map_options().pedestal;
-        if (::ImGui::SliderFloat("pedestal", &value, 0.0f, 1.0f))
-        {
-            scene.tone_map_options().pedestal = value;
-        }
-    }
-
-    {
-        auto value = scene.tone_map_options().gamma;
-        if (::ImGui::SliderFloat("gamma", &value, 0.0f, 5.0f))
-        {
-            scene.tone_map_options().gamma = value;
-        }
-    }
-
-    ::ImGui::Text("bloom options");
-    {
-        ::ImGui::SliderFloat("bloom_filter_radius", &scene.bloom_options().filter_radius, 0.0f, 0.1f);
-        ::ImGui::SliderFloat("bloom_mix", &scene.bloom_options().mix_amount, 0.0f, 1.0f);
-        ::ImGui::SliderFloat("bloom_threshold", &scene.bloom_options().threshold, 0.0f, 10.0f);
-    }
-
-    ::ImGui::Text("ssao options");
-
-    {
-        auto value = scene.ssao_options().enabled;
-        if (::ImGui::Checkbox("enabled", &value))
-        {
-            scene.ssao_options().enabled = value;
-        }
-    }
-
-    {
-        auto value = static_cast<int>(scene.ssao_options().sample_count);
-        if (::ImGui::SliderInt("sample_count", &value, 1, 64))
-        {
-            scene.ssao_options().sample_count = value;
-        }
-    }
-
-    {
-        auto value = scene.ssao_options().radius;
-        if (::ImGui::SliderFloat("radius", &value, 0.1f, 2.0f))
-        {
-            scene.ssao_options().radius = value;
-        }
-    }
-
-    {
-        auto value = scene.ssao_options().bias;
-        if (::ImGui::SliderFloat("bias", &value, 0.01f, 0.1f))
-        {
-            scene.ssao_options().bias = value;
-        }
-    }
-
-    {
-        auto value = scene.ssao_options().power;
-        if (::ImGui::SliderFloat("power", &value, 1.0f, 4.0f))
-        {
-            scene.ssao_options().power = value;
-        }
-    }
-
-    ::ImGui::Text("fog options");
-
-    {
-        float value[3]{};
-        std::memcpy(value, &scene.fog_options().colour, sizeof(value));
-        if (::ImGui::ColorPicker3("fog_colour", value))
-        {
-            std::memcpy(&scene.fog_options().colour, value, sizeof(value));
-        }
-    }
-
-    {
-        auto value = scene.fog_options().density;
-        if (::ImGui::SliderFloat("fog_density", &value, 0.0f, 0.2f))
-        {
-            scene.fog_options().density = value;
-        }
-    }
-
-    ::ImGui::Text("chromatic aberration options");
-
-    {
-        auto value = scene.chromatic_aberration_options().red_offset;
-        if (::ImGui::SliderFloat("red_offset", &value, -0.1f, 0.1f))
-        {
-            scene.chromatic_aberration_options().red_offset = value;
-        }
-    }
-
-    {
-        auto value = scene.chromatic_aberration_options().green_offset;
-        if (::ImGui::SliderFloat("green_offset", &value, -0.1f, 0.1f))
-        {
-            scene.chromatic_aberration_options().green_offset = value;
-        }
-    }
-
-    {
-        auto value = scene.chromatic_aberration_options().blue_offset;
-        if (::ImGui::SliderFloat("blue_offset", &value, -0.1f, 0.1f))
-        {
-            scene.chromatic_aberration_options().blue_offset = value;
-        }
-    }
-
-    {
-        auto value = scene.chromatic_aberration_options().strength;
-        if (::ImGui::SliderFloat("strength_offset", &value, 0.0f, 1.0f))
-        {
-            scene.chromatic_aberration_options().strength = value;
-        }
-    }
-
-    ::ImGui::Text("vignette options");
-
-    {
-        float value[3]{};
-        std::memcpy(value, &scene.vignette_options().colour, sizeof(value));
-        if (::ImGui::ColorPicker3("vignette_colour", value))
-        {
-            std::memcpy(&scene.vignette_options().colour, value, sizeof(value));
-        }
-    }
-
-    {
-        auto value = scene.vignette_options().strength;
-        if (::ImGui::SliderFloat("vignette_strength", &value, 0.0f, 1.0f))
-        {
-            scene.vignette_options().strength = value;
-        }
-    }
-
-    {
-        auto value = scene.vignette_options().feather;
-        if (::ImGui::SliderFloat("vignette_feather", &value, 0.0f, 1.0f))
-        {
-            scene.vignette_options().feather = value;
-        }
-    }
-
+    create_debug_controls(scene.tone_map_options());
+    create_debug_controls(scene.ssao_options());
+    create_debug_controls(scene.bloom_options());
+    create_debug_controls(scene.fog_options());
+    create_debug_controls(scene.chromatic_aberration_options());
+    create_debug_controls(scene.vignette_options());
     create_debug_controls(scene.film_grain_options());
-
-    ::ImGui::Text("exposure options");
-
-    {
-        auto value = scene.exposure_options().min_log_luminance;
-        if (::ImGui::SliderFloat("min_log_luminance", &value, -10.0f, 10.0f))
-        {
-            scene.exposure_options().min_log_luminance = value;
-        }
-    }
-
-    {
-        auto value = scene.exposure_options().max_log_luminance;
-        if (::ImGui::SliderFloat("max_log_luminance", &value, -10.0f, 10.0f))
-        {
-            scene.exposure_options().max_log_luminance = value;
-        }
-    }
+    create_debug_controls(scene.exposure_options());
 
     auto average_luminance = 0.0f;
     ::glGetNamedBufferSubData(
@@ -650,11 +479,6 @@ auto DebugRenderer::post_render(Scene &scene) -> void
 
             selected_ = scene.lights().lights.emplace(*light);
         }
-    }
-
-    for (auto &entity : scene.entities())
-    {
-        ::ImGui::CollapsingHeader(entity.name().c_str());
     }
 
     for (const auto &[index, light] : std::views::enumerate(scene.lights().lights.handles()))
