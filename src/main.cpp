@@ -1,4 +1,5 @@
 #include <fstream>
+#include <map>
 #include <memory>
 #include <numbers>
 #include <pthread.h>
@@ -44,6 +45,8 @@
 #include "utils/decompress.h"
 #include "utils/formatter.h"
 #include "utils/log.h"
+#include "utils/resolve_symbols.h"
+#include "utils/stack_trace_buffer.h"
 #include "utils/system_info.h"
 
 using namespace std::literals;
@@ -442,6 +445,26 @@ int start()
 
     awaitable_manager.pump();
     pool.drain();
+
+    auto profile_data = pool.profile_data();
+    for (const auto &[index, thread_data] : std::views::enumerate(profile_data))
+    {
+        ufps::log::info("thread id: {}", index);
+
+        const auto sorted_data =
+            thread_data |
+            std::views::transform([](const auto &p) { return std::make_pair(std::get<1>(p), std::get<0>(p)); }) |
+            std::ranges::to<std::map<std::size_t, ufps::StackTraceBuffer, std::greater<std::size_t>>>();
+
+        for (auto &data : sorted_data | std::views::take(2))
+        {
+            auto &stack = const_cast<ufps::StackTraceBuffer &>(std::get<1>(data));
+            auto &counter = std::get<0>(data);
+
+            ufps::log::info("{}", counter);
+            ufps::log::info("{}", ufps::resolve_symbols(stack));
+        }
+    }
 
     return 0;
 }
