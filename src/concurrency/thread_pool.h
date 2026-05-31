@@ -3,6 +3,7 @@
 #include <atomic>
 #include <cstdint>
 #include <functional>
+#include <inplace_vector>
 #include <optional>
 #include <vector>
 
@@ -10,6 +11,7 @@
 #include "concurrency/cond_var.h"
 #include "concurrency/lock.h"
 #include "concurrency/thread.h"
+#include "utils/stack_trace_counter.h"
 
 namespace ufps
 {
@@ -29,6 +31,8 @@ class ThreadPool
 
     auto drain() const -> void;
 
+    auto profile_data();
+
   private:
     auto worker(std::stop_token stop_token) -> void;
 
@@ -42,5 +46,16 @@ class ThreadPool
     std::vector<Thread> workers_;
     Thread main_thread_;
     std::optional<Thread> profiler_thread_;
+    Lock<> profile_lock_;
+    std::vector<StackTraceCounter> profile_data_;
 };
+
+inline auto ThreadPool::profile_data()
+{
+    const auto lck = std::scoped_lock{profile_lock_};
+
+    const auto data_copy = profile_data_;
+    return data_copy;
+}
+
 }

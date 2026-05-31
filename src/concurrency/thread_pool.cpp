@@ -7,8 +7,10 @@
 #include <stop_token>
 #include <thread>
 
+#include "utils/error.h"
 #include "utils/formatter.h"
 #include "utils/log.h"
+#include "utils/stack_trace_counter.h"
 
 using namespace std::literals;
 
@@ -46,8 +48,9 @@ ThreadPool::ThreadPool(std::uint32_t worker_count)
     , job_count_{}
     , workers_{}
     , main_thread_{"main_thread", current_thread_handle()}
-    , profiler_thread_{
-          {"profiler_thread", [this](std::stop_token stop_token) { profile_worker(std::move(stop_token)); }}}
+    , profiler_thread_{}
+    , profile_lock_{}
+    , profile_data_(worker_count_ + 1u)
 {
     log::info("starting thread pool with {} workers", worker_count);
 
@@ -56,6 +59,12 @@ ThreadPool::ThreadPool(std::uint32_t worker_count)
         const auto name = std::format("worker_{}", i);
         workers_.push_back({name, [this](std::stop_token stop_token) { worker(std::move(stop_token)); }});
     }
+
+    // make sure profile thread is created last so main + worker thread have slots (0, N) in profile data
+    profiler_thread_ = {
+        {"profiler_thread", [this](std::stop_token stop_token) { profile_worker(std::move(stop_token)); }}};
+
+    ensure(main_thread_.id() == 0zu, "thread creation confusion");
 }
 
 ThreadPool::~ThreadPool()
@@ -121,12 +130,16 @@ auto ThreadPool::profile_worker(std::stop_token stop_token) -> void
 
     while (!stop_token.stop_requested())
     {
-        for (auto &worker : workers_)
         {
-            worker.stack_trace();
-        }
+            const auto lck = std::scoped_lock{profile_lock_};
 
-        main_thread_.stack_trace();
+            for (auto &worker : workers_)
+            {
+                profile_data_[worker.id()].try_emplace(worker.stack_trace(), 0zu).first->second++;
+            }
+
+            profile_data_[main_thread_.id()].try_emplace(main_thread_.stack_trace(), 0zu).first->second++;
+        }
 
         std::this_thread::sleep_for(1ms);
     }
