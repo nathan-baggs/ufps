@@ -3,7 +3,6 @@
 #include <exception>
 #include <format>
 #include <functional>
-#include <inplace_vector>
 #include <stdexcept>
 #include <stop_token>
 #include <string>
@@ -19,6 +18,7 @@
 #include "utils/error.h"
 #include "utils/exception.h"
 #include "utils/log.h"
+#include "utils/stack_trace_buffer.h"
 #include "utils/text_utils.h"
 
 namespace ufps
@@ -117,9 +117,9 @@ class Thread
         return std::format("thread: {} [{}]", name_, id());
     }
 
-    auto stack_trace() -> std::inplace_vector<void *, 100>
+    auto stack_trace() -> StackTraceBuffer
     {
-        auto callstack = std::inplace_vector<void *, 100>{};
+        auto callstack = StackTraceBuffer{};
 
         auto thread_handle = AutoRelease<::HANDLE, nullptr>{nullptr, [](auto h) { ::CloseHandle(h); }};
 
@@ -227,6 +227,7 @@ class Thread
     std::exception_ptr exception_;
     std::stop_source stop_source_;
     AutoRelease<::HANDLE, nullptr> handle_;
+    std::size_t id_;
 };
 
 }
