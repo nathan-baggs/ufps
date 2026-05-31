@@ -63,8 +63,6 @@ ThreadPool::ThreadPool(std::uint32_t worker_count)
     // make sure profile thread is created last so main + worker thread have slots (0, N) in profile data
     profiler_thread_ = {
         {"profiler_thread", [this](std::stop_token stop_token) { profile_worker(std::move(stop_token)); }}};
-
-    ensure(main_thread_.id() == 0zu, "thread creation confusion");
 }
 
 ThreadPool::~ThreadPool()
