@@ -24,6 +24,15 @@
 namespace ufps
 {
 
+namespace impl
+{
+constexpr auto generate_id() -> std::size_t
+{
+    static auto num = 0zu;
+    return num++;
+}
+}
+
 class Thread
 {
   public:
@@ -32,6 +41,7 @@ class Thread
         , exception_{}
         , stop_source_{}
         , handle_{handle, [](auto handle) { ::CloseHandle(handle); }}
+        , id_{impl::generate_id()}
     {
         const auto wide_name = text_widen(name_);
         ::SetThreadDescription(handle, wide_name.c_str());
@@ -49,6 +59,7 @@ class Thread
                   ::WaitForSingleObject(handle, INFINITE);
                   ::CloseHandle(handle);
               }}
+        , id_{impl::generate_id()}
     {
         auto *thread_data = new std::tuple{
             auto(std::forward<F>(func)),
@@ -98,7 +109,7 @@ class Thread
 
     auto id() const
     {
-        return 0;
+        return id_;
     }
 
     auto to_string() const -> std::string
