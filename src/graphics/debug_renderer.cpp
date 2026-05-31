@@ -181,6 +181,8 @@ auto create_debug_controls(T &data) -> void
 {
     const auto title = std::format("{} options", clean_name(std::meta::display_string_of(^^T)));
 
+    ::ImGui::PushID(title.c_str());
+
     ::ImGui::Text(title.c_str());
 
     constexpr auto ctx = std::meta::access_context::current();
@@ -190,6 +192,8 @@ auto create_debug_controls(T &data) -> void
         const auto label = clean_name(std::meta::display_string_of(member));
         create_debug_controller(label, data.[:member:]);
     }
+
+    ::ImGui::PopID();
 }
 
 }
