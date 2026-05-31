@@ -2,9 +2,9 @@
 #include <map>
 #include <memory>
 #include <numbers>
-#include <pthread.h>
 #include <ranges>
 #include <span>
+#include <sstream>
 #include <string_view>
 #include <thread>
 #include <unordered_map>
@@ -462,8 +462,18 @@ int start()
             auto &counter = std::get<0>(data);
 
             ufps::log::info("{}", counter);
-            ufps::log::info("{}", ufps::resolve_symbols(stack));
+            const auto symbols = ufps::resolve_symbols(stack);
+
+            auto symbol_str = std::stringstream{};
+            for (const auto &symbol : symbols)
+            {
+                symbol_str << symbol << '\n';
+            }
+
+            ufps::log::info("{}", symbol_str.str());
         }
+
+        break;
     }
 
     return 0;
