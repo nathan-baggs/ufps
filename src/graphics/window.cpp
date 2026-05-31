@@ -274,7 +274,7 @@ Window::Window(
         .hInstance = ::GetModuleHandleA(nullptr),
         .hIcon = {},
         .hCursor{},
-        .hbrBackground = {},
+        .hbrBackground = static_cast<::HBRUSH>(::GetStockObject(BLACK_BRUSH)),
         .lpszMenuName = {},
         .lpszClassName = "window class"};
 

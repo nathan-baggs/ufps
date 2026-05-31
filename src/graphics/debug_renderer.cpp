@@ -28,6 +28,7 @@
 #include "maths/transform.h"
 #include "maths/vector3.h"
 #include "maths/vector4.h"
+#include "memory/metrics.h"
 #include "serialisation/yaml_serialiser.h"
 #include "utils/log.h"
 
@@ -729,6 +730,31 @@ auto DebugRenderer::post_render(Scene &scene) -> void
             ::ImVec2(1.0f, 0.0f));
         ::ImGui::SameLine();
     }
+
+    ::ImGui::End();
+
+    ::ImGui::Begin("metrics");
+    const auto m = metrics();
+
+    ::ImGui::LabelText("total_allocation_count", "%zu", m.total_allocation_count);
+    ::ImGui::LabelText("live_allocation_count", "%zu", m.live_allocation_count);
+    ::ImGui::LabelText("total_allocated_bytes", "%zu", m.total_allocated_bytes);
+    ::ImGui::LabelText("live_allocated_bytes", "%zu", m.live_allocated_bytes);
+    ::ImGui::LabelText("frame_allocated_bytes", "%zu", m.frame_allocated_bytes);
+
+    static auto frame_allocations = std::vector<float>(1000u);
+    frame_allocations.erase(std::ranges::begin(frame_allocations));
+    frame_allocations.push_back(static_cast<float>(m.frame_allocated_bytes / 1024.0f));
+
+    ::ImGui::PlotLines(
+        "frame allocations",
+        frame_allocations.data(),
+        frame_allocations.size(),
+        0,
+        nullptr,
+        0.0f,
+        std::numeric_limits<float>::max(),
+        ::ImVec2(0.0f, 80.0f));
 
     ::ImGui::End();
 

@@ -8,6 +8,7 @@ project(
 )
 
 include(FetchContent)
+include(ExternalProject)
 
 set(CMAKE_SKIP_PACKAGE_ALL_DEPENDENCY ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
@@ -82,6 +83,34 @@ if (NOT zstd_POPULATED)
 	FetchContent_Populate(zstd)
 	add_subdirectory(${zstd_SOURCE_DIR}/build/cmake ${zstd_BINARY_DIR} EXCLUDE_FROM_ALL)
 endif()
+
+set(BACKTRACE_PREFIX "${CMAKE_CURRENT_BINARY_DIR}/_deps/libbacktrace")
+set(BACKTRACE_INSTALL_DIR "${BACKTRACE_PREFIX}/install")
+set(BACKTRACE_LIB_PATH "${BACKTRACE_INSTALL_DIR}/lib/libbacktrace.a")
+
+ExternalProject_Add(
+    libbacktrace_build
+    GIT_REPOSITORY    https://github.com/ianlancetaylor/libbacktrace.git
+    GIT_TAG           master
+    PREFIX            "${BACKTRACE_PREFIX}"
+    UPDATE_COMMAND    ""
+    BUILD_BYPRODUCTS  "${BACKTRACE_LIB_PATH}"
+    CONFIGURE_COMMAND <SOURCE_DIR>/configure 
+                      --prefix=${BACKTRACE_INSTALL_DIR} 
+                      --with-pic
+                      --host=x86_64-w64-mingw32
+                      CC=${CMAKE_C_COMPILER}
+                      CXX=${CMAKE_CXX_COMPILER}
+    BUILD_COMMAND     make
+    INSTALL_COMMAND   make install
+)
+add_library(libbacktrace STATIC IMPORTED)
+add_dependencies(libbacktrace libbacktrace_build)
+file(MAKE_DIRECTORY "${BACKTRACE_INSTALL_DIR}/include")
+set_target_properties(libbacktrace PROPERTIES
+    IMPORTED_LOCATION "${BACKTRACE_INSTALL_DIR}/lib/libbacktrace.a"
+    INTERFACE_INCLUDE_DIRECTORIES "${BACKTRACE_INSTALL_DIR}/include"
+)
 
 add_subdirectory(src)
 add_subdirectory(tools)

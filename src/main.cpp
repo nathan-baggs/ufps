@@ -1,9 +1,10 @@
 #include <fstream>
+#include <map>
 #include <memory>
 #include <numbers>
-#include <pthread.h>
 #include <ranges>
 #include <span>
+#include <sstream>
 #include <string_view>
 #include <thread>
 #include <unordered_map>
@@ -35,6 +36,7 @@
 #include "graphics/vertex_data.h"
 #include "graphics/window.h"
 #include "maths/vector3.h"
+#include "memory/metrics.h"
 #include "resources/embedded_resource_loader.h"
 #include "resources/file_resource_loader.h"
 #include "resources/resource_loader.h"
@@ -43,6 +45,8 @@
 #include "utils/decompress.h"
 #include "utils/formatter.h"
 #include "utils/log.h"
+#include "utils/resolve_symbols.h"
+#include "utils/stack_trace_buffer.h"
 #include "utils/system_info.h"
 
 using namespace std::literals;
@@ -377,6 +381,8 @@ int start()
 
     while (running)
     {
+        const auto begin_frame_allocated_bytes = ufps::g_metrics.total_allocated_bytes.load(std::memory_order_relaxed);
+
         auto event = window.pump_event();
         while (event && running)
         {
@@ -431,10 +437,44 @@ int start()
         renderer.render(scene);
 
         window.swap();
+
+        const auto end_frame_allocated_bytes = ufps::g_metrics.total_allocated_bytes.load(std::memory_order_relaxed);
+        ufps::g_metrics.frame_allocated_bytes.store(
+            end_frame_allocated_bytes - begin_frame_allocated_bytes, std::memory_order_relaxed);
     }
 
     awaitable_manager.pump();
     pool.drain();
+
+    auto profile_data = pool.profile_data();
+    for (const auto &[index, thread_data] : std::views::enumerate(profile_data))
+    {
+        ufps::log::info("thread id: {}", index);
+
+        const auto sorted_data =
+            thread_data |
+            std::views::transform([](const auto &p) { return std::make_pair(std::get<1>(p), std::get<0>(p)); }) |
+            std::ranges::to<std::map<std::size_t, ufps::StackTraceBuffer, std::greater<std::size_t>>>();
+
+        for (auto &data : sorted_data | std::views::take(2))
+        {
+            auto &stack = const_cast<ufps::StackTraceBuffer &>(std::get<1>(data));
+            auto &counter = std::get<0>(data);
+
+            ufps::log::info("{}", counter);
+            const auto symbols = ufps::resolve_symbols(stack);
+
+            auto symbol_str = std::stringstream{};
+            for (const auto &symbol : symbols)
+            {
+                symbol_str << symbol << '\n';
+            }
+
+            ufps::log::info("{}", symbol_str.str());
+        }
+
+        break;
+    }
 
     return 0;
 }
