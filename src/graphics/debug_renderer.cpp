@@ -138,6 +138,40 @@ auto create_aabb_lines(const ufps::AABB &aabb, const ufps::Matrix4 &transform, c
     return lines;
 }
 
+struct SaveSceneButton
+{
+    ufps::Scene &scene;
+};
+
+struct AddLightButton
+{
+    ufps::Scene &scene;
+    std::variant<std::monostate, ufps::Entity *, ufps::PointLightHandle> *selected;
+};
+
+struct Histogram
+{
+    std::vector<float> values;
+};
+
+struct AddEntity
+{
+    ufps::Scene &scene;
+    std::variant<std::monostate, ufps::Entity *, ufps::PointLightHandle> *selected;
+};
+
+struct DuplicateEntity
+{
+    ufps::Scene &scene;
+    std::variant<std::monostate, ufps::Entity *, ufps::PointLightHandle> *selected;
+};
+
+struct DeleteEntity
+{
+    ufps::Scene &scene;
+    std::variant<std::monostate, ufps::Entity *, ufps::PointLightHandle> *selected;
+};
+
 constexpr auto clean_name(std::string_view name) -> std::string
 {
     return std::string{name.substr(name.find_last_of(":") + 1)};
@@ -165,6 +199,11 @@ auto create_debug_controller(const std::string &label, bool &value) -> void
     ::ImGui::Checkbox(label.c_str(), &value);
 }
 
+auto create_debug_controller(const std::string &label, float &value) -> void
+{
+    ::ImGui::LabelText(label.c_str(), "%0.2f", value);
+}
+
 auto create_debug_controller(const std::string &label, ufps::Colour &value) -> void
 {
     float v[3]{};
@@ -176,10 +215,119 @@ auto create_debug_controller(const std::string &label, ufps::Colour &value) -> v
     }
 }
 
-template <class T>
-auto create_debug_controls(T &data) -> void
+auto create_debug_controller(const std::string &, SaveSceneButton &value) -> void
 {
-    const auto title = std::format("{} options", clean_name(std::meta::display_string_of(^^T)));
+    if (::ImGui::Button("save"))
+    {
+        const auto scene_yaml = ufps::yaml::serialise(value.scene.description());
+        auto out = std::ofstream("scene.yaml");
+
+        out << scene_yaml;
+    }
+}
+
+auto create_debug_controller(const std::string &, AddLightButton &value) -> void
+{
+    if (::ImGui::Button("add light"))
+    {
+        const auto handle = value.scene.lights().lights.emplace(
+            ufps::PointLight{
+                .position = {},
+                .colour = {.r = 1.0f, .g = 1.0f, .b = 1.0f},
+                .constant_attenuation = 1.0f,
+                .linear_attenuation = 0.007f,
+                .quadratic_attenuation = 0.0002f,
+                .intensity = 1.0f});
+        *value.selected = handle;
+    }
+}
+
+auto create_debug_controller(const std::string &label, Histogram &value) -> void
+{
+    ::ImGui::PlotHistogram(
+        label.c_str(),
+        value.values.data(),
+        256,
+        0,
+        nullptr,
+        0.0f,
+        std::ranges::max(value.values),
+        ::ImVec2(::ImGui::GetContentRegionAvail().x, 150.0f));
+}
+
+auto create_debug_controller(const std::string &, AddEntity &value) -> void
+{
+    auto mesh_selected_index = std::optional<std::uint32_t>{};
+
+    auto mesh_names = value.scene.mesh_manager().mesh_names();
+    std::ranges::sort(mesh_names);
+    const auto mesh_names_cstr = mesh_names |                                                     //
+                                 std::views::filter([](const auto &e) { return !e.empty(); }) |   //
+                                 std::views::transform([](const auto &e) { return e.c_str(); }) | //
+                                 std::ranges::to<std::vector>();
+
+    if (::ImGui::BeginCombo("mesh_names", mesh_names_cstr.front(), 0))
+    {
+        for (const auto &[index, name] : std::views::enumerate(mesh_names_cstr))
+        {
+            if (::ImGui::Selectable(name))
+            {
+                mesh_selected_index = index;
+            }
+        }
+        ::ImGui::EndCombo();
+    }
+
+    if (mesh_selected_index)
+    {
+        value.scene.create_entity(mesh_names_cstr[*mesh_selected_index]);
+        *value.selected = &value.scene.entities().back();
+    }
+}
+
+auto create_debug_controller(const std::string &, DeleteEntity &value) -> void
+{
+    if (::ImGui::Button("delete"))
+    {
+        if (auto **selected_entity = std::get_if<ufps::Entity *>(value.selected))
+        {
+            auto *entity = *selected_entity;
+            value.scene.remove(*entity);
+            *value.selected = std::monostate{};
+        }
+        if (auto *selected_entity = std::get_if<ufps::PointLightHandle>(value.selected))
+        {
+            value.scene.lights().lights.remove(*selected_entity);
+            *value.selected = std::monostate{};
+        }
+    }
+}
+
+auto create_debug_controller(const std::string &, DuplicateEntity &value) -> void
+{
+    if (::ImGui::Button("duplicate"))
+    {
+        if (auto **selected_entity = std::get_if<ufps::Entity *>(value.selected))
+        {
+            auto *entity = *selected_entity;
+            auto *new_entity = value.scene.create_entity(entity->name());
+            new_entity->set_transform(entity->transform());
+            *value.selected = new_entity;
+        }
+        else if (auto *selected_light = std::get_if<ufps::PointLightHandle>(value.selected))
+        {
+            const auto light = value.scene.lights().lights[*selected_light];
+            ufps::ensure(!!light, "missing light?");
+
+            *value.selected = value.scene.lights().lights.emplace(*light);
+        }
+    }
+}
+
+template <class T>
+auto create_debug_controls(T &&data) -> void
+{
+    const auto title = std::format("{}", clean_name(std::meta::display_string_of(std::meta::remove_cvref(^^T))));
 
     ::ImGui::PushID(title.c_str());
 
@@ -187,7 +335,8 @@ auto create_debug_controls(T &data) -> void
 
     constexpr auto ctx = std::meta::access_context::current();
 
-    template for (constexpr auto &member : std::define_static_array(std::meta::nonstatic_data_members_of(^^T, ctx)))
+    template for (constexpr auto &member :
+                  std::define_static_array(std::meta::nonstatic_data_members_of(std::meta::remove_cvref(^^T), ctx)))
     {
         const auto label = clean_name(std::meta::display_string_of(member));
         create_debug_controller(label, data.[:member:]);
@@ -367,29 +516,20 @@ auto DebugRenderer::post_render(Scene &scene) -> void
 
     ::ImGui::Begin("scene");
 
-    ::ImGui::LabelText("FPS", "%0.1f", io.Framerate);
-    ::ImGui::LabelText("Debug Lines", "%0.1f", static_cast<float>(debug_line_count));
-
-    if (::ImGui::Button("save"))
+    struct BasicSceneInfo
     {
-        const auto scene_yaml = yaml::serialise(scene.description());
-        auto out = std::ofstream("scene.yaml");
+        float fps;
+        float debug_lines;
+        SaveSceneButton save_scene;
+        AddLightButton add_light;
+    };
 
-        out << scene_yaml;
-    }
-
-    if (::ImGui::Button("add light"))
-    {
-        const auto handle = scene.lights().lights.emplace(
-            PointLight{
-                .position = {},
-                .colour = {.r = 1.0f, .g = 1.0f, .b = 1.0f},
-                .constant_attenuation = 1.0f,
-                .linear_attenuation = 0.007f,
-                .quadratic_attenuation = 0.0002f,
-                .intensity = 1.0f});
-        selected_ = handle;
-    }
+    create_debug_controls(
+        BasicSceneInfo{
+            .fps = io.Framerate,
+            .debug_lines = static_cast<float>(debug_line_count),
+            .save_scene = {.scene = scene},
+            .add_light = {.scene = scene, .selected = &selected_}});
 
     create_debug_controls(scene.tone_map_options());
     create_debug_controls(scene.ssao_options());
@@ -404,86 +544,29 @@ auto DebugRenderer::post_render(Scene &scene) -> void
     ::glGetNamedBufferSubData(
         average_luminance_buffer_.native_handle(), 0, sizeof(average_luminance), &average_luminance);
 
-    ::ImGui::LabelText("average luminance", "%f", average_luminance);
-
     std::uint32_t histogram[256]{};
     ::glGetNamedBufferSubData(luminance_histogram_buffer_.native_handle(), 0, sizeof(histogram), &histogram);
 
-    const auto scaled_histogram =
+    auto scaled_histogram =
         histogram | std::views::transform([](const auto e) { return std::log2(static_cast<float>(e) + 1.0f); }) |
         std::ranges::to<std::vector>();
 
-    ::ImGui::PlotHistogram(
-        "luminance",
-        scaled_histogram.data(),
-        256,
-        0,
-        nullptr,
-        0.0f,
-        std::ranges::max(scaled_histogram),
-        ::ImVec2(::ImGui::GetContentRegionAvail().x, 150.0f));
-
-    auto mesh_names = scene.mesh_manager().mesh_names();
-    std::ranges::sort(mesh_names);
-    const auto mesh_names_cstr = mesh_names |                                                     //
-                                 std::views::filter([](const auto &e) { return !e.empty(); }) |   //
-                                 std::views::transform([](const auto &e) { return e.c_str(); }) | //
-                                 std::ranges::to<std::vector>();
-
-    auto mesh_selected_index = std::optional<std::uint32_t>{};
-
-    if (::ImGui::BeginCombo("mesh_names", mesh_names_cstr.front(), 0))
+    struct Luminance
     {
-        for (const auto &[index, name] : std::views::enumerate(mesh_names_cstr))
-        {
-            if (::ImGui::Selectable(name))
-            {
-                mesh_selected_index = index;
-            }
-        }
-        ::ImGui::EndCombo();
-    }
+        float average_luminance;
+        Histogram luminance;
+    };
 
-    if (mesh_selected_index)
+    create_debug_controls(
+        Luminance{
+            .average_luminance = average_luminance, .luminance = Histogram{.values = std::move(scaled_histogram)}});
+
+    struct SceneControls
     {
-        scene.create_entity(mesh_names_cstr[*mesh_selected_index]);
-        selected_ = &scene.entities().back();
-    }
+        AddEntity add_entity;
+    };
 
-    if (::ImGui::Button("delete"))
-    {
-        if (auto **selected_entity = std::get_if<Entity *>(&selected_))
-        {
-            auto *entity = *selected_entity;
-            scene.remove(*entity);
-            selected_ = std::monostate{};
-        }
-        if (auto *selected_entity = std::get_if<PointLightHandle>(&selected_))
-        {
-            scene.lights().lights.remove(*selected_entity);
-            selected_ = std::monostate{};
-        }
-    }
-
-    ::ImGui::SameLine();
-
-    if (::ImGui::Button("duplicate"))
-    {
-        if (auto **selected_entity = std::get_if<Entity *>(&selected_))
-        {
-            auto *entity = *selected_entity;
-            auto *new_entity = scene.create_entity(entity->name());
-            new_entity->set_transform(entity->transform());
-            selected_ = new_entity;
-        }
-        else if (auto *selected_light = std::get_if<PointLightHandle>(&selected_))
-        {
-            const auto light = scene.lights().lights[*selected_light];
-            ensure(!!light, "missing light?");
-
-            selected_ = scene.lights().lights.emplace(*light);
-        }
-    }
+    create_debug_controls(SceneControls{.add_entity = {.scene = scene, .selected = &selected_}});
 
     for (const auto &[index, light] : std::views::enumerate(scene.lights().lights.handles()))
     {
