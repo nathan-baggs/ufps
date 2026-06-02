@@ -172,6 +172,32 @@ struct DeleteEntity
     std::variant<std::monostate, ufps::Entity *, ufps::PointLightHandle> *selected;
 };
 
+struct Plot
+{
+    std::vector<float> values;
+};
+
+struct TextureController
+{
+    std::uint32_t handle;
+    float width;
+    float height;
+};
+
+template <class T>
+struct Wrapper
+{
+    T &controller;
+};
+
+struct SameLine
+{
+};
+
+struct LogView
+{
+};
+
 constexpr auto clean_name(std::string_view name) -> std::string
 {
     return std::string{name.substr(name.find_last_of(":") + 1)};
@@ -202,6 +228,11 @@ auto create_debug_controller(const std::string &label, bool &value) -> void
 auto create_debug_controller(const std::string &label, float &value) -> void
 {
     ::ImGui::LabelText(label.c_str(), "%0.2f", value);
+}
+
+auto create_debug_controller(const std::string &label, std::size_t &value) -> void
+{
+    ::ImGui::LabelText(label.c_str(), "%zu", value);
 }
 
 auto create_debug_controller(const std::string &label, ufps::Colour &value) -> void
@@ -303,6 +334,24 @@ auto create_debug_controller(const std::string &, DeleteEntity &value) -> void
     }
 }
 
+auto create_debug_controller(const std::string &, ufps::Matrix4 &value) -> void
+{
+    ::ImGui::BeginTable(
+        "transform", 4, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingFixedFit);
+
+    for (auto row = 0; row < 4; ++row)
+    {
+        ::ImGui::TableNextRow();
+        for (auto col = 0; col < 4; ++col)
+        {
+            ::ImGui::TableSetColumnIndex(col);
+            ::ImGui::Text("%0.2f", value[col * 4 + row]);
+        }
+    }
+
+    ::ImGui::EndTable();
+}
+
 auto create_debug_controller(const std::string &, DuplicateEntity &value) -> void
 {
     if (::ImGui::Button("duplicate"))
@@ -322,6 +371,75 @@ auto create_debug_controller(const std::string &, DuplicateEntity &value) -> voi
             *value.selected = value.scene.lights().lights.emplace(*light);
         }
     }
+}
+auto create_debug_controller(const std::string &, LogView &) -> void
+{
+    static auto auto_scroll = true;
+    static auto force_scroll_to_bottom = false;
+    if (::ImGui::Checkbox("auto scroll", &auto_scroll))
+    {
+        if (auto_scroll)
+        {
+            force_scroll_to_bottom = auto_scroll;
+        }
+    }
+
+    ::ImGui::BeginChild("log output");
+
+    if (auto_scroll && !force_scroll_to_bottom)
+    {
+        const auto scroll_max = ::ImGui::GetScrollMaxY();
+        const auto scroll_current = ::ImGui::GetScrollY();
+
+        if (scroll_max > 0.0f && scroll_current < scroll_max)
+        {
+            auto_scroll = false;
+        }
+    }
+
+    for (const auto &line : ufps::log::history)
+    {
+        switch (line[1])
+        {
+            case 'D': ::ImGui::TextColored({0.0f, 0.5f, 1.0f, 1.0f}, "%s", line.c_str()); break;
+            case 'I': ::ImGui::TextColored({1.0f, 1.0f, 1.0f, 1.0f}, "%s", line.c_str()); break;
+            case 'W': ::ImGui::TextColored({1.0f, 1.0f, 0.0f, 1.0f}, "%s", line.c_str()); break;
+            case 'E': ::ImGui::TextColored({1.0f, 0.0f, 0.0f, 1.0f}, "%s", line.c_str()); break;
+            default: ::ImGui::TextColored({1.0f, 0.412f, 0.706f, 1.0f}, "%s", line.c_str()); break;
+        }
+    }
+
+    if (auto_scroll)
+    {
+        ::ImGui::SetScrollHereY(1.0f);
+    }
+
+    ::ImGui::EndChild();
+
+    force_scroll_to_bottom = false;
+}
+
+auto create_debug_controller(const std::string &, Plot &value) -> void
+{
+    ::ImGui::PlotLines(
+        "frame allocations",
+        value.values.data(),
+        value.values.size(),
+        0,
+        nullptr,
+        0.0f,
+        std::numeric_limits<float>::max(),
+        ::ImVec2(0.0f, 80.0f));
+}
+
+auto create_debug_controller(const std::string &, SameLine &) -> void
+{
+    ::ImGui::SameLine();
+}
+
+auto create_debug_controller(const std::string &, TextureController &value) -> void
+{
+    ::ImGui::Image(value.handle, ::ImVec2(value.width, value.height), ::ImVec2(0.0f, 1.0f), ::ImVec2(1.0f, 0.0f));
 }
 
 template <class T>
@@ -343,6 +461,16 @@ auto create_debug_controls(T &&data) -> void
     }
 
     ::ImGui::PopID();
+}
+
+template <class... Controllers>
+auto create_debug_window(const std::string &name, Controllers &&...controllers)
+{
+    ::ImGui::Begin(name.c_str());
+
+    (create_debug_controls(controllers), ...);
+
+    ::ImGui::End();
 }
 
 }
@@ -514,8 +642,6 @@ auto DebugRenderer::post_render(Scene &scene) -> void
 
     ::ImGui::DockSpaceOverViewport(0, ::ImGui::GetMainViewport(), ::ImGuiDockNodeFlags_PassthruCentralNode);
 
-    ::ImGui::Begin("scene");
-
     struct BasicSceneInfo
     {
         float fps;
@@ -523,22 +649,6 @@ auto DebugRenderer::post_render(Scene &scene) -> void
         SaveSceneButton save_scene;
         AddLightButton add_light;
     };
-
-    create_debug_controls(
-        BasicSceneInfo{
-            .fps = io.Framerate,
-            .debug_lines = static_cast<float>(debug_line_count),
-            .save_scene = {.scene = scene},
-            .add_light = {.scene = scene, .selected = &selected_}});
-
-    create_debug_controls(scene.tone_map_options());
-    create_debug_controls(scene.ssao_options());
-    create_debug_controls(scene.bloom_options());
-    create_debug_controls(scene.fog_options());
-    create_debug_controls(scene.chromatic_aberration_options());
-    create_debug_controls(scene.vignette_options());
-    create_debug_controls(scene.film_grain_options());
-    create_debug_controls(scene.exposure_options());
 
     auto average_luminance = 0.0f;
     ::glGetNamedBufferSubData(
@@ -557,96 +667,49 @@ auto DebugRenderer::post_render(Scene &scene) -> void
         Histogram luminance;
     };
 
-    create_debug_controls(
-        Luminance{
-            .average_luminance = average_luminance, .luminance = Histogram{.values = std::move(scaled_histogram)}});
-
     struct SceneControls
     {
         AddEntity add_entity;
+        DeleteEntity delete_entity;
+        SameLine same_line{};
+        DuplicateEntity duplicate_entity;
     };
 
-    create_debug_controls(SceneControls{.add_entity = {.scene = scene, .selected = &selected_}});
-
-    for (const auto &[index, light] : std::views::enumerate(scene.lights().lights.handles()))
+    struct RemainingSceneInfo
     {
-        const auto light_name = std::format("light {}", index);
+        Colour &ambient;
+        Matrix4 camera_view;
+    };
 
-        ::ImGui::CollapsingHeader(light_name.c_str());
-    }
+    create_debug_window(
+        "scene",
+        BasicSceneInfo{
+            .fps = io.Framerate,
+            .debug_lines = static_cast<float>(debug_line_count),
+            .save_scene = {.scene = scene},
+            .add_light = {.scene = scene, .selected = &selected_}},
+        scene.tone_map_options(),
+        scene.ssao_options(),
+        scene.bloom_options(),
+        scene.fog_options(),
+        scene.chromatic_aberration_options(),
+        scene.vignette_options(),
+        scene.film_grain_options(),
+        scene.exposure_options(),
+        Luminance{
+            .average_luminance = average_luminance, .luminance = Histogram{.values = std::move(scaled_histogram)}},
+        SceneControls{
+            .add_entity = {.scene = scene, .selected = &selected_},
+            .delete_entity = {.scene = scene, .selected = &selected_},
+            .same_line = {},
+            .duplicate_entity = {.scene = scene, .selected = &selected_}},
+        RemainingSceneInfo{.ambient = scene.lights().ambient, .camera_view = scene.camera().data().view});
 
-    float amb_colour[3]{};
-    std::memcpy(amb_colour, &scene.lights().ambient, sizeof(amb_colour));
-
-    if (::ImGui::ColorPicker3("ambient light colour", amb_colour))
+    struct LogWindow
     {
-        std::memcpy(&scene.lights().ambient, amb_colour, sizeof(amb_colour));
-    }
-    const auto camera_transform = scene.camera().data().view;
-
-    ::ImGui::BeginTable(
-        "transform", 4, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingFixedFit);
-
-    for (auto row = 0; row < 4; ++row)
-    {
-        ::ImGui::TableNextRow();
-        for (auto col = 0; col < 4; ++col)
-        {
-            ::ImGui::TableSetColumnIndex(col);
-            ::ImGui::Text("%0.2f", camera_transform[col * 4 + row]);
-        }
-    }
-
-    ::ImGui::EndTable();
-
-    ::ImGui::End();
-    ::ImGui::Begin("log");
-
-    static auto auto_scroll = true;
-    static auto force_scroll_to_bottom = false;
-    if (::ImGui::Checkbox("auto scroll", &auto_scroll))
-    {
-        if (auto_scroll)
-        {
-            force_scroll_to_bottom = auto_scroll;
-        }
-    }
-
-    ::ImGui::BeginChild("log output");
-
-    if (auto_scroll && !force_scroll_to_bottom)
-    {
-        const auto scroll_max = ::ImGui::GetScrollMaxY();
-        const auto scroll_current = ::ImGui::GetScrollY();
-
-        if (scroll_max > 0.0f && scroll_current < scroll_max)
-        {
-            auto_scroll = false;
-        }
-    }
-
-    for (const auto &line : log::history)
-    {
-        switch (line[1])
-        {
-            case 'D': ::ImGui::TextColored({0.0f, 0.5f, 1.0f, 1.0f}, "%s", line.c_str()); break;
-            case 'I': ::ImGui::TextColored({1.0f, 1.0f, 1.0f, 1.0f}, "%s", line.c_str()); break;
-            case 'W': ::ImGui::TextColored({1.0f, 1.0f, 0.0f, 1.0f}, "%s", line.c_str()); break;
-            case 'E': ::ImGui::TextColored({1.0f, 0.0f, 0.0f, 1.0f}, "%s", line.c_str()); break;
-            default: ::ImGui::TextColored({1.0f, 0.412f, 0.706f, 1.0f}, "%s", line.c_str()); break;
-        }
-    }
-
-    if (auto_scroll)
-    {
-        ::ImGui::SetScrollHereY(1.0f);
-    }
-
-    ::ImGui::EndChild();
-
-    force_scroll_to_bottom = false;
-
-    ::ImGui::End();
+        LogView view;
+    };
+    create_debug_window("logs", LogWindow{});
 
     ::ImGui::Begin("bloom_mips");
 
@@ -665,68 +728,52 @@ auto DebugRenderer::post_render(Scene &scene) -> void
 
     ::ImGui::End();
 
-    ::ImGui::Begin("metrics");
-    const auto m = metrics();
+    static auto frame_allocations = Plot{.values = std::vector<float>(1000u)};
+    frame_allocations.values.erase(std::ranges::begin(frame_allocations.values));
+    frame_allocations.values.push_back(static_cast<float>(metrics().frame_allocated_bytes / 1024.0f));
 
-    ::ImGui::LabelText("total_allocation_count", "%zu", m.total_allocation_count);
-    ::ImGui::LabelText("live_allocation_count", "%zu", m.live_allocation_count);
-    ::ImGui::LabelText("total_allocated_bytes", "%zu", m.total_allocated_bytes);
-    ::ImGui::LabelText("live_allocated_bytes", "%zu", m.live_allocated_bytes);
-    ::ImGui::LabelText("frame_allocated_bytes", "%zu", m.frame_allocated_bytes);
+    create_debug_window("metrics", metrics(), Wrapper<Plot>{.controller = frame_allocations});
 
-    static auto frame_allocations = std::vector<float>(1000u);
-    frame_allocations.erase(std::ranges::begin(frame_allocations));
-    frame_allocations.push_back(static_cast<float>(m.frame_allocated_bytes / 1024.0f));
+    struct RenderTargets
+    {
+        TextureController ssao;
+        SameLine same_line_0;
+        TextureController gbuffer_0;
+        SameLine same_line_1;
+        TextureController gbuffer_1;
+        SameLine same_line_2;
+        TextureController gbuffer_2;
+        SameLine same_line_3;
+        TextureController gbuffer_3;
+    };
 
-    ::ImGui::PlotLines(
-        "frame allocations",
-        frame_allocations.data(),
-        frame_allocations.size(),
-        0,
-        nullptr,
-        0.0f,
-        std::numeric_limits<float>::max(),
-        ::ImVec2(0.0f, 80.0f));
-
-    ::ImGui::End();
-
-    ::ImGui::Begin("render_targets");
-
-    ::ImGui::Image(
-        scene.texture_manager().texture(ssao_blur_rt_.colour_texture_bindless_handle_0)->native_handle(),
-        ::ImVec2(width * aspect_ratio, width),
-        ::ImVec2(0.0f, 1.0f),
-        ::ImVec2(1.0f, 0.0f));
-    ::ImGui::SameLine();
-
-    ::ImGui::Image(
-        scene.texture_manager().texture(gbuffer_rt_.colour_texture_bindless_handle_0)->native_handle(),
-        ::ImVec2(width * aspect_ratio, width),
-        ::ImVec2(0.0f, 1.0f),
-        ::ImVec2(1.0f, 0.0f));
-    ::ImGui::SameLine();
-
-    ::ImGui::Image(
-        scene.texture_manager().texture(gbuffer_rt_.colour_texture_bindless_handle_1)->native_handle(),
-        ::ImVec2(width * aspect_ratio, width),
-        ::ImVec2(0.0f, 1.0f),
-        ::ImVec2(1.0f, 0.0f));
-    ::ImGui::SameLine();
-
-    ::ImGui::Image(
-        scene.texture_manager().texture(gbuffer_rt_.colour_texture_bindless_handle_2)->native_handle(),
-        ::ImVec2(width * aspect_ratio, width),
-        ::ImVec2(0.0f, 1.0f),
-        ::ImVec2(1.0f, 0.0f));
-    ::ImGui::SameLine();
-
-    ::ImGui::Image(
-        scene.texture_manager().texture(gbuffer_rt_.colour_texture_bindless_handle_3)->native_handle(),
-        ::ImVec2(width * aspect_ratio, width),
-        ::ImVec2(0.0f, 1.0f),
-        ::ImVec2(1.0f, 0.0f));
-
-    ::ImGui::End();
+    create_debug_window(
+        "render_targets",
+        RenderTargets{
+            .ssao =
+                {scene.texture_manager().texture(ssao_blur_rt_.colour_texture_bindless_handle_0)->native_handle(),
+                 width * aspect_ratio,
+                 width},
+            .same_line_0 = {},
+            .gbuffer_0 =
+                {scene.texture_manager().texture(gbuffer_rt_.colour_texture_bindless_handle_0)->native_handle(),
+                 width * aspect_ratio,
+                 width},
+            .same_line_1 = {},
+            .gbuffer_1 =
+                {scene.texture_manager().texture(gbuffer_rt_.colour_texture_bindless_handle_1)->native_handle(),
+                 width * aspect_ratio,
+                 width},
+            .same_line_2 = {},
+            .gbuffer_2 =
+                {scene.texture_manager().texture(gbuffer_rt_.colour_texture_bindless_handle_2)->native_handle(),
+                 width * aspect_ratio,
+                 width},
+            .same_line_3 = {},
+            .gbuffer_3 = {
+                scene.texture_manager().texture(gbuffer_rt_.colour_texture_bindless_handle_3)->native_handle(),
+                width * aspect_ratio,
+                width}});
 
     if (!std::holds_alternative<std::monostate>(selected_))
     {
