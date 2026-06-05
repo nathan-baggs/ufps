@@ -4,6 +4,7 @@
 #include <cstring>
 #include <format>
 #include <fstream>
+#include <meta>
 #include <optional>
 #include <ranges>
 #include <string>
@@ -23,6 +24,7 @@
 #include "graphics/utils.h"
 #include "graphics/window.h"
 #include "maths/aabb.h"
+#include "maths/bounded_number.h"
 #include "maths/matrix4.h"
 #include "maths/ray.h"
 #include "maths/transform.h"
@@ -134,6 +136,341 @@ auto create_aabb_lines(const ufps::AABB &aabb, const ufps::Matrix4 &transform, c
         lines);
 
     return lines;
+}
+
+struct SaveSceneButton
+{
+    ufps::Scene &scene;
+};
+
+struct AddLightButton
+{
+    ufps::Scene &scene;
+    std::variant<std::monostate, ufps::Entity *, ufps::PointLightHandle> *selected;
+};
+
+struct Histogram
+{
+    std::vector<float> values;
+};
+
+struct AddEntity
+{
+    ufps::Scene &scene;
+    std::variant<std::monostate, ufps::Entity *, ufps::PointLightHandle> *selected;
+};
+
+struct DuplicateEntity
+{
+    ufps::Scene &scene;
+    std::variant<std::monostate, ufps::Entity *, ufps::PointLightHandle> *selected;
+};
+
+struct DeleteEntity
+{
+    ufps::Scene &scene;
+    std::variant<std::monostate, ufps::Entity *, ufps::PointLightHandle> *selected;
+};
+
+struct Plot
+{
+    std::vector<float> values;
+};
+
+struct TextureController
+{
+    std::uint32_t handle;
+    float width;
+    float height;
+};
+
+template <class T>
+struct Wrapper
+{
+    T &controller;
+};
+
+struct SameLine
+{
+};
+
+struct LogView
+{
+};
+
+constexpr auto clean_name(std::string_view name) -> std::string
+{
+    return std::string{name.substr(name.find_last_of(":") + 1)};
+}
+
+template <float Min, float Max>
+auto create_debug_controller(const std::string &label, ufps::BoundedFloat<Min, Max> &value) -> void
+{
+    ::ImGui::SliderFloat(label.c_str(), &value, Min, Max);
+}
+
+template <std::uint32_t Min, std::uint32_t Max>
+auto create_debug_controller(const std::string &label, ufps::BoundedUint32<Min, Max> &value) -> void
+{
+    auto v = static_cast<int>(*value);
+
+    if (::ImGui::SliderInt(label.c_str(), &v, Min, Max))
+    {
+        value = static_cast<std::uint32_t>(v);
+    }
+}
+
+auto create_debug_controller(const std::string &label, bool &value) -> void
+{
+    ::ImGui::Checkbox(label.c_str(), &value);
+}
+
+auto create_debug_controller(const std::string &label, float &value) -> void
+{
+    ::ImGui::LabelText(label.c_str(), "%0.2f", value);
+}
+
+auto create_debug_controller(const std::string &label, std::size_t &value) -> void
+{
+    ::ImGui::LabelText(label.c_str(), "%zu", value);
+}
+
+auto create_debug_controller(const std::string &label, ufps::Colour &value) -> void
+{
+    float v[3]{};
+    std::memcpy(v, &value, sizeof(v));
+
+    if (::ImGui::ColorPicker3(label.c_str(), v))
+    {
+        std::memcpy(&value, v, sizeof(value));
+    }
+}
+
+auto create_debug_controller(const std::string &, SaveSceneButton &value) -> void
+{
+    if (::ImGui::Button("save"))
+    {
+        const auto scene_yaml = ufps::yaml::serialise(value.scene.description());
+        auto out = std::ofstream("scene.yaml");
+
+        out << scene_yaml;
+    }
+}
+
+auto create_debug_controller(const std::string &, AddLightButton &value) -> void
+{
+    if (::ImGui::Button("add light"))
+    {
+        const auto handle = value.scene.lights().lights.emplace(
+            ufps::PointLight{
+                .position = {},
+                .colour = {.r = 1.0f, .g = 1.0f, .b = 1.0f},
+                .constant_attenuation = 1.0f,
+                .linear_attenuation = 0.007f,
+                .quadratic_attenuation = 0.0002f,
+                .intensity = 1.0f});
+        *value.selected = handle;
+    }
+}
+
+auto create_debug_controller(const std::string &label, Histogram &value) -> void
+{
+    ::ImGui::PlotHistogram(
+        label.c_str(),
+        value.values.data(),
+        256,
+        0,
+        nullptr,
+        0.0f,
+        std::ranges::max(value.values),
+        ::ImVec2(::ImGui::GetContentRegionAvail().x, 150.0f));
+}
+
+auto create_debug_controller(const std::string &, AddEntity &value) -> void
+{
+    auto mesh_selected_index = std::optional<std::uint32_t>{};
+
+    auto mesh_names = value.scene.mesh_manager().mesh_names();
+    std::ranges::sort(mesh_names);
+    const auto mesh_names_cstr = mesh_names |                                                     //
+                                 std::views::filter([](const auto &e) { return !e.empty(); }) |   //
+                                 std::views::transform([](const auto &e) { return e.c_str(); }) | //
+                                 std::ranges::to<std::vector>();
+
+    if (::ImGui::BeginCombo("mesh_names", mesh_names_cstr.front(), 0))
+    {
+        for (const auto &[index, name] : std::views::enumerate(mesh_names_cstr))
+        {
+            if (::ImGui::Selectable(name))
+            {
+                mesh_selected_index = index;
+            }
+        }
+        ::ImGui::EndCombo();
+    }
+
+    if (mesh_selected_index)
+    {
+        value.scene.create_entity(mesh_names_cstr[*mesh_selected_index]);
+        *value.selected = &value.scene.entities().back();
+    }
+}
+
+auto create_debug_controller(const std::string &, DeleteEntity &value) -> void
+{
+    if (::ImGui::Button("delete"))
+    {
+        if (auto **selected_entity = std::get_if<ufps::Entity *>(value.selected))
+        {
+            auto *entity = *selected_entity;
+            value.scene.remove(*entity);
+            *value.selected = std::monostate{};
+        }
+        if (auto *selected_entity = std::get_if<ufps::PointLightHandle>(value.selected))
+        {
+            value.scene.lights().lights.remove(*selected_entity);
+            *value.selected = std::monostate{};
+        }
+    }
+}
+
+auto create_debug_controller(const std::string &, ufps::Matrix4 &value) -> void
+{
+    ::ImGui::BeginTable(
+        "transform", 4, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingFixedFit);
+
+    for (auto row = 0; row < 4; ++row)
+    {
+        ::ImGui::TableNextRow();
+        for (auto col = 0; col < 4; ++col)
+        {
+            ::ImGui::TableSetColumnIndex(col);
+            ::ImGui::Text("%0.2f", value[col * 4 + row]);
+        }
+    }
+
+    ::ImGui::EndTable();
+}
+
+auto create_debug_controller(const std::string &, DuplicateEntity &value) -> void
+{
+    if (::ImGui::Button("duplicate"))
+    {
+        if (auto **selected_entity = std::get_if<ufps::Entity *>(value.selected))
+        {
+            auto *entity = *selected_entity;
+            auto *new_entity = value.scene.create_entity(entity->name());
+            new_entity->set_transform(entity->transform());
+            *value.selected = new_entity;
+        }
+        else if (auto *selected_light = std::get_if<ufps::PointLightHandle>(value.selected))
+        {
+            const auto light = value.scene.lights().lights[*selected_light];
+            ufps::ensure(!!light, "missing light?");
+
+            *value.selected = value.scene.lights().lights.emplace(*light);
+        }
+    }
+}
+auto create_debug_controller(const std::string &, LogView &) -> void
+{
+    static auto auto_scroll = true;
+    static auto force_scroll_to_bottom = false;
+    if (::ImGui::Checkbox("auto scroll", &auto_scroll))
+    {
+        if (auto_scroll)
+        {
+            force_scroll_to_bottom = auto_scroll;
+        }
+    }
+
+    ::ImGui::BeginChild("log output");
+
+    if (auto_scroll && !force_scroll_to_bottom)
+    {
+        const auto scroll_max = ::ImGui::GetScrollMaxY();
+        const auto scroll_current = ::ImGui::GetScrollY();
+
+        if (scroll_max > 0.0f && scroll_current < scroll_max)
+        {
+            auto_scroll = false;
+        }
+    }
+
+    for (const auto &line : ufps::log::history)
+    {
+        switch (line[1])
+        {
+            case 'D': ::ImGui::TextColored({0.0f, 0.5f, 1.0f, 1.0f}, "%s", line.c_str()); break;
+            case 'I': ::ImGui::TextColored({1.0f, 1.0f, 1.0f, 1.0f}, "%s", line.c_str()); break;
+            case 'W': ::ImGui::TextColored({1.0f, 1.0f, 0.0f, 1.0f}, "%s", line.c_str()); break;
+            case 'E': ::ImGui::TextColored({1.0f, 0.0f, 0.0f, 1.0f}, "%s", line.c_str()); break;
+            default: ::ImGui::TextColored({1.0f, 0.412f, 0.706f, 1.0f}, "%s", line.c_str()); break;
+        }
+    }
+
+    if (auto_scroll)
+    {
+        ::ImGui::SetScrollHereY(1.0f);
+    }
+
+    ::ImGui::EndChild();
+
+    force_scroll_to_bottom = false;
+}
+
+auto create_debug_controller(const std::string &, Plot &value) -> void
+{
+    ::ImGui::PlotLines(
+        "frame allocations",
+        value.values.data(),
+        value.values.size(),
+        0,
+        nullptr,
+        0.0f,
+        std::numeric_limits<float>::max(),
+        ::ImVec2(0.0f, 80.0f));
+}
+
+auto create_debug_controller(const std::string &, SameLine &) -> void
+{
+    ::ImGui::SameLine();
+}
+
+auto create_debug_controller(const std::string &, TextureController &value) -> void
+{
+    ::ImGui::Image(value.handle, ::ImVec2(value.width, value.height), ::ImVec2(0.0f, 1.0f), ::ImVec2(1.0f, 0.0f));
+}
+
+template <class T>
+auto create_debug_controls(T &&data) -> void
+{
+    const auto title = std::format("{}", clean_name(std::meta::display_string_of(std::meta::remove_cvref(^^T))));
+
+    ::ImGui::PushID(title.c_str());
+
+    ::ImGui::Text(title.c_str());
+
+    constexpr auto ctx = std::meta::access_context::current();
+
+    template for (constexpr auto &member :
+                  std::define_static_array(std::meta::nonstatic_data_members_of(std::meta::remove_cvref(^^T), ctx)))
+    {
+        const auto label = clean_name(std::meta::display_string_of(member));
+        create_debug_controller(label, data.[:member:]);
+    }
+
+    ::ImGui::PopID();
+}
+
+template <class... Controllers>
+auto create_debug_window(const std::string &name, Controllers &&...controllers)
+{
+    ::ImGui::Begin(name.c_str());
+
+    (create_debug_controls(controllers), ...);
+
+    ::ImGui::End();
 }
 
 }
@@ -305,416 +642,74 @@ auto DebugRenderer::post_render(Scene &scene) -> void
 
     ::ImGui::DockSpaceOverViewport(0, ::ImGui::GetMainViewport(), ::ImGuiDockNodeFlags_PassthruCentralNode);
 
-    ::ImGui::Begin("scene");
-
-    ::ImGui::LabelText("FPS", "%0.1f", io.Framerate);
-    ::ImGui::LabelText("Debug Lines", "%0.1f", static_cast<float>(debug_line_count));
-
-    if (::ImGui::Button("save"))
+    struct BasicSceneInfo
     {
-        const auto scene_yaml = yaml::serialise(scene.description());
-        auto out = std::ofstream("scene.yaml");
-
-        out << scene_yaml;
-    }
-
-    if (::ImGui::Button("add light"))
-    {
-        const auto handle = scene.lights().lights.emplace(
-            PointLight{
-                .position = {},
-                .colour = {.r = 1.0f, .g = 1.0f, .b = 1.0f},
-                .constant_attenuation = 1.0f,
-                .linear_attenuation = 0.007f,
-                .quadratic_attenuation = 0.0002f,
-                .intensity = 1.0f});
-        selected_ = handle;
-    }
-
-    ::ImGui::Text("tone map options");
-
-    {
-        auto value = scene.tone_map_options().max_brightness;
-        if (::ImGui::SliderFloat("maximum brightness", &value, 0.0f, 100.0f))
-        {
-            scene.tone_map_options().max_brightness = value;
-        }
-    }
-
-    {
-        auto value = scene.tone_map_options().contrast;
-        if (::ImGui::SliderFloat("contrast", &value, 0.0f, 5.0f))
-        {
-            scene.tone_map_options().contrast = value;
-        }
-    }
-
-    {
-        auto value = scene.tone_map_options().linear_section_start;
-        if (::ImGui::SliderFloat("linear section start", &value, 0.0f, 1.0f))
-        {
-            scene.tone_map_options().linear_section_start = value;
-        }
-    }
-
-    {
-        auto value = scene.tone_map_options().linear_section_length;
-        if (::ImGui::SliderFloat("linear section length", &value, 0.0f, 1.0f))
-        {
-            scene.tone_map_options().linear_section_length = value;
-        }
-    }
-
-    {
-        auto value = scene.tone_map_options().black_tightness;
-        if (::ImGui::SliderFloat("black tightness", &value, 0.0f, 3.0f))
-        {
-            scene.tone_map_options().black_tightness = value;
-        }
-    }
-
-    {
-        auto value = scene.tone_map_options().pedestal;
-        if (::ImGui::SliderFloat("pedestal", &value, 0.0f, 1.0f))
-        {
-            scene.tone_map_options().pedestal = value;
-        }
-    }
-
-    {
-        auto value = scene.tone_map_options().gamma;
-        if (::ImGui::SliderFloat("gamma", &value, 0.0f, 5.0f))
-        {
-            scene.tone_map_options().gamma = value;
-        }
-    }
-
-    ::ImGui::Text("bloom options");
-    {
-        ::ImGui::SliderFloat("bloom_filter_radius", &scene.bloom_options().filter_radius, 0.0f, 0.1f);
-        ::ImGui::SliderFloat("bloom_mix", &scene.bloom_options().mix_amount, 0.0f, 1.0f);
-        ::ImGui::SliderFloat("bloom_threshold", &scene.bloom_options().threshold, 0.0f, 10.0f);
-    }
-
-    ::ImGui::Text("ssao options");
-
-    {
-        auto value = scene.ssao_options().enabled;
-        if (::ImGui::Checkbox("enabled", &value))
-        {
-            scene.ssao_options().enabled = value;
-        }
-    }
-
-    {
-        auto value = static_cast<int>(scene.ssao_options().sample_count);
-        if (::ImGui::SliderInt("sample_count", &value, 1, 64))
-        {
-            scene.ssao_options().sample_count = value;
-        }
-    }
-
-    {
-        auto value = scene.ssao_options().radius;
-        if (::ImGui::SliderFloat("radius", &value, 0.1f, 2.0f))
-        {
-            scene.ssao_options().radius = value;
-        }
-    }
-
-    {
-        auto value = scene.ssao_options().bias;
-        if (::ImGui::SliderFloat("bias", &value, 0.01f, 0.1f))
-        {
-            scene.ssao_options().bias = value;
-        }
-    }
-
-    {
-        auto value = scene.ssao_options().power;
-        if (::ImGui::SliderFloat("power", &value, 1.0f, 4.0f))
-        {
-            scene.ssao_options().power = value;
-        }
-    }
-
-    ::ImGui::Text("fog options");
-
-    {
-        float value[3]{};
-        std::memcpy(value, &scene.fog_options().colour, sizeof(value));
-        if (::ImGui::ColorPicker3("fog_colour", value))
-        {
-            std::memcpy(&scene.fog_options().colour, value, sizeof(value));
-        }
-    }
-
-    {
-        auto value = scene.fog_options().density;
-        if (::ImGui::SliderFloat("fog_density", &value, 0.0f, 0.2f))
-        {
-            scene.fog_options().density = value;
-        }
-    }
-
-    ::ImGui::Text("chromatic aberration options");
-
-    {
-        auto value = scene.chromatic_aberration_options().red_offset;
-        if (::ImGui::SliderFloat("red_offset", &value, -0.1f, 0.1f))
-        {
-            scene.chromatic_aberration_options().red_offset = value;
-        }
-    }
-
-    {
-        auto value = scene.chromatic_aberration_options().green_offset;
-        if (::ImGui::SliderFloat("green_offset", &value, -0.1f, 0.1f))
-        {
-            scene.chromatic_aberration_options().green_offset = value;
-        }
-    }
-
-    {
-        auto value = scene.chromatic_aberration_options().blue_offset;
-        if (::ImGui::SliderFloat("blue_offset", &value, -0.1f, 0.1f))
-        {
-            scene.chromatic_aberration_options().blue_offset = value;
-        }
-    }
-
-    {
-        auto value = scene.chromatic_aberration_options().strength;
-        if (::ImGui::SliderFloat("strength_offset", &value, 0.0f, 1.0f))
-        {
-            scene.chromatic_aberration_options().strength = value;
-        }
-    }
-
-    ::ImGui::Text("vignette options");
-
-    {
-        float value[3]{};
-        std::memcpy(value, &scene.vignette_options().colour, sizeof(value));
-        if (::ImGui::ColorPicker3("vignette_colour", value))
-        {
-            std::memcpy(&scene.vignette_options().colour, value, sizeof(value));
-        }
-    }
-
-    {
-        auto value = scene.vignette_options().strength;
-        if (::ImGui::SliderFloat("vignette_strength", &value, 0.0f, 1.0f))
-        {
-            scene.vignette_options().strength = value;
-        }
-    }
-
-    {
-        auto value = scene.vignette_options().feather;
-        if (::ImGui::SliderFloat("vignette_feather", &value, 0.0f, 1.0f))
-        {
-            scene.vignette_options().feather = value;
-        }
-    }
-
-    ::ImGui::Text("film grain options");
-
-    {
-        auto value = scene.film_grain_options().strength;
-        if (::ImGui::SliderFloat("film_grain_strength", &value, 0.0f, 1.0f))
-        {
-            scene.film_grain_options().strength = value;
-        }
-    }
-
-    ::ImGui::Text("exposure options");
-
-    {
-        auto value = scene.exposure_options().min_log_luminance;
-        if (::ImGui::SliderFloat("min_log_luminance", &value, -10.0f, 10.0f))
-        {
-            scene.exposure_options().min_log_luminance = value;
-        }
-    }
-
-    {
-        auto value = scene.exposure_options().max_log_luminance;
-        if (::ImGui::SliderFloat("max_log_luminance", &value, -10.0f, 10.0f))
-        {
-            scene.exposure_options().max_log_luminance = value;
-        }
-    }
+        float fps;
+        float debug_lines;
+        SaveSceneButton save_scene;
+        AddLightButton add_light;
+    };
 
     auto average_luminance = 0.0f;
     ::glGetNamedBufferSubData(
         average_luminance_buffer_.native_handle(), 0, sizeof(average_luminance), &average_luminance);
 
-    ::ImGui::LabelText("average luminance", "%f", average_luminance);
-
     std::uint32_t histogram[256]{};
     ::glGetNamedBufferSubData(luminance_histogram_buffer_.native_handle(), 0, sizeof(histogram), &histogram);
 
-    const auto scaled_histogram =
+    auto scaled_histogram =
         histogram | std::views::transform([](const auto e) { return std::log2(static_cast<float>(e) + 1.0f); }) |
         std::ranges::to<std::vector>();
 
-    ::ImGui::PlotHistogram(
-        "luminance",
-        scaled_histogram.data(),
-        256,
-        0,
-        nullptr,
-        0.0f,
-        std::ranges::max(scaled_histogram),
-        ::ImVec2(::ImGui::GetContentRegionAvail().x, 150.0f));
-
-    auto mesh_names = scene.mesh_manager().mesh_names();
-    std::ranges::sort(mesh_names);
-    const auto mesh_names_cstr = mesh_names |                                                     //
-                                 std::views::filter([](const auto &e) { return !e.empty(); }) |   //
-                                 std::views::transform([](const auto &e) { return e.c_str(); }) | //
-                                 std::ranges::to<std::vector>();
-
-    auto mesh_selected_index = std::optional<std::uint32_t>{};
-
-    if (::ImGui::BeginCombo("mesh_names", mesh_names_cstr.front(), 0))
+    struct Luminance
     {
-        for (const auto &[index, name] : std::views::enumerate(mesh_names_cstr))
-        {
-            if (::ImGui::Selectable(name))
-            {
-                mesh_selected_index = index;
-            }
-        }
-        ::ImGui::EndCombo();
-    }
+        float average_luminance;
+        Histogram luminance;
+    };
 
-    if (mesh_selected_index)
+    struct SceneControls
     {
-        scene.create_entity(mesh_names_cstr[*mesh_selected_index]);
-        selected_ = &scene.entities().back();
-    }
+        AddEntity add_entity;
+        DeleteEntity delete_entity;
+        SameLine same_line{};
+        DuplicateEntity duplicate_entity;
+    };
 
-    if (::ImGui::Button("delete"))
+    struct RemainingSceneInfo
     {
-        if (auto **selected_entity = std::get_if<Entity *>(&selected_))
-        {
-            auto *entity = *selected_entity;
-            scene.remove(*entity);
-            selected_ = std::monostate{};
-        }
-        if (auto *selected_entity = std::get_if<PointLightHandle>(&selected_))
-        {
-            scene.lights().lights.remove(*selected_entity);
-            selected_ = std::monostate{};
-        }
-    }
+        Colour &ambient;
+        Matrix4 camera_view;
+    };
 
-    ::ImGui::SameLine();
+    create_debug_window(
+        "scene",
+        BasicSceneInfo{
+            .fps = io.Framerate,
+            .debug_lines = static_cast<float>(debug_line_count),
+            .save_scene = {.scene = scene},
+            .add_light = {.scene = scene, .selected = &selected_}},
+        scene.tone_map_options(),
+        scene.ssao_options(),
+        scene.bloom_options(),
+        scene.fog_options(),
+        scene.chromatic_aberration_options(),
+        scene.vignette_options(),
+        scene.film_grain_options(),
+        scene.exposure_options(),
+        Luminance{
+            .average_luminance = average_luminance, .luminance = Histogram{.values = std::move(scaled_histogram)}},
+        SceneControls{
+            .add_entity = {.scene = scene, .selected = &selected_},
+            .delete_entity = {.scene = scene, .selected = &selected_},
+            .same_line = {},
+            .duplicate_entity = {.scene = scene, .selected = &selected_}},
+        RemainingSceneInfo{.ambient = scene.lights().ambient, .camera_view = scene.camera().data().view});
 
-    if (::ImGui::Button("duplicate"))
+    struct LogWindow
     {
-        if (auto **selected_entity = std::get_if<Entity *>(&selected_))
-        {
-            auto *entity = *selected_entity;
-            auto *new_entity = scene.create_entity(entity->name());
-            new_entity->set_transform(entity->transform());
-            selected_ = new_entity;
-        }
-        else if (auto *selected_light = std::get_if<PointLightHandle>(&selected_))
-        {
-            const auto light = scene.lights().lights[*selected_light];
-            ensure(!!light, "missing light?");
-
-            selected_ = scene.lights().lights.emplace(*light);
-        }
-    }
-
-    for (auto &entity : scene.entities())
-    {
-        ::ImGui::CollapsingHeader(entity.name().c_str());
-    }
-
-    for (const auto &[index, light] : std::views::enumerate(scene.lights().lights.handles()))
-    {
-        const auto light_name = std::format("light {}", index);
-
-        ::ImGui::CollapsingHeader(light_name.c_str());
-    }
-
-    float amb_colour[3]{};
-    std::memcpy(amb_colour, &scene.lights().ambient, sizeof(amb_colour));
-
-    if (::ImGui::ColorPicker3("ambient light colour", amb_colour))
-    {
-        std::memcpy(&scene.lights().ambient, amb_colour, sizeof(amb_colour));
-    }
-    const auto camera_transform = scene.camera().data().view;
-
-    ::ImGui::BeginTable(
-        "transform", 4, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingFixedFit);
-
-    for (auto row = 0; row < 4; ++row)
-    {
-        ::ImGui::TableNextRow();
-        for (auto col = 0; col < 4; ++col)
-        {
-            ::ImGui::TableSetColumnIndex(col);
-            ::ImGui::Text("%0.2f", camera_transform[col * 4 + row]);
-        }
-    }
-
-    ::ImGui::EndTable();
-
-    ::ImGui::End();
-    ::ImGui::Begin("log");
-
-    static auto auto_scroll = true;
-    static auto force_scroll_to_bottom = false;
-    if (::ImGui::Checkbox("auto scroll", &auto_scroll))
-    {
-        if (auto_scroll)
-        {
-            force_scroll_to_bottom = auto_scroll;
-        }
-    }
-
-    ::ImGui::BeginChild("log output");
-
-    if (auto_scroll && !force_scroll_to_bottom)
-    {
-        const auto scroll_max = ::ImGui::GetScrollMaxY();
-        const auto scroll_current = ::ImGui::GetScrollY();
-
-        if (scroll_max > 0.0f && scroll_current < scroll_max)
-        {
-            auto_scroll = false;
-        }
-    }
-
-    for (const auto &line : log::history)
-    {
-        switch (line[1])
-        {
-            case 'D': ::ImGui::TextColored({0.0f, 0.5f, 1.0f, 1.0f}, "%s", line.c_str()); break;
-            case 'I': ::ImGui::TextColored({1.0f, 1.0f, 1.0f, 1.0f}, "%s", line.c_str()); break;
-            case 'W': ::ImGui::TextColored({1.0f, 1.0f, 0.0f, 1.0f}, "%s", line.c_str()); break;
-            case 'E': ::ImGui::TextColored({1.0f, 0.0f, 0.0f, 1.0f}, "%s", line.c_str()); break;
-            default: ::ImGui::TextColored({1.0f, 0.412f, 0.706f, 1.0f}, "%s", line.c_str()); break;
-        }
-    }
-
-    if (auto_scroll)
-    {
-        ::ImGui::SetScrollHereY(1.0f);
-    }
-
-    ::ImGui::EndChild();
-
-    force_scroll_to_bottom = false;
-
-    ::ImGui::End();
+        LogView view;
+    };
+    create_debug_window("logs", LogWindow{});
 
     ::ImGui::Begin("bloom_mips");
 
@@ -733,68 +728,52 @@ auto DebugRenderer::post_render(Scene &scene) -> void
 
     ::ImGui::End();
 
-    ::ImGui::Begin("metrics");
-    const auto m = metrics();
+    static auto frame_allocations = Plot{.values = std::vector<float>(1000u)};
+    frame_allocations.values.erase(std::ranges::begin(frame_allocations.values));
+    frame_allocations.values.push_back(static_cast<float>(metrics().frame_allocated_bytes / 1024.0f));
 
-    ::ImGui::LabelText("total_allocation_count", "%zu", m.total_allocation_count);
-    ::ImGui::LabelText("live_allocation_count", "%zu", m.live_allocation_count);
-    ::ImGui::LabelText("total_allocated_bytes", "%zu", m.total_allocated_bytes);
-    ::ImGui::LabelText("live_allocated_bytes", "%zu", m.live_allocated_bytes);
-    ::ImGui::LabelText("frame_allocated_bytes", "%zu", m.frame_allocated_bytes);
+    create_debug_window("metrics", metrics(), Wrapper<Plot>{.controller = frame_allocations});
 
-    static auto frame_allocations = std::vector<float>(1000u);
-    frame_allocations.erase(std::ranges::begin(frame_allocations));
-    frame_allocations.push_back(static_cast<float>(m.frame_allocated_bytes / 1024.0f));
+    struct RenderTargets
+    {
+        TextureController ssao;
+        SameLine same_line_0;
+        TextureController gbuffer_0;
+        SameLine same_line_1;
+        TextureController gbuffer_1;
+        SameLine same_line_2;
+        TextureController gbuffer_2;
+        SameLine same_line_3;
+        TextureController gbuffer_3;
+    };
 
-    ::ImGui::PlotLines(
-        "frame allocations",
-        frame_allocations.data(),
-        frame_allocations.size(),
-        0,
-        nullptr,
-        0.0f,
-        std::numeric_limits<float>::max(),
-        ::ImVec2(0.0f, 80.0f));
-
-    ::ImGui::End();
-
-    ::ImGui::Begin("render_targets");
-
-    ::ImGui::Image(
-        scene.texture_manager().texture(ssao_blur_rt_.colour_texture_bindless_handle_0)->native_handle(),
-        ::ImVec2(width * aspect_ratio, width),
-        ::ImVec2(0.0f, 1.0f),
-        ::ImVec2(1.0f, 0.0f));
-    ::ImGui::SameLine();
-
-    ::ImGui::Image(
-        scene.texture_manager().texture(gbuffer_rt_.colour_texture_bindless_handle_0)->native_handle(),
-        ::ImVec2(width * aspect_ratio, width),
-        ::ImVec2(0.0f, 1.0f),
-        ::ImVec2(1.0f, 0.0f));
-    ::ImGui::SameLine();
-
-    ::ImGui::Image(
-        scene.texture_manager().texture(gbuffer_rt_.colour_texture_bindless_handle_1)->native_handle(),
-        ::ImVec2(width * aspect_ratio, width),
-        ::ImVec2(0.0f, 1.0f),
-        ::ImVec2(1.0f, 0.0f));
-    ::ImGui::SameLine();
-
-    ::ImGui::Image(
-        scene.texture_manager().texture(gbuffer_rt_.colour_texture_bindless_handle_2)->native_handle(),
-        ::ImVec2(width * aspect_ratio, width),
-        ::ImVec2(0.0f, 1.0f),
-        ::ImVec2(1.0f, 0.0f));
-    ::ImGui::SameLine();
-
-    ::ImGui::Image(
-        scene.texture_manager().texture(gbuffer_rt_.colour_texture_bindless_handle_3)->native_handle(),
-        ::ImVec2(width * aspect_ratio, width),
-        ::ImVec2(0.0f, 1.0f),
-        ::ImVec2(1.0f, 0.0f));
-
-    ::ImGui::End();
+    create_debug_window(
+        "render_targets",
+        RenderTargets{
+            .ssao =
+                {scene.texture_manager().texture(ssao_blur_rt_.colour_texture_bindless_handle_0)->native_handle(),
+                 width * aspect_ratio,
+                 width},
+            .same_line_0 = {},
+            .gbuffer_0 =
+                {scene.texture_manager().texture(gbuffer_rt_.colour_texture_bindless_handle_0)->native_handle(),
+                 width * aspect_ratio,
+                 width},
+            .same_line_1 = {},
+            .gbuffer_1 =
+                {scene.texture_manager().texture(gbuffer_rt_.colour_texture_bindless_handle_1)->native_handle(),
+                 width * aspect_ratio,
+                 width},
+            .same_line_2 = {},
+            .gbuffer_2 =
+                {scene.texture_manager().texture(gbuffer_rt_.colour_texture_bindless_handle_2)->native_handle(),
+                 width * aspect_ratio,
+                 width},
+            .same_line_3 = {},
+            .gbuffer_3 = {
+                scene.texture_manager().texture(gbuffer_rt_.colour_texture_bindless_handle_3)->native_handle(),
+                width * aspect_ratio,
+                width}});
 
     if (!std::holds_alternative<std::monostate>(selected_))
     {

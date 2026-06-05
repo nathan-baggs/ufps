@@ -9,6 +9,7 @@
 
 #include <yaml-cpp/yaml.h>
 
+#include "maths/bounded_number.h"
 #include "utils/exception.h"
 
 namespace ufps::yaml
@@ -18,7 +19,14 @@ namespace impl
 {
 
 template <class T>
-concept Class = !std::ranges::range<T> && std::is_class_v<T> && !(requires { typename T::handle_type; });
+concept Bounded = requires {
+    typename T::type;
+    T::min;
+    T::max;
+};
+
+template <class T>
+concept Class = !std::ranges::range<T> && std::is_class_v<T> && !(requires { typename T::handle_type; }) && !Bounded<T>;
 
 template <class T>
 concept BaseType = std::integral<T> || std::floating_point<T> || std::same_as<T, std::string>;
@@ -47,6 +55,12 @@ auto do_deserialise(const ::YAML::Node &node) -> T;
 auto do_serialise(const BaseType auto &obj) -> ::YAML::Node
 {
     return ::YAML::Node{obj};
+}
+
+template <Bounded T>
+auto do_serialise(const T &obj) -> ::YAML::Node
+{
+    return ::YAML::Node{*obj};
 }
 
 template <Enum T>
@@ -124,6 +138,12 @@ template <BaseType T>
 auto do_deserialise(const ::YAML::Node &node) -> T
 {
     return node.as<T>();
+}
+
+template <Bounded T>
+auto do_deserialise(const ::YAML::Node &node) -> T::type
+{
+    return node.as<typename T::type>();
 }
 
 template <Enum T>
