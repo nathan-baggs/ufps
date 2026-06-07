@@ -91,8 +91,9 @@ auto get_texture_filename(::aiMaterial const *material, ::aiTextureType type) ->
     material->GetTexture(type, 0u, &path_str);
     const auto path = std::filesystem::path{path_str.C_Str()};
 
-    return path.empty() ? std::nullopt
-                        : std::optional{std::format("textures\\{}.dds", path.filename().stem().string())};
+    return path.empty()
+               ? std::nullopt
+               : std::optional{std::format("textures\\{}.dds", path.filename().stem().native_encoded_string())};
 }
 
 auto to_native_format(::DXGI_FORMAT format) -> ufps::TextureFormat
