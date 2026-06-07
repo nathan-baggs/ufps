@@ -67,7 +67,7 @@ target_compile_options(ufpslib PRIVATE
 target_include_directories(ufpslib PUBLIC ${PROJECT_SOURCE_DIR}/ ${PROJECT_SOURCE_DIR}/src ${stb_lib_SOURCE_DIR} ${zstd_SOURCE_DIR}/lib)
 target_compile_features(ufpslib PUBLIC cxx_std_26)
 target_compile_definitions(ufpslib PUBLIC -DNOMINMAX)
-target_link_libraries(ufpslib PUBLIC stdc++exp wbemuuid opengl32 imguilib dwmapi assimp yaml-cpp libzstd_static dbghelp libbacktrace)
+target_link_libraries(ufpslib PUBLIC stdc++exp wbemuuid opengl32 imguilib dwmapi assimp yaml-cpp libzstd_static dbghelp libbacktrace Jolt)
 
 target_link_libraries(ufps PUBLIC ufpslib)
 

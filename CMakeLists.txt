@@ -112,6 +112,17 @@ set_target_properties(libbacktrace PROPERTIES
     INTERFACE_INCLUDE_DIRECTORIES "${BACKTRACE_INSTALL_DIR}/include"
 )
 
+FetchContent_Declare(
+	jolt
+	GIT_REPOSITORY https://github.com/jrouwe/JoltPhysics
+	GIT_TAG v5.5.0
+	SOURCE_SUBDIR Build)
+FetchContent_GetProperties(jolt)
+if (NOT jolt_POPULATED)
+	FetchContent_Populate(jolt)
+	add_subdirectory(${jolt_SOURCE_DIR}/Build ${jolt_BINARY_DIR} EXCLUDE_FROM_ALL)
+endif()
+
 add_subdirectory(src)
 add_subdirectory(tools)
 
