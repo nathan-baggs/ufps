@@ -37,6 +37,7 @@
 #include "graphics/window.h"
 #include "maths/vector3.h"
 #include "memory/metrics.h"
+#include "physics/physics_system.h"
 #include "resources/embedded_resource_loader.h"
 #include "resources/file_resource_loader.h"
 #include "resources/resource_loader.h"
@@ -341,6 +342,8 @@ int start()
     auto renderer = ufps::DebugRenderer{window, *resource_loader, texture_manager, mesh_manager};
     auto debug_mode = false;
 
+    auto physics = ufps::PhysicsSystem{};
+
     auto strm = std::stringstream{};
     auto scene_description_yaml = std::ifstream{"scene.yaml"};
 
@@ -428,6 +431,8 @@ int start()
 
             event = window.pump_event();
         }
+
+        physics.update();
 
         awaitable_manager.pump();
         pool.drain();
