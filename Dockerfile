@@ -4,7 +4,7 @@ ENV MINGW=/mingw
 ARG PKG_CONFIG_VERSION=0.29.2
 ARG CMAKE_VERSION=4.1.2
 ARG BINUTILS_VERSION=2.45
-ARG MINGW_VERSION=13.0.0
+ARG MINGW_VERSION=14.0.0
 ARG GCC_VERSION=trunk
 ARG NASM_VERSION=3.01
 ARG NVCC_VERSION=13.0.2
@@ -54,10 +54,10 @@ RUN wget -q https://ftp.gnu.org/gnu/binutils/binutils-${BINUTILS_VERSION}.tar.xz
     && cd .. \
     && rm -r binutils-${BINUTILS_VERSION}
 
-RUN wget -q https://sourceforge.net/projects/mingw-w64/files/mingw-w64/mingw-w64-release/mingw-w64-v${MINGW_VERSION}.tar.bz2 -O - | tar -xj \
+RUN git clone https://git.code.sf.net/p/mingw-w64/mingw-w64 mingw-w64-mingw-w64 \
     && mkdir mingw-w64 \
     && cd mingw-w64 \
-    && ../mingw-w64-v${MINGW_VERSION}/mingw-w64-headers/configure \
+    && ../mingw-w64-mingw-w64/mingw-w64-headers/configure \
         --prefix=/usr/local/x86_64-w64-mingw32 \
         --host=x86_64-w64-mingw32 \
         --enable-sdk=all \
@@ -93,7 +93,7 @@ RUN if [ "${GCC_VERSION}" = "trunk" ]; then \
     && cd ..
 
 RUN cd mingw-w64 \
-    && ../mingw-w64-v${MINGW_VERSION}/mingw-w64-crt/configure \
+    && ../mingw-w64-mingw-w64/mingw-w64-crt/configure \
         --prefix=/usr/local/x86_64-w64-mingw32 \
         --host=x86_64-w64-mingw32 \
         --enable-wildcard \
@@ -104,7 +104,7 @@ RUN cd mingw-w64 \
     && cd ..
 
 RUN cd mingw-w64 \
-    && ../mingw-w64-v${MINGW_VERSION}/mingw-w64-libraries/winpthreads/configure \
+    && ../mingw-w64-mingw-w64/mingw-w64-libraries/winpthreads/configure \
         --prefix=/usr/local/x86_64-w64-mingw32 \
         --host=x86_64-w64-mingw32 \
         --enable-static \
@@ -118,7 +118,7 @@ RUN cd gcc \
     && make install \
     && cd .. \
     && rm -r gcc gcc-${GCC_VERSION} \
-    && rm -r mingw-w64 mingw-w64-v${MINGW_VERSION}
+    && rm -r mingw-w64 mingw-w64-mingw-w64
 
 RUN wget -q https://github.com/Kitware/CMake/releases/download/v${CMAKE_VERSION}/cmake-${CMAKE_VERSION}.tar.gz -O - | tar -xz \
     && cd cmake-${CMAKE_VERSION} \
