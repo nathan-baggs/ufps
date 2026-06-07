@@ -122,6 +122,7 @@ if (NOT jolt_POPULATED)
 	FetchContent_Populate(jolt)
 	add_subdirectory(${jolt_SOURCE_DIR}/Build ${jolt_BINARY_DIR} EXCLUDE_FROM_ALL)
 endif()
+target_compile_options(Jolt PRIVATE -Wno-error=deprecated-declarations)
 
 add_subdirectory(src)
 add_subdirectory(tools)
