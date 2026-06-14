@@ -12,8 +12,10 @@
 #include <Jolt/Core/Memory.h>
 #include <Jolt/Core/TempAllocator.h>
 #include <Jolt/Math/Real.h>
+#include <Jolt/Physics/Body/Body.h>
 #include <Jolt/Physics/Body/BodyCreationSettings.h>
 #include <Jolt/Physics/Body/BodyID.h>
+#include <Jolt/Physics/Body/BodyInterface.h>
 #include <Jolt/Physics/Body/MotionType.h>
 #include <Jolt/Physics/Collision/BroadPhase/BroadPhaseLayer.h>
 #include <Jolt/Physics/Collision/BroadPhase/ObjectVsBroadPhaseLayerFilterMask.h>
@@ -27,3 +29,20 @@
 #include <Jolt/RegisterTypes.h>
 
 #pragma GCC diagnostic pop
+
+#include "maths/vector3.h"
+
+namespace ufps
+{
+
+inline auto to_native(const ::JPH::Vec3 &vec) -> Vector3
+{
+    return {vec.GetX(), vec.GetY(), vec.GetZ()};
+}
+
+inline auto to_jolt(ufps::Vector3 vec) -> ::JPH::Vec3
+{
+    return {vec.x, vec.y, vec.z};
+}
+
+}
