@@ -22,6 +22,7 @@
 #include "core/manifest_descriptions.h"
 #include "core/render_entity.h"
 #include "core/scene.h"
+#include "core/service_locator.h"
 #include "events/key.h"
 #include "events/key_event.h"
 #include "graphics/colour.h"
@@ -290,9 +291,10 @@ auto flicker_light(ufps::AwaitableManager &awaitable, ufps::PointLightHandle han
     }
 }
 
-auto log_box(ufps::AwaitableManager &awaitable, ufps::RigidBodyHandle handle, ufps::PhysicsSystem &physics)
-    -> ufps::Task
+auto log_box(ufps::AwaitableManager &awaitable, ufps::RigidBodyHandle handle) -> ufps::Task
 {
+    auto &physics = ufps::service<ufps::PhysicsSystem>();
+
     for (;;)
     {
         if (const auto body = physics.rigid_body(handle); body)
@@ -360,8 +362,13 @@ int start()
     auto renderer = ufps::DebugRenderer{window, *resource_loader, texture_manager, mesh_manager};
     auto debug_mode = false;
 
-    auto physics = ufps::PhysicsSystem{};
-    auto body = physics.create_box({{-1.0f}, {1.0f}}, {0.0f, 5.0f, -5.0f}, ufps::PhysicsLayer::DYNAMIC);
+    auto physics = std::make_unique<ufps::PhysicsSystem>();
+
+    auto services = std::make_unique<ufps::Services>(std::move(physics));
+    ufps::set_service(services.get());
+
+    auto body = ufps::service<ufps::PhysicsSystem>().create_box(
+        {{-1.0f}, {1.0f}}, {0.0f, 5.0f, -5.0f}, ufps::PhysicsLayer::DYNAMIC);
 
     auto strm = std::stringstream{};
     auto scene_description_yaml = std::ifstream{"scene.yaml"};
@@ -400,7 +407,7 @@ int start()
 
     pulse_light(awaitable_manager, point_light_handles[0], scene);
     flicker_light(awaitable_manager, point_light_handles[2], scene);
-    log_box(awaitable_manager, body, physics);
+    log_box(awaitable_manager, body);
 
     while (running)
     {
@@ -452,6 +459,7 @@ int start()
             event = window.pump_event();
         }
 
+        auto &physics = ufps::service<ufps::PhysicsSystem>();
         physics.update();
 
         awaitable_manager.pump();
