@@ -38,6 +38,7 @@
 #include "maths/vector3.h"
 #include "memory/metrics.h"
 #include "physics/physics_system.h"
+#include "physics/rigid_body.h"
 #include "resources/embedded_resource_loader.h"
 #include "resources/file_resource_loader.h"
 #include "resources/resource_loader.h"
@@ -288,6 +289,23 @@ auto flicker_light(ufps::AwaitableManager &awaitable, ufps::PointLightHandle han
         }
     }
 }
+
+auto log_box(ufps::AwaitableManager &awaitable, ufps::RigidBodyHandle handle, ufps::PhysicsSystem &physics)
+    -> ufps::Task
+{
+    for (;;)
+    {
+        if (const auto body = physics.rigid_body(handle); body)
+        {
+            ufps::log::debug("body pos: {}", body->position());
+            co_await awaitable(100ms);
+        }
+        else
+        {
+            co_return;
+        }
+    }
+}
 }
 
 int start()
@@ -343,6 +361,7 @@ int start()
     auto debug_mode = false;
 
     auto physics = ufps::PhysicsSystem{};
+    auto body = physics.create_box({{-1.0f}, {1.0f}}, {0.0f, 5.0f, -5.0f}, ufps::PhysicsLayer::DYNAMIC);
 
     auto strm = std::stringstream{};
     auto scene_description_yaml = std::ifstream{"scene.yaml"};
@@ -381,6 +400,7 @@ int start()
 
     pulse_light(awaitable_manager, point_light_handles[0], scene);
     flicker_light(awaitable_manager, point_light_handles[2], scene);
+    log_box(awaitable_manager, body, physics);
 
     while (running)
     {
