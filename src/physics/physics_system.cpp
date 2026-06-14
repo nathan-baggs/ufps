@@ -4,14 +4,43 @@
 #include <cstdio>
 #include <string_view>
 
-#include "Jolt/Core/Memory.h"
+#include "Jolt/Math/Vec3.h"
+#include "Jolt/Physics/Collision/Shape/BoxShape.h"
+#include "maths/vector3.h"
 #include "physics/jolt.h"
+#include "physics/physics_layers.h"
 #include "physics/utils.h"
 #include "utils/error.h"
+#include "utils/exception.h"
+#include "utils/formatter.h"
 #include "utils/log.h"
 
 namespace
 {
+
+auto to_activation(ufps::PhysicsLayer layer) -> ::JPH::EActivation
+{
+    switch (layer)
+    {
+        using enum ufps::PhysicsLayer;
+        case STATIC: return ::JPH::EActivation::DontActivate;
+        case DYNAMIC: return ::JPH::EActivation::Activate;
+    }
+
+    throw ufps::Exception("unknown layer type: {}", layer);
+}
+
+auto to_motion(ufps::PhysicsLayer layer) -> ::JPH::EMotionType
+{
+    switch (layer)
+    {
+        using enum ufps::PhysicsLayer;
+        case STATIC: return ::JPH::EMotionType::Static;
+        case DYNAMIC: return ::JPH::EMotionType::Dynamic;
+    }
+
+    throw ufps::Exception("unknown layer type: {}", layer);
+}
 
 auto jolt_trace(const char *fmt, ...) -> void
 {
@@ -24,7 +53,13 @@ auto jolt_trace(const char *fmt, ...) -> void
 
     ufps::ensure(write_count > 0, "failed to jolt trace");
 
-    ufps::log::info("jolt_trace: {}", std::string_view(buffer.data(), write_count));
+    const auto error_str = std::string_view(buffer.data(), write_count);
+    if (error_str.starts_with("Error"))
+    {
+        throw ufps::Exception{"{}", error_str};
+    }
+
+    ufps::log::info("jolt_trace: {}", error_str);
 }
 
 auto jolt_init = []
@@ -67,9 +102,33 @@ PhysicsSystem::PhysicsSystem()
     physics_system_.SetGravity({0.0f, -9.8f, 0.0f});
 }
 
+auto PhysicsSystem::create_box(const AABB &aabb, const Vector3 &position, PhysicsLayer layer) -> RigidBodyHandle
+{
+    const auto half_extents =
+        Vector3{(aabb.max.x - aabb.min.x) / 2.0f, (aabb.max.y - aabb.min.y) / 2.0f, (aabb.max.z - aabb.min.z) / 2.0f};
+
+    auto box_shape_settings = ::JPH::BoxShapeSettings{to_jolt(half_extents)};
+    box_shape_settings.SetEmbedded();
+
+    auto box_result = box_shape_settings.Create();
+    if (box_result.HasError())
+    {
+        throw Exception("box error: {}", box_result.GetError());
+    }
+
+    const auto &box = box_result.Get();
+
+    const auto body_settings = ::JPH::BodyCreationSettings{
+        box, to_jolt(position), ::JPH::Quat::sIdentity(), to_motion(layer), static_cast<::JPH::ObjectLayer>(layer)};
+    auto &interface = physics_system_.GetBodyInterface();
+
+    const auto body_id = interface.CreateAndAddBody(body_settings, to_activation(layer));
+
+    return rigid_bodies_.emplace(body_id, std::addressof(interface));
+}
+
 auto PhysicsSystem::update() -> void
 {
     physics_system_.Update(1.0f / 60.f, 1, &temp_allocator_, &job_system_);
 }
-
 }
