@@ -17,16 +17,6 @@ set(FETCHCONTENT_QUIET FALSE)
 option(UFPS_USE_EMBEDDED_RESOURCE_LOADER "Use EmbeddedResourceLoader" OFF)
 
 FetchContent_Declare(
-  googletest
-  GIT_REPOSITORY https://github.com/google/googletest.git
-  GIT_TAG v1.15.2)
-FetchContent_GetProperties(googletest)
-if (NOT googletest_POPULATED)
-  FetchContent_Populate(googletest)
-  add_subdirectory(${googletest_SOURCE_DIR} ${googletest_BINARY_DIR} EXCLUDE_FROM_ALL)
-endif()
-
-FetchContent_Declare(
 	imgui
 	GIT_REPOSITORY https://github.com/ocornut/imgui.git
 	GIT_TAG v1.92.5-docking)
@@ -124,6 +114,7 @@ if (NOT jolt_POPULATED)
 endif()
 target_compile_options(Jolt PRIVATE -Wno-error=deprecated-declarations)
 
+add_subdirectory(third_party)
 add_subdirectory(src)
 add_subdirectory(tools)
 
