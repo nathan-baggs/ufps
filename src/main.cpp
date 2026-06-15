@@ -11,6 +11,7 @@
 #include <variant>
 
 #include <windows.h>
+#include <objbase.h>
 
 #include <yaml-cpp/yaml.h>
 
