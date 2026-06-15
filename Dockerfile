@@ -1,6 +1,7 @@
 FROM ubuntu:24.04
 WORKDIR /mnt
 ENV MINGW=/mingw
+ENV CCACHE_DIR=/ccache
 ARG PKG_CONFIG_VERSION=0.29.2
 ARG CMAKE_VERSION=4.1.2
 ARG BINUTILS_VERSION=2.45
@@ -8,7 +9,7 @@ ARG MINGW_VERSION=14.0.0
 ARG GCC_VERSION=trunk
 ARG NASM_VERSION=3.01
 ARG NVCC_VERSION=13.0.2
-ARG LLVM_VERSION=21.1.0  
+ARG LLVM_VERSION=22.1.0
 
 RUN ln -sf /bin/bash /bin/sh
 RUN set -ex \
@@ -18,10 +19,10 @@ RUN set -ex \
     ca-certificates gcc g++ zlib1g-dev libssl-dev libgmp-dev libmpfr-dev \
     libmpc-dev libisl-dev libssl3 libgmp10 libmpfr6 libmpc3 libisl23 \
     xz-utils ninja-build texinfo meson gnupg bzip2 patch gperf bison \
-    file flex make yasm wget zip git jq curl python3
+    file flex make yasm wget zip git jq curl python3 ccache
 
-RUN mkdir -p ${MINGW}/include ${MINGW}/lib/pkgconfig \
-    && chmod 0777 -R /mnt ${MINGW}
+RUN mkdir -p ${MINGW}/include ${MINGW}/lib/pkgconfig /ccache \
+    && chmod 0777 -R /mnt ${MINGW} /ccache
 
 RUN wget -q https://pkg-config.freedesktop.org/releases/pkg-config-${PKG_CONFIG_VERSION}.tar.gz -O - | tar -xz \
     && cd pkg-config-${PKG_CONFIG_VERSION} \
@@ -135,6 +136,26 @@ RUN wget -q https://www.nasm.us/pub/nasm/releasebuilds/${NASM_VERSION}/nasm-${NA
     && make install \
     && cd .. \
     && rm -r nasm-${NASM_VERSION}
+
+RUN wget -q https://github.com/llvm/llvm-project/releases/download/llvmorg-${LLVM_VERSION}/llvm-project-${LLVM_VERSION}.src.tar.xz -O - | tar -xJ \
+    && cd llvm-project-${LLVM_VERSION}.src \
+    && cmake -B build -S llvm -G Ninja \
+        -DCMAKE_BUILD_TYPE=Release \
+        -DCMAKE_INSTALL_PREFIX=/usr/local \
+        -DLLVM_ENABLE_PROJECTS=lld \
+        -DLLVM_TARGETS_TO_BUILD=X86 \
+        -DLLVM_INCLUDE_TESTS=OFF \
+        -DLLVM_INCLUDE_BENCHMARKS=OFF \
+        -DLLVM_INCLUDE_EXAMPLES=OFF \
+        -DLLVM_INCLUDE_DOCS=OFF \
+        -DLLVM_ENABLE_BINDINGS=OFF \
+        -DLLVM_ENABLE_TERMINFO=OFF \
+        -DLLVM_ENABLE_ZLIB=OFF \
+    && ninja -C build -j`nproc` lld \
+    && ninja -C build install-lld \
+    && ln -s ld.lld /usr/local/bin/x86_64-w64-mingw32-ld.lld \
+    && cd .. \
+    && rm -r llvm-project-${LLVM_VERSION}.src
 
 RUN apt-get remove --purge -y file gcc g++ zlib1g-dev libssl-dev libgmp-dev libmpfr-dev libmpc-dev libisl-dev \
     && apt-key adv --fetch-keys https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2404/x86_64/3bf863cc.pub \
