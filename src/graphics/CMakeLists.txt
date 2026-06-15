@@ -1,4 +1,4 @@
-target_sources(ufpslib PUBLIC
+target_sources(ufpslib PRIVATE
   buffer.cpp
   command_buffer.cpp
   debug_renderer.cpp

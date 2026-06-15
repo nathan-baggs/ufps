@@ -1,16 +1,15 @@
-.PHONY: docker-image config config-ci build run tests sysroot clean
+.PHONY: docker-image config config-ci build run tests sysroot clean clean-cache
 
 DOCKER_CCACHE := -e CCACHE_DIR=/ccache -v ufps-ccache:/ccache
-CMAKE_CCACHE := -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
 
 docker-image:
 	docker build -t custom-mingw64 .
 
 config:
-	docker run --rm -u $(shell id -u):$(shell id -g) -v "$(PWD)":"$(PWD)" -w "$(PWD)" $(DOCKER_CCACHE) custom-mingw64 cmake -B build -DCMAKE_TOOLCHAIN_FILE=mingw_toolchain.cmake $(CMAKE_CCACHE) -G "Ninja Multi-Config"
+	docker run --rm -u $(shell id -u):$(shell id -g) -v "$(PWD)":"$(PWD)" -w "$(PWD)" $(DOCKER_CCACHE) custom-mingw64 cmake -B build -DCMAKE_TOOLCHAIN_FILE=mingw_toolchain.cmake -G "Ninja Multi-Config"
 
 config-ci:
-	docker run --rm -u $(shell id -u):$(shell id -g) -v "$(PWD)":"$(PWD)" -w "$(PWD)" $(DOCKER_CCACHE) custom-mingw64 cmake -B build -DUFPS_USE_EMBEDDED_RESOURCE_LOADER=ON -DCMAKE_TOOLCHAIN_FILE=mingw_toolchain.cmake $(CMAKE_CCACHE) -G "Ninja Multi-Config"
+	docker run --rm -u $(shell id -u):$(shell id -g) -v "$(PWD)":"$(PWD)" -w "$(PWD)" $(DOCKER_CCACHE) custom-mingw64 cmake -B build -DUFPS_USE_EMBEDDED_RESOURCE_LOADER=ON -DCMAKE_TOOLCHAIN_FILE=mingw_toolchain.cmake -G "Ninja Multi-Config"
 
 build:
 	docker run --rm -u $(shell id -u):$(shell id -g) -v "$(PWD)":"$(PWD)" -w "$(PWD)" $(DOCKER_CCACHE) custom-mingw64 cmake --build build --config Debug
@@ -37,6 +36,9 @@ ci:
 
 sysroot:
 	docker run --rm -v "$(PWD)/sysroot":/out custom-mingw64 bash -c "cp -r /usr/local/x86_64-w64-mingw32/include /out/ && cp -r /usr/local/x86_64-w64-mingw32/include/c++ /out/ || true"
+
+clean-cache:
+	docker run --rm -v ufps-ccache:/ccache custom-mingw64 ccache --clear
 
 clean:
 	rm -rf build
