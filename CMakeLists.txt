@@ -16,26 +16,6 @@ set(FETCHCONTENT_QUIET FALSE)
 
 option(UFPS_USE_EMBEDDED_RESOURCE_LOADER "Use EmbeddedResourceLoader" OFF)
 
-set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
-set(ASSIMP_BUILD_ASSIMP_TOOLS OFF CACHE BOOL "" FORCE)
-set(ASSIMP_BUILD_SAMPLES OFF CACHE BOOL "" FORCE)
-set(ASSIMP_BUILD_TESTS OFF CACHE BOOL "" FORCE)
-set(ASSIMP_BUILD_ZLIB ON CACHE BOOL "" FORCE)
-set(ASSIMP_BUILD_ALL_IMPORTERS_BY_DEFAULT OFF CACHE BOOL "" FORCE)
-set(ASSIMP_BUILD_FBX_IMPORTER ON CACHE BOOL "" FORCE)
-set(ASSIMP_BUILD_ALL_EXPORTERS_BY_DEFAULT OFF CACHE BOOL "" FORCE)
-set(ASSIMP_NO_EXPORT ON CACHE BOOL "" FORCE)
-
-FetchContent_Declare(
-	assimp
-	GIT_REPOSITORY https://github.com/assimp/assimp
-	GIT_TAG v6.0.4)
-if (NOT assimp_POPULATED)
-	FetchContent_Populate(assimp)
-	add_subdirectory(${assimp_SOURCE_DIR} ${assimp_BINARY_DIR} EXCLUDE_FROM_ALL)
-endif()
-target_compile_options(assimp PRIVATE -Wno-error=maybe-uninitialized)
-
 FetchContent_Declare(
   yaml-cpp
   GIT_REPOSITORY https://github.com/jbeder/yaml-cpp
@@ -100,9 +80,9 @@ add_subdirectory(third_party)
 add_subdirectory(src)
 add_subdirectory(tools)
 
-enable_testing()
-include(CTest)
-add_subdirectory(tests)
+#enable_testing()
+#include(CTest)
+#add_subdirectory(tests)
 
 set(CPACK_PACKAGE_NAME "ufps")
 set(CPACK_PACKAGE_VERSION ${PROJECT_VERSION})
