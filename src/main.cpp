@@ -10,8 +10,8 @@
 #include <unordered_map>
 #include <variant>
 
-#include <windows.h>
 #include <objbase.h>
+#include <windows.h>
 
 #include <yaml-cpp/yaml.h>
 
@@ -509,6 +509,8 @@ int start()
 
         break;
     }
+
+    services.release();
 
     return 0;
 }
