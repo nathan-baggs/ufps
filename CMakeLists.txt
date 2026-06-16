@@ -17,18 +17,6 @@ set(FETCHCONTENT_QUIET FALSE)
 option(UFPS_USE_EMBEDDED_RESOURCE_LOADER "Use EmbeddedResourceLoader" OFF)
 
 FetchContent_Declare(
-	imgui
-	GIT_REPOSITORY https://github.com/ocornut/imgui.git
-	GIT_TAG v1.92.5-docking)
-FetchContent_MakeAvailable(imgui)
-
-FetchContent_Declare(
-	imguizmo
-	GIT_REPOSITORY https://github.com/CedricGuillemet/ImGuizmo
-	GIT_TAG df1c301)
-FetchContent_MakeAvailable(imguizmo)
-
-FetchContent_Declare(
 	stb_lib
 	GIT_REPOSITORY https://github.com/nothings/stb.git
 	GIT_TAG 5c205738c191bcb0abc65c4febfa9bd25ff35234)
