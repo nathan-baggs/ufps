@@ -1,3 +1,5 @@
+set(CMAKE_DISABLE_PRECOMPILE_HEADERS ON)
+
 include(ExternalProject)
 
 add_subdirectory(googletest EXCLUDE_FROM_ALL)
@@ -66,3 +68,5 @@ target_include_directories(libbacktrace INTERFACE "${BACKTRACE_INSTALL_DIR}/incl
 target_link_libraries(libbacktrace INTERFACE "${BACKTRACE_LIB_PATH}")
 
 add_subdirectory(JoltPhysics/Build)
+
+set(CMAKE_DISABLE_PRECOMPILE_HEADERS OFF)

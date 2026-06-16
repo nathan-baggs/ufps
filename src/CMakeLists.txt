@@ -53,27 +53,6 @@ target_compile_options(ufpslib PRIVATE
   -Wwrite-strings
   -Winvalid-pch
 )
-target_precompile_headers(ufpslib PRIVATE
-  <algorithm>
-  <atomic>
-  <chrono>
-  <cstddef>
-  <cstdint>
-  <format>
-  <functional>
-  <memory>
-  <optional>
-  <ranges>
-  <span>
-  <string>
-  <string_view>
-  <vector>
-  <Jolt/Jolt.h>
-  <assimp/Importer.hpp>
-  <assimp/scene.h>
-  <imgui.h>
-)
-target_precompile_headers(ufps REUSE_FROM ufpslib)
 
 target_include_directories(ufpslib PUBLIC ${PROJECT_SOURCE_DIR}/ ${PROJECT_SOURCE_DIR}/src ${zstd_SOURCE_DIR}/lib)
 target_compile_features(ufpslib PUBLIC cxx_std_26)
