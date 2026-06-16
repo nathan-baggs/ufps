@@ -13,3 +13,6 @@ add_library(imguilib STATIC
 )
 target_include_directories(imguilib PUBLIC imgui ImGuizmo)
 
+add_library(stblib INTERFACE)
+target_include_directories(stblib INTERFACE stb)
+
