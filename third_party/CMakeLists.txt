@@ -33,3 +33,8 @@ set(YAML_CPP_BUILD_TOOLS OFF)
 set(YAML_CPP_INSTALL OFF)
 set(YAML_CPP_FORMAT_SOURCE OFF)
 add_subdirectory(yaml-cpp EXCLUDE_FROM_ALL)
+
+set(ZSTD_BUILD_STATIC ON)
+set(ZSTD_BUILD_SHARED OFF)
+add_subdirectory(zstd/build/cmake EXCLUDE_FROM_ALL)
+

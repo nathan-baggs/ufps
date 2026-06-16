@@ -16,20 +16,6 @@ set(FETCHCONTENT_QUIET FALSE)
 
 option(UFPS_USE_EMBEDDED_RESOURCE_LOADER "Use EmbeddedResourceLoader" OFF)
 
-set(ZSTD_BUILD_STATIC ON)
-set(ZSTD_BUILD_SHARED OFF)
-
-FetchContent_Declare(
-	zstd
-	GIT_REPOSITORY https://github.com/facebook/zstd
-	GIT_TAG v1.5.7
-	SOURCE_SUBDIR build/cmake)
-FetchContent_GetProperties(zstd)
-if (NOT zstd_POPULATED)
-	FetchContent_Populate(zstd)
-	add_subdirectory(${zstd_SOURCE_DIR}/build/cmake ${zstd_BINARY_DIR} EXCLUDE_FROM_ALL)
-endif()
-
 set(BACKTRACE_PREFIX "${CMAKE_CURRENT_BINARY_DIR}/_deps/libbacktrace")
 set(BACKTRACE_INSTALL_DIR "${BACKTRACE_PREFIX}/install")
 set(BACKTRACE_LIB_PATH "${BACKTRACE_INSTALL_DIR}/lib/libbacktrace.a")
