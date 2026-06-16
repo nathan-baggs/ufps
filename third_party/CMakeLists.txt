@@ -1,3 +1,5 @@
+include(ExternalProject)
+
 add_subdirectory(googletest EXCLUDE_FROM_ALL)
 
 add_library(imguilib STATIC
@@ -37,4 +39,29 @@ add_subdirectory(yaml-cpp EXCLUDE_FROM_ALL)
 set(ZSTD_BUILD_STATIC ON)
 set(ZSTD_BUILD_SHARED OFF)
 add_subdirectory(zstd/build/cmake EXCLUDE_FROM_ALL)
+
+set(BACKTRACE_PREFIX "${CMAKE_CURRENT_BINARY_DIR}/libbacktrace")
+set(BACKTRACE_INSTALL_DIR "${BACKTRACE_PREFIX}/install")
+file(TO_CMAKE_PATH "${BACKTRACE_INSTALL_DIR}" BACKTRACE_INSTALL_DIR)
+set(BACKTRACE_LIB_PATH "${BACKTRACE_INSTALL_DIR}/lib/libbacktrace.a")
+file(MAKE_DIRECTORY "${BACKTRACE_INSTALL_DIR}/include")
+ExternalProject_Add(
+    libbacktrace_build
+    SOURCE_DIR        "${CMAKE_CURRENT_SOURCE_DIR}/libbacktrace"
+    PREFIX            "${BACKTRACE_PREFIX}"
+    UPDATE_COMMAND    ""
+    BUILD_BYPRODUCTS  "${BACKTRACE_LIB_PATH}"
+    CONFIGURE_COMMAND <SOURCE_DIR>/configure 
+                      "--prefix=${BACKTRACE_INSTALL_DIR}" 
+                      --with-pic
+                      --host=x86_64-w64-mingw32
+                      "CC=${CMAKE_C_COMPILER}"
+                      "CXX=${CMAKE_CXX_COMPILER}"
+    BUILD_COMMAND     make
+    INSTALL_COMMAND   make install
+)
+add_library(libbacktrace INTERFACE)
+add_dependencies(libbacktrace libbacktrace_build)
+target_include_directories(libbacktrace INTERFACE "${BACKTRACE_INSTALL_DIR}/include")
+target_link_libraries(libbacktrace INTERFACE "${BACKTRACE_LIB_PATH}")
 
