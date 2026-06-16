@@ -1,6 +1,6 @@
 .PHONY: docker-image config config-ci build run tests sysroot clean clean-cache
 
-DOCKER_CCACHE := -e CCACHE_DIR=/ccache -v ufps-ccache:/ccache
+DOCKER_CCACHE := -e CCACHE_DIR=/ccache -e CCACHE_MAXSIZE=50G -v ufps-ccache:/ccache
 
 docker-image:
 	docker build -t custom-mingw64 .
