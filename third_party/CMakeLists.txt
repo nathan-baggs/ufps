@@ -65,3 +65,4 @@ add_dependencies(libbacktrace libbacktrace_build)
 target_include_directories(libbacktrace INTERFACE "${BACKTRACE_INSTALL_DIR}/include")
 target_link_libraries(libbacktrace INTERFACE "${BACKTRACE_LIB_PATH}")
 
+add_subdirectory(JoltPhysics/Build)
