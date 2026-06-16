@@ -28,6 +28,7 @@ inline auto set_service(Services *services)
 template <class T>
 auto service() -> T &
 {
+    expect(!!impl::g_services, "g_services not set");
     return *std::get<std::unique_ptr<T>>(*impl::g_services);
 }
 
