@@ -16,12 +16,6 @@ set(FETCHCONTENT_QUIET FALSE)
 
 option(UFPS_USE_EMBEDDED_RESOURCE_LOADER "Use EmbeddedResourceLoader" OFF)
 
-FetchContent_Declare(
-  yaml-cpp
-  GIT_REPOSITORY https://github.com/jbeder/yaml-cpp
-  GIT_TAG yaml-cpp-0.9.0)
-FetchContent_MakeAvailable(yaml-cpp)
-
 set(ZSTD_BUILD_STATIC ON)
 set(ZSTD_BUILD_SHARED OFF)
 
@@ -80,9 +74,9 @@ add_subdirectory(third_party)
 add_subdirectory(src)
 add_subdirectory(tools)
 
-#enable_testing()
-#include(CTest)
-#add_subdirectory(tests)
+enable_testing()
+include(CTest)
+add_subdirectory(tests)
 
 set(CPACK_PACKAGE_NAME "ufps")
 set(CPACK_PACKAGE_VERSION ${PROJECT_VERSION})
