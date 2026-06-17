@@ -2,6 +2,7 @@
 
 #include <cstdarg>
 #include <cstdio>
+#include <optional>
 #include <string_view>
 
 #include "Jolt/Math/Vec3.h"
@@ -76,13 +77,15 @@ auto jolt_init = []
 namespace ufps
 {
 
-PhysicsSystem::PhysicsSystem()
+PhysicsSystem::PhysicsSystem(DebugRenderMode debug_render_mode)
     : broad_phase_layer_{}
     , object_vs_broad_phase_layer_filter_{}
     , object_layer_pair_filter_{}
     , temp_allocator_{10u * 1024u * 1024u}
     , job_system_{::JPH::cMaxPhysicsJobs, ::JPH::cMaxPhysicsBarriers, static_cast<int>(std::thread::hardware_concurrency() - 1zu)}
     , physics_system_{}
+    , debug_renderer_{
+          debug_render_mode == DebugRenderMode::ON ? std::make_optional<PhysicsDebugRenderer>() : std::nullopt}
 {
 
     constexpr auto max_bodies = 1024u;
@@ -130,5 +133,17 @@ auto PhysicsSystem::create_box(const AABB &aabb, const Vector3 &position, Physic
 auto PhysicsSystem::update() -> void
 {
     physics_system_.Update(1.0f / 60.f, 1, &temp_allocator_, &job_system_);
+
+    if (debug_renderer_)
+    {
+        static const auto settings = ::JPH::BodyManager::DrawSettings{};
+        physics_system_.DrawBodies(settings, &*debug_renderer_);
+    }
 }
+
+auto PhysicsSystem::debug_renderer() -> std::optional<PhysicsDebugRenderer &>
+{
+    return debug_renderer_.transform([](auto &e) -> decltype(auto) { return e; });
+}
+
 }
