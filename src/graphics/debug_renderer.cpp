@@ -23,6 +23,7 @@
 #include "graphics/mesh_manager.h"
 #include "graphics/opengl.h"
 #include "graphics/point_light.h"
+#include "graphics/texture_manager.h"
 #include "graphics/utils.h"
 #include "graphics/window.h"
 #include "maths/aabb.h"
@@ -479,8 +480,8 @@ auto create_debug_window(const std::string &name, Controllers &&...controllers)
 
 namespace ufps
 {
-DebugRenderer::DebugRenderer(const Window &window, ResourceLoader &resource_loader, TextureManager &texture_manager)
-    : Renderer{window, resource_loader, texture_manager}
+DebugRenderer::DebugRenderer(const Window &window, ResourceLoader &resource_loader)
+    : Renderer{window, resource_loader}
     , enabled_{false}
     , click_{}
     , selected_{std::monostate{}}
@@ -547,6 +548,8 @@ auto DebugRenderer::post_render(Scene &scene) -> void
     {
         return;
     }
+
+    auto &texture_manager = service<TextureManager>();
 
     light_pass_rt_.fb.unbind();
     ::glBlitNamedFramebuffer(
@@ -717,7 +720,7 @@ auto DebugRenderer::post_render(Scene &scene) -> void
     for (const auto &mip : bloom_mips_)
     {
         ::ImGui::Image(
-            scene.texture_manager().texture(mip.colour_texture_bindless_handle_0)->native_handle(),
+            texture_manager.texture(mip.colour_texture_bindless_handle_0)->native_handle(),
             ::ImVec2(width * aspect_ratio, width),
             ::ImVec2(0.0f, 1.0f),
             ::ImVec2(1.0f, 0.0f));
@@ -749,27 +752,27 @@ auto DebugRenderer::post_render(Scene &scene) -> void
         "render_targets",
         RenderTargets{
             .ssao =
-                {scene.texture_manager().texture(ssao_blur_rt_.colour_texture_bindless_handle_0)->native_handle(),
+                {texture_manager.texture(ssao_blur_rt_.colour_texture_bindless_handle_0)->native_handle(),
                  width * aspect_ratio,
                  width},
             .same_line_0 = {},
             .gbuffer_0 =
-                {scene.texture_manager().texture(gbuffer_rt_.colour_texture_bindless_handle_0)->native_handle(),
+                {texture_manager.texture(gbuffer_rt_.colour_texture_bindless_handle_0)->native_handle(),
                  width * aspect_ratio,
                  width},
             .same_line_1 = {},
             .gbuffer_1 =
-                {scene.texture_manager().texture(gbuffer_rt_.colour_texture_bindless_handle_1)->native_handle(),
+                {texture_manager.texture(gbuffer_rt_.colour_texture_bindless_handle_1)->native_handle(),
                  width * aspect_ratio,
                  width},
             .same_line_2 = {},
             .gbuffer_2 =
-                {scene.texture_manager().texture(gbuffer_rt_.colour_texture_bindless_handle_2)->native_handle(),
+                {texture_manager.texture(gbuffer_rt_.colour_texture_bindless_handle_2)->native_handle(),
                  width * aspect_ratio,
                  width},
             .same_line_3 = {},
             .gbuffer_3 = {
-                scene.texture_manager().texture(gbuffer_rt_.colour_texture_bindless_handle_3)->native_handle(),
+                texture_manager.texture(gbuffer_rt_.colour_texture_bindless_handle_3)->native_handle(),
                 width * aspect_ratio,
                 width}});
 
@@ -809,16 +812,14 @@ auto DebugRenderer::post_render(Scene &scene) -> void
 
             for (const auto &render_entity : entity->render_entities())
             {
-                const auto *albedo_texture =
-                    scene.texture_manager().texture(render_entity.albedo_texture_bindless_handle());
+                const auto *albedo_texture = texture_manager.texture(render_entity.albedo_texture_bindless_handle());
                 ::ImGui::Image(
                     albedo_texture->native_handle(),
                     ::ImVec2(64.0f, 64.0f),
                     ::ImVec2(0.0f, 1.0f),
                     ::ImVec2(1.0f, 0.0f));
 
-                const auto *normal_texture =
-                    scene.texture_manager().texture(render_entity.normal_texture_bindless_handle());
+                const auto *normal_texture = texture_manager.texture(render_entity.normal_texture_bindless_handle());
                 ::ImGui::SameLine();
                 ::ImGui::Image(
                     normal_texture->native_handle(),
@@ -827,7 +828,7 @@ auto DebugRenderer::post_render(Scene &scene) -> void
                     ::ImVec2(1.0f, 0.0f));
 
                 const auto *specular_texture =
-                    scene.texture_manager().texture(render_entity.specular_texture_bindless_handle());
+                    texture_manager.texture(render_entity.specular_texture_bindless_handle());
                 ::ImGui::SameLine();
                 ::ImGui::Image(
                     specular_texture->native_handle(),
@@ -835,12 +836,12 @@ auto DebugRenderer::post_render(Scene &scene) -> void
                     ::ImVec2(0.0f, 1.0f),
                     ::ImVec2(1.0f, 0.0f));
 
-                const auto *ao_texture = scene.texture_manager().texture(render_entity.ao_texture_bindless_handle());
+                const auto *ao_texture = texture_manager.texture(render_entity.ao_texture_bindless_handle());
                 ::ImGui::Image(
                     ao_texture->native_handle(), ::ImVec2(64.0f, 64.0f), ::ImVec2(0.0f, 1.0f), ::ImVec2(1.0f, 0.0f));
 
                 const auto *glossiness_texture =
-                    scene.texture_manager().texture(render_entity.glossiness_texture_bindless_handle());
+                    texture_manager.texture(render_entity.glossiness_texture_bindless_handle());
                 ::ImGui::SameLine();
                 ::ImGui::Image(
                     glossiness_texture->native_handle(),
@@ -849,7 +850,7 @@ auto DebugRenderer::post_render(Scene &scene) -> void
                     ::ImVec2(1.0f, 0.0f));
 
                 const auto *emissive_texture =
-                    scene.texture_manager().texture(render_entity.emissive_texture_bindless_handle());
+                    texture_manager.texture(render_entity.emissive_texture_bindless_handle());
                 ::ImGui::SameLine();
                 ::ImGui::Image(
                     emissive_texture->native_handle(),

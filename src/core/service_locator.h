@@ -11,12 +11,14 @@ namespace ufps
 class AwaitableManager;
 class MeshManager;
 class PhysicsSystem;
+class TextureManager;
 class ThreadPool;
 
 using Services = std::tuple<
     std::unique_ptr<AwaitableManager>,
     std::unique_ptr<MeshManager>,
     std::unique_ptr<PhysicsSystem>,
+    std::unique_ptr<TextureManager>,
     std::unique_ptr<ThreadPool>>;
 
 namespace impl

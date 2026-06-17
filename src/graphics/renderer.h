@@ -10,7 +10,6 @@
 #include "graphics/persistent_buffer.h"
 #include "graphics/program.h"
 #include "graphics/sampler.h"
-#include "graphics/texture_manager.h"
 #include "graphics/window.h"
 #include "resources/resource_loader.h"
 #include "utils/auto_release.h"
@@ -32,7 +31,7 @@ struct RenderTarget
 class Renderer
 {
   public:
-    Renderer(const Window &window, ResourceLoader &resource_loader, TextureManager &texture_manager);
+    Renderer(const Window &window, ResourceLoader &resource_loader);
     virtual ~Renderer() = default;
 
     auto render(Scene &scene) -> void;

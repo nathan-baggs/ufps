@@ -201,9 +201,9 @@ auto build_mesh_lookup(ufps::ResourceLoader &resource_loader) -> ufps::StringMap
            std::ranges::to<ufps::StringMap<std::vector<ufps::MeshView>>>();
 }
 
-auto build_entity_cache(ufps::ResourceLoader &resource_loader, ufps::TextureManager &texture_manager)
-    -> ufps::StringMap<ufps::Entity>
+auto build_entity_cache(ufps::ResourceLoader &resource_loader) -> ufps::StringMap<ufps::Entity>
 {
+    auto &texture_manager = ufps::service<ufps::TextureManager>();
     auto entity_cache = ufps::StringMap<ufps::Entity>{};
 
     const auto model_manifest_str = resource_loader.load_string("configs\\model_manifest.yaml");
@@ -343,8 +343,8 @@ int start()
         ufps::WrapMode::REPEAT,
         "simple_sampler"};
 
-    auto texture_manager = ufps::TextureManager{};
-    load_all_textures(*resource_loader, texture_manager, sampler);
+    auto texture_manager = std::make_unique<ufps::TextureManager>();
+    load_all_textures(*resource_loader, *texture_manager, sampler);
 
     auto pool = std::make_unique<ufps::ThreadPool>();
     auto awaitable_manager = std::make_unique<ufps::AwaitableManager>(*pool);
@@ -375,14 +375,17 @@ int start()
     }
 
     auto services = std::make_unique<ufps::Services>(
-        std::move(awaitable_manager), std::move(mesh_manager), std::move(physics), std::move(pool));
+        std::move(awaitable_manager),
+        std::move(mesh_manager),
+        std::move(physics),
+        std::move(texture_manager),
+        std::move(pool));
     ufps::set_service(services.get());
 
-    auto renderer = ufps::DebugRenderer{window, *resource_loader, texture_manager};
+    auto renderer = ufps::DebugRenderer{window, *resource_loader};
     auto debug_mode = false;
 
     auto scene = ufps::Scene{
-        texture_manager,
         {{},
          {0.0f, 0.0f, -1.0f},
          {0.0f, 1.0f, 0.0f},
@@ -392,7 +395,7 @@ int start()
          0.1f,
          1000.0f},
         ufps::yaml::deserialise<ufps::Scene::Description>(strm.str()),
-        build_entity_cache(*resource_loader, texture_manager)};
+        build_entity_cache(*resource_loader)};
 
     auto key_state = std::unordered_map<ufps::Key, bool>{
         {ufps::Key::W, false}, {ufps::Key::A, false}, {ufps::Key::S, false}, {ufps::Key::D, false}};

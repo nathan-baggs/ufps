@@ -12,7 +12,6 @@
 #include "graphics/colour.h"
 #include "graphics/mesh_manager.h"
 #include "graphics/point_light.h"
-#include "graphics/texture_manager.h"
 #include "maths/bounded_number.h"
 #include "maths/ray.h"
 #include "maths/utils.h"
@@ -114,7 +113,6 @@ class Scene
     };
 
     constexpr Scene(
-        TextureManager &texture_manager,
         Camera camera,
         LightData lights,
         ToneMapOptions tone_map_options,
@@ -127,11 +125,7 @@ class Scene
         BloomOptions bloom_options,
         const StringMap<Entity> &entity_cache);
 
-    constexpr Scene(
-        TextureManager &texture_manager,
-        Camera camera,
-        const Description &description,
-        const StringMap<Entity> &entity_cache);
+    constexpr Scene(Camera camera, const Description &description, const StringMap<Entity> &entity_cache);
 
     constexpr auto intersect_ray(const Ray &ray) -> std::optional<IntersectionResult>;
 
@@ -145,8 +139,6 @@ class Scene
     constexpr auto &camera(this auto &&self);
 
     constexpr auto &lights(this auto &&self);
-
-    constexpr auto &texture_manager(this auto &&self);
 
     constexpr auto &tone_map_options(this auto &&self);
 
@@ -173,7 +165,6 @@ class Scene
   private:
     std::vector<Entity> entities_;
     std::vector<Entity> entity_cache_;
-    TextureManager &texture_manager_;
     Camera camera_;
     LightData lights_;
     ToneMapOptions tone_map_options_;
@@ -187,7 +178,6 @@ class Scene
 };
 
 constexpr Scene::Scene(
-    TextureManager &texture_manager,
     Camera camera,
     LightData lights,
     ToneMapOptions tone_map_options,
@@ -201,7 +191,6 @@ constexpr Scene::Scene(
     const StringMap<Entity> &entity_cache)
     : entities_{}
     , entity_cache_{}
-    , texture_manager_{texture_manager}
     , camera_{std::move(camera)}
     , lights_{std::move(lights)}
     , tone_map_options_{std::move(tone_map_options)}
@@ -220,14 +209,9 @@ constexpr Scene::Scene(
     }
 }
 
-constexpr Scene::Scene(
-    TextureManager &texture_manager,
-    Camera camera,
-    const Description &description,
-    const StringMap<Entity> &entity_cache)
+constexpr Scene::Scene(Camera camera, const Description &description, const StringMap<Entity> &entity_cache)
     : entities_{}
     , entity_cache_{}
-    , texture_manager_{texture_manager}
     , camera_{std::move(camera)}
     , lights_{description.lights}
     , tone_map_options_{description.tone_map_options}
@@ -342,11 +326,6 @@ constexpr auto &Scene::camera(this auto &&self)
 constexpr auto &Scene::lights(this auto &&self)
 {
     return self.lights_;
-}
-
-constexpr auto &Scene::texture_manager(this auto &&self)
-{
-    return self.texture_manager_;
 }
 
 constexpr auto &Scene::tone_map_options(this auto &&self)

@@ -59,10 +59,11 @@ auto create_render_target(
     std::uint32_t width,
     std::uint32_t height,
     ufps::Sampler &sampler,
-    ufps::TextureManager &texture_manager,
     std::string_view name,
     ufps::TextureFormat format = ufps::TextureFormat::RGB16F) -> ufps::RenderTarget
 {
+    auto &texture_manager = ufps::service<ufps::TextureManager>();
+
     const auto colour_attachment_texture_data = ufps::TextureData{
         .width = width,
         .height = height,
@@ -132,8 +133,10 @@ auto sprite() -> ufps::MeshData
     return {.vertices = vertices(positions, positions, positions, positions, uvs), .indices = std::move(indices)};
 }
 
-auto create_sprite(ufps::TextureManager &texture_manager) -> ufps::Entity
+auto create_sprite() -> ufps::Entity
 {
+    auto &texture_manager = ufps::service<ufps::TextureManager>();
+
     const auto mesh_data = std::vector{sprite()};
     const auto mesh_views = ufps::service<ufps::MeshManager>().load("sprite", mesh_data);
     return {
@@ -148,8 +151,10 @@ auto create_sprite(ufps::TextureManager &texture_manager) -> ufps::Entity
         {}};
 }
 
-auto create_ssao_noise_texture(ufps::TextureManager &texture_manager, const ufps::Sampler &sampler) -> std::uint64_t
+auto create_ssao_noise_texture(const ufps::Sampler &sampler) -> std::uint64_t
 {
+    auto &texture_manager = ufps::service<ufps::TextureManager>();
+
     auto generator = std::mt19937{std::random_device{}()};
     auto distribution = std::uniform_real_distribution<float>{-1.0f, 1.0f};
 
@@ -190,13 +195,12 @@ namespace ufps
 
 Renderer::Renderer(
     const Window &window,
-    ResourceLoader &resource_loader,
-    TextureManager &texture_manager)
+    ResourceLoader &resource_loader)
     : window_{window}
     , dummy_vao_{0u, [](auto e) { ::glDeleteVertexArrays(1u, &e); }}
     , command_buffer_{"gbuffer_command_buffer"}
     , post_processing_command_buffer_{"post_processing_command_buffer"}
-    , post_process_sprite_{create_sprite(texture_manager)}
+    , post_process_sprite_{create_sprite()}
     , camera_buffer_{sizeof(CameraData), "camera_buffer"}
     , light_buffer_{sizeof(LightData), "light_buffer"}
     , object_data_buffer_{sizeof(ObjectData), "object_data_buffer"}
@@ -277,35 +281,31 @@ Renderer::Renderer(
           "bloom_mix_fragment_shader",
           "bloom_mix_program")}
     , ssao_noise_sampler_{FilterType::NEAREST, FilterType::NEAREST, WrapMode::REPEAT, WrapMode::REPEAT, "ssao_noise_sampler"}
-    , ssao_noise_texture_bindless_handle_{create_ssao_noise_texture(texture_manager, ssao_noise_sampler_)}
+    , ssao_noise_texture_bindless_handle_{create_ssao_noise_texture( ssao_noise_sampler_)}
     , fb_sampler_{FilterType::LINEAR, FilterType::LINEAR, WrapMode::CLAMP_TO_EDGE, WrapMode::CLAMP_TO_EDGE, "fb_sampler"}
     , gbuffer_rt_{create_render_target(
           5u,
           window_.render_width(),
           window_.render_height(),
           fb_sampler_,
-          texture_manager,
           "gbuffer")}
     , light_pass_rt_{create_render_target(
           1u,
           window_.render_width(),
           window_.render_height(),
           fb_sampler_,
-          texture_manager,
           "light_pass"),}
     , tone_map_rt_{create_render_target(
           1u,
           window_.render_width(),
           window_.render_height(),
           fb_sampler_,
-          texture_manager,
           "tone_map"),}
     , ssao_rt_{create_render_target(
           1u,
           window_.render_width() / 2u,
           window_.render_height() / 2u,
           fb_sampler_,
-          texture_manager,
           "ssao",
           TextureFormat::R16F),}
     , ssao_blur_rt_{create_render_target(
@@ -313,7 +313,6 @@ Renderer::Renderer(
           window_.render_width() / 2u,
           window_.render_height() / 2u,
           fb_sampler_,
-          texture_manager,
           "ssao_blur",
           TextureFormat::R16F),}
     , chromatic_aberration_rt_{create_render_target(
@@ -321,7 +320,6 @@ Renderer::Renderer(
           window_.render_width(),
           window_.render_height(),
           fb_sampler_,
-          texture_manager,
           "chromatic_aberration"),}
     , bloom_mips_{}
     , bloom_rt_{create_render_target(
@@ -329,7 +327,6 @@ Renderer::Renderer(
           window_.render_width(),
           window_.render_height(),
           fb_sampler_,
-          texture_manager,
           "bloom"),}
     ,final_fb_{}
 {
@@ -372,7 +369,6 @@ Renderer::Renderer(
             window_.render_width() * scale,
             window_.render_height() * scale,
             fb_sampler_,
-            texture_manager,
             std::format("bloom_mip_{}", i)));
 
         log::debug("mip w: {} h: {}", bloom_mips_.back().fb.width(), bloom_mips_.back().fb.height());
