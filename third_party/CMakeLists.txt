@@ -72,15 +72,7 @@ add_dependencies(libbacktrace libbacktrace_build)
 target_include_directories(libbacktrace INTERFACE "${BACKTRACE_INSTALL_DIR}/include")
 target_link_libraries(libbacktrace INTERFACE "${BACKTRACE_LIB_PATH}")
 
-# Disable Jolt features that bloat compilation or binary size
 set(PROFILER_IN_DEBUG_AND_RELEASE OFF CACHE BOOL "" FORCE)
-set(DEBUG_RENDERER_IN_DEBUG_AND_RELEASE OFF CACHE BOOL "" FORCE)
-set(FLOATING_POINT_EXCEPTIONS_ENABLED OFF CACHE BOOL "" FORCE)
-set(ENABLE_OBJECT_STREAM OFF CACHE BOOL "" FORCE)
-set(ENABLE_ALL_WARNINGS OFF CACHE BOOL "" FORCE)
-set(ENABLE_INSTALL OFF CACHE BOOL "" FORCE)
-set(GENERATE_DEBUG_SYMBOLS OFF CACHE BOOL "" FORCE)
-
 add_subdirectory(JoltPhysics/Build)
 
 set(CMAKE_DISABLE_PRECOMPILE_HEADERS OFF)
