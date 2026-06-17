@@ -3,6 +3,10 @@
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 
+#if !defined(JPH_DEBUG_RENDERER)
+#define JPH_DEBUG_RENDERER
+#endif
+
 #include <Jolt/Jolt.h>
 
 #include <Jolt/Core/Core.h>
@@ -27,9 +31,12 @@
 #include <Jolt/Physics/PhysicsSettings.h>
 #include <Jolt/Physics/PhysicsSystem.h>
 #include <Jolt/RegisterTypes.h>
+#include <Jolt/Renderer/DebugRenderer.h>
+#include <Jolt/Renderer/DebugRendererSimple.h>
 
 #pragma GCC diagnostic pop
 
+#include "graphics/colour.h"
 #include "maths/vector3.h"
 
 namespace ufps
@@ -38,6 +45,11 @@ namespace ufps
 inline auto to_native(const ::JPH::Vec3 &vec) -> Vector3
 {
     return {vec.GetX(), vec.GetY(), vec.GetZ()};
+}
+
+inline auto to_native(const ::JPH::Color &c) -> Colour
+{
+    return {c.r / 255.0f, c.g / 255.0f, c.b / 255.0f};
 }
 
 inline auto to_jolt(ufps::Vector3 vec) -> ::JPH::Vec3
