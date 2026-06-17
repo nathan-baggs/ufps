@@ -1,6 +1,7 @@
 add_library(ufpslib STATIC
 )
 
+add_subdirectory(core)
 add_subdirectory(concurrency)
 add_subdirectory(graphics)
 add_subdirectory(memory)
@@ -52,6 +53,7 @@ target_compile_options(ufpslib PRIVATE
   -Wvla
   -Wwrite-strings
   -Winvalid-pch
+  -fcontract-evaluation-semantic=enforce
 )
 
 target_include_directories(ufpslib PUBLIC ${PROJECT_SOURCE_DIR}/ ${PROJECT_SOURCE_DIR}/src ${zstd_SOURCE_DIR}/lib)

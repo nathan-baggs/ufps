@@ -28,7 +28,9 @@ inline Services *g_services{};
 
 }
 
-inline auto set_service(Services *services)
+inline auto set_service(Services *services) //
+    pre(impl::g_services == nullptr)        //
+    post(impl::g_services != nullptr)
 {
     expect(!impl::g_services, "services already set");
     impl::g_services = services;
