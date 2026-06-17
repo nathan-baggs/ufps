@@ -8,7 +8,6 @@
 #include "core/scene.h"
 #include "events/mouse_button_event.h"
 #include "graphics/line_data.h"
-#include "graphics/mesh_manager.h"
 #include "graphics/point_light.h"
 #include "graphics/renderer.h"
 #include "graphics/texture_manager.h"
@@ -21,11 +20,7 @@ namespace ufps
 class DebugRenderer : public Renderer
 {
   public:
-    DebugRenderer(
-        const Window &window,
-        ResourceLoader &resource_loader,
-        TextureManager &texture_manager,
-        MeshManager &mesh_manager);
+    DebugRenderer(const Window &window, ResourceLoader &resource_loader, TextureManager &texture_manager);
     ~DebugRenderer();
 
     auto add_mouse_event(const MouseButtonEvent &evt) -> void;

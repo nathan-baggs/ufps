@@ -16,9 +16,11 @@
 #include <backends/imgui_impl_win32.h>
 
 #include "core/scene.h"
+#include "core/service_locator.h"
 #include "events/mouse_button_event.h"
 #include "graphics/colour.h"
 #include "graphics/line_data.h"
+#include "graphics/mesh_manager.h"
 #include "graphics/opengl.h"
 #include "graphics/point_light.h"
 #include "graphics/utils.h"
@@ -290,7 +292,7 @@ auto create_debug_controller(const std::string &, AddEntity &value) -> void
 {
     auto mesh_selected_index = std::optional<std::uint32_t>{};
 
-    auto mesh_names = value.scene.mesh_manager().mesh_names();
+    auto mesh_names = ufps::service<ufps::MeshManager>().mesh_names();
     std::ranges::sort(mesh_names);
     const auto mesh_names_cstr = mesh_names |                                                     //
                                  std::views::filter([](const auto &e) { return !e.empty(); }) |   //
@@ -477,12 +479,8 @@ auto create_debug_window(const std::string &name, Controllers &&...controllers)
 
 namespace ufps
 {
-DebugRenderer::DebugRenderer(
-    const Window &window,
-    ResourceLoader &resource_loader,
-    TextureManager &texture_manager,
-    MeshManager &mesh_manager)
-    : Renderer{window, resource_loader, texture_manager, mesh_manager}
+DebugRenderer::DebugRenderer(const Window &window, ResourceLoader &resource_loader, TextureManager &texture_manager)
+    : Renderer{window, resource_loader, texture_manager}
     , enabled_{false}
     , click_{}
     , selected_{std::monostate{}}
@@ -567,7 +565,7 @@ auto DebugRenderer::post_render(Scene &scene) -> void
 
     debug_light_program_.bind();
 
-    const auto [vertex_buffer_handle, index_buffer_handle] = scene.mesh_manager().native_handle();
+    const auto [vertex_buffer_handle, index_buffer_handle] = service<MeshManager>().native_handle();
     ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, vertex_buffer_handle);
     ::glBindBufferRange(
         GL_SHADER_STORAGE_BUFFER,
@@ -577,7 +575,7 @@ auto DebugRenderer::post_render(Scene &scene) -> void
         sizeof(CameraData));
     ::glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffer_handle);
 
-    const auto cube_parts = scene.mesh_manager().mesh("cube");
+    const auto cube_parts = service<MeshManager>().mesh("cube");
     ensure(cube_parts.size() == 1u, "cube mesh should have exactly 1 part");
     const auto cube_indices_offset_bytes = cube_parts.front().index_offset * sizeof(std::uint32_t);
     const auto cube_vertex_offset = cube_parts.front().vertex_offset;

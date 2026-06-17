@@ -201,10 +201,8 @@ auto build_mesh_lookup(ufps::ResourceLoader &resource_loader) -> ufps::StringMap
            std::ranges::to<ufps::StringMap<std::vector<ufps::MeshView>>>();
 }
 
-auto build_entity_cache(
-    ufps::ResourceLoader &resource_loader,
-    ufps::TextureManager &texture_manager,
-    ufps::MeshManager &mesh_manager) -> ufps::StringMap<ufps::Entity>
+auto build_entity_cache(ufps::ResourceLoader &resource_loader, ufps::TextureManager &texture_manager)
+    -> ufps::StringMap<ufps::Entity>
 {
     auto entity_cache = ufps::StringMap<ufps::Entity>{};
 
@@ -225,14 +223,7 @@ auto build_entity_cache(
             const auto emissive_index = texture_manager.bindless_handle(emissive);
 
             render_entities.push_back(
-                {mesh_view,
-                 albedo_index,
-                 normal_index,
-                 specular_index,
-                 ao_index,
-                 glossiness_index,
-                 emissive_index,
-                 mesh_manager});
+                {mesh_view, albedo_index, normal_index, specular_index, ao_index, glossiness_index, emissive_index});
         }
 
         entity_cache.insert({name, ufps::Entity{name, std::move(render_entities), {}}});
@@ -357,15 +348,12 @@ int start()
 
     auto pool = std::make_unique<ufps::ThreadPool>();
     auto awaitable_manager = std::make_unique<ufps::AwaitableManager>(*pool);
-    auto mesh_manager = ufps::MeshManager{
+    auto mesh_manager = std::make_unique<ufps::MeshManager>(
         ufps::decompress(resource_loader->load_data_buffer("blobs\\vertex_data.bin")),
         ufps::decompress(resource_loader->load_data_buffer("blobs\\index_data.bin")),
-        build_mesh_lookup(*resource_loader)};
+        build_mesh_lookup(*resource_loader));
 
-    mesh_manager.load("cube", std::vector{cube()});
-
-    auto renderer = ufps::DebugRenderer{window, *resource_loader, texture_manager, mesh_manager};
-    auto debug_mode = false;
+    mesh_manager->load("cube", std::vector{cube()});
 
     auto physics = std::make_unique<ufps::PhysicsSystem>();
     auto body = physics->create_box({{-1.0f}, {1.0f}}, {0.0f, 5.0f, -5.0f}, ufps::PhysicsLayer::DYNAMIC);
@@ -386,11 +374,14 @@ int start()
         }
     }
 
-    auto services = std::make_unique<ufps::Services>(std::move(awaitable_manager), std::move(physics), std::move(pool));
+    auto services = std::make_unique<ufps::Services>(
+        std::move(awaitable_manager), std::move(mesh_manager), std::move(physics), std::move(pool));
     ufps::set_service(services.get());
 
+    auto renderer = ufps::DebugRenderer{window, *resource_loader, texture_manager};
+    auto debug_mode = false;
+
     auto scene = ufps::Scene{
-        mesh_manager,
         texture_manager,
         {{},
          {0.0f, 0.0f, -1.0f},
@@ -401,7 +392,7 @@ int start()
          0.1f,
          1000.0f},
         ufps::yaml::deserialise<ufps::Scene::Description>(strm.str()),
-        build_entity_cache(*resource_loader, texture_manager, mesh_manager)};
+        build_entity_cache(*resource_loader, texture_manager)};
 
     auto key_state = std::unordered_map<ufps::Key, bool>{
         {ufps::Key::W, false}, {ufps::Key::A, false}, {ufps::Key::S, false}, {ufps::Key::D, false}};

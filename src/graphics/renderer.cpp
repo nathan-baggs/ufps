@@ -13,6 +13,7 @@
 #include "core/camera.h"
 #include "core/entity.h"
 #include "core/scene.h"
+#include "core/service_locator.h"
 #include "graphics/buffer_writer.h"
 #include "graphics/command_buffer.h"
 #include "graphics/frame_buffer.h"
@@ -131,10 +132,10 @@ auto sprite() -> ufps::MeshData
     return {.vertices = vertices(positions, positions, positions, positions, uvs), .indices = std::move(indices)};
 }
 
-auto create_sprite(ufps::MeshManager &mesh_manager, ufps::TextureManager &texture_manager) -> ufps::Entity
+auto create_sprite(ufps::TextureManager &texture_manager) -> ufps::Entity
 {
     const auto mesh_data = std::vector{sprite()};
-    const auto mesh_views = mesh_manager.load("sprite", mesh_data);
+    const auto mesh_views = ufps::service<ufps::MeshManager>().load("sprite", mesh_data);
     return {
         "post_process_sprite",
         {{mesh_views.front(),
@@ -143,8 +144,7 @@ auto create_sprite(ufps::MeshManager &mesh_manager, ufps::TextureManager &textur
           texture_manager.texture_index("textures\\default_Metallic.dds"),
           texture_manager.texture_index("textures\\default_AO.dds"),
           texture_manager.texture_index("textures\\default_Roughness.dds"),
-          texture_manager.texture_index("textures\\default_Emissive.dds"),
-          mesh_manager}},
+          texture_manager.texture_index("textures\\default_Emissive.dds")}},
         {}};
 }
 
@@ -191,13 +191,12 @@ namespace ufps
 Renderer::Renderer(
     const Window &window,
     ResourceLoader &resource_loader,
-    TextureManager &texture_manager,
-    MeshManager &mesh_manager)
+    TextureManager &texture_manager)
     : window_{window}
     , dummy_vao_{0u, [](auto e) { ::glDeleteVertexArrays(1u, &e); }}
     , command_buffer_{"gbuffer_command_buffer"}
     , post_processing_command_buffer_{"post_processing_command_buffer"}
-    , post_process_sprite_{create_sprite(mesh_manager, texture_manager)}
+    , post_process_sprite_{create_sprite(texture_manager)}
     , camera_buffer_{sizeof(CameraData), "camera_buffer"}
     , light_buffer_{sizeof(LightData), "light_buffer"}
     , object_data_buffer_{sizeof(ObjectData), "object_data_buffer"}
@@ -332,7 +331,6 @@ Renderer::Renderer(
           fb_sampler_,
           texture_manager,
           "bloom"),}
-    ,mesh_manager_{mesh_manager}
     ,final_fb_{}
 {
     post_processing_command_buffer_.build(post_process_sprite_);
@@ -456,7 +454,7 @@ auto Renderer::execute_gbuffer_pass(Scene &scene) -> void
 
     const auto auto_bind = AutoBind{gbuffer_program_};
 
-    const auto [vertex_buffer_handle, index_buffer_handle] = scene.mesh_manager().native_handle();
+    const auto [vertex_buffer_handle, index_buffer_handle] = service<MeshManager>().native_handle();
     ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, vertex_buffer_handle);
     ::glBindBufferRange(
         GL_SHADER_STORAGE_BUFFER,
@@ -538,7 +536,7 @@ auto Renderer::execute_lighting_pass(Scene &scene) -> void
         gbuffer_rt_.colour_texture_bindless_handle_3,
         gbuffer_rt_.colour_texture_bindless_handle_4);
 
-    const auto [vertex_buffer_handle, index_buffer_handle] = scene.mesh_manager().native_handle();
+    const auto [vertex_buffer_handle, index_buffer_handle] = service<MeshManager>().native_handle();
     ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, vertex_buffer_handle);
     ::glBindBufferRange(
         GL_SHADER_STORAGE_BUFFER,
@@ -580,7 +578,7 @@ auto Renderer::execute_bloom_pass([[maybe_unused]] Scene &scene) -> void
             bloom_downsample_program_.set_uniforms(
                 src_handle, std::make_tuple(src_width, src_height), scene.bloom_options().threshold);
 
-            const auto [vertex_buffer_handle, index_buffer_handle] = scene.mesh_manager().native_handle();
+            const auto [vertex_buffer_handle, index_buffer_handle] = service<MeshManager>().native_handle();
             ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, vertex_buffer_handle);
             ::glBindBuffer(GL_DRAW_INDIRECT_BUFFER, post_processing_command_buffer_.native_handle());
             ::glMultiDrawElementsIndirect(
@@ -608,7 +606,7 @@ auto Renderer::execute_bloom_pass([[maybe_unused]] Scene &scene) -> void
 
             bloom_upsample_program_.set_uniforms(src_handle, scene.bloom_options().filter_radius);
 
-            const auto [vertex_buffer_handle, index_buffer_handle] = scene.mesh_manager().native_handle();
+            const auto [vertex_buffer_handle, index_buffer_handle] = service<MeshManager>().native_handle();
             ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, vertex_buffer_handle);
             ::glBindBuffer(GL_DRAW_INDIRECT_BUFFER, post_processing_command_buffer_.native_handle());
             ::glMultiDrawElementsIndirect(
@@ -640,7 +638,7 @@ auto Renderer::execute_bloom_pass([[maybe_unused]] Scene &scene) -> void
             scene.bloom_options().mix_amount,
             scene.bloom_options().filter_radius);
 
-        const auto [vertex_buffer_handle, index_buffer_handle] = scene.mesh_manager().native_handle();
+        const auto [vertex_buffer_handle, index_buffer_handle] = service<MeshManager>().native_handle();
         ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, vertex_buffer_handle);
         ::glBindBuffer(GL_DRAW_INDIRECT_BUFFER, post_processing_command_buffer_.native_handle());
         ::glMultiDrawElementsIndirect(
@@ -709,7 +707,7 @@ auto Renderer::execute_ssao_pass(Scene &scene) -> void
 
     ::glViewport(0, 0, ssao_rt_.fb.width(), ssao_rt_.fb.height());
 
-    const auto [vertex_buffer_handle, index_buffer_handle] = scene.mesh_manager().native_handle();
+    const auto [vertex_buffer_handle, index_buffer_handle] = service<MeshManager>().native_handle();
 
     {
         ssao_rt_.fb.bind();
@@ -770,7 +768,7 @@ auto Renderer::execute_ssao_pass(Scene &scene) -> void
 
 auto Renderer::execute_tone_mapping_pass(Scene &scene) -> void
 {
-    const auto [vertex_buffer_handle, index_buffer_handle] = scene.mesh_manager().native_handle();
+    const auto [vertex_buffer_handle, index_buffer_handle] = service<MeshManager>().native_handle();
 
     tone_map_rt_.fb.bind();
     ::glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -813,7 +811,7 @@ auto Renderer::execute_chromatic_aberration_pass(Scene &scene) -> void
     const auto elapsed =
         std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start);
 
-    const auto [vertex_buffer_handle, index_buffer_handle] = scene.mesh_manager().native_handle();
+    const auto [vertex_buffer_handle, index_buffer_handle] = service<MeshManager>().native_handle();
 
     chromatic_aberration_rt_.fb.bind();
     ::glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);

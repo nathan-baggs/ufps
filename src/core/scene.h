@@ -7,6 +7,7 @@
 
 #include "core/camera.h"
 #include "core/entity.h"
+#include "core/service_locator.h"
 #include "core/sparse_set.h"
 #include "graphics/colour.h"
 #include "graphics/mesh_manager.h"
@@ -113,7 +114,6 @@ class Scene
     };
 
     constexpr Scene(
-        MeshManager &mesh_manager,
         TextureManager &texture_manager,
         Camera camera,
         LightData lights,
@@ -128,7 +128,6 @@ class Scene
         const StringMap<Entity> &entity_cache);
 
     constexpr Scene(
-        MeshManager &mesh_manager,
         TextureManager &texture_manager,
         Camera camera,
         const Description &description,
@@ -146,8 +145,6 @@ class Scene
     constexpr auto &camera(this auto &&self);
 
     constexpr auto &lights(this auto &&self);
-
-    constexpr auto &mesh_manager(this auto &&self);
 
     constexpr auto &texture_manager(this auto &&self);
 
@@ -176,7 +173,6 @@ class Scene
   private:
     std::vector<Entity> entities_;
     std::vector<Entity> entity_cache_;
-    MeshManager &mesh_manager_;
     TextureManager &texture_manager_;
     Camera camera_;
     LightData lights_;
@@ -191,7 +187,6 @@ class Scene
 };
 
 constexpr Scene::Scene(
-    MeshManager &mesh_manager,
     TextureManager &texture_manager,
     Camera camera,
     LightData lights,
@@ -206,7 +201,6 @@ constexpr Scene::Scene(
     const StringMap<Entity> &entity_cache)
     : entities_{}
     , entity_cache_{}
-    , mesh_manager_{mesh_manager}
     , texture_manager_{texture_manager}
     , camera_{std::move(camera)}
     , lights_{std::move(lights)}
@@ -227,14 +221,12 @@ constexpr Scene::Scene(
 }
 
 constexpr Scene::Scene(
-    MeshManager &mesh_manager,
     TextureManager &texture_manager,
     Camera camera,
     const Description &description,
     const StringMap<Entity> &entity_cache)
     : entities_{}
     , entity_cache_{}
-    , mesh_manager_{mesh_manager}
     , texture_manager_{texture_manager}
     , camera_{std::move(camera)}
     , lights_{description.lights}
@@ -266,6 +258,8 @@ constexpr Scene::Scene(
 
 constexpr auto Scene::intersect_ray(const Ray &ray) -> std::optional<IntersectionResult>
 {
+    auto &mesh_manager = service<MeshManager>();
+
     auto result = std::optional<IntersectionResult>{};
     auto min_distance = std::numeric_limits<float>::max();
 
@@ -285,8 +279,8 @@ constexpr auto Scene::intersect_ray(const Ray &ray) -> std::optional<Intersectio
                 }
 
                 const auto mesh_view = render_entity.mesh_view();
-                const auto indices = mesh_manager_.index_data(mesh_view);
-                const auto vertices = mesh_manager_.vertex_data(mesh_view);
+                const auto indices = mesh_manager.index_data(mesh_view);
+                const auto vertices = mesh_manager.vertex_data(mesh_view);
 
                 for (const auto &indices : std::views::chunk(indices, 3))
                 {
@@ -348,11 +342,6 @@ constexpr auto &Scene::camera(this auto &&self)
 constexpr auto &Scene::lights(this auto &&self)
 {
     return self.lights_;
-}
-
-constexpr auto &Scene::mesh_manager(this auto &&self)
-{
-    return self.mesh_manager_;
 }
 
 constexpr auto &Scene::texture_manager(this auto &&self)
