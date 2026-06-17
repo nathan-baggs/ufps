@@ -6,6 +6,7 @@
 #include "concurrency/awaitable_manager.h"
 #include "concurrency/task.h"
 #include "concurrency/thread_pool.h"
+#include "core/service_locator.h"
 
 using namespace std::literals;
 

@@ -355,8 +355,8 @@ int start()
     auto texture_manager = ufps::TextureManager{};
     load_all_textures(*resource_loader, texture_manager, sampler);
 
-    auto pool = ufps::ThreadPool{};
-    auto awaitable_manager = std::make_unique<ufps::AwaitableManager>(pool);
+    auto pool = std::make_unique<ufps::ThreadPool>();
+    auto awaitable_manager = std::make_unique<ufps::AwaitableManager>(*pool);
     auto mesh_manager = ufps::MeshManager{
         ufps::decompress(resource_loader->load_data_buffer("blobs\\vertex_data.bin")),
         ufps::decompress(resource_loader->load_data_buffer("blobs\\index_data.bin")),
@@ -386,7 +386,7 @@ int start()
         }
     }
 
-    auto services = std::make_unique<ufps::Services>(std::move(awaitable_manager), std::move(physics));
+    auto services = std::make_unique<ufps::Services>(std::move(awaitable_manager), std::move(physics), std::move(pool));
     ufps::set_service(services.get());
 
     auto scene = ufps::Scene{
@@ -414,6 +414,10 @@ int start()
 
     while (running)
     {
+        auto &awaitable = ufps::service<ufps::AwaitableManager>();
+        auto &physics = ufps::service<ufps::PhysicsSystem>();
+        auto &pool = ufps::service<ufps::ThreadPool>();
+
         const auto begin_frame_allocated_bytes = ufps::g_metrics.total_allocated_bytes.load(std::memory_order_relaxed);
 
         auto event = window.pump_event();
@@ -462,10 +466,8 @@ int start()
             event = window.pump_event();
         }
 
-        auto &physics = ufps::service<ufps::PhysicsSystem>();
         physics.update();
 
-        auto &awaitable = ufps::service<ufps::AwaitableManager>();
         awaitable.pump();
         pool.drain();
 
@@ -481,9 +483,9 @@ int start()
     }
 
     ufps::service<ufps::AwaitableManager>().pump();
-    pool.drain();
+    ufps::service<ufps::ThreadPool>().drain();
 
-    auto profile_data = pool.profile_data();
+    auto profile_data = ufps::service<ufps::ThreadPool>().profile_data();
     for (const auto &[index, thread_data] : std::views::enumerate(profile_data))
     {
         ufps::log::info("thread id: {}", index);

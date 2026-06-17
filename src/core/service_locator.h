@@ -10,8 +10,10 @@ namespace ufps
 
 class AwaitableManager;
 class PhysicsSystem;
+class ThreadPool;
 
-using Services = std::tuple<std::unique_ptr<AwaitableManager>, std::unique_ptr<PhysicsSystem>>;
+using Services =
+    std::tuple<std::unique_ptr<AwaitableManager>, std::unique_ptr<PhysicsSystem>, std::unique_ptr<ThreadPool>>;
 
 namespace impl
 {
