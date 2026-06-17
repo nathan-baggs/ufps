@@ -355,7 +355,7 @@ int start()
 
     mesh_manager->load("cube", std::vector{cube()});
 
-    auto physics = std::make_unique<ufps::PhysicsSystem>();
+    auto physics = std::make_unique<ufps::PhysicsSystem>(ufps::DebugRenderMode::ON);
     auto body = physics->create_box({{-1.0f}, {1.0f}}, {0.0f, 5.0f, -5.0f}, ufps::PhysicsLayer::DYNAMIC);
 
     auto strm = std::stringstream{};
