@@ -34,6 +34,8 @@
 #include "maths/vector3.h"
 #include "maths/vector4.h"
 #include "memory/metrics.h"
+#include "physics/physics_debug_renderer.h"
+#include "physics/physics_system.h"
 #include "serialisation/yaml_serialiser.h"
 #include "utils/log.h"
 
@@ -605,6 +607,12 @@ auto DebugRenderer::post_render(Scene &scene) -> void
     }
 
     debug_light_program_.unbind();
+
+    auto &&physics_debug_renderer = service<PhysicsSystem>().debug_renderer();
+    if (physics_debug_renderer)
+    {
+        debug_lines_.append_range(physics_debug_renderer->yield_lines());
+    }
 
     auto debug_line_count = 0zu;
 
