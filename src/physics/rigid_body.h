@@ -1,5 +1,6 @@
 #pragma once
 
+#include "maths/transform.h"
 #include "maths/vector3.h"
 #include "physics/jolt.h"
 
@@ -17,6 +18,7 @@ class RigidBody
     auto operator=(RigidBody &&) -> RigidBody & = default;
 
     auto position() const -> Vector3;
+    auto set_transform(const Transform &transform) -> void;
 
   private:
     ::JPH::BodyID body_id_;
