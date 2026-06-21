@@ -793,6 +793,13 @@ auto DebugRenderer::post_render(Scene &scene) -> void
             auto *entity = *selected_entity;
             ::ImGui::Text("entity: %s", entity->name().c_str());
 
+            if (::ImGui::Button("add rigid body"))
+            {
+                const auto body = service<PhysicsSystem>().create_box(
+                    {{-1.0f}, {1.0f}}, entity->transform().position, PhysicsLayer::STATIC);
+                entity->add_rigid_body(body);
+            }
+
             {
                 auto value = entity->emissive_strength();
                 if (::ImGui::SliderFloat("emissive_strength", &value, 0.0f, 10.0f))
