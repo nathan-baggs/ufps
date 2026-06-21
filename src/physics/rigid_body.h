@@ -18,11 +18,13 @@ class RigidBody
     auto operator=(RigidBody &&) -> RigidBody & = default;
 
     auto position() const -> Vector3;
-    auto set_transform(const Transform &transform) -> void;
+    auto set_parent_transform(const Transform &transform) -> void;
 
   private:
     ::JPH::BodyID body_id_;
     ::JPH::BodyInterface *body_interface_;
+    Transform local_transform_;
+    Transform parent_transform_;
 };
 
 }
