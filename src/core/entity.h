@@ -78,7 +78,7 @@ constexpr auto Entity::set_transform(const Transform &transform) -> void
 
     for (const auto handle : rigid_bodies_)
     {
-        service<PhysicsSystem>().rigid_body(handle)->set_transform(transform_);
+        service<PhysicsSystem>().rigid_body(handle)->set_parent_transform(transform_);
     }
 }
 
