@@ -536,7 +536,7 @@ auto DebugRenderer::post_render(Scene &scene) -> void
             selected_entity->render_entities() |
             std::views::transform(
                 [&](const auto &e)
-                { return create_aabb_lines(e.aabb(), selected_entity->transform(), {0.4f, 0.4f, 0.4f}); }) |
+                { return create_aabb_lines(e.aabb(), selected_entity->transform(), {0.0f, 0.2f, 0.0f}); }) |
             std::views::join;
 
         debug_lines_.append_range(aabb_lines);
