@@ -6,6 +6,7 @@
 #include <vector>
 
 #include "core/render_entity.h"
+#include "core/service_locator.h"
 #include "core/utils.h"
 #include "maths/aabb.h"
 #include "maths/transform.h"
@@ -74,6 +75,11 @@ constexpr auto Entity::transform() const -> const Transform &
 constexpr auto Entity::set_transform(const Transform &transform) -> void
 {
     transform_ = transform;
+
+    for (const auto handle : rigid_bodies_)
+    {
+        service<PhysicsSystem>().rigid_body(handle)->set_transform(transform_);
+    }
 }
 
 constexpr auto Entity::aabb() const -> const AABB &
