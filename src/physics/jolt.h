@@ -15,6 +15,7 @@
 #include <Jolt/Core/JobSystemThreadPool.h>
 #include <Jolt/Core/Memory.h>
 #include <Jolt/Core/TempAllocator.h>
+#include <Jolt/Math/Quat.h>
 #include <Jolt/Math/Real.h>
 #include <Jolt/Physics/Body/Body.h>
 #include <Jolt/Physics/Body/BodyCreationSettings.h>
@@ -37,6 +38,7 @@
 #pragma GCC diagnostic pop
 
 #include "graphics/colour.h"
+#include "maths/quaternion.h"
 #include "maths/vector3.h"
 
 namespace ufps
@@ -55,6 +57,11 @@ inline auto to_native(const ::JPH::Color &c) -> Colour
 inline auto to_jolt(ufps::Vector3 vec) -> ::JPH::Vec3
 {
     return {vec.x, vec.y, vec.z};
+}
+
+inline auto to_jolt(ufps::Quaternion q) -> ::JPH::Quat
+{
+    return {q.x, q.y, q.z, q.w};
 }
 
 }
