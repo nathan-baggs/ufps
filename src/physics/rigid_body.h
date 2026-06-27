@@ -25,7 +25,7 @@ class RigidBody
     ::JPH::BodyInterface *body_interface_;
     ::JPH::RefConst<::JPH::Shape> original_shape_;
     Transform local_transform_;
-    Transform parent_transform_;
+    Vector3 applied_scale_;
 };
 
 }

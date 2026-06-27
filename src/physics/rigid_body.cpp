@@ -14,7 +14,7 @@ RigidBody::RigidBody(::JPH::BodyID body_id, ::JPH::BodyInterface *body_interface
     , body_interface_{body_interface}
     , original_shape_{body_interface_->GetShape(body_id_)}
     , local_transform_{{}, {1.0f}, {}}
-    , parent_transform_{{}, {1.0f}, {}}
+    , applied_scale_{1.0f}
 {
 }
 
@@ -25,17 +25,16 @@ auto RigidBody::position() const -> Vector3
 
 auto RigidBody::set_parent_transform(const Transform &transform) -> void
 {
-    const auto new_transform = Transform{Matrix4{transform} * Matrix4{local_transform_}};
-    const auto scale_changed = transform.scale != parent_transform_.scale;
-
-    parent_transform_ = transform;
+    const auto world_transform = Transform{Matrix4{transform} * Matrix4{local_transform_}};
 
     body_interface_->SetPositionAndRotation(
-        body_id_, to_jolt(new_transform.position), to_jolt(new_transform.rotation), ::JPH::EActivation::Activate);
+        body_id_, to_jolt(world_transform.position), to_jolt(world_transform.rotation), ::JPH::EActivation::Activate);
 
-    if (scale_changed)
+    if (world_transform.scale != applied_scale_)
     {
-        const auto jolt_scale = to_jolt(new_transform.scale);
+        applied_scale_ = world_transform.scale;
+
+        const auto jolt_scale = to_jolt(applied_scale_);
 
         const auto scaled_result = original_shape_->ScaleShape(jolt_scale);
         if (scaled_result.HasError())
