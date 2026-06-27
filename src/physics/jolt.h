@@ -14,6 +14,7 @@
 #include <Jolt/Core/JobSystem.h>
 #include <Jolt/Core/JobSystemThreadPool.h>
 #include <Jolt/Core/Memory.h>
+#include <Jolt/Core/Reference.h>
 #include <Jolt/Core/TempAllocator.h>
 #include <Jolt/Math/Quat.h>
 #include <Jolt/Math/Real.h>

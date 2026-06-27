@@ -23,6 +23,7 @@ class RigidBody
   private:
     ::JPH::BodyID body_id_;
     ::JPH::BodyInterface *body_interface_;
+    ::JPH::RefConst<::JPH::Shape> original_shape_;
     Transform local_transform_;
     Transform parent_transform_;
 };

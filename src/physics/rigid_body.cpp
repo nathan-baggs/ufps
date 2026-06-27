@@ -12,6 +12,7 @@ namespace ufps
 RigidBody::RigidBody(::JPH::BodyID body_id, ::JPH::BodyInterface *body_interface)
     : body_id_{body_id}
     , body_interface_{body_interface}
+    , original_shape_{body_interface_->GetShape(body_id_)}
     , local_transform_{{}, {1.0f}, {}}
     , parent_transform_{{}, {1.0f}, {}}
 {
@@ -24,22 +25,19 @@ auto RigidBody::position() const -> Vector3
 
 auto RigidBody::set_parent_transform(const Transform &transform) -> void
 {
-    const auto scale_amount = Vector3{1.0f} + (transform.scale - parent_transform_.scale);
+    const auto new_transform = Transform{Matrix4{transform} * Matrix4{local_transform_}};
+    const auto scale_changed = transform.scale != parent_transform_.scale;
 
     parent_transform_ = transform;
-
-    const auto new_transform = Transform{Matrix4{parent_transform_} * Matrix4{local_transform_}};
 
     body_interface_->SetPositionAndRotation(
         body_id_, to_jolt(new_transform.position), to_jolt(new_transform.rotation), ::JPH::EActivation::Activate);
 
-    log::debug("scale: {}", scale_amount);
-    const auto jolt_scale = to_jolt(scale_amount);
-
-    if (!jolt_scale.IsNearZero())
+    if (scale_changed)
     {
-        const auto shape = body_interface_->GetShape(body_id_);
-        const auto scaled_result = shape->ScaleShape(jolt_scale);
+        const auto jolt_scale = to_jolt(new_transform.scale);
+
+        const auto scaled_result = original_shape_->ScaleShape(jolt_scale);
         if (scaled_result.HasError())
         {
             throw Exception("scale error: {}", scaled_result.GetError());
