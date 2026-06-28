@@ -28,14 +28,20 @@ template <class T, class D, class... Args>
 constexpr auto ensure(std::unique_ptr<T, D> &obj, std::format_string<Args...> msg, Args &&...args) -> void;
 
 template <class... Args>
+[[noreturn]] constexpr auto drop_mic(std::format_string<Args...> msg, Args &&...args) -> void
+{
+    log::error("{}", std::format(msg, std::forward<Args>(args)...));
+    log::error("{}", std::stacktrace::current(1));
+    std::terminate();
+    std::unreachable();
+}
+
+template <class... Args>
 constexpr auto expect(bool predicate, std::format_string<Args...> msg, Args &&...args) -> void
 {
     if (!predicate)
     {
-        log::error("{}", std::format(msg, std::forward<Args>(args)...));
-        log::error("{}", std::stacktrace::current(1));
-        std::terminate();
-        std::unreachable();
+        drop_mic(msg, std::forward<Args>(args)...);
     }
 }
 
