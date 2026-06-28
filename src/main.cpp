@@ -170,10 +170,11 @@ auto load_all_textures(
 {
     const auto texture_manifest_str = resource_loader.load_string("configs\\texture_manifest.yaml");
     const auto texture_manifest = ufps::yaml::deserialise<ufps::TextureManifestDescription>(texture_manifest_str);
+    ensure(texture_manifest);
 
     const auto texture_blob = ufps::decompress(resource_loader.load_data_buffer("blobs\\texture_data.bin"));
 
-    for (const auto &[name, manifest] : texture_manifest.textures)
+    for (const auto &[name, manifest] : texture_manifest->textures)
     {
         const auto raw_texture_data = std::span{texture_blob.data() + manifest.offset, manifest.size};
         const auto texture_data = ufps::load_texture(raw_texture_data, manifest.is_srgb);
@@ -187,8 +188,9 @@ auto build_mesh_lookup(ufps::ResourceLoader &resource_loader) -> ufps::StringMap
 
     const auto manifest_str = resource_loader.load_string("configs\\model_manifest.yaml");
     const auto manifest = ufps::yaml::deserialise<ufps::ModelManifestDescription>(manifest_str);
+    ensure(manifest);
 
-    return manifest.models |
+    return manifest->models |
            std::views::transform(
                [](const auto &e)
                {
@@ -208,8 +210,9 @@ auto build_entity_cache(ufps::ResourceLoader &resource_loader) -> ufps::StringMa
 
     const auto model_manifest_str = resource_loader.load_string("configs\\model_manifest.yaml");
     const auto model_manifest = ufps::yaml::deserialise<ufps::ModelManifestDescription>(model_manifest_str);
+    ensure(model_manifest);
 
-    for (const auto &[name, manifests] : model_manifest.models)
+    for (const auto &[name, manifests] : model_manifest->models)
     {
         auto render_entities = std::vector<ufps::RenderEntity>{};
 
@@ -385,6 +388,9 @@ int start()
     auto renderer = ufps::DebugRenderer{window, *resource_loader};
     auto debug_mode = false;
 
+    auto scene_description = ufps::yaml::deserialise<ufps::Scene::Description>(strm.str());
+    ufps::ensure(scene_description);
+
     auto scene = ufps::Scene{
         {{},
          {0.0f, 0.0f, -1.0f},
@@ -394,7 +400,7 @@ int start()
          static_cast<float>(window.render_height()),
          0.1f,
          1000.0f},
-        ufps::yaml::deserialise<ufps::Scene::Description>(strm.str()),
+        std::move(*scene_description),
         build_entity_cache(*resource_loader)};
 
     auto key_state = std::unordered_map<ufps::Key, bool>{
