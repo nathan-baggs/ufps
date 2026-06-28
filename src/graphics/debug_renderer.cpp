@@ -256,9 +256,10 @@ auto create_debug_controller(const std::string &, SaveSceneButton &value) -> voi
     if (::ImGui::Button("save"))
     {
         const auto scene_yaml = ufps::yaml::serialise(value.scene.description());
+        ufps::ensure(scene_yaml);
         auto out = std::ofstream("scene.yaml");
 
-        out << scene_yaml;
+        out << *scene_yaml;
     }
 }
 

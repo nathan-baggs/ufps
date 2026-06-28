@@ -121,7 +121,7 @@ auto main(int argc, char **argv) -> int
 
             const auto manifest_path = output_configs_dir / "model_manifest.yaml";
             auto manifest_file = std::ofstream{manifest_path};
-            manifest_file << ufps::yaml::serialise(manifest);
+            manifest_file << *ufps::yaml::serialise(manifest);
         }
 
         ufps::log::info("finished packing models, packing textures");
@@ -153,7 +153,7 @@ auto main(int argc, char **argv) -> int
             const auto manifest_path = output_configs_dir / "texture_manifest.yaml";
             auto manifest_file = std::ofstream{manifest_path};
 
-            manifest_file << ufps::yaml::serialise(manifest);
+            manifest_file << *ufps::yaml::serialise(manifest);
         }
 
         ufps::log::info("finished packing textures, writing to disk");
