@@ -29,7 +29,6 @@ auto RigidBody::set_parent_transform(const Transform &transform) -> void
 
     if (world_transform.scale != applied_scale_)
     {
-
         const auto jolt_scale = to_jolt(world_transform.scale);
 
         const auto scaled_result = original_shape_->ScaleShape(jolt_scale);
