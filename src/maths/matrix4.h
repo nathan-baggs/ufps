@@ -1,6 +1,7 @@
 #pragma once
 
 #include <array>
+#include <contracts>
 #include <format>
 #include <initializer_list>
 #include <ranges>
@@ -328,7 +329,7 @@ constexpr auto Matrix4::invert(const Matrix4 &matrix) -> Matrix4
               m[8] * m[2] * m[5];
 
     auto det = m[0] * inv[0] + m[1] * inv[4] + m[2] * inv[8] + m[3] * inv[12];
-    expect(det != 0.0f, "matrix is singular and cannot be inverted");
+    contract_assert(det != 0.0f);
 
     det = 1.0f / det;
 
