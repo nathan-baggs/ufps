@@ -14,7 +14,7 @@
 
 #include "maths/bounded_number.h"
 #include "utils/exception.h"
-#include "yaml-cpp/exceptions.h"
+#include "utils/formatter.h"
 
 namespace ufps::yaml
 {
@@ -51,24 +51,24 @@ template <class T>
 concept Enum = std::is_enum_v<T>;
 
 template <Class T>
-auto do_serialise(const T &obj) -> ::YAML::Node;
-auto do_serialise(const Map auto &obj) -> ::YAML::Node;
+auto do_serialise(const T &obj) -> std::expected<::YAML::Node, std::string>;
+auto do_serialise(const Map auto &obj) -> std::expected<::YAML::Node, std::string>;
 template <Class T>
 auto do_deserialise(const ::YAML::Node &node) -> std::expected<T, std::string>;
 
-auto do_serialise(const BaseType auto &obj) -> ::YAML::Node
+auto do_serialise(const BaseType auto &obj) -> std::expected<::YAML::Node, std::string>
 {
     return ::YAML::Node{obj};
 }
 
 template <Bounded T>
-auto do_serialise(const T &obj) -> ::YAML::Node
+auto do_serialise(const T &obj) -> std::expected<::YAML::Node, std::string>
 {
     return ::YAML::Node{*obj};
 }
 
 template <Enum T>
-auto do_serialise(const T &obj) -> ::YAML::Node
+auto do_serialise(const T &obj) -> std::expected<::YAML::Node, std::string>
 {
     auto node = ::YAML::Node{};
 
@@ -81,48 +81,65 @@ auto do_serialise(const T &obj) -> ::YAML::Node
         }
     }
 
-    node = "<unknown>";
-    return node;
+    return std::unexpected(std::format("unknown enum: {}", obj));
 }
 
-auto do_serialise(const Array auto &obj) -> ::YAML::Node
+auto do_serialise(const Array auto &obj) -> std::expected<::YAML::Node, std::string>
 {
     auto node = ::YAML::Node{};
 
     for (const auto &e : obj)
     {
-        node.push_back(do_serialise(e));
+        auto inner_object = do_serialise(e);
+        if (!inner_object)
+        {
+            return std::unexpected(inner_object.error());
+        }
+
+        node.push_back(std::move(*inner_object));
     }
 
     return node;
 }
 
-auto do_serialise(const Map auto &obj) -> ::YAML::Node
+auto do_serialise(const Map auto &obj) -> std::expected<::YAML::Node, std::string>
 {
     auto node = ::YAML::Node{};
 
     for (const auto &[k, v] : obj)
     {
-        node[k] = do_serialise(v);
+        auto inner_object = do_serialise(v);
+        if (!inner_object)
+        {
+            return std::unexpected(inner_object.error());
+        }
+
+        node[k] = std::move(*inner_object);
     }
 
     return node;
 }
 
-auto do_serialise(const Sparse auto &obj) -> ::YAML::Node
+auto do_serialise(const Sparse auto &obj) -> std::expected<::YAML::Node, std::string>
 {
     auto node = ::YAML::Node{};
 
     for (const auto &e : obj.data())
     {
-        node.push_back(do_serialise(e));
+        auto inner_object = do_serialise(e);
+        if (!inner_object)
+        {
+            return std::unexpected(inner_object.error());
+        }
+
+        node.push_back(std::move(*inner_object));
     }
 
     return node;
 }
 
 template <Class T>
-auto do_serialise(const T &obj) -> ::YAML::Node
+auto do_serialise(const T &obj) -> std::expected<::YAML::Node, std::string>
 {
     auto node = ::YAML::Node{};
     auto members = ::YAML::Node{};
@@ -130,7 +147,13 @@ auto do_serialise(const T &obj) -> ::YAML::Node
     constexpr auto ctx = std::meta::access_context::current();
     template for (constexpr auto e : std::define_static_array(std::meta::nonstatic_data_members_of(^^T, ctx)))
     {
-        members[std::meta::identifier_of(e)] = do_serialise(obj.[:e:]);
+        auto inner_object = do_serialise(obj.[:e:]);
+        if (!inner_object)
+        {
+            return std::unexpected(inner_object.error());
+        }
+
+        members[std::meta::identifier_of(e)] = std::move(*inner_object);
     }
 
     node[std::meta::identifier_of(^^T)] = members;
@@ -257,31 +280,30 @@ auto do_deserialise(const ::YAML::Node &node) -> std::expected<T, std::string>
 
 }
 
-auto serialise(const impl::Class auto &obj) -> std::string
+auto serialise(const impl::Class auto &obj) -> std::expected<std::string, std::string>
 {
     try
     {
-        auto node = impl::do_serialise(obj);
-
-        auto strm = std::stringstream{};
-        strm << node;
-
-        return {strm.str()};
+        return impl::do_serialise(obj).and_then(
+            [](const auto &e) -> std::expected<std::string, std::string>
+            {
+                auto strm = std::stringstream{};
+                strm << e;
+                return strm.str();
+            });
     }
     catch (const ::YAML::Exception &e)
     {
-        // return std::unexpected(std::format("{} [{} {} {}]", e.msg, e.mark.pos, e.mark.line, e.mark.column));
+        return std::unexpected(std::format("{} [{} {} {}]", e.msg, e.mark.pos, e.mark.line, e.mark.column));
     }
     catch (const std::exception &e)
     {
-        // return std::unexpected(std::format("{}", e.what()));
+        return std::unexpected(std::format("{}", e.what()));
     }
     catch (...)
     {
-        // return std::unexpected<std::string>("unknown exception");
+        return std::unexpected<std::string>("unknown exception");
     }
-
-    return {};
 }
 
 template <impl::Class T>
