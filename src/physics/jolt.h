@@ -1,5 +1,6 @@
 #pragma once
 
+#include "maths/matrix4.h"
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 
@@ -46,24 +47,29 @@
 namespace ufps
 {
 
-inline auto to_native(const ::JPH::Vec3 &vec) -> Vector3
+constexpr auto to_native(const ::JPH::Vec3 &vec) -> Vector3
 {
-    return {vec.GetX(), vec.GetY(), vec.GetZ()};
+    return std::bit_cast<Vector4>(vec);
 }
 
-inline auto to_native(const ::JPH::Color &c) -> Colour
+constexpr auto to_native(const ::JPH::Color &c) -> Colour
 {
     return {c.r / 255.0f, c.g / 255.0f, c.b / 255.0f};
 }
 
-inline auto to_jolt(ufps::Vector3 vec) -> ::JPH::Vec3
+constexpr auto to_native(const ::JPH::Mat44 &m) -> Matrix4
+{
+    return std::bit_cast<Matrix4>(m);
+}
+
+constexpr auto to_jolt(ufps::Vector3 vec) -> ::JPH::Vec3
 {
     return {vec.x, vec.y, vec.z};
 }
 
-inline auto to_jolt(ufps::Quaternion q) -> ::JPH::Quat
+constexpr auto to_jolt(ufps::Quaternion q) -> ::JPH::Quat
 {
-    return {q.x, q.y, q.z, q.w};
+    return std::bit_cast<::JPH::Quat>(q);
 }
 
 }
