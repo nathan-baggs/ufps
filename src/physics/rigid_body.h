@@ -18,6 +18,10 @@ class RigidBody
     auto operator=(RigidBody &&) -> RigidBody & = default;
 
     auto position() const -> Vector3;
+    auto transform() const -> Transform;
+    auto local_transform() const -> Transform;
+    auto parent_transform() const -> Transform;
+    auto set_local_transform(const Transform &transform) -> void;
     auto set_parent_transform(const Transform &transform) -> void;
 
   private:
@@ -25,6 +29,7 @@ class RigidBody
     ::JPH::BodyInterface *body_interface_;
     ::JPH::RefConst<::JPH::Shape> original_shape_;
     Transform local_transform_;
+    Transform parent_transform_;
     Vector3 applied_scale_;
 };
 
