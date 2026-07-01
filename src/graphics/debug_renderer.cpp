@@ -151,7 +151,7 @@ struct SaveSceneButton
 struct AddLightButton
 {
     ufps::Scene &scene;
-    std::variant<std::monostate, ufps::Entity *, ufps::PointLightHandle> *selected;
+    std::variant<std::monostate, ufps::Entity *, ufps::PointLightHandle, ufps::RigidBodyHandle> *selected;
 };
 
 struct Histogram
@@ -162,19 +162,19 @@ struct Histogram
 struct AddEntity
 {
     ufps::Scene &scene;
-    std::variant<std::monostate, ufps::Entity *, ufps::PointLightHandle> *selected;
+    std::variant<std::monostate, ufps::Entity *, ufps::PointLightHandle, ufps::RigidBodyHandle> *selected;
 };
 
 struct DuplicateEntity
 {
     ufps::Scene &scene;
-    std::variant<std::monostate, ufps::Entity *, ufps::PointLightHandle> *selected;
+    std::variant<std::monostate, ufps::Entity *, ufps::PointLightHandle, ufps::RigidBodyHandle> *selected;
 };
 
 struct DeleteEntity
 {
     ufps::Scene &scene;
-    std::variant<std::monostate, ufps::Entity *, ufps::PointLightHandle> *selected;
+    std::variant<std::monostate, ufps::Entity *, ufps::PointLightHandle, ufps::RigidBodyHandle> *selected;
 };
 
 struct Plot
@@ -801,6 +801,16 @@ auto DebugRenderer::post_render(Scene &scene) -> void
                 entity->add_rigid_body(body);
             }
 
+            for (const auto &[index, handle] : std::views::enumerate(entity->rigid_bodies()))
+            {
+                const auto button_text = std::format("rigid body {}", index);
+                if (::ImGui::Button(button_text.c_str()))
+                {
+                    selected_ = handle;
+                    break;
+                }
+            }
+
             {
                 auto value = entity->emissive_strength();
                 if (::ImGui::SliderFloat("emissive_strength", &value, 0.0f, 10.0f))
@@ -884,7 +894,7 @@ auto DebugRenderer::post_render(Scene &scene) -> void
                 camera_data.projection.data().data(),
                 ::ImGuizmo::TRANSLATE | ::ImGuizmo::SCALE | ::ImGuizmo::ROTATE,
                 ::ImGuizmo::WORLD,
-                const_cast<float *>(transform.data().data()),
+                transform.data().data(),
                 nullptr,
                 snap_translation,
                 nullptr,
@@ -935,7 +945,7 @@ auto DebugRenderer::post_render(Scene &scene) -> void
                 camera_data.projection.data().data(),
                 ::ImGuizmo::TRANSLATE | ::ImGuizmo::SCALE | ::ImGuizmo::BOUNDS | ::ImGuizmo::ROTATE,
                 ::ImGuizmo::WORLD,
-                const_cast<float *>(transform.data().data()),
+                transform.data().data(),
                 nullptr,
                 nullptr,
                 nullptr,
@@ -943,6 +953,31 @@ auto DebugRenderer::post_render(Scene &scene) -> void
 
             const auto new_transform = Transform{transform};
             light->position = new_transform.position;
+        }
+        else if (auto *selected_rigid_body = std::get_if<RigidBodyHandle>(&selected_))
+        {
+            if (auto rigid_body = service<PhysicsSystem>().rigid_body(*selected_rigid_body); rigid_body)
+            {
+                auto &rb = *rigid_body;
+
+                auto transform = Matrix4{rb.transform()};
+                auto delta = Matrix4{};
+                const auto &camera_data = scene.camera().data();
+
+                ::ImGuizmo::Manipulate(
+                    camera_data.view.data().data(),
+                    camera_data.projection.data().data(),
+                    ::ImGuizmo::TRANSLATE | ::ImGuizmo::SCALE | ::ImGuizmo::BOUNDS | ::ImGuizmo::ROTATE,
+                    ::ImGuizmo::WORLD,
+                    transform.data().data(),
+                    delta.data().data(),
+                    nullptr,
+                    nullptr,
+                    nullptr);
+
+                const auto new_transform = Transform{delta * Matrix4{rb.local_transform()}};
+                rb.set_local_transform(new_transform);
+            }
         }
 
         ::ImGui::End();
