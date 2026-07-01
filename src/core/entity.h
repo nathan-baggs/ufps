@@ -37,6 +37,7 @@ class Entity
     constexpr auto emissive_strength() const -> float;
     constexpr auto set_emissive_strength(float strength) -> void;
     constexpr auto add_rigid_body(RigidBodyHandle handle);
+    constexpr auto rigid_bodies() const -> std::span<const RigidBodyHandle>;
 
   private:
     std::string name_;
@@ -110,6 +111,11 @@ constexpr auto Entity::set_emissive_strength(float strength) -> void
 constexpr auto Entity::add_rigid_body(RigidBodyHandle handle)
 {
     rigid_bodies_.push_back(handle);
+}
+
+constexpr auto Entity::rigid_bodies() const -> std::span<const RigidBodyHandle>
+{
+    return rigid_bodies_;
 }
 
 }
