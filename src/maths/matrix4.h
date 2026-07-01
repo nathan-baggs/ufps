@@ -151,9 +151,15 @@ class Matrix4
 
     static constexpr auto invert(const Matrix4 &matrix) -> Matrix4;
 
-    constexpr auto data() const -> std::span<const float>
+    template <class Self>
+    constexpr auto data(this Self &&self)
     {
-        return elements_;
+        using SpanType = std::conditional_t< //
+            std::is_const_v<std::remove_reference_t<Self>>,//
+            std::span<const float>,//
+            std::span<float>>;
+
+        return SpanType(self.elements_.data(), std::ranges::size(self.elements_));
     }
 
     constexpr auto operator[](this auto &&self, std::size_t index) -> auto &
