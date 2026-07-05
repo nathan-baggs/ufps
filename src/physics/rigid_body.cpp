@@ -49,6 +49,14 @@ auto RigidBody::set_parent_transform(const Transform &transform) -> void
     update_transforms(local_transform_, transform);
 }
 
+auto RigidBody::description() const -> Description
+{
+    return {
+        .local_transform = local_transform_,
+        .applied_scale = applied_scale_,
+    };
+}
+
 auto RigidBody::update_transforms(const Transform &local, const Transform &parent) -> void
 {
     const auto world_transform = Transform{Matrix4{parent} * Matrix4{local}};

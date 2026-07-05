@@ -13,6 +13,7 @@
 #include <yaml-cpp/yaml.h>
 
 #include "maths/bounded_number.h"
+#include "maths/matrix4.h"
 #include "utils/exception.h"
 #include "utils/formatter.h"
 
@@ -134,6 +135,14 @@ auto do_serialise(const Sparse auto &obj) -> std::expected<::YAML::Node, std::st
 
         node.push_back(std::move(*inner_object));
     }
+
+    return node;
+}
+
+inline auto do_serialise(const Matrix4 &obj) -> std::expected<::YAML::Node, std::string>
+{
+    auto node = ::YAML::Node{};
+    std::ranges::for_each(obj.data(), [&node](auto e) { node.push_back(e); });
 
     return node;
 }

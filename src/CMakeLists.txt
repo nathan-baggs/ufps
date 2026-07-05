@@ -53,6 +53,7 @@ target_compile_options(ufpslib PRIVATE
   -Wvla
   -Wwrite-strings
   -Winvalid-pch
+  -Wno-missing-declarations
   -fcontract-evaluation-semantic=enforce
 )
 

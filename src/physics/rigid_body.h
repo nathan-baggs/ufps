@@ -1,5 +1,6 @@
 #pragma once
 
+#include "maths/matrix4.h"
 #include "maths/transform.h"
 #include "maths/vector3.h"
 #include "physics/jolt.h"
@@ -10,6 +11,12 @@ namespace ufps
 class RigidBody
 {
   public:
+    struct Description
+    {
+        Matrix4 local_transform;
+        Vector3 applied_scale;
+    };
+
     RigidBody(::JPH::BodyID body_id, ::JPH::BodyInterface *body_interface);
 
     RigidBody(const RigidBody &) = delete;
@@ -23,6 +30,7 @@ class RigidBody
     auto parent_transform() const -> Transform;
     auto set_local_transform(const Transform &transform) -> void;
     auto set_parent_transform(const Transform &transform) -> void;
+    auto description() const -> Description;
 
   private:
     auto update_transforms(const Transform &local, const Transform &parent) -> void;

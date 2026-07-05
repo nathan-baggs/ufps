@@ -1,6 +1,7 @@
 #pragma once
 
 #include <algorithm>
+#include <ranges>
 #include <span>
 #include <string>
 #include <vector>
@@ -24,6 +25,7 @@ class Entity
         float emissive_strength;
         Transform transform;
         AABB aabb;
+        std::vector<RigidBody::Description> rigid_bodies;
     };
 
     constexpr Entity(std::string name, std::vector<RenderEntity> render_entities, Transform transform);
@@ -95,6 +97,16 @@ constexpr auto Entity::description() const -> Entity::Description
         .emissive_strength = emissive_strength_,
         .transform = transform_,
         .aabb = aabb_,
+        .rigid_bodies = rigid_bodies_ |
+                        std::views::transform(
+                            [](auto e)
+                            {
+                                auto &physics = service<PhysicsSystem>();
+                                return physics.rigid_body(e);
+                            }) |
+                        std::views::filter([](const auto &e) { return !!e; }) |
+                        std::views::transform([](const auto &e) { return e->description(); }) |
+                        std::ranges::to<std::vector>(),
     };
 }
 
