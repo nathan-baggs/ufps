@@ -41,32 +41,17 @@ auto RigidBody::parent_transform() const -> Transform
 
 auto RigidBody::set_local_transform(const Transform &transform) -> void
 {
-    const auto world_transform = Transform{Matrix4{parent_transform_} * Matrix4{transform}};
-
-    if (world_transform.scale != applied_scale_)
-    {
-        const auto jolt_scale = to_jolt(world_transform.scale);
-
-        const auto scaled_result = original_shape_->ScaleShape(jolt_scale);
-        if (scaled_result.HasError())
-        {
-            throw Exception("scale error: {}", scaled_result.GetError());
-        }
-
-        applied_scale_ = world_transform.scale;
-
-        body_interface_->SetShape(body_id_, scaled_result.Get(), false, ::JPH::EActivation::Activate);
-    }
-
-    body_interface_->SetPositionAndRotation(
-        body_id_, to_jolt(world_transform.position), to_jolt(world_transform.rotation), ::JPH::EActivation::Activate);
-
-    local_transform_ = transform;
+    update_transforms(transform, parent_transform_);
 }
 
 auto RigidBody::set_parent_transform(const Transform &transform) -> void
 {
-    const auto world_transform = Transform{Matrix4{transform} * Matrix4{local_transform_}};
+    update_transforms(local_transform_, transform);
+}
+
+auto RigidBody::update_transforms(const Transform &local, const Transform &parent) -> void
+{
+    const auto world_transform = Transform{Matrix4{parent} * Matrix4{local}};
 
     if (world_transform.scale != applied_scale_)
     {
@@ -86,6 +71,7 @@ auto RigidBody::set_parent_transform(const Transform &transform) -> void
     body_interface_->SetPositionAndRotation(
         body_id_, to_jolt(world_transform.position), to_jolt(world_transform.rotation), ::JPH::EActivation::Activate);
 
-    parent_transform_ = transform;
+    local_transform_ = local;
+    parent_transform_ = parent;
 }
 }

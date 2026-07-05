@@ -25,6 +25,8 @@ class RigidBody
     auto set_parent_transform(const Transform &transform) -> void;
 
   private:
+    auto update_transforms(const Transform &local, const Transform &parent) -> void;
+
     ::JPH::BodyID body_id_;
     ::JPH::BodyInterface *body_interface_;
     ::JPH::RefConst<::JPH::Shape> original_shape_;
