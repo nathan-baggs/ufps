@@ -237,6 +237,12 @@ constexpr Scene::Scene(Camera camera, const Description &description, const Stri
         auto &new_entity = entities_.emplace_back(*cached);
         new_entity.set_transform(entity_description.transform);
         new_entity.set_emissive_strength(entity_description.emissive_strength);
+
+        for (const auto &rb_description : entity_description.rigid_bodies)
+        {
+            const auto rb = service<PhysicsSystem>().create_rigid_body(rb_description);
+            new_entity.add_rigid_body(rb);
+        }
     }
 }
 

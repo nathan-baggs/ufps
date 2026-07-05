@@ -123,6 +123,7 @@ constexpr auto Entity::set_emissive_strength(float strength) -> void
 constexpr auto Entity::add_rigid_body(RigidBodyHandle handle)
 {
     rigid_bodies_.push_back(handle);
+    service<PhysicsSystem>().rigid_body(handle)->set_parent_transform(transform_);
 }
 
 constexpr auto Entity::rigid_bodies() const -> std::span<const RigidBodyHandle>
