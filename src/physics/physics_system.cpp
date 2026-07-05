@@ -7,6 +7,7 @@
 
 #include "Jolt/Math/Vec3.h"
 #include "Jolt/Physics/Collision/Shape/BoxShape.h"
+#include "maths/transform.h"
 #include "maths/vector3.h"
 #include "physics/jolt.h"
 #include "physics/physics_layers.h"
@@ -128,6 +129,15 @@ auto PhysicsSystem::create_box(const AABB &aabb, const Vector3 &position, Physic
     const auto body_id = interface.CreateAndAddBody(body_settings, to_activation(layer));
 
     return rigid_bodies_.emplace(body_id, std::addressof(interface));
+}
+
+auto PhysicsSystem::create_rigid_body(const RigidBody::Description &description) -> RigidBodyHandle
+{
+    const auto transform = Transform{description.local_transform};
+    const auto handle = create_box({{-1.0f}, {1.0f}}, transform.position, PhysicsLayer::STATIC);
+    rigid_bodies_[handle]->set_local_transform(transform);
+
+    return handle;
 }
 
 auto PhysicsSystem::update() -> void
