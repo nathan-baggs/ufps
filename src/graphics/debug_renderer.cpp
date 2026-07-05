@@ -960,23 +960,28 @@ auto DebugRenderer::post_render(Scene &scene) -> void
             {
                 auto &rb = *rigid_body;
 
-                auto transform = Matrix4{rb.transform()};
-                auto delta = Matrix4{};
+                auto world_matrix = Matrix4{rb.transform()};
                 const auto &camera_data = scene.camera().data();
 
                 ::ImGuizmo::Manipulate(
                     camera_data.view.data().data(),
                     camera_data.projection.data().data(),
-                    ::ImGuizmo::TRANSLATE | ::ImGuizmo::SCALE | ::ImGuizmo::BOUNDS | ::ImGuizmo::ROTATE,
+                    ::ImGuizmo::TRANSLATE | ::ImGuizmo::SCALE | ::ImGuizmo::ROTATE,
                     ::ImGuizmo::WORLD,
-                    transform.data().data(),
-                    delta.data().data(),
+                    world_matrix.data().data(),
+                    nullptr,
                     nullptr,
                     nullptr,
                     nullptr);
 
-                const auto new_transform = Transform{delta * Matrix4{rb.local_transform()}};
-                rb.set_local_transform(new_transform);
+                if (::ImGuizmo::IsUsing())
+                {
+                    const auto parent = Matrix4{rb.parent_transform()};
+                    const auto inverse_parent = Matrix4::invert(parent);
+                    const auto local = inverse_parent * world_matrix;
+
+                    rb.set_local_transform(local);
+                }
             }
         }
 
