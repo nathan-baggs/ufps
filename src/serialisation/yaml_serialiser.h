@@ -1,5 +1,6 @@
 #pragma once
 
+#include <algorithm>
 #include <concepts>
 #include <exception>
 #include <expected>
@@ -262,6 +263,29 @@ auto do_deserialise(const ::YAML::Node &node) -> std::expected<T, std::string>
     }
 
     return obj;
+}
+
+template <>
+inline auto do_deserialise(const ::YAML::Node &node) -> std::expected<Matrix4, std::string>
+{
+    auto values = std::array<float, 16u>{};
+    auto *iter = std::begin(values);
+    for (const auto e : node)
+    {
+        if (iter == std::ranges::end(values))
+        {
+            return std::unexpected{"too many values in matrix"};
+        }
+        *iter = e.as<float>();
+        ++iter;
+    }
+
+    if (iter != std::ranges::end(values))
+    {
+        return std::unexpected{"too few values in matrix"};
+    }
+
+    return Matrix4{values};
 }
 
 template <Class T>
