@@ -87,6 +87,7 @@ class Renderer
     std::vector<RenderTarget> bloom_mips_;
     RenderTarget bloom_rt_;
     FrameBuffer *final_fb_;
+    bool enable_post_processing_;
 
   private:
     auto execute_gbuffer_pass(Scene &scene) -> void;

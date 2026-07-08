@@ -659,6 +659,7 @@ auto DebugRenderer::post_render(Scene &scene) -> void
         float debug_lines;
         SaveSceneButton save_scene;
         AddLightButton add_light;
+        bool &enable_post_processing;
     };
 
     auto average_luminance = 0.0f;
@@ -698,7 +699,8 @@ auto DebugRenderer::post_render(Scene &scene) -> void
             .fps = io.Framerate,
             .debug_lines = static_cast<float>(debug_line_count),
             .save_scene = {.scene = scene},
-            .add_light = {.scene = scene, .selected = &selected_}},
+            .add_light = {.scene = scene, .selected = &selected_},
+            .enable_post_processing = enable_post_processing_},
         scene.tone_map_options(),
         scene.ssao_options(),
         scene.bloom_options(),
@@ -1088,5 +1090,6 @@ auto DebugRenderer::add_mouse_event(const MouseButtonEvent &evt) -> void
 auto DebugRenderer::set_enabled(bool enabled) -> void
 {
     enabled_ = enabled;
+    enable_post_processing_ = !enabled_;
 }
 }

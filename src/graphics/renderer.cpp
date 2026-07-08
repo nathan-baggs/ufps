@@ -329,6 +329,7 @@ Renderer::Renderer(
           fb_sampler_,
           "bloom"),}
     ,final_fb_{}
+    , enable_post_processing_{true}
 {
     post_processing_command_buffer_.build(post_process_sprite_);
 
@@ -381,14 +382,21 @@ auto Renderer::render(Scene &scene) -> void
 
     execute_gbuffer_pass(scene);
     execute_lighting_pass(scene);
-    execute_bloom_pass(scene);
-    execute_luminance_histogram_pass(scene);
-    execute_average_luminance_pass(scene);
-    execute_ssao_pass(scene);
-    execute_tone_mapping_pass(scene);
-    execute_chromatic_aberration_pass(scene);
 
-    final_fb_ = &chromatic_aberration_rt_.fb;
+    if (enable_post_processing_)
+    {
+        execute_bloom_pass(scene);
+        execute_luminance_histogram_pass(scene);
+        execute_average_luminance_pass(scene);
+        execute_ssao_pass(scene);
+        execute_tone_mapping_pass(scene);
+        execute_chromatic_aberration_pass(scene);
+        final_fb_ = &chromatic_aberration_rt_.fb;
+    }
+    else
+    {
+        final_fb_ = &light_pass_rt_.fb;
+    }
 
     post_render(scene);
 
