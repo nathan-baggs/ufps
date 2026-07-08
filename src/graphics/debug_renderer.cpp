@@ -368,6 +368,12 @@ auto create_debug_controller(const std::string &, DuplicateEntity &value) -> voi
             auto *entity = *selected_entity;
             auto *new_entity = value.scene.create_entity(entity->name());
             new_entity->set_transform(entity->transform());
+
+            for (const auto handle : entity->rigid_bodies())
+            {
+                new_entity->add_rigid_body(ufps::service<ufps::PhysicsSystem>().duplicate_rigid_body(handle));
+            }
+
             *value.selected = new_entity;
         }
         else if (auto *selected_light = std::get_if<ufps::PointLightHandle>(value.selected))
