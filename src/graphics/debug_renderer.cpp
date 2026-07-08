@@ -14,6 +14,7 @@
 #include <ImGuizmo.h>
 #include <backends/imgui_impl_opengl3.h>
 #include <backends/imgui_impl_win32.h>
+#include <variant>
 
 #include "core/scene.h"
 #include "core/service_locator.h"
@@ -799,16 +800,38 @@ auto DebugRenderer::post_render(Scene &scene) -> void
                 const auto body = service<PhysicsSystem>().create_box(
                     {{-1.0f}, {1.0f}}, entity->transform().position, PhysicsLayer::STATIC);
                 entity->add_rigid_body(body);
+                selected_ = body;
             }
+
+            auto to_delete = RigidBodyHandle{};
 
             for (const auto &[index, handle] : std::views::enumerate(entity->rigid_bodies()))
             {
-                const auto button_text = std::format("rigid body {}", index);
-                if (::ImGui::Button(button_text.c_str()))
                 {
-                    selected_ = handle;
-                    break;
+                    const auto button_text = std::format("rigid body {}", index);
+                    if (::ImGui::Button(button_text.c_str()))
+                    {
+                        selected_ = handle;
+                        break;
+                    }
                 }
+
+                ::ImGui::SameLine();
+
+                {
+                    const auto button_text = std::format("remove rigid body {}", index);
+                    if (::ImGui::Button(button_text.c_str()))
+                    {
+                        to_delete = handle;
+
+                        break;
+                    }
+                }
+            }
+
+            if (to_delete)
+            {
+                service<PhysicsSystem>().remove_rigid_body(to_delete);
             }
 
             {
