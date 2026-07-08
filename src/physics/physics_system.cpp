@@ -1,5 +1,6 @@
 #include "physics/physics_system.h"
 
+#include <contracts>
 #include <cstdarg>
 #include <cstdio>
 #include <optional>
@@ -138,6 +139,16 @@ auto PhysicsSystem::create_rigid_body(const RigidBody::Description &description)
     rigid_bodies_[handle]->set_local_transform(transform);
 
     return handle;
+}
+
+auto PhysicsSystem::remove_rigid_body(RigidBodyHandle handle) -> void
+{
+    const auto &rb = rigid_body(handle);
+    contract_assert(rb);
+
+    physics_system_.GetBodyInterface().RemoveBody(rb->native_handle());
+
+    rigid_bodies_.remove(handle);
 }
 
 auto PhysicsSystem::update() -> void
