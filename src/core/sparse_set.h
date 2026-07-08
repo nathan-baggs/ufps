@@ -21,11 +21,18 @@ class SparseSet
     {
         inline static constexpr auto Invalid = std::numeric_limits<std::uint32_t>::max();
 
+      public:
         constexpr Handle()
-            : Handle(Invalid)
+            : Handle(Invalid, Invalid)
         {
         }
 
+        constexpr explicit operator bool() const
+        {
+            return *this != Handle{};
+        }
+
+      private:
         explicit constexpr Handle(std::uint32_t index, std::uint32_t version)
             : index_{index}
             , version_{version}
