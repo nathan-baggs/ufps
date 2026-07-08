@@ -26,7 +26,7 @@ auto RigidBody::position() const -> Vector3
 
 auto RigidBody::transform() const -> Transform
 {
-    return {to_native(body_interface_->GetWorldTransform(body_id_))};
+    return {to_native(body_interface_->GetWorldTransform(body_id_)) * Matrix4{applied_scale_, Matrix4::Scale{}}};
 }
 
 auto RigidBody::local_transform() const -> Transform
@@ -41,6 +41,7 @@ auto RigidBody::parent_transform() const -> Transform
 
 auto RigidBody::set_local_transform(const Transform &transform) -> void
 {
+    log::debug("{}", transform);
     update_transforms(transform, parent_transform_);
 }
 
