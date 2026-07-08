@@ -804,6 +804,7 @@ auto DebugRenderer::post_render(Scene &scene) -> void
             }
 
             auto to_delete = RigidBodyHandle{};
+            auto to_duplicate = RigidBodyHandle{};
 
             for (const auto &[index, handle] : std::views::enumerate(entity->rigid_bodies()))
             {
@@ -823,7 +824,17 @@ auto DebugRenderer::post_render(Scene &scene) -> void
                     if (::ImGui::Button(button_text.c_str()))
                     {
                         to_delete = handle;
+                        break;
+                    }
+                }
 
+                ::ImGui::SameLine();
+
+                {
+                    const auto button_text = std::format("duplicate rigid body {}", index);
+                    if (::ImGui::Button(button_text.c_str()))
+                    {
+                        to_duplicate = handle;
                         break;
                     }
                 }
@@ -832,6 +843,12 @@ auto DebugRenderer::post_render(Scene &scene) -> void
             if (to_delete)
             {
                 service<PhysicsSystem>().remove_rigid_body(to_delete);
+            }
+            if (to_duplicate)
+            {
+                const auto handle = service<PhysicsSystem>().duplicate_rigid_body(to_duplicate);
+                entity->add_rigid_body(handle);
+                selected_ = handle;
             }
 
             {
