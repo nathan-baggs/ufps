@@ -36,6 +36,7 @@ class PhysicsSystem
 
     auto create_rigid_body(const RigidBody::Description &description) -> RigidBodyHandle;
     auto remove_rigid_body(RigidBodyHandle handle) -> void;
+    auto duplicate_rigid_body(RigidBodyHandle handle) -> RigidBodyHandle;
 
     constexpr auto rigid_body(this auto &&self, RigidBodyHandle handle);
 
