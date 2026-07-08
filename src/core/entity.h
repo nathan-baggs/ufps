@@ -79,6 +79,10 @@ constexpr auto Entity::set_transform(const Transform &transform) -> void
 {
     transform_ = transform;
 
+    rigid_bodies_ = rigid_bodies_ |
+                    std::views::filter([](auto e) { return !!service<PhysicsSystem>().rigid_body(e); }) |
+                    std::ranges::to<std::vector>();
+
     for (const auto handle : rigid_bodies_)
     {
         service<PhysicsSystem>().rigid_body(handle)->set_parent_transform(transform_);
