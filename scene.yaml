@@ -17,6 +17,7 @@ Description:
       power: 2
   exposure_options:
     ExposureOptions:
+      enabled: false
       min_log_luminance: -1.208
       max_log_luminance: 3.264
   fog_options:
@@ -72,7 +73,7 @@ Description:
             constant_attenuation: 1
             linear_attenuation: 0.313
             quadratic_attenuation: 0.157
-            intensity: 3.9308043
+            intensity: 3.0809402
         - PointLight:
             position:
               Vector3:
@@ -113,7 +114,7 @@ Description:
               Vector3:
                 x: 0
                 y: 0
-                z: 0
+                z: 2
             scale:
               Vector3:
                 x: 1
@@ -137,6 +138,145 @@ Description:
                 x: 8
                 y: 4.0000134
                 z: 8
+        rigid_bodies:
+          - Description:
+              local_transform:
+                - 7.9843764
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0.24711135
+                - 0
+                - 0
+                - 0
+                - 0
+                - 7.4722896
+                - 0
+                - -0.012764335
+                - -0.20285493
+                - 0.38244247
+                - 1
+              applied_scale:
+                Vector3:
+                  x: 7.9843764
+                  y: 0.24711135
+                  z: 7.4722896
+          - Description:
+              local_transform:
+                - 7.9843764
+                - 0
+                - 0
+                - 0
+                - 0
+                - 0.24711135
+                - 0
+                - 0
+                - 0
+                - 0
+                - 7.4722896
+                - 0
+                - -0.012764335
+                - 3.2136033
+                - 0.38244247
+                - 1
+              applied_scale:
+                Vector3:
+                  x: 7.9843764
+                  y: 0.24711135
+                  z: 7.4722896
+          - Description:
+              local_transform:
+                - 1.970745
+                - 0
+                - 0
+                - 0
+                - 0
+                - 1.646917
+                - 0
+                - 0
+                - 0
+                - 0
+                - 2.3483603
+                - 0
+                - 3.9295275
+                - 1.6838582
+                - 4.3068624
+                - 1
+              applied_scale:
+                Vector3:
+                  x: 1.970745
+                  y: 1.646917
+                  z: 2.3483603
+          - Description:
+              local_transform:
+                - 1.970745
+                - 0
+                - 0
+                - 0
+                - 0
+                - 1.646917
+                - 0
+                - 0
+                - 0
+                - 0
+                - 2.3483603
+                - 0
+                - -3.9129772
+                - 1.6838576
+                - 4.3185306
+                - 1
+              applied_scale:
+                Vector3:
+                  x: 1.970745
+                  y: 1.646917
+                  z: 2.3483603
+          - Description:
+              local_transform:
+                - 1.970745
+                - 0
+                - 0
+                - 0
+                - 0
+                - 1.646917
+                - 0
+                - 0
+                - 0
+                - 0
+                - 2.3483603
+                - 0
+                - -3.9207296
+                - 1.6838605
+                - -4.2833624
+                - 1
+              applied_scale:
+                Vector3:
+                  x: 1.970745
+                  y: 1.646917
+                  z: 2.3483603
+          - Description:
+              local_transform:
+                - 1.970745
+                - 0
+                - 0
+                - 0
+                - 0
+                - 1.646917
+                - 0
+                - 0
+                - 0
+                - 0
+                - 2.3483603
+                - 0
+                - 3.9426897
+                - 1.6838608
+                - -4.267811
+                - 1
+              applied_scale:
+                Vector3:
+                  x: 1.970745
+                  y: 1.646917
+                  z: 2.3483603
     - Description:
         name: SM_Corridor039_12_06_Top_B_02
         emissive_strength: 1
@@ -170,6 +310,7 @@ Description:
                 x: 7
                 y: 6.999999
                 z: 6
+        rigid_bodies: ~
     - Description:
         name: SM_Corridor045_04_04
         emissive_strength: 1
@@ -203,6 +344,7 @@ Description:
                 x: 2.0646152
                 y: 2.0976985
                 z: 8.34465e-07
+        rigid_bodies: ~
     - Description:
         name: SM_Corridor042_12_06_Bottom_B
         emissive_strength: 1
@@ -236,6 +378,7 @@ Description:
                 x: 7.0794563
                 y: 3.9999998
                 z: 6
+        rigid_bodies: ~
     - Description:
         name: SM_Corridor043_12_06_Bottom_B
         emissive_strength: 1
@@ -269,6 +412,7 @@ Description:
                 x: 7.0794563
                 y: 3.9999998
                 z: 6
+        rigid_bodies: ~
     - Description:
         name: SM_Windows03_12_4
         emissive_strength: 1
@@ -302,6 +446,7 @@ Description:
                 x: 7.0000005
                 y: 5
                 z: 0
+        rigid_bodies: ~
     - Description:
         name: SM_Corridor036_12_06_Top_B_02
         emissive_strength: 1
@@ -335,6 +480,7 @@ Description:
                 x: 7
                 y: 6.999999
                 z: 6
+        rigid_bodies: ~
     - Description:
         name: SM_Corridor045_04_04
         emissive_strength: 1
@@ -368,6 +514,7 @@ Description:
                 x: 2.0646152
                 y: 2.0976985
                 z: 8.34465e-07
+        rigid_bodies: ~
     - Description:
         name: SM_Corridor042_12_06_Bottom_B
         emissive_strength: 1
@@ -401,6 +548,7 @@ Description:
                 x: 7.0794563
                 y: 3.9999998
                 z: 6
+        rigid_bodies: ~
     - Description:
         name: SM_Corridor043_12_06_Bottom_B
         emissive_strength: 1
@@ -434,6 +582,7 @@ Description:
                 x: 7.0794563
                 y: 3.9999998
                 z: 6
+        rigid_bodies: ~
     - Description:
         name: SM_Corridor039_12_06_Top_B_02
         emissive_strength: 1
@@ -467,6 +616,7 @@ Description:
                 x: 7
                 y: 6.999999
                 z: 6
+        rigid_bodies: ~
     - Description:
         name: SM_Corridor036_12_06_Top_B_02
         emissive_strength: 1
@@ -500,6 +650,7 @@ Description:
                 x: 7
                 y: 6.999999
                 z: 6
+        rigid_bodies: ~
     - Description:
         name: SM_Windows03_12_4
         emissive_strength: 1
@@ -533,6 +684,7 @@ Description:
                 x: 7.0000005
                 y: 5
                 z: 0
+        rigid_bodies: ~
     - Description:
         name: SM_Corridor019_06_08_B
         emissive_strength: 1
@@ -566,6 +718,7 @@ Description:
                 x: 4.104806
                 y: 4.4271092
                 z: 4.7683716e-07
+        rigid_bodies: ~
     - Description:
         name: SM_Corridor018_06_08_B
         emissive_strength: 1
@@ -599,6 +752,7 @@ Description:
                 x: 4.081047
                 y: 4.279462
                 z: 3.7758843e-17
+        rigid_bodies: ~
     - Description:
         name: SM_Corridor018_06_08_B
         emissive_strength: 1
@@ -632,6 +786,7 @@ Description:
                 x: 4.081047
                 y: 4.279462
                 z: 3.7758843e-17
+        rigid_bodies: ~
     - Description:
         name: SM_Corridor018_06_08_B
         emissive_strength: 1
@@ -665,6 +820,7 @@ Description:
                 x: 4.081047
                 y: 4.279462
                 z: 3.7758843e-17
+        rigid_bodies: ~
     - Description:
         name: SM_Corner06_12_12_B_L
         emissive_strength: 1
@@ -698,6 +854,7 @@ Description:
                 x: 15.327793
                 y: 4.4271092
                 z: 12.000001
+        rigid_bodies: ~
     - Description:
         name: SM_Windows05_6_4
         emissive_strength: 1
@@ -731,6 +888,7 @@ Description:
                 x: 3.3277926
                 y: 4.279462
                 z: 0
+        rigid_bodies: ~
     - Description:
         name: SM_Detail13
         emissive_strength: 1
@@ -764,6 +922,7 @@ Description:
                 x: 0.13479376
                 y: 0.44238245
                 z: 0.21634865
+        rigid_bodies: ~
     - Description:
         name: SM_Generator
         emissive_strength: 10
@@ -797,6 +956,7 @@ Description:
                 x: 0.9403464
                 y: 1.4152939
                 z: 1.0975153
+        rigid_bodies: ~
     - Description:
         name: SM_Monitor
         emissive_strength: 1
@@ -830,6 +990,7 @@ Description:
                 x: 0.0049307793
                 y: 0.36726955
                 z: 0.58520603
+        rigid_bodies: ~
     - Description:
         name: SM_Fan03
         emissive_strength: 1
@@ -863,3 +1024,4 @@ Description:
                 x: -0.06586146
                 y: -1.536452
                 z: 0.654063
+        rigid_bodies: ~
