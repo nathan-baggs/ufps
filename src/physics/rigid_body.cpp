@@ -1,6 +1,5 @@
 #include "physics/rigid_body.h"
 
-#include "Jolt/Physics/EActivation.h"
 #include "maths/matrix4.h"
 #include "maths/vector3.h"
 #include "physics/jolt.h"
@@ -41,7 +40,6 @@ auto RigidBody::parent_transform() const -> Transform
 
 auto RigidBody::set_local_transform(const Transform &transform) -> void
 {
-    log::debug("{}", transform);
     update_transforms(transform, parent_transform_);
 }
 
@@ -56,6 +54,11 @@ auto RigidBody::description() const -> Description
         .local_transform = local_transform_,
         .applied_scale = applied_scale_,
     };
+}
+
+auto RigidBody::native_handle() const -> ::JPH::BodyID
+{
+    return body_id_;
 }
 
 auto RigidBody::update_transforms(const Transform &local, const Transform &parent) -> void
@@ -83,4 +86,5 @@ auto RigidBody::update_transforms(const Transform &local, const Transform &paren
     local_transform_ = local;
     parent_transform_ = parent;
 }
+
 }

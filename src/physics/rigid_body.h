@@ -31,6 +31,7 @@ class RigidBody
     auto set_local_transform(const Transform &transform) -> void;
     auto set_parent_transform(const Transform &transform) -> void;
     auto description() const -> Description;
+    auto native_handle() const -> ::JPH::BodyID;
 
   private:
     auto update_transforms(const Transform &local, const Transform &parent) -> void;
