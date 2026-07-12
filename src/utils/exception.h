@@ -1,5 +1,6 @@
 #pragma once
 
+#include <debugging>
 #include <format>
 #include <stacktrace>
 #include <stdexcept>
@@ -27,6 +28,7 @@ constexpr Exception::Exception(std::format_string<Args...> msg, Args &&...args)
     : std::runtime_error{std::format(msg, std::forward<Args>(args)...)}
     , what_{std::format("{}\n{}", std::runtime_error::what(), std::stacktrace::current(1)).c_str()}
 {
+    std::breakpoint_if_debugging();
 }
 
 constexpr auto Exception::to_string(this auto &&self) -> std::string

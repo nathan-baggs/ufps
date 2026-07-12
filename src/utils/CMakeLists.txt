@@ -1,4 +1,4 @@
-target_sources(ufpslib PUBLIC
+target_sources(ufpslib PRIVATE
   compress.cpp
   decompress.cpp
   resolve_symbols.cpp

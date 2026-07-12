@@ -16,6 +16,7 @@ target_compile_options(resource_packer PRIVATE
   -Wvarargs
   -Wvla
   -Wwrite-strings
+  -Wno-missing-declarations
 )
 
 target_link_libraries(resource_packer

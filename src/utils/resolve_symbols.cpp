@@ -20,7 +20,7 @@ namespace
 {
 auto error_callback(void *, const char *msg, int errnum) -> void
 {
-    throw ufps::Exception("backtrace error: {} {}", msg, errnum);
+    ufps::drop_mic("backtrace error: {} {}", msg, errnum);
 }
 
 auto *g_state = []

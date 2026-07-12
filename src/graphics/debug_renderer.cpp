@@ -14,13 +14,17 @@
 #include <ImGuizmo.h>
 #include <backends/imgui_impl_opengl3.h>
 #include <backends/imgui_impl_win32.h>
+#include <variant>
 
 #include "core/scene.h"
+#include "core/service_locator.h"
 #include "events/mouse_button_event.h"
 #include "graphics/colour.h"
 #include "graphics/line_data.h"
+#include "graphics/mesh_manager.h"
 #include "graphics/opengl.h"
 #include "graphics/point_light.h"
+#include "graphics/texture_manager.h"
 #include "graphics/utils.h"
 #include "graphics/window.h"
 #include "maths/aabb.h"
@@ -31,6 +35,8 @@
 #include "maths/vector3.h"
 #include "maths/vector4.h"
 #include "memory/metrics.h"
+#include "physics/physics_debug_renderer.h"
+#include "physics/physics_system.h"
 #include "serialisation/yaml_serialiser.h"
 #include "utils/log.h"
 
@@ -146,7 +152,7 @@ struct SaveSceneButton
 struct AddLightButton
 {
     ufps::Scene &scene;
-    std::variant<std::monostate, ufps::Entity *, ufps::PointLightHandle> *selected;
+    std::variant<std::monostate, ufps::Entity *, ufps::PointLightHandle, ufps::RigidBodyHandle> *selected;
 };
 
 struct Histogram
@@ -157,19 +163,19 @@ struct Histogram
 struct AddEntity
 {
     ufps::Scene &scene;
-    std::variant<std::monostate, ufps::Entity *, ufps::PointLightHandle> *selected;
+    std::variant<std::monostate, ufps::Entity *, ufps::PointLightHandle, ufps::RigidBodyHandle> *selected;
 };
 
 struct DuplicateEntity
 {
     ufps::Scene &scene;
-    std::variant<std::monostate, ufps::Entity *, ufps::PointLightHandle> *selected;
+    std::variant<std::monostate, ufps::Entity *, ufps::PointLightHandle, ufps::RigidBodyHandle> *selected;
 };
 
 struct DeleteEntity
 {
     ufps::Scene &scene;
-    std::variant<std::monostate, ufps::Entity *, ufps::PointLightHandle> *selected;
+    std::variant<std::monostate, ufps::Entity *, ufps::PointLightHandle, ufps::RigidBodyHandle> *selected;
 };
 
 struct Plot
@@ -251,9 +257,10 @@ auto create_debug_controller(const std::string &, SaveSceneButton &value) -> voi
     if (::ImGui::Button("save"))
     {
         const auto scene_yaml = ufps::yaml::serialise(value.scene.description());
+        ufps::ensure(scene_yaml);
         auto out = std::ofstream("scene.yaml");
 
-        out << scene_yaml;
+        out << *scene_yaml;
     }
 }
 
@@ -290,7 +297,7 @@ auto create_debug_controller(const std::string &, AddEntity &value) -> void
 {
     auto mesh_selected_index = std::optional<std::uint32_t>{};
 
-    auto mesh_names = value.scene.mesh_manager().mesh_names();
+    auto mesh_names = ufps::service<ufps::MeshManager>().mesh_names();
     std::ranges::sort(mesh_names);
     const auto mesh_names_cstr = mesh_names |                                                     //
                                  std::views::filter([](const auto &e) { return !e.empty(); }) |   //
@@ -361,6 +368,12 @@ auto create_debug_controller(const std::string &, DuplicateEntity &value) -> voi
             auto *entity = *selected_entity;
             auto *new_entity = value.scene.create_entity(entity->name());
             new_entity->set_transform(entity->transform());
+
+            for (const auto handle : entity->rigid_bodies())
+            {
+                new_entity->add_rigid_body(ufps::service<ufps::PhysicsSystem>().duplicate_rigid_body(handle));
+            }
+
             *value.selected = new_entity;
         }
         else if (auto *selected_light = std::get_if<ufps::PointLightHandle>(value.selected))
@@ -477,12 +490,8 @@ auto create_debug_window(const std::string &name, Controllers &&...controllers)
 
 namespace ufps
 {
-DebugRenderer::DebugRenderer(
-    const Window &window,
-    ResourceLoader &resource_loader,
-    TextureManager &texture_manager,
-    MeshManager &mesh_manager)
-    : Renderer{window, resource_loader, texture_manager, mesh_manager}
+DebugRenderer::DebugRenderer(const Window &window, ResourceLoader &resource_loader)
+    : Renderer{window, resource_loader}
     , enabled_{false}
     , click_{}
     , selected_{std::monostate{}}
@@ -535,7 +544,7 @@ auto DebugRenderer::post_render(Scene &scene) -> void
             selected_entity->render_entities() |
             std::views::transform(
                 [&](const auto &e)
-                { return create_aabb_lines(e.aabb(), selected_entity->transform(), {0.4f, 0.4f, 0.4f}); }) |
+                { return create_aabb_lines(e.aabb(), selected_entity->transform(), {0.0f, 0.2f, 0.0f}); }) |
             std::views::join;
 
         debug_lines_.append_range(aabb_lines);
@@ -549,6 +558,8 @@ auto DebugRenderer::post_render(Scene &scene) -> void
     {
         return;
     }
+
+    auto &texture_manager = service<TextureManager>();
 
     light_pass_rt_.fb.unbind();
     ::glBlitNamedFramebuffer(
@@ -567,7 +578,7 @@ auto DebugRenderer::post_render(Scene &scene) -> void
 
     debug_light_program_.bind();
 
-    const auto [vertex_buffer_handle, index_buffer_handle] = scene.mesh_manager().native_handle();
+    const auto [vertex_buffer_handle, index_buffer_handle] = service<MeshManager>().native_handle();
     ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, vertex_buffer_handle);
     ::glBindBufferRange(
         GL_SHADER_STORAGE_BUFFER,
@@ -577,7 +588,7 @@ auto DebugRenderer::post_render(Scene &scene) -> void
         sizeof(CameraData));
     ::glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffer_handle);
 
-    const auto cube_parts = scene.mesh_manager().mesh("cube");
+    const auto cube_parts = service<MeshManager>().mesh("cube");
     ensure(cube_parts.size() == 1u, "cube mesh should have exactly 1 part");
     const auto cube_indices_offset_bytes = cube_parts.front().index_offset * sizeof(std::uint32_t);
     const auto cube_vertex_offset = cube_parts.front().vertex_offset;
@@ -604,6 +615,12 @@ auto DebugRenderer::post_render(Scene &scene) -> void
     }
 
     debug_light_program_.unbind();
+
+    auto &&physics_debug_renderer = service<PhysicsSystem>().debug_renderer();
+    if (physics_debug_renderer)
+    {
+        debug_lines_.append_range(physics_debug_renderer->yield_lines());
+    }
 
     auto debug_line_count = 0zu;
 
@@ -648,6 +665,7 @@ auto DebugRenderer::post_render(Scene &scene) -> void
         float debug_lines;
         SaveSceneButton save_scene;
         AddLightButton add_light;
+        bool &enable_post_processing;
     };
 
     auto average_luminance = 0.0f;
@@ -687,7 +705,8 @@ auto DebugRenderer::post_render(Scene &scene) -> void
             .fps = io.Framerate,
             .debug_lines = static_cast<float>(debug_line_count),
             .save_scene = {.scene = scene},
-            .add_light = {.scene = scene, .selected = &selected_}},
+            .add_light = {.scene = scene, .selected = &selected_},
+            .enable_post_processing = enable_post_processing_},
         scene.tone_map_options(),
         scene.ssao_options(),
         scene.bloom_options(),
@@ -719,7 +738,7 @@ auto DebugRenderer::post_render(Scene &scene) -> void
     for (const auto &mip : bloom_mips_)
     {
         ::ImGui::Image(
-            scene.texture_manager().texture(mip.colour_texture_bindless_handle_0)->native_handle(),
+            texture_manager.texture(mip.colour_texture_bindless_handle_0)->native_handle(),
             ::ImVec2(width * aspect_ratio, width),
             ::ImVec2(0.0f, 1.0f),
             ::ImVec2(1.0f, 0.0f));
@@ -751,27 +770,27 @@ auto DebugRenderer::post_render(Scene &scene) -> void
         "render_targets",
         RenderTargets{
             .ssao =
-                {scene.texture_manager().texture(ssao_blur_rt_.colour_texture_bindless_handle_0)->native_handle(),
+                {texture_manager.texture(ssao_blur_rt_.colour_texture_bindless_handle_0)->native_handle(),
                  width * aspect_ratio,
                  width},
             .same_line_0 = {},
             .gbuffer_0 =
-                {scene.texture_manager().texture(gbuffer_rt_.colour_texture_bindless_handle_0)->native_handle(),
+                {texture_manager.texture(gbuffer_rt_.colour_texture_bindless_handle_0)->native_handle(),
                  width * aspect_ratio,
                  width},
             .same_line_1 = {},
             .gbuffer_1 =
-                {scene.texture_manager().texture(gbuffer_rt_.colour_texture_bindless_handle_1)->native_handle(),
+                {texture_manager.texture(gbuffer_rt_.colour_texture_bindless_handle_1)->native_handle(),
                  width * aspect_ratio,
                  width},
             .same_line_2 = {},
             .gbuffer_2 =
-                {scene.texture_manager().texture(gbuffer_rt_.colour_texture_bindless_handle_2)->native_handle(),
+                {texture_manager.texture(gbuffer_rt_.colour_texture_bindless_handle_2)->native_handle(),
                  width * aspect_ratio,
                  width},
             .same_line_3 = {},
             .gbuffer_3 = {
-                scene.texture_manager().texture(gbuffer_rt_.colour_texture_bindless_handle_3)->native_handle(),
+                texture_manager.texture(gbuffer_rt_.colour_texture_bindless_handle_3)->native_handle(),
                 width * aspect_ratio,
                 width}});
 
@@ -783,6 +802,62 @@ auto DebugRenderer::post_render(Scene &scene) -> void
         {
             auto *entity = *selected_entity;
             ::ImGui::Text("entity: %s", entity->name().c_str());
+
+            if (::ImGui::Button("add rigid body"))
+            {
+                const auto body = service<PhysicsSystem>().create_box(
+                    {{-1.0f}, {1.0f}}, entity->transform().position, PhysicsLayer::STATIC);
+                entity->add_rigid_body(body);
+                selected_ = body;
+            }
+
+            auto to_delete = RigidBodyHandle{};
+            auto to_duplicate = RigidBodyHandle{};
+
+            for (const auto &[index, handle] : std::views::enumerate(entity->rigid_bodies()))
+            {
+                {
+                    const auto button_text = std::format("rigid body {}", index);
+                    if (::ImGui::Button(button_text.c_str()))
+                    {
+                        selected_ = handle;
+                        break;
+                    }
+                }
+
+                ::ImGui::SameLine();
+
+                {
+                    const auto button_text = std::format("remove rigid body {}", index);
+                    if (::ImGui::Button(button_text.c_str()))
+                    {
+                        to_delete = handle;
+                        break;
+                    }
+                }
+
+                ::ImGui::SameLine();
+
+                {
+                    const auto button_text = std::format("duplicate rigid body {}", index);
+                    if (::ImGui::Button(button_text.c_str()))
+                    {
+                        to_duplicate = handle;
+                        break;
+                    }
+                }
+            }
+
+            if (to_delete)
+            {
+                service<PhysicsSystem>().remove_rigid_body(to_delete);
+            }
+            if (to_duplicate)
+            {
+                const auto handle = service<PhysicsSystem>().duplicate_rigid_body(to_duplicate);
+                entity->add_rigid_body(handle);
+                selected_ = handle;
+            }
 
             {
                 auto value = entity->emissive_strength();
@@ -811,16 +886,14 @@ auto DebugRenderer::post_render(Scene &scene) -> void
 
             for (const auto &render_entity : entity->render_entities())
             {
-                const auto *albedo_texture =
-                    scene.texture_manager().texture(render_entity.albedo_texture_bindless_handle());
+                const auto *albedo_texture = texture_manager.texture(render_entity.albedo_texture_bindless_handle());
                 ::ImGui::Image(
                     albedo_texture->native_handle(),
                     ::ImVec2(64.0f, 64.0f),
                     ::ImVec2(0.0f, 1.0f),
                     ::ImVec2(1.0f, 0.0f));
 
-                const auto *normal_texture =
-                    scene.texture_manager().texture(render_entity.normal_texture_bindless_handle());
+                const auto *normal_texture = texture_manager.texture(render_entity.normal_texture_bindless_handle());
                 ::ImGui::SameLine();
                 ::ImGui::Image(
                     normal_texture->native_handle(),
@@ -829,7 +902,7 @@ auto DebugRenderer::post_render(Scene &scene) -> void
                     ::ImVec2(1.0f, 0.0f));
 
                 const auto *specular_texture =
-                    scene.texture_manager().texture(render_entity.specular_texture_bindless_handle());
+                    texture_manager.texture(render_entity.specular_texture_bindless_handle());
                 ::ImGui::SameLine();
                 ::ImGui::Image(
                     specular_texture->native_handle(),
@@ -837,12 +910,12 @@ auto DebugRenderer::post_render(Scene &scene) -> void
                     ::ImVec2(0.0f, 1.0f),
                     ::ImVec2(1.0f, 0.0f));
 
-                const auto *ao_texture = scene.texture_manager().texture(render_entity.ao_texture_bindless_handle());
+                const auto *ao_texture = texture_manager.texture(render_entity.ao_texture_bindless_handle());
                 ::ImGui::Image(
                     ao_texture->native_handle(), ::ImVec2(64.0f, 64.0f), ::ImVec2(0.0f, 1.0f), ::ImVec2(1.0f, 0.0f));
 
                 const auto *glossiness_texture =
-                    scene.texture_manager().texture(render_entity.glossiness_texture_bindless_handle());
+                    texture_manager.texture(render_entity.glossiness_texture_bindless_handle());
                 ::ImGui::SameLine();
                 ::ImGui::Image(
                     glossiness_texture->native_handle(),
@@ -851,7 +924,7 @@ auto DebugRenderer::post_render(Scene &scene) -> void
                     ::ImVec2(1.0f, 0.0f));
 
                 const auto *emissive_texture =
-                    scene.texture_manager().texture(render_entity.emissive_texture_bindless_handle());
+                    texture_manager.texture(render_entity.emissive_texture_bindless_handle());
                 ::ImGui::SameLine();
                 ::ImGui::Image(
                     emissive_texture->native_handle(),
@@ -869,7 +942,7 @@ auto DebugRenderer::post_render(Scene &scene) -> void
                 camera_data.projection.data().data(),
                 ::ImGuizmo::TRANSLATE | ::ImGuizmo::SCALE | ::ImGuizmo::ROTATE,
                 ::ImGuizmo::WORLD,
-                const_cast<float *>(transform.data().data()),
+                transform.data().data(),
                 nullptr,
                 snap_translation,
                 nullptr,
@@ -920,7 +993,7 @@ auto DebugRenderer::post_render(Scene &scene) -> void
                 camera_data.projection.data().data(),
                 ::ImGuizmo::TRANSLATE | ::ImGuizmo::SCALE | ::ImGuizmo::BOUNDS | ::ImGuizmo::ROTATE,
                 ::ImGuizmo::WORLD,
-                const_cast<float *>(transform.data().data()),
+                transform.data().data(),
                 nullptr,
                 nullptr,
                 nullptr,
@@ -928,6 +1001,36 @@ auto DebugRenderer::post_render(Scene &scene) -> void
 
             const auto new_transform = Transform{transform};
             light->position = new_transform.position;
+        }
+        else if (auto *selected_rigid_body = std::get_if<RigidBodyHandle>(&selected_))
+        {
+            if (auto rigid_body = service<PhysicsSystem>().rigid_body(*selected_rigid_body); rigid_body)
+            {
+                auto &rb = *rigid_body;
+
+                auto world_matrix = Matrix4{rb.transform()};
+                const auto &camera_data = scene.camera().data();
+
+                ::ImGuizmo::Manipulate(
+                    camera_data.view.data().data(),
+                    camera_data.projection.data().data(),
+                    ::ImGuizmo::TRANSLATE | ::ImGuizmo::SCALE | ::ImGuizmo::ROTATE,
+                    ::ImGuizmo::WORLD,
+                    world_matrix.data().data(),
+                    nullptr,
+                    nullptr,
+                    nullptr,
+                    nullptr);
+
+                if (::ImGuizmo::IsUsing())
+                {
+                    const auto parent = Matrix4{rb.parent_transform()};
+                    const auto inverse_parent = Matrix4::invert(parent);
+                    const auto local = inverse_parent * world_matrix;
+
+                    rb.set_local_transform(local);
+                }
+            }
         }
 
         ::ImGui::End();
@@ -993,5 +1096,6 @@ auto DebugRenderer::add_mouse_event(const MouseButtonEvent &evt) -> void
 auto DebugRenderer::set_enabled(bool enabled) -> void
 {
     enabled_ = enabled;
+    enable_post_processing_ = !enabled_;
 }
 }

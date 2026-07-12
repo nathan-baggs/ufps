@@ -7,111 +7,13 @@ project(
   LANGUAGES C CXX
 )
 
-include(FetchContent)
-include(ExternalProject)
-
 set(CMAKE_SKIP_PACKAGE_ALL_DEPENDENCY ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(FETCHCONTENT_QUIET FALSE)
 
 option(UFPS_USE_EMBEDDED_RESOURCE_LOADER "Use EmbeddedResourceLoader" OFF)
 
-FetchContent_Declare(
-  googletest
-  GIT_REPOSITORY https://github.com/google/googletest.git
-  GIT_TAG v1.15.2)
-FetchContent_GetProperties(googletest)
-if (NOT googletest_POPULATED)
-  FetchContent_Populate(googletest)
-  add_subdirectory(${googletest_SOURCE_DIR} ${googletest_BINARY_DIR} EXCLUDE_FROM_ALL)
-endif()
-
-FetchContent_Declare(
-	imgui
-	GIT_REPOSITORY https://github.com/ocornut/imgui.git
-	GIT_TAG v1.92.5-docking)
-FetchContent_MakeAvailable(imgui)
-
-FetchContent_Declare(
-	imguizmo
-	GIT_REPOSITORY https://github.com/CedricGuillemet/ImGuizmo
-	GIT_TAG df1c301)
-FetchContent_MakeAvailable(imguizmo)
-
-FetchContent_Declare(
-	stb_lib
-	GIT_REPOSITORY https://github.com/nothings/stb.git
-	GIT_TAG 5c205738c191bcb0abc65c4febfa9bd25ff35234)
-FetchContent_MakeAvailable(stb_lib)
-
-set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
-set(ASSIMP_BUILD_ASSIMP_TOOLS OFF CACHE BOOL "" FORCE)
-set(ASSIMP_BUILD_SAMPLES OFF CACHE BOOL "" FORCE)
-set(ASSIMP_BUILD_TESTS OFF CACHE BOOL "" FORCE)
-set(ASSIMP_BUILD_ZLIB ON CACHE BOOL "" FORCE)
-set(ASSIMP_BUILD_ALL_IMPORTERS_BY_DEFAULT OFF CACHE BOOL "" FORCE)
-set(ASSIMP_BUILD_FBX_IMPORTER ON CACHE BOOL "" FORCE)
-set(ASSIMP_BUILD_ALL_EXPORTERS_BY_DEFAULT OFF CACHE BOOL "" FORCE)
-set(ASSIMP_NO_EXPORT ON CACHE BOOL "" FORCE)
-
-FetchContent_Declare(
-	assimp
-	GIT_REPOSITORY https://github.com/assimp/assimp
-	GIT_TAG v6.0.4)
-if (NOT assimp_POPULATED)
-	FetchContent_Populate(assimp)
-	add_subdirectory(${assimp_SOURCE_DIR} ${assimp_BINARY_DIR} EXCLUDE_FROM_ALL)
-endif()
-target_compile_options(assimp PRIVATE -Wno-error=maybe-uninitialized)
-
-FetchContent_Declare(
-  yaml-cpp
-  GIT_REPOSITORY https://github.com/jbeder/yaml-cpp
-  GIT_TAG yaml-cpp-0.9.0)
-FetchContent_MakeAvailable(yaml-cpp)
-
-set(ZSTD_BUILD_STATIC ON)
-set(ZSTD_BUILD_SHARED OFF)
-
-FetchContent_Declare(
-	zstd
-	GIT_REPOSITORY https://github.com/facebook/zstd
-	GIT_TAG v1.5.7
-	SOURCE_SUBDIR build/cmake)
-FetchContent_GetProperties(zstd)
-if (NOT zstd_POPULATED)
-	FetchContent_Populate(zstd)
-	add_subdirectory(${zstd_SOURCE_DIR}/build/cmake ${zstd_BINARY_DIR} EXCLUDE_FROM_ALL)
-endif()
-
-set(BACKTRACE_PREFIX "${CMAKE_CURRENT_BINARY_DIR}/_deps/libbacktrace")
-set(BACKTRACE_INSTALL_DIR "${BACKTRACE_PREFIX}/install")
-set(BACKTRACE_LIB_PATH "${BACKTRACE_INSTALL_DIR}/lib/libbacktrace.a")
-
-ExternalProject_Add(
-    libbacktrace_build
-    GIT_REPOSITORY    https://github.com/ianlancetaylor/libbacktrace.git
-    GIT_TAG           master
-    PREFIX            "${BACKTRACE_PREFIX}"
-    UPDATE_COMMAND    ""
-    BUILD_BYPRODUCTS  "${BACKTRACE_LIB_PATH}"
-    CONFIGURE_COMMAND <SOURCE_DIR>/configure 
-                      --prefix=${BACKTRACE_INSTALL_DIR} 
-                      --with-pic
-                      --host=x86_64-w64-mingw32
-                      CC=${CMAKE_C_COMPILER}
-                      CXX=${CMAKE_CXX_COMPILER}
-    BUILD_COMMAND     make
-    INSTALL_COMMAND   make install
-)
-add_library(libbacktrace STATIC IMPORTED)
-add_dependencies(libbacktrace libbacktrace_build)
-file(MAKE_DIRECTORY "${BACKTRACE_INSTALL_DIR}/include")
-set_target_properties(libbacktrace PROPERTIES
-    IMPORTED_LOCATION "${BACKTRACE_INSTALL_DIR}/lib/libbacktrace.a"
-    INTERFACE_INCLUDE_DIRECTORIES "${BACKTRACE_INSTALL_DIR}/include"
-)
-
+add_subdirectory(third_party)
 add_subdirectory(src)
 add_subdirectory(tools)
 

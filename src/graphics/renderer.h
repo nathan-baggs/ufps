@@ -5,13 +5,11 @@
 #include "core/scene.h"
 #include "graphics/command_buffer.h"
 #include "graphics/frame_buffer.h"
-#include "graphics/mesh_manager.h"
 #include "graphics/multi_buffer.h"
 #include "graphics/opengl.h"
 #include "graphics/persistent_buffer.h"
 #include "graphics/program.h"
 #include "graphics/sampler.h"
-#include "graphics/texture_manager.h"
 #include "graphics/window.h"
 #include "resources/resource_loader.h"
 #include "utils/auto_release.h"
@@ -33,11 +31,7 @@ struct RenderTarget
 class Renderer
 {
   public:
-    Renderer(
-        const Window &window,
-        ResourceLoader &resource_loader,
-        TextureManager &texture_manager,
-        MeshManager &mesh_manager);
+    Renderer(const Window &window, ResourceLoader &resource_loader);
     virtual ~Renderer() = default;
 
     auto render(Scene &scene) -> void;
@@ -92,8 +86,8 @@ class Renderer
     RenderTarget chromatic_aberration_rt_;
     std::vector<RenderTarget> bloom_mips_;
     RenderTarget bloom_rt_;
-    MeshManager &mesh_manager_;
     FrameBuffer *final_fb_;
+    bool enable_post_processing_;
 
   private:
     auto execute_gbuffer_pass(Scene &scene) -> void;

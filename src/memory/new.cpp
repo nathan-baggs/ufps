@@ -60,16 +60,16 @@ auto operator new(std::size_t count, std::align_val_t al) -> void *
         return ::operator new(count);
     }
 
-    const auto new_size = count + alignment + sizeof(void *);
+    const auto new_size = count + alignment - 1 + sizeof(void *);
 
     auto *ptr = ::operator new(new_size);
-    auto size = new_size;
+    auto *offset_ptr = reinterpret_cast<void *>(reinterpret_cast<char *>(ptr) + sizeof(void *));
+    auto remaining = new_size - sizeof(void *);
 
-    auto *offset_ptr = reinterpret_cast<void *>(reinterpret_cast<char *>(ptr) + alignment);
-
-    auto *aligned_ptr = std::align(alignment, count, offset_ptr, size);
+    auto *aligned_ptr = std::align(alignment, count, offset_ptr, remaining);
     if (aligned_ptr == nullptr)
     {
+        ::operator delete(ptr);
         throw std::bad_alloc{};
     }
 
@@ -85,6 +85,11 @@ auto operator new[](std::size_t count, std::align_val_t al) -> void *
 
 auto operator delete(void *ptr) noexcept -> void
 {
+    if (!ptr)
+    {
+        return;
+    }
+
     const auto real_allocation_size = ::HeapSize(heap(), 0, ptr);
 
     ufps::g_metrics.live_allocation_count.fetch_sub(1, std::memory_order_relaxed);
@@ -110,6 +115,11 @@ auto operator delete[](void *ptr, std::size_t) noexcept -> void
 
 auto operator delete(void *ptr, std::align_val_t al) noexcept -> void
 {
+    if (!ptr)
+    {
+        return;
+    }
+
     const auto alignment = static_cast<std::size_t>(al);
     if (alignment <= MEMORY_ALLOCATION_ALIGNMENT)
     {

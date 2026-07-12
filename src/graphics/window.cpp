@@ -42,7 +42,7 @@ auto APIENTRY opengl_debug_callback(
 {
     if (type == GL_DEBUG_TYPE_ERROR)
     {
-        throw ufps::Exception("{} {} {} {} {}", source, type, id, severity, message);
+        ufps::drop_mic("{} {} {} {} {}", source, type, id, severity, message);
     }
 }
 

@@ -20,18 +20,28 @@ namespace
 auto init(const std::filesystem::path &path)
 {
     auto handle = ufps::AutoRelease<HANDLE, nullptr>{
-        ::CreateFileA(path.string().c_str(), GENERIC_READ, 0, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr),
+        ::CreateFileA(
+            path.native_encoded_string().c_str(),
+            GENERIC_READ,
+            0,
+            nullptr,
+            OPEN_EXISTING,
+            FILE_ATTRIBUTE_NORMAL,
+            nullptr),
         ::CloseHandle};
     ufps::ensure(
-        handle.get() != INVALID_HANDLE_VALUE, "failed to open file: {} error: {}", path.string(), ::GetLastError());
+        handle.get() != INVALID_HANDLE_VALUE,
+        "failed to open file: {} error: {}",
+        path.native_encoded_string(),
+        ::GetLastError());
 
     auto mapping = ufps::AutoRelease<HANDLE, nullptr>{
         ::CreateFileMappingA(handle, nullptr, PAGE_READONLY, 0, 0, nullptr), ::CloseHandle};
-    ufps::ensure(mapping, "failed to map file: {} error: {}", path.string(), ::GetLastError());
+    ufps::ensure(mapping, "failed to map file: {} error: {}", path.native_encoded_string(), ::GetLastError());
 
     auto map_view = std::unique_ptr<void, decltype(&::UnmapViewOfFile)>{
         ::MapViewOfFile(mapping, FILE_MAP_READ, 0, 0, 0), ::UnmapViewOfFile};
-    ufps::ensure(map_view, "failed to get map view: {} error: {}", path.string(), ::GetLastError());
+    ufps::ensure(map_view, "failed to get map view: {} error: {}", path.native_encoded_string(), ::GetLastError());
 
     return std::make_tuple(std::move(handle), std::move(mapping), std::move(map_view));
 }
@@ -58,7 +68,7 @@ FileResourceLoader::FileResourceLoader(const std::vector<std::filesystem::path> 
     {
         if (!std::filesystem::exists(root))
         {
-            throw Exception("resource root does not exist: {}", root.string());
+            throw Exception("resource root does not exist: {}", root.native_encoded_string());
         }
     }
 }
@@ -99,8 +109,9 @@ auto FileResourceLoader::resources(std::string_view type) -> std::vector<std::st
                {
                    const auto dir_iter = std::filesystem::directory_iterator{e / type};
                    return dir_iter | std::views::filter([&](const auto &e) { return e.is_regular_file(); }) |
-                          std::views::transform([&](const auto &e)
-                                                { return std::format("{}\\{}", type, e.path().filename().string()); }) |
+                          std::views::transform(
+                              [&](const auto &e)
+                              { return std::format("{}\\{}", type, e.path().filename().native_encoded_string()); }) |
                           std::ranges::to<std::vector>();
                }) |
            std::views::join | std::ranges::to<std::vector>();

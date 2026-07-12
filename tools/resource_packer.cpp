@@ -121,7 +121,7 @@ auto main(int argc, char **argv) -> int
 
             const auto manifest_path = output_configs_dir / "model_manifest.yaml";
             auto manifest_file = std::ofstream{manifest_path};
-            manifest_file << ufps::yaml::serialise(manifest);
+            manifest_file << *ufps::yaml::serialise(manifest);
         }
 
         ufps::log::info("finished packing models, packing textures");
@@ -153,51 +153,54 @@ auto main(int argc, char **argv) -> int
             const auto manifest_path = output_configs_dir / "texture_manifest.yaml";
             auto manifest_file = std::ofstream{manifest_path};
 
-            manifest_file << ufps::yaml::serialise(manifest);
+            manifest_file << *ufps::yaml::serialise(manifest);
         }
 
         ufps::log::info("finished packing textures, writing to disk");
 
         const auto compressed_vertex_data =
             ufps::compress(std::as_bytes(std::span{vertex_data.data(), vertex_data.size()}));
+        ufps::ensure(compressed_vertex_data);
 
         const auto vertex_data_path = output_blobs_dir / "vertex_data.bin";
         auto vertex_data_file = std::ofstream{vertex_data_path, std::ios::binary};
         vertex_data_file.write(
-            reinterpret_cast<const char *>(compressed_vertex_data.data()), compressed_vertex_data.size());
+            reinterpret_cast<const char *>(compressed_vertex_data->data()), compressed_vertex_data->size());
 
         ufps::log::info(
             "wrote vertex data: {} vertices, {} bytes, compression ratio: {:.2f}%",
-            compressed_vertex_data.size(),
-            compressed_vertex_data.size() * sizeof(ufps::VertexData),
-            100.0f * compressed_vertex_data.size() / (vertex_data.size() * sizeof(ufps::VertexData)));
+            compressed_vertex_data->size(),
+            compressed_vertex_data->size() * sizeof(ufps::VertexData),
+            100.0f * compressed_vertex_data->size() / (vertex_data.size() * sizeof(ufps::VertexData)));
 
         const auto compressed_index_data =
             ufps::compress(std::as_bytes(std::span{index_data.data(), index_data.size()}));
+        ufps::ensure(compressed_index_data);
 
         const auto index_data_path = output_blobs_dir / "index_data.bin";
         auto index_data_file = std::ofstream{index_data_path, std::ios::binary};
         index_data_file.write(
-            reinterpret_cast<const char *>(compressed_index_data.data()), compressed_index_data.size());
+            reinterpret_cast<const char *>(compressed_index_data->data()), compressed_index_data->size());
 
         ufps::log::info(
             "wrote index data: {} indices, {} bytes, compression ratio: {:.2f}%",
-            compressed_index_data.size(),
-            compressed_index_data.size() * sizeof(std::uint32_t),
-            100.0f * compressed_index_data.size() / (index_data.size() * sizeof(std::uint32_t)));
+            compressed_index_data->size(),
+            compressed_index_data->size() * sizeof(std::uint32_t),
+            100.0f * compressed_index_data->size() / (index_data.size() * sizeof(std::uint32_t)));
 
         const auto compressed_texture_blob = ufps::compress(texture_blob);
+        ufps::ensure(compressed_texture_blob);
 
         const auto texture_blob_path = output_blobs_dir / "texture_data.bin";
         auto texture_blob_file = std::ofstream{texture_blob_path, std::ios::binary};
         texture_blob_file.write(
-            reinterpret_cast<const char *>(compressed_texture_blob.data()), compressed_texture_blob.size());
+            reinterpret_cast<const char *>(compressed_texture_blob->data()), compressed_texture_blob->size());
 
         ufps::log::info(
             "wrote texture blob: {} textures, {} bytes, compression ratio: {:.2f}%",
             texture_names.size(),
-            compressed_texture_blob.size(),
-            100.0f * compressed_texture_blob.size() / texture_blob.size());
+            compressed_texture_blob->size(),
+            100.0f * compressed_texture_blob->size() / texture_blob.size());
     }
     catch (const ufps::Exception &e)
     {

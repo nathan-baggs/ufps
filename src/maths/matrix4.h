@@ -1,6 +1,7 @@
 #pragma once
 
 #include <array>
+#include <contracts>
 #include <format>
 #include <initializer_list>
 #include <ranges>
@@ -150,9 +151,15 @@ class Matrix4
 
     static constexpr auto invert(const Matrix4 &matrix) -> Matrix4;
 
-    constexpr auto data() const -> std::span<const float>
+    template <class Self>
+    constexpr auto data(this Self &&self)
     {
-        return elements_;
+        using SpanType = std::conditional_t< //
+            std::is_const_v<std::remove_reference_t<Self>>,//
+            std::span<const float>,//
+            std::span<float>>;
+
+        return SpanType(self.elements_.data(), std::ranges::size(self.elements_));
     }
 
     constexpr auto operator[](this auto &&self, std::size_t index) -> auto &
@@ -328,7 +335,7 @@ constexpr auto Matrix4::invert(const Matrix4 &matrix) -> Matrix4
               m[8] * m[2] * m[5];
 
     auto det = m[0] * inv[0] + m[1] * inv[4] + m[2] * inv[8] + m[3] * inv[12];
-    expect(det != 0.0f, "matrix is singular and cannot be inverted");
+    contract_assert(det != 0.0f);
 
     det = 1.0f / det;
 

@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <cstdint>
 
+#include "core/service_locator.h"
 #include "graphics/mesh_manager.h"
 #include "graphics/mesh_view.h"
 #include "maths/aabb.h"
@@ -12,9 +13,9 @@ namespace ufps
 
 namespace impl
 {
-constexpr auto calculate_aabb(ufps::MeshView mesh_view, const ufps::MeshManager &mesh_manager) -> ufps::AABB
+constexpr auto calculate_aabb(ufps::MeshView mesh_view) -> ufps::AABB
 {
-    const auto vertices = mesh_manager.vertex_data(mesh_view);
+    const auto vertices = ufps::service<ufps::MeshManager>().vertex_data(mesh_view);
 
     auto initial_aabb = ufps::AABB{
         .min = {std::numeric_limits<float>::max()},
@@ -54,8 +55,7 @@ class RenderEntity
         std::uint64_t specular_texture_bindless_handle,
         std::uint64_t ao_texture_bindless_handle,
         std::uint64_t glossiness_texture_bindless_handle,
-        std::uint64_t emissive_texture_bindless_handle,
-        const MeshManager &mesh_manager);
+        std::uint64_t emissive_texture_bindless_handle);
 
     constexpr auto mesh_view() const -> MeshView;
     constexpr auto albedo_texture_bindless_handle() const -> std::uint64_t;
@@ -84,8 +84,7 @@ constexpr RenderEntity::RenderEntity(
     std::uint64_t specular_texture_bindless_handle,
     std::uint64_t ao_texture_bindless_handle,
     std::uint64_t glossiness_texture_bindless_handle,
-    std::uint64_t emissive_texture_bindless_handle,
-    const MeshManager &mesh_manager)
+    std::uint64_t emissive_texture_bindless_handle)
     : mesh_view_{mesh_view}
     , albedo_texture_bindless_handle_{albedo_texture_bindless_handle}
     , normal_texture_bindless_handle_{normal_texture_bindless_handle}
@@ -93,7 +92,7 @@ constexpr RenderEntity::RenderEntity(
     , ao_texture_bindless_handle_{ao_texture_bindless_handle}
     , glossiness_texture_bindless_handle_{glossiness_texture_bindless_handle}
     , emissive_texture_bindless_handle_{emissive_texture_bindless_handle}
-    , aabb_{impl::calculate_aabb(mesh_view_, mesh_manager)}
+    , aabb_{impl::calculate_aabb(mesh_view_)}
 {
 }
 

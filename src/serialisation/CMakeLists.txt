@@ -1,3 +1,3 @@
-target_sources(ufpslib PUBLIC
+target_sources(ufpslib PRIVATE
 )
 

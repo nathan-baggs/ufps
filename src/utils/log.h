@@ -76,7 +76,11 @@ struct Print
         const auto path = std::filesystem::path{loc.file_name()};
 
         auto log_line = std::format(
-            "[{}] {}:{} {}", c, path.filename().string(), loc.line(), std::format(msg, std::forward<Args>(args)...));
+            "[{}] {}:{} {}",
+            c,
+            path.filename().native_encoded_string(),
+            loc.line(),
+            std::format(msg, std::forward<Args>(args)...));
 
         {
             const auto lock = std::scoped_lock(history_lock);

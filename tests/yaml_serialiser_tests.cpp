@@ -310,3 +310,12 @@ TEST(yaml_deserialisation, enum_struct)
 
     ASSERT_EQ(result, expected);
 }
+
+TEST(yaml_deserialisation, invalid_yaml)
+{
+    const auto yaml =
+        R"(FruitStruct:::Akjsdgfjkwhgijw3hgkjh3
+   f: APPLE)";
+    const auto result = ufps::yaml::deserialise<FruitStruct>(yaml);
+    ASSERT_FALSE(!!result);
+}

@@ -13,6 +13,7 @@
 #include "core/camera.h"
 #include "core/entity.h"
 #include "core/scene.h"
+#include "core/service_locator.h"
 #include "graphics/buffer_writer.h"
 #include "graphics/command_buffer.h"
 #include "graphics/frame_buffer.h"
@@ -58,10 +59,11 @@ auto create_render_target(
     std::uint32_t width,
     std::uint32_t height,
     ufps::Sampler &sampler,
-    ufps::TextureManager &texture_manager,
     std::string_view name,
     ufps::TextureFormat format = ufps::TextureFormat::RGB16F) -> ufps::RenderTarget
 {
+    auto &texture_manager = ufps::service<ufps::TextureManager>();
+
     const auto colour_attachment_texture_data = ufps::TextureData{
         .width = width,
         .height = height,
@@ -131,10 +133,12 @@ auto sprite() -> ufps::MeshData
     return {.vertices = vertices(positions, positions, positions, positions, uvs), .indices = std::move(indices)};
 }
 
-auto create_sprite(ufps::MeshManager &mesh_manager, ufps::TextureManager &texture_manager) -> ufps::Entity
+auto create_sprite() -> ufps::Entity
 {
+    auto &texture_manager = ufps::service<ufps::TextureManager>();
+
     const auto mesh_data = std::vector{sprite()};
-    const auto mesh_views = mesh_manager.load("sprite", mesh_data);
+    const auto mesh_views = ufps::service<ufps::MeshManager>().load("sprite", mesh_data);
     return {
         "post_process_sprite",
         {{mesh_views.front(),
@@ -143,13 +147,14 @@ auto create_sprite(ufps::MeshManager &mesh_manager, ufps::TextureManager &textur
           texture_manager.texture_index("textures\\default_Metallic.dds"),
           texture_manager.texture_index("textures\\default_AO.dds"),
           texture_manager.texture_index("textures\\default_Roughness.dds"),
-          texture_manager.texture_index("textures\\default_Emissive.dds"),
-          mesh_manager}},
+          texture_manager.texture_index("textures\\default_Emissive.dds")}},
         {}};
 }
 
-auto create_ssao_noise_texture(ufps::TextureManager &texture_manager, const ufps::Sampler &sampler) -> std::uint64_t
+auto create_ssao_noise_texture(const ufps::Sampler &sampler) -> std::uint64_t
 {
+    auto &texture_manager = ufps::service<ufps::TextureManager>();
+
     auto generator = std::mt19937{std::random_device{}()};
     auto distribution = std::uniform_real_distribution<float>{-1.0f, 1.0f};
 
@@ -190,14 +195,12 @@ namespace ufps
 
 Renderer::Renderer(
     const Window &window,
-    ResourceLoader &resource_loader,
-    TextureManager &texture_manager,
-    MeshManager &mesh_manager)
+    ResourceLoader &resource_loader)
     : window_{window}
     , dummy_vao_{0u, [](auto e) { ::glDeleteVertexArrays(1u, &e); }}
     , command_buffer_{"gbuffer_command_buffer"}
     , post_processing_command_buffer_{"post_processing_command_buffer"}
-    , post_process_sprite_{create_sprite(mesh_manager, texture_manager)}
+    , post_process_sprite_{create_sprite()}
     , camera_buffer_{sizeof(CameraData), "camera_buffer"}
     , light_buffer_{sizeof(LightData), "light_buffer"}
     , object_data_buffer_{sizeof(ObjectData), "object_data_buffer"}
@@ -278,35 +281,31 @@ Renderer::Renderer(
           "bloom_mix_fragment_shader",
           "bloom_mix_program")}
     , ssao_noise_sampler_{FilterType::NEAREST, FilterType::NEAREST, WrapMode::REPEAT, WrapMode::REPEAT, "ssao_noise_sampler"}
-    , ssao_noise_texture_bindless_handle_{create_ssao_noise_texture(texture_manager, ssao_noise_sampler_)}
+    , ssao_noise_texture_bindless_handle_{create_ssao_noise_texture( ssao_noise_sampler_)}
     , fb_sampler_{FilterType::LINEAR, FilterType::LINEAR, WrapMode::CLAMP_TO_EDGE, WrapMode::CLAMP_TO_EDGE, "fb_sampler"}
     , gbuffer_rt_{create_render_target(
           5u,
           window_.render_width(),
           window_.render_height(),
           fb_sampler_,
-          texture_manager,
           "gbuffer")}
     , light_pass_rt_{create_render_target(
           1u,
           window_.render_width(),
           window_.render_height(),
           fb_sampler_,
-          texture_manager,
           "light_pass"),}
     , tone_map_rt_{create_render_target(
           1u,
           window_.render_width(),
           window_.render_height(),
           fb_sampler_,
-          texture_manager,
           "tone_map"),}
     , ssao_rt_{create_render_target(
           1u,
           window_.render_width() / 2u,
           window_.render_height() / 2u,
           fb_sampler_,
-          texture_manager,
           "ssao",
           TextureFormat::R16F),}
     , ssao_blur_rt_{create_render_target(
@@ -314,7 +313,6 @@ Renderer::Renderer(
           window_.render_width() / 2u,
           window_.render_height() / 2u,
           fb_sampler_,
-          texture_manager,
           "ssao_blur",
           TextureFormat::R16F),}
     , chromatic_aberration_rt_{create_render_target(
@@ -322,7 +320,6 @@ Renderer::Renderer(
           window_.render_width(),
           window_.render_height(),
           fb_sampler_,
-          texture_manager,
           "chromatic_aberration"),}
     , bloom_mips_{}
     , bloom_rt_{create_render_target(
@@ -330,10 +327,9 @@ Renderer::Renderer(
           window_.render_width(),
           window_.render_height(),
           fb_sampler_,
-          texture_manager,
           "bloom"),}
-    ,mesh_manager_{mesh_manager}
     ,final_fb_{}
+    , enable_post_processing_{true}
 {
     post_processing_command_buffer_.build(post_process_sprite_);
 
@@ -374,7 +370,6 @@ Renderer::Renderer(
             window_.render_width() * scale,
             window_.render_height() * scale,
             fb_sampler_,
-            texture_manager,
             std::format("bloom_mip_{}", i)));
 
         log::debug("mip w: {} h: {}", bloom_mips_.back().fb.width(), bloom_mips_.back().fb.height());
@@ -387,14 +382,21 @@ auto Renderer::render(Scene &scene) -> void
 
     execute_gbuffer_pass(scene);
     execute_lighting_pass(scene);
-    execute_bloom_pass(scene);
-    execute_luminance_histogram_pass(scene);
-    execute_average_luminance_pass(scene);
-    execute_ssao_pass(scene);
-    execute_tone_mapping_pass(scene);
-    execute_chromatic_aberration_pass(scene);
 
-    final_fb_ = &chromatic_aberration_rt_.fb;
+    if (enable_post_processing_)
+    {
+        execute_bloom_pass(scene);
+        execute_luminance_histogram_pass(scene);
+        execute_average_luminance_pass(scene);
+        execute_ssao_pass(scene);
+        execute_tone_mapping_pass(scene);
+        execute_chromatic_aberration_pass(scene);
+        final_fb_ = &chromatic_aberration_rt_.fb;
+    }
+    else
+    {
+        final_fb_ = &light_pass_rt_.fb;
+    }
 
     post_render(scene);
 
@@ -456,7 +458,7 @@ auto Renderer::execute_gbuffer_pass(Scene &scene) -> void
 
     const auto auto_bind = AutoBind{gbuffer_program_};
 
-    const auto [vertex_buffer_handle, index_buffer_handle] = scene.mesh_manager().native_handle();
+    const auto [vertex_buffer_handle, index_buffer_handle] = service<MeshManager>().native_handle();
     ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, vertex_buffer_handle);
     ::glBindBufferRange(
         GL_SHADER_STORAGE_BUFFER,
@@ -538,7 +540,7 @@ auto Renderer::execute_lighting_pass(Scene &scene) -> void
         gbuffer_rt_.colour_texture_bindless_handle_3,
         gbuffer_rt_.colour_texture_bindless_handle_4);
 
-    const auto [vertex_buffer_handle, index_buffer_handle] = scene.mesh_manager().native_handle();
+    const auto [vertex_buffer_handle, index_buffer_handle] = service<MeshManager>().native_handle();
     ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, vertex_buffer_handle);
     ::glBindBufferRange(
         GL_SHADER_STORAGE_BUFFER,
@@ -580,7 +582,7 @@ auto Renderer::execute_bloom_pass([[maybe_unused]] Scene &scene) -> void
             bloom_downsample_program_.set_uniforms(
                 src_handle, std::make_tuple(src_width, src_height), scene.bloom_options().threshold);
 
-            const auto [vertex_buffer_handle, index_buffer_handle] = scene.mesh_manager().native_handle();
+            const auto [vertex_buffer_handle, index_buffer_handle] = service<MeshManager>().native_handle();
             ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, vertex_buffer_handle);
             ::glBindBuffer(GL_DRAW_INDIRECT_BUFFER, post_processing_command_buffer_.native_handle());
             ::glMultiDrawElementsIndirect(
@@ -608,7 +610,7 @@ auto Renderer::execute_bloom_pass([[maybe_unused]] Scene &scene) -> void
 
             bloom_upsample_program_.set_uniforms(src_handle, scene.bloom_options().filter_radius);
 
-            const auto [vertex_buffer_handle, index_buffer_handle] = scene.mesh_manager().native_handle();
+            const auto [vertex_buffer_handle, index_buffer_handle] = service<MeshManager>().native_handle();
             ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, vertex_buffer_handle);
             ::glBindBuffer(GL_DRAW_INDIRECT_BUFFER, post_processing_command_buffer_.native_handle());
             ::glMultiDrawElementsIndirect(
@@ -640,7 +642,7 @@ auto Renderer::execute_bloom_pass([[maybe_unused]] Scene &scene) -> void
             scene.bloom_options().mix_amount,
             scene.bloom_options().filter_radius);
 
-        const auto [vertex_buffer_handle, index_buffer_handle] = scene.mesh_manager().native_handle();
+        const auto [vertex_buffer_handle, index_buffer_handle] = service<MeshManager>().native_handle();
         ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, vertex_buffer_handle);
         ::glBindBuffer(GL_DRAW_INDIRECT_BUFFER, post_processing_command_buffer_.native_handle());
         ::glMultiDrawElementsIndirect(
@@ -709,7 +711,7 @@ auto Renderer::execute_ssao_pass(Scene &scene) -> void
 
     ::glViewport(0, 0, ssao_rt_.fb.width(), ssao_rt_.fb.height());
 
-    const auto [vertex_buffer_handle, index_buffer_handle] = scene.mesh_manager().native_handle();
+    const auto [vertex_buffer_handle, index_buffer_handle] = service<MeshManager>().native_handle();
 
     {
         ssao_rt_.fb.bind();
@@ -770,7 +772,7 @@ auto Renderer::execute_ssao_pass(Scene &scene) -> void
 
 auto Renderer::execute_tone_mapping_pass(Scene &scene) -> void
 {
-    const auto [vertex_buffer_handle, index_buffer_handle] = scene.mesh_manager().native_handle();
+    const auto [vertex_buffer_handle, index_buffer_handle] = service<MeshManager>().native_handle();
 
     tone_map_rt_.fb.bind();
     ::glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -813,7 +815,7 @@ auto Renderer::execute_chromatic_aberration_pass(Scene &scene) -> void
     const auto elapsed =
         std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start);
 
-    const auto [vertex_buffer_handle, index_buffer_handle] = scene.mesh_manager().native_handle();
+    const auto [vertex_buffer_handle, index_buffer_handle] = service<MeshManager>().native_handle();
 
     chromatic_aberration_rt_.fb.bind();
     ::glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);

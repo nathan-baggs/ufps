@@ -10,6 +10,7 @@
 #include <unordered_map>
 #include <variant>
 
+#include <objbase.h>
 #include <windows.h>
 
 #include <yaml-cpp/yaml.h>
@@ -22,6 +23,7 @@
 #include "core/manifest_descriptions.h"
 #include "core/render_entity.h"
 #include "core/scene.h"
+#include "core/service_locator.h"
 #include "events/key.h"
 #include "events/key_event.h"
 #include "graphics/colour.h"
@@ -37,6 +39,8 @@
 #include "graphics/window.h"
 #include "maths/vector3.h"
 #include "memory/metrics.h"
+#include "physics/physics_system.h"
+#include "physics/rigid_body.h"
 #include "resources/embedded_resource_loader.h"
 #include "resources/file_resource_loader.h"
 #include "resources/resource_loader.h"
@@ -166,10 +170,11 @@ auto load_all_textures(
 {
     const auto texture_manifest_str = resource_loader.load_string("configs\\texture_manifest.yaml");
     const auto texture_manifest = ufps::yaml::deserialise<ufps::TextureManifestDescription>(texture_manifest_str);
+    ensure(texture_manifest);
 
     const auto texture_blob = ufps::decompress(resource_loader.load_data_buffer("blobs\\texture_data.bin"));
 
-    for (const auto &[name, manifest] : texture_manifest.textures)
+    for (const auto &[name, manifest] : texture_manifest->textures)
     {
         const auto raw_texture_data = std::span{texture_blob.data() + manifest.offset, manifest.size};
         const auto texture_data = ufps::load_texture(raw_texture_data, manifest.is_srgb);
@@ -183,8 +188,9 @@ auto build_mesh_lookup(ufps::ResourceLoader &resource_loader) -> ufps::StringMap
 
     const auto manifest_str = resource_loader.load_string("configs\\model_manifest.yaml");
     const auto manifest = ufps::yaml::deserialise<ufps::ModelManifestDescription>(manifest_str);
+    ensure(manifest);
 
-    return manifest.models |
+    return manifest->models |
            std::views::transform(
                [](const auto &e)
                {
@@ -197,17 +203,16 @@ auto build_mesh_lookup(ufps::ResourceLoader &resource_loader) -> ufps::StringMap
            std::ranges::to<ufps::StringMap<std::vector<ufps::MeshView>>>();
 }
 
-auto build_entity_cache(
-    ufps::ResourceLoader &resource_loader,
-    ufps::TextureManager &texture_manager,
-    ufps::MeshManager &mesh_manager) -> ufps::StringMap<ufps::Entity>
+auto build_entity_cache(ufps::ResourceLoader &resource_loader) -> ufps::StringMap<ufps::Entity>
 {
+    auto &texture_manager = ufps::service<ufps::TextureManager>();
     auto entity_cache = ufps::StringMap<ufps::Entity>{};
 
     const auto model_manifest_str = resource_loader.load_string("configs\\model_manifest.yaml");
     const auto model_manifest = ufps::yaml::deserialise<ufps::ModelManifestDescription>(model_manifest_str);
+    ensure(model_manifest);
 
-    for (const auto &[name, manifests] : model_manifest.models)
+    for (const auto &[name, manifests] : model_manifest->models)
     {
         auto render_entities = std::vector<ufps::RenderEntity>{};
 
@@ -221,14 +226,7 @@ auto build_entity_cache(
             const auto emissive_index = texture_manager.bindless_handle(emissive);
 
             render_entities.push_back(
-                {mesh_view,
-                 albedo_index,
-                 normal_index,
-                 specular_index,
-                 ao_index,
-                 glossiness_index,
-                 emissive_index,
-                 mesh_manager});
+                {mesh_view, albedo_index, normal_index, specular_index, ao_index, glossiness_index, emissive_index});
         }
 
         entity_cache.insert({name, ufps::Entity{name, std::move(render_entities), {}}});
@@ -237,8 +235,9 @@ auto build_entity_cache(
     return entity_cache;
 }
 
-auto pulse_light(ufps::AwaitableManager &awaitable, ufps::PointLightHandle handle, ufps::Scene &scene) -> ufps::Task
+auto pulse_light(ufps::PointLightHandle handle, ufps::Scene &scene) -> ufps::Task
 {
+    auto &awaitable = ufps::service<ufps::AwaitableManager>();
     auto fake_time = 0.0f;
 
     for (;;)
@@ -258,8 +257,10 @@ auto pulse_light(ufps::AwaitableManager &awaitable, ufps::PointLightHandle handl
     }
 }
 
-auto flicker_light(ufps::AwaitableManager &awaitable, ufps::PointLightHandle handle, ufps::Scene &scene) -> ufps::Task
+auto flicker_light(ufps::PointLightHandle handle, ufps::Scene &scene) -> ufps::Task
 {
+    auto &awaitable = ufps::service<ufps::AwaitableManager>();
+
     for (;;)
     {
         co_await awaitable(3s);
@@ -283,6 +284,25 @@ auto flicker_light(ufps::AwaitableManager &awaitable, ufps::PointLightHandle han
         else
         {
             ufps::log::info("ending flicker_light coroutine");
+            co_return;
+        }
+    }
+}
+
+auto log_box(ufps::RigidBodyHandle handle) -> ufps::Task
+{
+    auto &awaitable = ufps::service<ufps::AwaitableManager>();
+    auto &physics = ufps::service<ufps::PhysicsSystem>();
+
+    for (;;)
+    {
+        if (const auto body = physics.rigid_body(handle); body)
+        {
+            ufps::log::debug("body pos: {}", body->position());
+            co_await awaitable(100ms);
+        }
+        else
+        {
             co_return;
         }
     }
@@ -326,20 +346,20 @@ int start()
         ufps::WrapMode::REPEAT,
         "simple_sampler"};
 
-    auto texture_manager = ufps::TextureManager{};
-    load_all_textures(*resource_loader, texture_manager, sampler);
+    auto texture_manager = std::make_unique<ufps::TextureManager>();
+    load_all_textures(*resource_loader, *texture_manager, sampler);
 
-    auto pool = ufps::ThreadPool{};
-    auto awaitable_manager = ufps::AwaitableManager{pool};
-    auto mesh_manager = ufps::MeshManager{
+    auto pool = std::make_unique<ufps::ThreadPool>();
+    auto awaitable_manager = std::make_unique<ufps::AwaitableManager>(*pool);
+    auto mesh_manager = std::make_unique<ufps::MeshManager>(
         ufps::decompress(resource_loader->load_data_buffer("blobs\\vertex_data.bin")),
         ufps::decompress(resource_loader->load_data_buffer("blobs\\index_data.bin")),
-        build_mesh_lookup(*resource_loader)};
+        build_mesh_lookup(*resource_loader));
 
-    mesh_manager.load("cube", std::vector{cube()});
+    mesh_manager->load("cube", std::vector{cube()});
 
-    auto renderer = ufps::DebugRenderer{window, *resource_loader, texture_manager, mesh_manager};
-    auto debug_mode = false;
+    auto physics = std::make_unique<ufps::PhysicsSystem>(ufps::DebugRenderMode::ON);
+    auto body = physics->create_box({{-1.0f}, {1.0f}}, {0.0f, 5.0f, -5.0f}, ufps::PhysicsLayer::DYNAMIC);
 
     auto strm = std::stringstream{};
     auto scene_description_yaml = std::ifstream{"scene.yaml"};
@@ -357,9 +377,21 @@ int start()
         }
     }
 
+    auto services = std::make_unique<ufps::Services>(
+        std::move(awaitable_manager),
+        std::move(mesh_manager),
+        std::move(physics),
+        std::move(texture_manager),
+        std::move(pool));
+    ufps::set_service(services.get());
+
+    auto renderer = ufps::DebugRenderer{window, *resource_loader};
+    auto debug_mode = false;
+
+    auto scene_description = ufps::yaml::deserialise<ufps::Scene::Description>(strm.str());
+    ufps::ensure(scene_description);
+
     auto scene = ufps::Scene{
-        mesh_manager,
-        texture_manager,
         {{},
          {0.0f, 0.0f, -1.0f},
          {0.0f, 1.0f, 0.0f},
@@ -368,19 +400,24 @@ int start()
          static_cast<float>(window.render_height()),
          0.1f,
          1000.0f},
-        ufps::yaml::deserialise<ufps::Scene::Description>(strm.str()),
-        build_entity_cache(*resource_loader, texture_manager, mesh_manager)};
+        std::move(*scene_description),
+        build_entity_cache(*resource_loader)};
 
     auto key_state = std::unordered_map<ufps::Key, bool>{
         {ufps::Key::W, false}, {ufps::Key::A, false}, {ufps::Key::S, false}, {ufps::Key::D, false}};
 
     const auto point_light_handles = scene.lights().lights.handles();
 
-    pulse_light(awaitable_manager, point_light_handles[0], scene);
-    flicker_light(awaitable_manager, point_light_handles[2], scene);
+    pulse_light(point_light_handles[0], scene);
+    flicker_light(point_light_handles[2], scene);
+    log_box(body);
 
     while (running)
     {
+        auto &awaitable = ufps::service<ufps::AwaitableManager>();
+        auto &physics = ufps::service<ufps::PhysicsSystem>();
+        auto &pool = ufps::service<ufps::ThreadPool>();
+
         const auto begin_frame_allocated_bytes = ufps::g_metrics.total_allocated_bytes.load(std::memory_order_relaxed);
 
         auto event = window.pump_event();
@@ -429,7 +466,9 @@ int start()
             event = window.pump_event();
         }
 
-        awaitable_manager.pump();
+        physics.update();
+
+        awaitable.pump();
         pool.drain();
 
         scene.camera().translate(walk_direction(key_state, scene.camera()));
@@ -443,10 +482,10 @@ int start()
             end_frame_allocated_bytes - begin_frame_allocated_bytes, std::memory_order_relaxed);
     }
 
-    awaitable_manager.pump();
-    pool.drain();
+    ufps::service<ufps::AwaitableManager>().pump();
+    ufps::service<ufps::ThreadPool>().drain();
 
-    auto profile_data = pool.profile_data();
+    auto profile_data = ufps::service<ufps::ThreadPool>().profile_data();
     for (const auto &[index, thread_data] : std::views::enumerate(profile_data))
     {
         ufps::log::info("thread id: {}", index);
