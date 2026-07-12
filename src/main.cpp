@@ -439,6 +439,7 @@ int start()
                         {
                             debug_mode = !debug_mode;
                             renderer.set_enabled(debug_mode);
+                            scene.next_camera();
                         }
                         else
                         {
