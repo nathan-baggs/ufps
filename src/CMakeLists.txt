@@ -61,6 +61,5 @@ target_include_directories(ufpslib PUBLIC ${PROJECT_SOURCE_DIR}/ ${PROJECT_SOURC
 target_compile_features(ufpslib PUBLIC cxx_std_26)
 target_compile_definitions(ufpslib PUBLIC -DNOMINMAX -DWIN32_LEAN_AND_MEAN)
 target_link_libraries(ufpslib PUBLIC stdc++exp wbemuuid opengl32 imguilib stblib dwmapi assimp yaml-cpp libzstd_static dbghelp libbacktrace Jolt)
-target_link_options(ufps PUBLIC "LINKER:--threads=8,--icf=safe")
 target_link_libraries(ufps PUBLIC ufpslib)
 
