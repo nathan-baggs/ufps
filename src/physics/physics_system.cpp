@@ -181,4 +181,9 @@ auto PhysicsSystem::debug_renderer() -> std::optional<PhysicsDebugRenderer &>
     return debug_renderer_.transform([](auto &e) -> decltype(auto) { return e; });
 }
 
+auto PhysicsSystem::player_controller() -> VirtualCharacterController &
+{
+    return *player_controller_;
+}
+
 }

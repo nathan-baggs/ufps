@@ -45,6 +45,8 @@ class PhysicsSystem : public ::JPH::ContactListener
 
     auto debug_renderer() -> std::optional<PhysicsDebugRenderer &>;
 
+    auto player_controller() -> VirtualCharacterController &;
+
   private:
     SimpleBroadPhaseLayer broad_phase_layer_;
     SimpleObjectVsBroadPhaseLayerFilter object_vs_broad_phase_layer_filter_;
