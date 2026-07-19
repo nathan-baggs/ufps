@@ -6,8 +6,6 @@
 #include <optional>
 #include <string_view>
 
-#include "Jolt/Math/Vec3.h"
-#include "Jolt/Physics/Collision/Shape/BoxShape.h"
 #include "maths/transform.h"
 #include "maths/vector3.h"
 #include "physics/jolt.h"
@@ -108,6 +106,7 @@ PhysicsSystem::PhysicsSystem(DebugRenderMode debug_render_mode)
         object_layer_pair_filter_);
 
     physics_system_.SetGravity({0.0f, -9.8f, 0.0f});
+    physics_system_.SetContactListener(this);
 
     player_controller_ = std::make_unique<VirtualCharacterController>(physics_system_);
 }
@@ -166,7 +165,7 @@ auto PhysicsSystem::duplicate_rigid_body(RigidBodyHandle handle) -> RigidBodyHan
 
 auto PhysicsSystem::update() -> void
 {
-    player_controller_->update(16ms);
+    player_controller_->update(16ms, to_native(physics_system_.GetGravity()));
     physics_system_.Update(1.0f / 60.f, 1, &temp_allocator_, &job_system_);
 
     if (debug_renderer_)

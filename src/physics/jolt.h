@@ -1,6 +1,5 @@
 #pragma once
 
-#include "maths/matrix4.h"
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 
@@ -24,6 +23,7 @@
 #include <Jolt/Physics/Body/BodyID.h>
 #include <Jolt/Physics/Body/BodyInterface.h>
 #include <Jolt/Physics/Body/MotionType.h>
+#include <Jolt/Physics/Character/Character.h>
 #include <Jolt/Physics/Character/CharacterVirtual.h>
 #include <Jolt/Physics/Collision/BroadPhase/BroadPhaseLayer.h>
 #include <Jolt/Physics/Collision/BroadPhase/ObjectVsBroadPhaseLayerFilterMask.h>
@@ -44,6 +44,7 @@
 #pragma GCC diagnostic pop
 
 #include "graphics/colour.h"
+#include "maths/matrix4.h"
 #include "maths/quaternion.h"
 #include "maths/vector3.h"
 
