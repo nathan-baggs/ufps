@@ -26,6 +26,7 @@
 #include "core/service_locator.h"
 #include "events/key.h"
 #include "events/key_event.h"
+#include "events/key_map.h"
 #include "graphics/colour.h"
 #include "graphics/debug_renderer.h"
 #include "graphics/mesh_data.h"
@@ -288,25 +289,6 @@ auto flicker_light(ufps::PointLightHandle handle, ufps::Scene &scene) -> ufps::T
         }
     }
 }
-
-auto log_box(ufps::RigidBodyHandle handle) -> ufps::Task
-{
-    auto &awaitable = ufps::service<ufps::AwaitableManager>();
-    auto &physics = ufps::service<ufps::PhysicsSystem>();
-
-    for (;;)
-    {
-        if (const auto body = physics.rigid_body(handle); body)
-        {
-            ufps::log::debug("body pos: {}", body->position());
-            co_await awaitable(100ms);
-        }
-        else
-        {
-            co_return;
-        }
-    }
-}
 }
 
 int start()
@@ -323,7 +305,7 @@ int start()
         ufps::version::tweak);
     ufps::log::info("{}", ufps::system_info());
 
-    auto window = ufps::Window{ufps::WindowMode::WINDOWED, 1920u, 1080u, 1920u, 0u};
+    auto window = ufps::Window{ufps::WindowMode::WINDOWED, 3840, 2160, 0u, 0u};
     auto running = true;
 
     auto resource_loader = std::unique_ptr<ufps::ResourceLoader>();
@@ -359,7 +341,7 @@ int start()
     mesh_manager->load("cube", std::vector{cube()});
 
     auto physics = std::make_unique<ufps::PhysicsSystem>(ufps::DebugRenderMode::ON);
-    auto body = physics->create_box({{-1.0f}, {1.0f}}, {0.0f, 5.0f, -5.0f}, ufps::PhysicsLayer::DYNAMIC);
+    [[maybe_unused]] auto &player_controller = physics->player_controller();
 
     auto strm = std::stringstream{};
     auto scene_description_yaml = std::ifstream{"scene.yaml"};
@@ -406,11 +388,12 @@ int start()
     auto key_state = std::unordered_map<ufps::Key, bool>{
         {ufps::Key::W, false}, {ufps::Key::A, false}, {ufps::Key::S, false}, {ufps::Key::D, false}};
 
+    auto key_map = ufps::KeyMap{};
+
     const auto point_light_handles = scene.lights().lights.handles();
 
     pulse_light(point_light_handles[0], scene);
     flicker_light(point_light_handles[2], scene);
-    log_box(body);
 
     while (running)
     {
@@ -445,6 +428,8 @@ int start()
                         {
                             key_state[arg.key()] = arg.state() == ufps::KeyState::DOWN;
                         }
+
+                        key_map.set(arg);
                     }
                     else if constexpr (std::same_as<T, ufps::MouseEvent>)
                     {
