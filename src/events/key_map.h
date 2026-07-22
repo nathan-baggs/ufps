@@ -65,6 +65,11 @@ class KeyMap
         return map_[index];
     }
 
+    constexpr auto operator[](ufps::Key key) const -> bool
+    {
+        return is_set(key);
+    }
+
   private:
     std::bitset<impl::size()> map_;
 };
