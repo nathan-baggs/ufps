@@ -307,7 +307,7 @@ int start()
     mesh_manager->load("cube", std::vector{cube()});
 
     auto physics = std::make_unique<ufps::PhysicsSystem>(ufps::DebugRenderMode::ON);
-    [[maybe_unused]] auto &player_controller = physics->player_controller();
+    auto &player_controller = physics->player_controller();
 
     auto player_actor = ufps::PlayerActor{
         {{0.0f, 2.0f, 0.0f},
@@ -318,7 +318,8 @@ int start()
          static_cast<float>(window.render_height()),
          0.1f,
          1000.0f},
-        key_map};
+        key_map,
+        player_controller};
 
     ufps::Actor *current_actor = std::addressof(player_actor);
 
