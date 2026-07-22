@@ -353,17 +353,7 @@ int start()
     auto scene_description = ufps::yaml::deserialise<ufps::Scene::Description>(strm.str());
     ufps::ensure(scene_description);
 
-    auto scene = ufps::Scene{
-        {{},
-         {0.0f, 0.0f, -1.0f},
-         {0.0f, 1.0f, 0.0f},
-         std::numbers::pi_v<float> / 4.0f,
-         static_cast<float>(window.render_width()),
-         static_cast<float>(window.render_height()),
-         0.1f,
-         1000.0f},
-        std::move(*scene_description),
-        build_entity_cache(*resource_loader)};
+    auto scene = ufps::Scene{std::move(*scene_description), build_entity_cache(*resource_loader)};
 
     const auto point_light_handles = scene.lights().lights.handles();
 

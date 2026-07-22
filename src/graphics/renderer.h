@@ -2,6 +2,7 @@
 
 #include <cstdint>
 
+#include "core/camera.h"
 #include "core/scene.h"
 #include "graphics/command_buffer.h"
 #include "graphics/frame_buffer.h"
