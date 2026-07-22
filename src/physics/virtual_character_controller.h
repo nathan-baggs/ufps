@@ -21,6 +21,8 @@ class VirtualCharacterController : public ::JPH::CharacterContactListener
 
     auto update(std::chrono::milliseconds delta, const Vector3 &gravity) -> void;
 
+    auto set_walk_direction(const Vector3 &walk_direction) -> void;
+
     auto debug_draw(PhysicsDebugRenderer &renderer) -> void;
 
     auto position() const -> Vector3;
@@ -41,6 +43,7 @@ class VirtualCharacterController : public ::JPH::CharacterContactListener
     ::JPH::RefConst<::JPH::Shape> shape_;
     ::JPH::RefConst<::JPH::Shape> inner_shape_;
     ::JPH::Ref<::JPH::CharacterVirtual> character_;
+    Vector3 walk_direction_;
 };
 
 }

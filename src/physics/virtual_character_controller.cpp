@@ -11,6 +11,7 @@ VirtualCharacterController::VirtualCharacterController(::JPH::PhysicsSystem &ps)
     : ps_{ps}
     , shape_{}
     , character_{}
+    , walk_direction_{}
 {
     shape_ = ::JPH::RotatedTranslatedShapeSettings(
                  ::JPH::Vec3(0, 0.5f * 1.35f + 0.3f, 0),
@@ -42,7 +43,8 @@ auto VirtualCharacterController::update(std::chrono::milliseconds delta, const V
 
     const auto jolt_delta = 1.0f / delta.count();
 
-    auto new_velocity = Vector3{0.0f, 0.0f, -0.5f};
+    constexpr auto speed = 1.2f;
+    auto new_velocity = walk_direction_ * speed;
     new_velocity += gravity * jolt_delta;
 
     character_->SetLinearVelocity(to_jolt(new_velocity));
@@ -55,6 +57,11 @@ auto VirtualCharacterController::update(std::chrono::milliseconds delta, const V
         {},
         {},
         temp_allocator);
+}
+
+auto VirtualCharacterController::set_walk_direction(const Vector3 &walk_direction) -> void
+{
+    walk_direction_ = walk_direction;
 }
 
 auto VirtualCharacterController::debug_draw(PhysicsDebugRenderer &renderer) -> void
