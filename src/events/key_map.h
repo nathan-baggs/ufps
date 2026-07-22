@@ -53,6 +53,13 @@ constexpr auto to_index(ufps::Key k) -> std::size_t
 class KeyMap
 {
   public:
+    constexpr KeyMap()
+        : delta_x{}
+        , delta_y{}
+        , map_{}
+    {
+    }
+
     constexpr auto set(ufps::KeyEvent event) -> void
     {
         const auto index = impl::to_index(event.key());
@@ -69,6 +76,10 @@ class KeyMap
     {
         return is_set(key);
     }
+
+    float delta_x;
+
+    float delta_y;
 
   private:
     std::bitset<impl::size()> map_;
