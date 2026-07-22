@@ -50,10 +50,10 @@ constexpr auto to_index(ufps::Key k) -> std::size_t
 
 }
 
-class KeyMap
+class InputMap
 {
   public:
-    constexpr KeyMap()
+    constexpr InputMap()
         : delta_x{}
         , delta_y{}
         , map_{}

@@ -27,9 +27,9 @@
 #include "core/render_entity.h"
 #include "core/scene.h"
 #include "core/service_locator.h"
+#include "events/input_map.h"
 #include "events/key.h"
 #include "events/key_event.h"
-#include "events/key_map.h"
 #include "graphics/colour.h"
 #include "graphics/debug_renderer.h"
 #include "graphics/mesh_data.h"
@@ -273,7 +273,7 @@ int start()
     auto window = ufps::Window{ufps::WindowMode::WINDOWED, 3840, 2160, 0u, 0u};
     auto running = true;
 
-    auto key_map = ufps::KeyMap{};
+    auto input_map = ufps::InputMap{};
 
     auto resource_loader = std::unique_ptr<ufps::ResourceLoader>();
     if constexpr (ufps::config::use_embedded_resouce_loader)
@@ -319,7 +319,7 @@ int start()
          static_cast<float>(window.render_height()),
          0.1f,
          1000.0f},
-        key_map,
+        input_map,
         player_controller};
 
     auto flycam_actor = ufps::FlyCamActor{
@@ -331,7 +331,7 @@ int start()
          static_cast<float>(window.render_height()),
          0.1f,
          1000.0f},
-        key_map};
+        input_map};
 
     ufps::Actor *current_actor = std::addressof(player_actor);
 
@@ -380,8 +380,8 @@ int start()
 
         const auto begin_frame_allocated_bytes = ufps::g_metrics.total_allocated_bytes.load(std::memory_order_relaxed);
 
-        key_map.delta_x = 0.0f;
-        key_map.delta_y = 0.0f;
+        input_map.delta_x = 0.0f;
+        input_map.delta_y = 0.0f;
 
         auto event = window.pump_event();
         while (event && running)
@@ -406,15 +406,15 @@ int start()
                                                        : static_cast<ufps::Actor *>(&player_actor);
                         }
 
-                        key_map.set(arg);
+                        input_map.set(arg);
                     }
                     else if constexpr (std::same_as<T, ufps::MouseEvent>)
                     {
-                        if (!debug_mode || key_map[ufps::Key::SHIFT])
+                        if (!debug_mode || input_map[ufps::Key::SHIFT])
                         {
                             static constexpr auto sensitivity = float{0.002f};
-                            key_map.delta_x += arg.delta_x() * sensitivity;
-                            key_map.delta_y += arg.delta_y() * sensitivity;
+                            input_map.delta_x += arg.delta_x() * sensitivity;
+                            input_map.delta_y += arg.delta_y() * sensitivity;
                         }
                     }
                     else if constexpr (std::same_as<T, ufps::MouseButtonEvent>)
