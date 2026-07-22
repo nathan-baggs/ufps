@@ -20,7 +20,9 @@
 #include "concurrency/awaitable_manager.h"
 #include "concurrency/task.h"
 #include "concurrency/thread_pool.h"
+#include "core/actor.h"
 #include "core/manifest_descriptions.h"
+#include "core/player_actor.h"
 #include "core/render_entity.h"
 #include "core/scene.h"
 #include "core/service_locator.h"
@@ -124,44 +126,6 @@ auto cube() -> ufps::MeshData
     }
 
     return vs;
-}
-
-auto walk_direction(const ufps::KeyMap &key_map, const ufps::Camera &camera) -> ufps::Vector3
-{
-    auto direction = ufps::Vector3{};
-
-    if (key_map[ufps::Key::W])
-    {
-        direction += camera.direction();
-    }
-
-    if (key_map[ufps::Key::S])
-    {
-        direction -= camera.direction();
-    }
-
-    if (key_map[ufps::Key::D])
-    {
-        direction += camera.right();
-    }
-
-    if (key_map[ufps::Key::A])
-    {
-        direction -= camera.right();
-    }
-
-    if (key_map[ufps::Key::Q])
-    {
-        direction += camera.up();
-    }
-
-    if (key_map[ufps::Key::E])
-    {
-        direction -= camera.up();
-    }
-
-    constexpr auto speed = 0.1f;
-    return ufps::Vector3::normalise(direction) * speed;
 }
 
 auto load_all_textures(
@@ -308,6 +272,8 @@ int start()
     auto window = ufps::Window{ufps::WindowMode::WINDOWED, 3840, 2160, 0u, 0u};
     auto running = true;
 
+    auto key_map = ufps::KeyMap{};
+
     auto resource_loader = std::unique_ptr<ufps::ResourceLoader>();
     if constexpr (ufps::config::use_embedded_resouce_loader)
     {
@@ -342,6 +308,19 @@ int start()
 
     auto physics = std::make_unique<ufps::PhysicsSystem>(ufps::DebugRenderMode::ON);
     [[maybe_unused]] auto &player_controller = physics->player_controller();
+
+    auto player_actor = ufps::PlayerActor{
+        {{0.0f, 2.0f, 0.0f},
+         {0.0f, 0.0f, -1.0f},
+         {0.0f, 1.0f, 0.0f},
+         std::numbers::pi_v<float> / 4.0f,
+         static_cast<float>(window.render_width()),
+         static_cast<float>(window.render_height()),
+         0.1f,
+         1000.0f},
+        key_map};
+
+    ufps::Actor *current_actor = std::addressof(player_actor);
 
     auto strm = std::stringstream{};
     auto scene_description_yaml = std::ifstream{"scene.yaml"};
@@ -385,8 +364,6 @@ int start()
         std::move(*scene_description),
         build_entity_cache(*resource_loader)};
 
-    auto key_map = ufps::KeyMap{};
-
     const auto point_light_handles = scene.lights().lights.handles();
 
     pulse_light(point_light_handles[0], scene);
@@ -400,6 +377,9 @@ int start()
 
         const auto begin_frame_allocated_bytes = ufps::g_metrics.total_allocated_bytes.load(std::memory_order_relaxed);
 
+        key_map.delta_x = 0.0f;
+        key_map.delta_y = 0.0f;
+
         auto event = window.pump_event();
         while (event && running)
         {
@@ -410,7 +390,6 @@ int start()
 
                     if constexpr (std::same_as<T, ufps::KeyEvent>)
                     {
-
                         if (arg.key() == ufps::Key::ESC)
                         {
                             ufps::log::info("stopping");
@@ -418,9 +397,9 @@ int start()
                         }
                         if (arg == ufps::KeyEvent{ufps::Key::F1, ufps::KeyState::DOWN})
                         {
-                            debug_mode = !debug_mode;
-                            renderer.set_enabled(debug_mode);
-                            scene.next_camera();
+                            //     debug_mode = !debug_mode;
+                            //     renderer.set_enabled(debug_mode);
+                            //     scene.next_camera();
                         }
 
                         key_map.set(arg);
@@ -430,10 +409,8 @@ int start()
                         if (!debug_mode || key_map[ufps::Key::SHIFT])
                         {
                             static constexpr auto sensitivity = float{0.002f};
-                            const auto delta_x = arg.delta_x() * sensitivity;
-                            const auto delta_y = arg.delta_y() * sensitivity;
-                            scene.camera().adjust_yaw(delta_x);
-                            scene.camera().adjust_pitch(-delta_y);
+                            key_map.delta_x += arg.delta_x() * sensitivity;
+                            key_map.delta_y += arg.delta_y() * sensitivity;
                         }
                     }
                     else if constexpr (std::same_as<T, ufps::MouseButtonEvent>)
@@ -446,14 +423,14 @@ int start()
             event = window.pump_event();
         }
 
+        current_actor->update();
+
         physics.update();
 
         awaitable.pump();
         pool.drain();
 
-        scene.camera().translate(walk_direction(key_map, scene.camera()));
-
-        renderer.render(scene);
+        renderer.render(scene, current_actor->camera());
 
         window.swap();
 
