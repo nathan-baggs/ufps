@@ -126,36 +126,36 @@ auto cube() -> ufps::MeshData
     return vs;
 }
 
-auto walk_direction(std::unordered_map<ufps::Key, bool> &key_state, const ufps::Camera &camera) -> ufps::Vector3
+auto walk_direction(const ufps::KeyMap &key_map, const ufps::Camera &camera) -> ufps::Vector3
 {
     auto direction = ufps::Vector3{};
 
-    if (key_state[ufps::Key::W])
+    if (key_map[ufps::Key::W])
     {
         direction += camera.direction();
     }
 
-    if (key_state[ufps::Key::S])
+    if (key_map[ufps::Key::S])
     {
         direction -= camera.direction();
     }
 
-    if (key_state[ufps::Key::D])
+    if (key_map[ufps::Key::D])
     {
         direction += camera.right();
     }
 
-    if (key_state[ufps::Key::A])
+    if (key_map[ufps::Key::A])
     {
         direction -= camera.right();
     }
 
-    if (key_state[ufps::Key::Q])
+    if (key_map[ufps::Key::Q])
     {
         direction += camera.up();
     }
 
-    if (key_state[ufps::Key::E])
+    if (key_map[ufps::Key::E])
     {
         direction -= camera.up();
     }
@@ -385,9 +385,6 @@ int start()
         std::move(*scene_description),
         build_entity_cache(*resource_loader)};
 
-    auto key_state = std::unordered_map<ufps::Key, bool>{
-        {ufps::Key::W, false}, {ufps::Key::A, false}, {ufps::Key::S, false}, {ufps::Key::D, false}};
-
     auto key_map = ufps::KeyMap{};
 
     const auto point_light_handles = scene.lights().lights.handles();
@@ -413,6 +410,7 @@ int start()
 
                     if constexpr (std::same_as<T, ufps::KeyEvent>)
                     {
+
                         if (arg.key() == ufps::Key::ESC)
                         {
                             ufps::log::info("stopping");
@@ -424,16 +422,12 @@ int start()
                             renderer.set_enabled(debug_mode);
                             scene.next_camera();
                         }
-                        else
-                        {
-                            key_state[arg.key()] = arg.state() == ufps::KeyState::DOWN;
-                        }
 
                         key_map.set(arg);
                     }
                     else if constexpr (std::same_as<T, ufps::MouseEvent>)
                     {
-                        if (!debug_mode || key_state[ufps::Key::SHIFT])
+                        if (!debug_mode || key_map[ufps::Key::SHIFT])
                         {
                             static constexpr auto sensitivity = float{0.002f};
                             const auto delta_x = arg.delta_x() * sensitivity;
@@ -457,7 +451,7 @@ int start()
         awaitable.pump();
         pool.drain();
 
-        scene.camera().translate(walk_direction(key_state, scene.camera()));
+        scene.camera().translate(walk_direction(key_map, scene.camera()));
 
         renderer.render(scene);
 
