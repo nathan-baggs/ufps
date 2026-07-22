@@ -34,17 +34,17 @@ auto walk_direction(const ufps::KeyMap &key_map, const ufps::Camera &camera) -> 
         direction -= camera.right();
     }
 
-    constexpr auto speed = 0.1f;
-    return ufps::Vector3::normalise(direction) * speed;
+    return ufps::Vector3::normalise(direction);
 }
 }
 
 namespace ufps
 {
 
-PlayerActor::PlayerActor(Camera camera, const KeyMap &key_map)
+PlayerActor::PlayerActor(Camera camera, const KeyMap &key_map, VirtualCharacterController &character_controller)
     : Actor{std::move(camera)}
     , key_map_{key_map}
+    , character_controller_{character_controller}
 {
 }
 
@@ -60,6 +60,8 @@ auto PlayerActor::update() -> void
         camera_.adjust_pitch(-key_map_.delta_y);
     }
 
-    camera_.translate(walk_direction(key_map_, camera_));
+    character_controller_.set_walk_direction(walk_direction(key_map_, camera_));
+
+    camera_.set_position(character_controller_.position() + Vector3{0.0f, 2.0f, 0.0f});
 }
 }
