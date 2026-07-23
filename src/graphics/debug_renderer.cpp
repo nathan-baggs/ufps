@@ -535,7 +535,7 @@ DebugRenderer::~DebugRenderer()
     ::ImGui::DestroyContext();
 }
 
-auto DebugRenderer::post_render(Scene &scene) -> void
+auto DebugRenderer::post_render(Scene &scene, const Camera &camera) -> void
 {
     if (std::holds_alternative<Entity *>(selected_))
     {
@@ -552,7 +552,7 @@ auto DebugRenderer::post_render(Scene &scene) -> void
             create_aabb_lines(selected_entity->aabb(), selected_entity->transform(), {0.0f, 1.0f, 0.0f}));
     }
 
-    Renderer::post_render(scene);
+    Renderer::post_render(scene, camera);
 
     if (!enabled_)
     {
@@ -722,7 +722,7 @@ auto DebugRenderer::post_render(Scene &scene) -> void
             .delete_entity = {.scene = scene, .selected = &selected_},
             .same_line = {},
             .duplicate_entity = {.scene = scene, .selected = &selected_}},
-        RemainingSceneInfo{.ambient = scene.lights().ambient, .camera_view = scene.camera().data().view});
+        RemainingSceneInfo{.ambient = scene.lights().ambient, .camera_view = camera.data().view});
 
     struct LogWindow
     {
@@ -933,7 +933,7 @@ auto DebugRenderer::post_render(Scene &scene) -> void
                     ::ImVec2(1.0f, 0.0f));
             }
 
-            const auto &camera_data = scene.camera().data();
+            const auto &camera_data = camera.data();
 
             static float snap_translation[3] = {1.0f, 1.0f, 1.0f};
 
@@ -986,7 +986,7 @@ auto DebugRenderer::post_render(Scene &scene) -> void
             }
 
             auto transform = Matrix4{light->position};
-            const auto &camera_data = scene.camera().data();
+            const auto &camera_data = camera.data();
 
             ::ImGuizmo::Manipulate(
                 camera_data.view.data().data(),
@@ -1009,7 +1009,7 @@ auto DebugRenderer::post_render(Scene &scene) -> void
                 auto &rb = *rigid_body;
 
                 auto world_matrix = Matrix4{rb.transform()};
-                const auto &camera_data = scene.camera().data();
+                const auto &camera_data = camera.data();
 
                 ::ImGuizmo::Manipulate(
                     camera_data.view.data().data(),
@@ -1041,7 +1041,7 @@ auto DebugRenderer::post_render(Scene &scene) -> void
 
     if (click_)
     {
-        const auto pick_ray = screen_ray(*click_, window_, scene.camera());
+        const auto pick_ray = screen_ray(*click_, window_, camera);
         auto intersection = scene.intersect_ray(pick_ray);
         if (intersection)
         {

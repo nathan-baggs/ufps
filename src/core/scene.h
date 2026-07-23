@@ -5,7 +5,6 @@
 #include <type_traits>
 #include <vector>
 
-#include "core/camera.h"
 #include "core/entity.h"
 #include "core/service_locator.h"
 #include "core/sparse_set.h"
@@ -113,7 +112,6 @@ class Scene
     };
 
     constexpr Scene(
-        Camera camera,
         LightData lights,
         ToneMapOptions tone_map_options,
         SSAOOptions ssao_options,
@@ -125,7 +123,7 @@ class Scene
         BloomOptions bloom_options,
         const StringMap<Entity> &entity_cache);
 
-    constexpr Scene(Camera camera, const Description &description, const StringMap<Entity> &entity_cache);
+    constexpr Scene(const Description &description, const StringMap<Entity> &entity_cache);
 
     constexpr auto intersect_ray(const Ray &ray) -> std::optional<IntersectionResult>;
 
@@ -135,8 +133,6 @@ class Scene
     auto entities(this Self &&self);
 
     constexpr auto cache_entity(std::string_view name, Entity entity) -> void;
-
-    constexpr auto &camera(this auto &&self);
 
     constexpr auto &lights(this auto &&self);
 
@@ -165,7 +161,6 @@ class Scene
   private:
     std::vector<Entity> entities_;
     std::vector<Entity> entity_cache_;
-    Camera camera_;
     LightData lights_;
     ToneMapOptions tone_map_options_;
     SSAOOptions ssao_options_;
@@ -178,7 +173,6 @@ class Scene
 };
 
 constexpr Scene::Scene(
-    Camera camera,
     LightData lights,
     ToneMapOptions tone_map_options,
     SSAOOptions ssao_options,
@@ -191,7 +185,6 @@ constexpr Scene::Scene(
     const StringMap<Entity> &entity_cache)
     : entities_{}
     , entity_cache_{}
-    , camera_{std::move(camera)}
     , lights_{std::move(lights)}
     , tone_map_options_{std::move(tone_map_options)}
     , ssao_options_{std::move(ssao_options)}
@@ -209,10 +202,9 @@ constexpr Scene::Scene(
     }
 }
 
-constexpr Scene::Scene(Camera camera, const Description &description, const StringMap<Entity> &entity_cache)
+constexpr Scene::Scene(const Description &description, const StringMap<Entity> &entity_cache)
     : entities_{}
     , entity_cache_{}
-    , camera_{std::move(camera)}
     , lights_{description.lights}
     , tone_map_options_{description.tone_map_options}
     , ssao_options_{description.ssao_options}
@@ -322,11 +314,6 @@ constexpr auto Scene::cache_entity(std::string_view name, Entity entity) -> void
     expect(cached == std::ranges::cend(entity_cache_), "{} already exists", name);
 
     entity_cache_.push_back(std::move(entity));
-}
-
-constexpr auto &Scene::camera(this auto &&self)
-{
-    return self.camera_;
 }
 
 constexpr auto &Scene::lights(this auto &&self)

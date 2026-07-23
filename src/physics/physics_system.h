@@ -10,6 +10,7 @@
 #include "physics/physics_layers.h"
 #include "physics/rigid_body.h"
 #include "physics/utils.h"
+#include "physics/virtual_character_controller.h"
 
 namespace ufps
 {
@@ -22,7 +23,7 @@ enum class DebugRenderMode
     OFF
 };
 
-class PhysicsSystem
+class PhysicsSystem : public ::JPH::ContactListener
 {
   public:
     PhysicsSystem(DebugRenderMode debug_render_mode = DebugRenderMode::OFF);
@@ -44,6 +45,8 @@ class PhysicsSystem
 
     auto debug_renderer() -> std::optional<PhysicsDebugRenderer &>;
 
+    auto player_controller() -> VirtualCharacterController &;
+
   private:
     SimpleBroadPhaseLayer broad_phase_layer_;
     SimpleObjectVsBroadPhaseLayerFilter object_vs_broad_phase_layer_filter_;
@@ -53,6 +56,7 @@ class PhysicsSystem
     ::JPH::PhysicsSystem physics_system_;
     SparseSet<RigidBody> rigid_bodies_;
     std::optional<PhysicsDebugRenderer> debug_renderer_;
+    std::unique_ptr<VirtualCharacterController> player_controller_;
 };
 
 constexpr auto PhysicsSystem::rigid_body(this auto &&self, RigidBodyHandle handle)

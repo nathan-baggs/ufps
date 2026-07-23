@@ -1,6 +1,5 @@
 #pragma once
 
-#include "maths/matrix4.h"
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 
@@ -24,11 +23,15 @@
 #include <Jolt/Physics/Body/BodyID.h>
 #include <Jolt/Physics/Body/BodyInterface.h>
 #include <Jolt/Physics/Body/MotionType.h>
+#include <Jolt/Physics/Character/Character.h>
+#include <Jolt/Physics/Character/CharacterVirtual.h>
 #include <Jolt/Physics/Collision/BroadPhase/BroadPhaseLayer.h>
 #include <Jolt/Physics/Collision/BroadPhase/ObjectVsBroadPhaseLayerFilterMask.h>
 #include <Jolt/Physics/Collision/ObjectLayer.h>
 #include <Jolt/Physics/Collision/ObjectLayerPairFilterMask.h>
 #include <Jolt/Physics/Collision/Shape/BoxShape.h>
+#include <Jolt/Physics/Collision/Shape/CapsuleShape.h>
+#include <Jolt/Physics/Collision/Shape/RotatedTranslatedShape.h>
 #include <Jolt/Physics/Collision/Shape/ScaledShape.h>
 #include <Jolt/Physics/Collision/Shape/SphereShape.h>
 #include <Jolt/Physics/EActivation.h>
@@ -41,6 +44,7 @@
 #pragma GCC diagnostic pop
 
 #include "graphics/colour.h"
+#include "maths/matrix4.h"
 #include "maths/quaternion.h"
 #include "maths/vector3.h"
 
@@ -60,6 +64,11 @@ constexpr auto to_native(const ::JPH::Color &c) -> Colour
 constexpr auto to_native(const ::JPH::Mat44 &m) -> Matrix4
 {
     return std::bit_cast<Matrix4>(m);
+}
+
+constexpr auto to_native(const ::JPH::Quat &q) -> Quaternion
+{
+    return std::bit_cast<Quaternion>(q);
 }
 
 constexpr auto to_jolt(ufps::Vector3 vec) -> ::JPH::Vec3

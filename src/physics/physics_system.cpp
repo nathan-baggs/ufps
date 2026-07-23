@@ -6,17 +6,18 @@
 #include <optional>
 #include <string_view>
 
-#include "Jolt/Math/Vec3.h"
-#include "Jolt/Physics/Collision/Shape/BoxShape.h"
 #include "maths/transform.h"
 #include "maths/vector3.h"
 #include "physics/jolt.h"
 #include "physics/physics_layers.h"
 #include "physics/utils.h"
+#include "physics/virtual_character_controller.h"
 #include "utils/error.h"
 #include "utils/exception.h"
 #include "utils/formatter.h"
 #include "utils/log.h"
+
+using namespace std::literals;
 
 namespace
 {
@@ -86,8 +87,8 @@ PhysicsSystem::PhysicsSystem(DebugRenderMode debug_render_mode)
     , temp_allocator_{10u * 1024u * 1024u}
     , job_system_{::JPH::cMaxPhysicsJobs, ::JPH::cMaxPhysicsBarriers, static_cast<int>(std::thread::hardware_concurrency() - 1zu)}
     , physics_system_{}
-    , debug_renderer_{
-          debug_render_mode == DebugRenderMode::ON ? std::make_optional<PhysicsDebugRenderer>() : std::nullopt}
+    , debug_renderer_{debug_render_mode == DebugRenderMode::ON ? std::make_optional<PhysicsDebugRenderer>() : std::nullopt}
+    , player_controller_{}
 {
 
     constexpr auto max_bodies = 1024u;
@@ -105,6 +106,9 @@ PhysicsSystem::PhysicsSystem(DebugRenderMode debug_render_mode)
         object_layer_pair_filter_);
 
     physics_system_.SetGravity({0.0f, -9.8f, 0.0f});
+    physics_system_.SetContactListener(this);
+
+    player_controller_ = std::make_unique<VirtualCharacterController>(physics_system_);
 }
 
 auto PhysicsSystem::create_box(const AABB &aabb, const Vector3 &position, PhysicsLayer layer) -> RigidBodyHandle
@@ -161,18 +165,25 @@ auto PhysicsSystem::duplicate_rigid_body(RigidBodyHandle handle) -> RigidBodyHan
 
 auto PhysicsSystem::update() -> void
 {
+    player_controller_->update(16ms, to_native(physics_system_.GetGravity()));
     physics_system_.Update(1.0f / 60.f, 1, &temp_allocator_, &job_system_);
 
     if (debug_renderer_)
     {
         static const auto settings = ::JPH::BodyManager::DrawSettings{};
-        physics_system_.DrawBodies(settings, &*debug_renderer_);
+        physics_system_.DrawBodies(settings, std::addressof(*debug_renderer_));
+        player_controller_->debug_draw(*debug_renderer_);
     }
 }
 
 auto PhysicsSystem::debug_renderer() -> std::optional<PhysicsDebugRenderer &>
 {
     return debug_renderer_.transform([](auto &e) -> decltype(auto) { return e; });
+}
+
+auto PhysicsSystem::player_controller() -> VirtualCharacterController &
+{
+    return *player_controller_;
 }
 
 }

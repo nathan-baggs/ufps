@@ -20,10 +20,14 @@
 #include "concurrency/awaitable_manager.h"
 #include "concurrency/task.h"
 #include "concurrency/thread_pool.h"
+#include "core/actor.h"
+#include "core/flycam_actor.h"
 #include "core/manifest_descriptions.h"
+#include "core/player_actor.h"
 #include "core/render_entity.h"
 #include "core/scene.h"
 #include "core/service_locator.h"
+#include "events/input_map.h"
 #include "events/key.h"
 #include "events/key_event.h"
 #include "graphics/colour.h"
@@ -123,44 +127,6 @@ auto cube() -> ufps::MeshData
     }
 
     return vs;
-}
-
-auto walk_direction(std::unordered_map<ufps::Key, bool> &key_state, const ufps::Camera &camera) -> ufps::Vector3
-{
-    auto direction = ufps::Vector3{};
-
-    if (key_state[ufps::Key::W])
-    {
-        direction += camera.direction();
-    }
-
-    if (key_state[ufps::Key::S])
-    {
-        direction -= camera.direction();
-    }
-
-    if (key_state[ufps::Key::D])
-    {
-        direction += camera.right();
-    }
-
-    if (key_state[ufps::Key::A])
-    {
-        direction -= camera.right();
-    }
-
-    if (key_state[ufps::Key::Q])
-    {
-        direction += camera.up();
-    }
-
-    if (key_state[ufps::Key::E])
-    {
-        direction -= camera.up();
-    }
-
-    constexpr auto speed = 0.1f;
-    return ufps::Vector3::normalise(direction) * speed;
 }
 
 auto load_all_textures(
@@ -288,25 +254,6 @@ auto flicker_light(ufps::PointLightHandle handle, ufps::Scene &scene) -> ufps::T
         }
     }
 }
-
-auto log_box(ufps::RigidBodyHandle handle) -> ufps::Task
-{
-    auto &awaitable = ufps::service<ufps::AwaitableManager>();
-    auto &physics = ufps::service<ufps::PhysicsSystem>();
-
-    for (;;)
-    {
-        if (const auto body = physics.rigid_body(handle); body)
-        {
-            ufps::log::debug("body pos: {}", body->position());
-            co_await awaitable(100ms);
-        }
-        else
-        {
-            co_return;
-        }
-    }
-}
 }
 
 int start()
@@ -323,8 +270,10 @@ int start()
         ufps::version::tweak);
     ufps::log::info("{}", ufps::system_info());
 
-    auto window = ufps::Window{ufps::WindowMode::WINDOWED, 1920u, 1080u, 1920u, 0u};
+    auto window = ufps::Window{ufps::WindowMode::WINDOWED, 3840, 2160, 0u, 0u};
     auto running = true;
+
+    auto input_map = ufps::InputMap{};
 
     auto resource_loader = std::unique_ptr<ufps::ResourceLoader>();
     if constexpr (ufps::config::use_embedded_resouce_loader)
@@ -359,7 +308,32 @@ int start()
     mesh_manager->load("cube", std::vector{cube()});
 
     auto physics = std::make_unique<ufps::PhysicsSystem>(ufps::DebugRenderMode::ON);
-    auto body = physics->create_box({{-1.0f}, {1.0f}}, {0.0f, 5.0f, -5.0f}, ufps::PhysicsLayer::DYNAMIC);
+    auto &player_controller = physics->player_controller();
+
+    auto player_actor = ufps::PlayerActor{
+        {{0.0f, 2.0f, 0.0f},
+         {0.0f, 0.0f, -1.0f},
+         {0.0f, 1.0f, 0.0f},
+         std::numbers::pi_v<float> / 4.0f,
+         static_cast<float>(window.render_width()),
+         static_cast<float>(window.render_height()),
+         0.1f,
+         1000.0f},
+        input_map,
+        player_controller};
+
+    auto flycam_actor = ufps::FlyCamActor{
+        {{0.0f, 2.0f, 0.0f},
+         {0.0f, 0.0f, -1.0f},
+         {0.0f, 1.0f, 0.0f},
+         std::numbers::pi_v<float> / 4.0f,
+         static_cast<float>(window.render_width()),
+         static_cast<float>(window.render_height()),
+         0.1f,
+         1000.0f},
+        input_map};
+
+    ufps::Actor *current_actor = std::addressof(player_actor);
 
     auto strm = std::stringstream{};
     auto scene_description_yaml = std::ifstream{"scene.yaml"};
@@ -391,26 +365,12 @@ int start()
     auto scene_description = ufps::yaml::deserialise<ufps::Scene::Description>(strm.str());
     ufps::ensure(scene_description);
 
-    auto scene = ufps::Scene{
-        {{},
-         {0.0f, 0.0f, -1.0f},
-         {0.0f, 1.0f, 0.0f},
-         std::numbers::pi_v<float> / 4.0f,
-         static_cast<float>(window.render_width()),
-         static_cast<float>(window.render_height()),
-         0.1f,
-         1000.0f},
-        std::move(*scene_description),
-        build_entity_cache(*resource_loader)};
-
-    auto key_state = std::unordered_map<ufps::Key, bool>{
-        {ufps::Key::W, false}, {ufps::Key::A, false}, {ufps::Key::S, false}, {ufps::Key::D, false}};
+    auto scene = ufps::Scene{std::move(*scene_description), build_entity_cache(*resource_loader)};
 
     const auto point_light_handles = scene.lights().lights.handles();
 
     pulse_light(point_light_handles[0], scene);
     flicker_light(point_light_handles[2], scene);
-    log_box(body);
 
     while (running)
     {
@@ -419,6 +379,9 @@ int start()
         auto &pool = ufps::service<ufps::ThreadPool>();
 
         const auto begin_frame_allocated_bytes = ufps::g_metrics.total_allocated_bytes.load(std::memory_order_relaxed);
+
+        input_map.delta_x = 0.0f;
+        input_map.delta_y = 0.0f;
 
         auto event = window.pump_event();
         while (event && running)
@@ -439,21 +402,19 @@ int start()
                         {
                             debug_mode = !debug_mode;
                             renderer.set_enabled(debug_mode);
+                            current_actor = debug_mode ? static_cast<ufps::Actor *>(&flycam_actor)
+                                                       : static_cast<ufps::Actor *>(&player_actor);
                         }
-                        else
-                        {
-                            key_state[arg.key()] = arg.state() == ufps::KeyState::DOWN;
-                        }
+
+                        input_map.set(arg);
                     }
                     else if constexpr (std::same_as<T, ufps::MouseEvent>)
                     {
-                        if (!debug_mode || key_state[ufps::Key::SHIFT])
+                        if (!debug_mode || input_map[ufps::Key::SHIFT])
                         {
                             static constexpr auto sensitivity = float{0.002f};
-                            const auto delta_x = arg.delta_x() * sensitivity;
-                            const auto delta_y = arg.delta_y() * sensitivity;
-                            scene.camera().adjust_yaw(delta_x);
-                            scene.camera().adjust_pitch(-delta_y);
+                            input_map.delta_x += arg.delta_x() * sensitivity;
+                            input_map.delta_y += arg.delta_y() * sensitivity;
                         }
                     }
                     else if constexpr (std::same_as<T, ufps::MouseButtonEvent>)
@@ -466,14 +427,14 @@ int start()
             event = window.pump_event();
         }
 
+        current_actor->update();
+
         physics.update();
 
         awaitable.pump();
         pool.drain();
 
-        scene.camera().translate(walk_direction(key_state, scene.camera()));
-
-        renderer.render(scene);
+        renderer.render(scene, current_actor->camera());
 
         window.swap();
 

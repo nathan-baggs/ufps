@@ -376,9 +376,9 @@ Renderer::Renderer(
     }
 }
 
-auto Renderer::render(Scene &scene) -> void
+auto Renderer::render(Scene &scene, const Camera &camera) -> void
 {
-    camera_buffer_.write(scene.camera().data_view(), 0zu);
+    camera_buffer_.write(camera.data_view(), 0zu);
 
     execute_gbuffer_pass(scene);
     execute_lighting_pass(scene);
@@ -398,7 +398,7 @@ auto Renderer::render(Scene &scene) -> void
         final_fb_ = &light_pass_rt_.fb;
     }
 
-    post_render(scene);
+    post_render(scene, camera);
 
     command_buffer_.advance();
     camera_buffer_.advance();
@@ -406,7 +406,7 @@ auto Renderer::render(Scene &scene) -> void
     object_data_buffer_.advance();
 }
 
-auto Renderer::post_render(Scene &) -> void
+auto Renderer::post_render(Scene &, const Camera &) -> void
 {
     final_fb_->unbind();
 

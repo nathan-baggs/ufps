@@ -2,6 +2,7 @@
 
 #include <cstdint>
 
+#include "core/camera.h"
 #include "core/scene.h"
 #include "graphics/command_buffer.h"
 #include "graphics/frame_buffer.h"
@@ -34,7 +35,7 @@ class Renderer
     Renderer(const Window &window, ResourceLoader &resource_loader);
     virtual ~Renderer() = default;
 
-    auto render(Scene &scene) -> void;
+    auto render(Scene &scene, const Camera &camera) -> void;
 
   protected:
     static auto create_program(
@@ -51,7 +52,7 @@ class Renderer
         std::string_view compute_name,
         std::string_view program_name) -> ufps::Program;
 
-    virtual auto post_render(Scene &scene) -> void;
+    virtual auto post_render(Scene &scene, const Camera &camera) -> void;
 
     const Window &window_;
     AutoRelease<::GLuint> dummy_vao_;
