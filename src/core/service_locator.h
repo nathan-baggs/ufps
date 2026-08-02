@@ -14,6 +14,7 @@ class PhysicsSystem;
 class TextureManager;
 class ThreadPool;
 class RenderEntityManager;
+class EntityManager;
 
 using Services = std::tuple<
     std::unique_ptr<AwaitableManager>,
@@ -21,7 +22,8 @@ using Services = std::tuple<
     std::unique_ptr<PhysicsSystem>,
     std::unique_ptr<TextureManager>,
     std::unique_ptr<ThreadPool>,
-    std::unique_ptr<RenderEntityManager>>;
+    std::unique_ptr<RenderEntityManager>,
+    std::unique_ptr<EntityManager>>;
 
 namespace impl
 {

@@ -21,6 +21,7 @@
 #include "concurrency/task.h"
 #include "concurrency/thread_pool.h"
 #include "core/actor.h"
+#include "core/entity_manager.h"
 #include "core/flycam_actor.h"
 #include "core/manifest_descriptions.h"
 #include "core/player_actor.h"
@@ -381,7 +382,8 @@ int start()
         std::move(physics),
         std::move(texture_manager),
         std::move(pool),
-        std::make_unique<ufps::RenderEntityManager>());
+        std::make_unique<ufps::RenderEntityManager>(),
+        std::make_unique<ufps::EntityManager>());
     ufps::set_service(services.get());
 
     load_render_entity_manager(*resource_loader);
