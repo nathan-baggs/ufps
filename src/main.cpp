@@ -25,6 +25,7 @@
 #include "core/manifest_descriptions.h"
 #include "core/player_actor.h"
 #include "core/render_entity.h"
+#include "core/render_entity_manager.h"
 #include "core/scene.h"
 #include "core/service_locator.h"
 #include "events/input_map.h"
@@ -169,10 +170,11 @@ auto build_mesh_lookup(ufps::ResourceLoader &resource_loader) -> ufps::StringMap
            std::ranges::to<ufps::StringMap<std::vector<ufps::MeshView>>>();
 }
 
-auto build_entity_cache(ufps::ResourceLoader &resource_loader) -> ufps::StringMap<ufps::Entity>
+auto build_render_entity_manager(ufps::ResourceLoader &resource_loader) -> std::unique_ptr<ufps::RenderEntityManager>
 {
+    auto rem = std::make_unique<ufps::RenderEntityManager>();
+
     auto &texture_manager = ufps::service<ufps::TextureManager>();
-    auto entity_cache = ufps::StringMap<ufps::Entity>{};
 
     const auto model_manifest_str = resource_loader.load_string("configs\\model_manifest.yaml");
     const auto model_manifest = ufps::yaml::deserialise<ufps::ModelManifestDescription>(model_manifest_str);
@@ -195,10 +197,10 @@ auto build_entity_cache(ufps::ResourceLoader &resource_loader) -> ufps::StringMa
                 {mesh_view, albedo_index, normal_index, specular_index, ao_index, glossiness_index, emissive_index});
         }
 
-        entity_cache.insert({name, ufps::Entity{name, std::move(render_entities), {}}});
+        rem->register_group(name, std::move(render_entities));
     }
 
-    return entity_cache;
+    return rem;
 }
 
 auto pulse_light(ufps::PointLightHandle handle, ufps::Scene &scene) -> ufps::Task
@@ -356,7 +358,8 @@ int start()
         std::move(mesh_manager),
         std::move(physics),
         std::move(texture_manager),
-        std::move(pool));
+        std::move(pool),
+        build_render_entity_manager(*resource_loader));
     ufps::set_service(services.get());
 
     auto renderer = ufps::DebugRenderer{window, *resource_loader};
@@ -365,7 +368,7 @@ int start()
     auto scene_description = ufps::yaml::deserialise<ufps::Scene::Description>(strm.str());
     ufps::ensure(scene_description);
 
-    auto scene = ufps::Scene{std::move(*scene_description), build_entity_cache(*resource_loader)};
+    auto scene = ufps::Scene{std::move(*scene_description)};
 
     const auto point_light_handles = scene.lights().lights.handles();
 

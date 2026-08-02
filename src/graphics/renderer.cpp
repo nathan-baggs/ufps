@@ -12,6 +12,7 @@
 
 #include "core/camera.h"
 #include "core/entity.h"
+#include "core/render_entity_manager.h"
 #include "core/scene.h"
 #include "core/service_locator.h"
 #include "graphics/buffer_writer.h"
@@ -473,22 +474,27 @@ auto Renderer::execute_gbuffer_pass(Scene &scene) -> void
 
     auto object_data = std::vector<ObjectData>{};
 
+    auto &rem = service<RenderEntityManager>();
+
     for (const auto &entity : scene.entities())
     {
         object_data.append_range(
-            entity.render_entities() | std::views::transform(
-                                           [&entity](const auto &e)
-                                           {
-                                               return ObjectData{
-                                                   .model = entity.transform(),
-                                                   .albedo_texture_index = e.albedo_texture_bindless_handle(),
-                                                   .normal_texture_index = e.normal_texture_bindless_handle(),
-                                                   .specular_texture_index = e.specular_texture_bindless_handle(),
-                                                   .glossiness_texture_index = e.glossiness_texture_bindless_handle(),
-                                                   .emissive_texture_index = e.emissive_texture_bindless_handle(),
-                                                   .emissive_strength = entity.emissive_strength(),
-                                               };
-                                           }));
+            entity.render_entities() |
+            std::views::transform(
+                [&](auto e)
+                {
+                    auto sub_entity = rem[e];
+
+                    return ObjectData{
+                        .model = entity.transform(),
+                        .albedo_texture_index = sub_entity->albedo_texture_bindless_handle(),
+                        .normal_texture_index = sub_entity->normal_texture_bindless_handle(),
+                        .specular_texture_index = sub_entity->specular_texture_bindless_handle(),
+                        .glossiness_texture_index = sub_entity->glossiness_texture_bindless_handle(),
+                        .emissive_texture_index = sub_entity->emissive_texture_bindless_handle(),
+                        .emissive_strength = entity.emissive_strength(),
+                    };
+                }));
     }
 
     resize_gpu_buffer(object_data, object_data_buffer_);

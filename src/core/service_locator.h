@@ -13,13 +13,15 @@ class MeshManager;
 class PhysicsSystem;
 class TextureManager;
 class ThreadPool;
+class RenderEntityManager;
 
 using Services = std::tuple<
     std::unique_ptr<AwaitableManager>,
     std::unique_ptr<MeshManager>,
     std::unique_ptr<PhysicsSystem>,
     std::unique_ptr<TextureManager>,
-    std::unique_ptr<ThreadPool>>;
+    std::unique_ptr<ThreadPool>,
+    std::unique_ptr<RenderEntityManager>>;
 
 namespace impl
 {

@@ -7,7 +7,9 @@
 #include <span>
 #include <string>
 
+#include "core/render_entity_manager.h"
 #include "core/scene.h"
+#include "core/service_locator.h"
 #include "graphics/multi_buffer.h"
 #include "graphics/opengl.h"
 #include "graphics/persistent_buffer.h"
@@ -37,16 +39,19 @@ CommandBuffer::CommandBuffer(std::string_view name)
 
 auto CommandBuffer::build(const Scene &scene) -> std::uint32_t
 {
+    auto &rem = service<RenderEntityManager>();
+
     const auto command = scene.entities() | std::views::transform([](const auto &e) { return e.render_entities(); }) |
                          std::views::join |
                          std::views::transform(
-                             [](const auto &e)
+                             [&](auto e)
                              {
+                                 const auto entity = rem[e];
                                  const auto cmd = IndirectCommand{
-                                     .count = e.mesh_view().index_count,
+                                     .count = entity->mesh_view().index_count,
                                      .instance_count = 1u,
-                                     .first = e.mesh_view().index_offset,
-                                     .base_vertex = static_cast<std::int32_t>(e.mesh_view().vertex_offset),
+                                     .first = entity->mesh_view().index_offset,
+                                     .base_vertex = static_cast<std::int32_t>(entity->mesh_view().vertex_offset),
                                      .base_instance = 0u,
                                  };
                                  return cmd;
@@ -65,15 +70,19 @@ auto CommandBuffer::build(const Scene &scene) -> std::uint32_t
 
 auto CommandBuffer::build(const Entity &entity) -> std::uint32_t
 {
+    auto &rem = service<RenderEntityManager>();
+
     const auto command = entity.render_entities() |
                          std::views::transform(
-                             [](const auto &e)
+                             [&](auto e)
                              {
+                                 const auto entity = rem[e];
+
                                  const auto cmd = IndirectCommand{
-                                     .count = e.mesh_view().index_count,
+                                     .count = entity->mesh_view().index_count,
                                      .instance_count = 1u,
-                                     .first = e.mesh_view().index_offset,
-                                     .base_vertex = static_cast<std::int32_t>(e.mesh_view().vertex_offset),
+                                     .first = entity->mesh_view().index_offset,
+                                     .base_vertex = static_cast<std::int32_t>(entity->mesh_view().vertex_offset),
                                      .base_instance = 0u,
                                  };
                                  return cmd;
