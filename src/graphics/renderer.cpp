@@ -449,25 +449,33 @@ auto Renderer::execute_gbuffer_pass(Scene &scene) -> void
 
     auto object_data = std::vector<ObjectData>{};
 
-    auto &rem = service<RenderEntityManager>();
+    auto &&[em, rem] = services<EntityManager, RenderEntityManager>();
 
-    for (const auto &entity : scene.entities())
+    for (auto entity_handle : scene.entities())
     {
+        const auto entity = em[entity_handle];
+
+        if (!entity)
+        {
+            continue;
+        }
+
         object_data.append_range(
-            entity.render_entities() |
+            entity->render_entities() |
             std::views::transform(
                 [&](auto e)
                 {
                     auto sub_entity = rem[e];
+                    contract_assert(sub_entity);
 
                     return ObjectData{
-                        .model = entity.transform(),
+                        .model = entity->transform(),
                         .albedo_texture_index = sub_entity->albedo_texture_bindless_handle(),
                         .normal_texture_index = sub_entity->normal_texture_bindless_handle(),
                         .specular_texture_index = sub_entity->specular_texture_bindless_handle(),
                         .glossiness_texture_index = sub_entity->glossiness_texture_bindless_handle(),
                         .emissive_texture_index = sub_entity->emissive_texture_bindless_handle(),
-                        .emissive_strength = entity.emissive_strength(),
+                        .emissive_strength = entity->emissive_strength(),
                     };
                 }));
     }

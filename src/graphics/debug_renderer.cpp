@@ -16,6 +16,7 @@
 #include <backends/imgui_impl_win32.h>
 #include <variant>
 
+#include "core/entity_manager.h"
 #include "core/render_entity_manager.h"
 #include "core/scene.h"
 #include "core/service_locator.h"
@@ -153,7 +154,7 @@ struct SaveSceneButton
 struct AddLightButton
 {
     ufps::Scene &scene;
-    std::variant<std::monostate, ufps::Entity *, ufps::PointLightHandle, ufps::RigidBodyHandle> *selected;
+    std::variant<std::monostate, ufps::EntityHandle, ufps::PointLightHandle, ufps::RigidBodyHandle> *selected;
 };
 
 struct Histogram
@@ -164,19 +165,19 @@ struct Histogram
 struct AddEntity
 {
     ufps::Scene &scene;
-    std::variant<std::monostate, ufps::Entity *, ufps::PointLightHandle, ufps::RigidBodyHandle> *selected;
+    std::variant<std::monostate, ufps::EntityHandle, ufps::PointLightHandle, ufps::RigidBodyHandle> *selected;
 };
 
 struct DuplicateEntity
 {
     ufps::Scene &scene;
-    std::variant<std::monostate, ufps::Entity *, ufps::PointLightHandle, ufps::RigidBodyHandle> *selected;
+    std::variant<std::monostate, ufps::EntityHandle, ufps::PointLightHandle, ufps::RigidBodyHandle> *selected;
 };
 
 struct DeleteEntity
 {
     ufps::Scene &scene;
-    std::variant<std::monostate, ufps::Entity *, ufps::PointLightHandle, ufps::RigidBodyHandle> *selected;
+    std::variant<std::monostate, ufps::EntityHandle, ufps::PointLightHandle, ufps::RigidBodyHandle> *selected;
 };
 
 struct Plot
@@ -319,8 +320,11 @@ auto create_debug_controller(const std::string &, AddEntity &value) -> void
 
     if (mesh_selected_index)
     {
-        value.scene.create_entity(mesh_names_cstr[*mesh_selected_index]);
-        *value.selected = &value.scene.entities().back();
+        auto &em = ufps::service<ufps::EntityManager>();
+        const auto handle = em[mesh_names_cstr[*mesh_selected_index]];
+
+        value.scene.add(handle);
+        *value.selected = handle;
     }
 }
 
@@ -328,10 +332,9 @@ auto create_debug_controller(const std::string &, DeleteEntity &value) -> void
 {
     if (::ImGui::Button("delete"))
     {
-        if (auto **selected_entity = std::get_if<ufps::Entity *>(value.selected))
+        if (auto *selected_entity = std::get_if<ufps::EntityHandle>(value.selected))
         {
-            auto *entity = *selected_entity;
-            value.scene.remove(*entity);
+            value.scene.remove(*selected_entity);
             *value.selected = std::monostate{};
         }
         if (auto *selected_entity = std::get_if<ufps::PointLightHandle>(value.selected))
@@ -364,10 +367,20 @@ auto create_debug_controller(const std::string &, DuplicateEntity &value) -> voi
 {
     if (::ImGui::Button("duplicate"))
     {
-        if (auto **selected_entity = std::get_if<ufps::Entity *>(value.selected))
+        if (auto *selected_entity = std::get_if<ufps::EntityHandle>(value.selected))
         {
-            auto *entity = *selected_entity;
-            auto *new_entity = value.scene.create_entity(entity->name());
+            auto &em = ufps::service<ufps::EntityManager>();
+
+            auto entity = em[*selected_entity];
+            contract_assert(entity);
+
+            auto new_entity_handle = em.register_entity(std::format("{}_1", entity->name()), *entity);
+
+            value.scene.add(new_entity_handle);
+
+            auto new_entity = em[new_entity_handle];
+            contract_assert(new_entity);
+
             new_entity->set_transform(entity->transform());
 
             for (const auto handle : entity->rigid_bodies())
@@ -375,7 +388,7 @@ auto create_debug_controller(const std::string &, DuplicateEntity &value) -> voi
                 new_entity->add_rigid_body(ufps::service<ufps::PhysicsSystem>().duplicate_rigid_body(handle));
             }
 
-            *value.selected = new_entity;
+            *value.selected = new_entity_handle;
         }
         else if (auto *selected_light = std::get_if<ufps::PointLightHandle>(value.selected))
         {
@@ -538,24 +551,26 @@ DebugRenderer::~DebugRenderer()
 
 auto DebugRenderer::post_render(Scene &scene, const Camera &camera) -> void
 {
-    auto &rem = service<RenderEntityManager>();
+    auto &&[em, rem] = services<EntityManager, RenderEntityManager>();
 
-    if (std::holds_alternative<Entity *>(selected_))
+    if (std::holds_alternative<EntityHandle>(selected_))
     {
-        const auto *selected_entity = std::get<Entity *>(selected_);
+        const auto selected_entity = std::get<EntityHandle>(selected_);
+        auto entity = em[selected_entity];
+        contract_assert(entity);
+
         auto aabb_lines =
-            selected_entity->render_entities() |
+            entity->render_entities() |
             std::views::transform(
-                [&](const auto &e)
+                [&](auto e)
                 {
-                    auto entity = rem[e];
-                    return create_aabb_lines(entity->aabb(), selected_entity->transform(), {0.0f, 0.2f, 0.0f});
+                    auto render_entity = rem[e];
+                    return create_aabb_lines(render_entity->aabb(), entity->transform(), {0.0f, 0.2f, 0.0f});
                 }) |
             std::views::join;
 
         debug_lines_.append_range(aabb_lines);
-        debug_lines_.append_range(
-            create_aabb_lines(selected_entity->aabb(), selected_entity->transform(), {0.0f, 1.0f, 0.0f}));
+        debug_lines_.append_range(create_aabb_lines(entity->aabb(), entity->transform(), {0.0f, 1.0f, 0.0f}));
     }
 
     Renderer::post_render(scene, camera);
@@ -804,9 +819,13 @@ auto DebugRenderer::post_render(Scene &scene, const Camera &camera) -> void
     {
         ::ImGui::Begin("inspector");
 
-        if (auto **selected_entity = std::get_if<Entity *>(&selected_))
+        auto &em = service<EntityManager>();
+
+        if (auto *selected_entity = std::get_if<EntityHandle>(&selected_))
         {
-            auto *entity = *selected_entity;
+            auto entity = em[*selected_entity];
+            contract_assert(entity);
+
             ::ImGui::Text("entity: %s", entity->name().c_str());
 
             if (::ImGui::Button("add rigid body"))

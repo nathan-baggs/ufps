@@ -7,6 +7,7 @@
 #include <vector>
 
 #include "core/entity.h"
+#include "core/entity_manager.h"
 #include "core/render_entity.h"
 #include "core/render_entity_manager.h"
 #include "core/service_locator.h"
@@ -25,11 +26,10 @@ namespace ufps
 {
 
 using PointLightHandle = SparseSet<PointLight>::handle_type;
-using RenderEntityHandle = SparseSet<RenderEntity>::handle_type;
 
 struct IntersectionResult
 {
-    Entity *entity;
+    EntityHandle entity;
     Vector3 position;
     float distance;
 };
@@ -131,7 +131,7 @@ class Scene
 
     constexpr auto intersect_ray(const Ray &ray) -> std::optional<IntersectionResult>;
 
-    constexpr auto create_entity(std::string_view name) -> Entity *;
+    constexpr auto add(EntityHandle handle) -> void;
 
     template <class Self>
     auto &entities(this Self &&self);
@@ -156,12 +156,12 @@ class Scene
 
     constexpr auto description(this auto &&self) -> Description;
 
-    constexpr auto remove(const Entity &entity) -> void;
+    constexpr auto remove(EntityHandle handle) -> void;
 
     constexpr auto remove(PointLightHandle light) -> void;
 
   private:
-    std::deque<Entity> entities_;
+    std::vector<EntityHandle> entities_;
     LightData lights_;
     ToneMapOptions tone_map_options_;
     SSAOOptions ssao_options_;
@@ -208,39 +208,49 @@ constexpr Scene::Scene(const Description &description)
     , film_grain_options_{description.film_grain_options}
     , bloom_options_{description.bloom_options}
 {
-    auto &rem = service<RenderEntityManager>();
+    auto &&[em, rem] = services<EntityManager, RenderEntityManager>();
 
     for (const auto &entity_description : description.entities)
     {
-        auto &new_entity =
-            entities_.emplace_back(entity_description.name, rem[entity_description.name], entity_description.transform);
-        new_entity.set_emissive_strength(entity_description.emissive_strength);
+        const auto new_entity_handle = em.register_entity(
+            entity_description.name,
+            {entity_description.name, rem[entity_description.name], entity_description.transform});
+
+        auto new_entity = em[new_entity_handle];
+        new_entity->set_emissive_strength(entity_description.emissive_strength);
 
         for (const auto &rb_description : entity_description.rigid_bodies)
         {
             const auto rb = service<PhysicsSystem>().create_rigid_body(rb_description);
-            new_entity.add_rigid_body(rb);
+            new_entity->add_rigid_body(rb);
         }
+
+        add(new_entity_handle);
     }
 }
 
 constexpr auto Scene::intersect_ray(const Ray &ray) -> std::optional<IntersectionResult>
 {
-    auto &mesh_manager = service<MeshManager>();
-    auto &rem = service<RenderEntityManager>();
+    auto &&[mesh_manager, rem, em] = services<MeshManager, RenderEntityManager, EntityManager>();
 
     auto result = std::optional<IntersectionResult>{};
     auto min_distance = std::numeric_limits<float>::max();
 
-    for (auto &entity : entities_)
+    for (auto handle : entities_)
     {
-        const auto inv_transform = Matrix4::invert(entity.transform());
+        auto entity = em[handle];
+        if (!entity)
+        {
+            continue;
+        }
+
+        const auto inv_transform = Matrix4::invert(entity->transform());
         const auto transformed_ray =
             Ray{inv_transform * Vector4{ray.origin, 1.0f}, inv_transform * Vector4{ray.direction, 0.0f}};
 
-        if (!!intersect(transformed_ray, entity.aabb()))
+        if (!!intersect(transformed_ray, entity->aabb()))
         {
-            for (auto render_entity_handle : entity.render_entities())
+            for (auto render_entity_handle : entity->render_entities())
             {
                 if (auto render_entity = rem[render_entity_handle]; render_entity)
                 {
@@ -267,7 +277,7 @@ constexpr auto Scene::intersect_ray(const Ray &ray) -> std::optional<Intersectio
                             if (*distance < min_distance)
                             {
                                 result = IntersectionResult{
-                                    .entity = &entity, .position = intersection_point, .distance = *distance};
+                                    .entity = handle, .position = intersection_point, .distance = *distance};
                                 min_distance = *distance;
                             }
                         }
@@ -280,10 +290,9 @@ constexpr auto Scene::intersect_ray(const Ray &ray) -> std::optional<Intersectio
     return result;
 }
 
-constexpr auto Scene::create_entity(std::string_view name) -> Entity *
+constexpr auto Scene::add(EntityHandle handle) -> void
 {
-    auto &rem = service<RenderEntityManager>();
-    return std::addressof(entities_.emplace_back(std::string{name}, rem[name], Transform{}));
+    entities_.push_back(handle);
 }
 
 template <class Self>
@@ -339,6 +348,8 @@ constexpr auto &Scene::bloom_options(this auto &&self)
 
 constexpr auto Scene::description(this auto &&self) -> Description
 {
+    auto &em = service<EntityManager>();
+
     return {
         .tone_map_options = self.tone_map_options_,
         .ssao_options = self.ssao_options_,
@@ -349,13 +360,14 @@ constexpr auto Scene::description(this auto &&self) -> Description
         .film_grain_options = self.film_grain_options_,
         .bloom_options = self.bloom_options_,
         .lights = self.lights_,
-        .entities = self.entities_ | std::views::transform([](const auto &e) { return e.description(); }) |
+        .entities = self.entities_ | std::views::filter([&](auto &e) { return !!em[e]; }) |
+                    std::views::transform([&](auto e) { return em[e]->description(); }) |
                     std::ranges::to<std::vector>()};
 }
 
-constexpr auto Scene::remove(const Entity &entity) -> void
+constexpr auto Scene::remove(EntityHandle handle) -> void
 {
-    const auto iter = std::ranges::find_if(entities_, [&entity](const auto &e) { return &e == &entity; });
+    const auto iter = std::ranges::find(entities_, handle);
     expect(iter != std::ranges::cend(entities_), "entity not found");
 
     entities_.erase(iter);
