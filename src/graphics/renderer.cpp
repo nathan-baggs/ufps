@@ -122,34 +122,9 @@ auto create_render_target(
     };
 }
 
-auto sprite() -> ufps::MeshData
-{
-    const ufps::Vector3 positions[] = {
-        {-1.0f, 1.0f, 0.0f}, {-1.0f, -1.0f, 0.0f}, {1.0f, -1.0f, 0.0f}, {1.0f, 1.0f, 0.0f}};
-
-    const ufps::UV uvs[] = {{0.0f, 1.0f}, {0.0f, 0.0f}, {1.0f, 0.0f}, {1.0f, 1.0f}};
-
-    auto indices = std::vector<std::uint32_t>{0, 1, 2, 0, 2, 3};
-
-    return {.vertices = vertices(positions, positions, positions, positions, uvs), .indices = std::move(indices)};
-}
-
 auto create_sprite() -> ufps::Entity
 {
-    auto &texture_manager = ufps::service<ufps::TextureManager>();
-
-    const auto mesh_data = std::vector{sprite()};
-    const auto mesh_views = ufps::service<ufps::MeshManager>().load("sprite", mesh_data);
-    return {
-        "post_process_sprite",
-        {{mesh_views.front(),
-          texture_manager.texture_index("textures\\default_BaseColor.dds"),
-          texture_manager.texture_index("textures\\default_Normal.dds"),
-          texture_manager.texture_index("textures\\default_Metallic.dds"),
-          texture_manager.texture_index("textures\\default_AO.dds"),
-          texture_manager.texture_index("textures\\default_Roughness.dds"),
-          texture_manager.texture_index("textures\\default_Emissive.dds")}},
-        {}};
+    return {"post_process_sprite", ufps::service<ufps::RenderEntityManager>()["sprite"], {}};
 }
 
 auto create_ssao_noise_texture(const ufps::Sampler &sampler) -> std::uint64_t

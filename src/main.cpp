@@ -170,11 +170,22 @@ auto build_mesh_lookup(ufps::ResourceLoader &resource_loader) -> ufps::StringMap
            std::ranges::to<ufps::StringMap<std::vector<ufps::MeshView>>>();
 }
 
-auto build_render_entity_manager(ufps::ResourceLoader &resource_loader) -> std::unique_ptr<ufps::RenderEntityManager>
+auto sprite() -> ufps::MeshData
 {
-    auto rem = std::make_unique<ufps::RenderEntityManager>();
+    const ufps::Vector3 positions[] = {
+        {-1.0f, 1.0f, 0.0f}, {-1.0f, -1.0f, 0.0f}, {1.0f, -1.0f, 0.0f}, {1.0f, 1.0f, 0.0f}};
 
-    auto &texture_manager = ufps::service<ufps::TextureManager>();
+    const ufps::UV uvs[] = {{0.0f, 1.0f}, {0.0f, 0.0f}, {1.0f, 0.0f}, {1.0f, 1.0f}};
+
+    auto indices = std::vector<std::uint32_t>{0, 1, 2, 0, 2, 3};
+
+    return {.vertices = vertices(positions, positions, positions, positions, uvs), .indices = std::move(indices)};
+}
+
+auto load_render_entity_manager(ufps::ResourceLoader &resource_loader)
+{
+    auto &&[rem, mesh_manager, texture_manager] =
+        ufps::services<ufps::RenderEntityManager, ufps::MeshManager, ufps::TextureManager>();
 
     const auto model_manifest_str = resource_loader.load_string("configs\\model_manifest.yaml");
     const auto model_manifest = ufps::yaml::deserialise<ufps::ModelManifestDescription>(model_manifest_str);
@@ -197,10 +208,21 @@ auto build_render_entity_manager(ufps::ResourceLoader &resource_loader) -> std::
                 {mesh_view, albedo_index, normal_index, specular_index, ao_index, glossiness_index, emissive_index});
         }
 
-        rem->register_group(name, std::move(render_entities));
+        rem.register_group(name, std::move(render_entities));
     }
 
-    return rem;
+    const auto mesh_data = std::vector{sprite()};
+    const auto mesh_views = mesh_manager.load("sprite", mesh_data);
+
+    rem.register_group(
+        "sprite",
+        {{mesh_views.front(),
+          texture_manager.texture_index("textures\\default_BaseColor.dds"),
+          texture_manager.texture_index("textures\\default_Normal.dds"),
+          texture_manager.texture_index("textures\\default_Metallic.dds"),
+          texture_manager.texture_index("textures\\default_AO.dds"),
+          texture_manager.texture_index("textures\\default_Roughness.dds"),
+          texture_manager.texture_index("textures\\default_Emissive.dds")}});
 }
 
 auto pulse_light(ufps::PointLightHandle handle, ufps::Scene &scene) -> ufps::Task
@@ -359,8 +381,10 @@ int start()
         std::move(physics),
         std::move(texture_manager),
         std::move(pool),
-        build_render_entity_manager(*resource_loader));
+        std::make_unique<ufps::RenderEntityManager>());
     ufps::set_service(services.get());
+
+    load_render_entity_manager(*resource_loader);
 
     auto renderer = ufps::DebugRenderer{window, *resource_loader};
     auto debug_mode = false;
