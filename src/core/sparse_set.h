@@ -32,14 +32,14 @@ class SparseSet
             return *this != Handle{};
         }
 
+        constexpr auto operator<=>(const Handle &) const = default;
+
       private:
         explicit constexpr Handle(std::uint32_t index, std::uint32_t version)
             : index_{index}
             , version_{version}
         {
         }
-
-        constexpr auto operator<=>(const Handle &) const = default;
 
         std::uint32_t index_;
         std::uint32_t version_;
