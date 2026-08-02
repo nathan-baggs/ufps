@@ -45,4 +45,10 @@ auto service() -> T &
     return *std::get<std::unique_ptr<T>>(*impl::g_services);
 }
 
+template <class... Ts>
+auto services() -> std::tuple<Ts &...>
+{
+    return std::tuple<Ts &...>{service<Ts>()...};
+}
+
 }
