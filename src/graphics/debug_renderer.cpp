@@ -320,8 +320,10 @@ auto create_debug_controller(const std::string &, AddEntity &value) -> void
 
     if (mesh_selected_index)
     {
-        auto &em = ufps::service<ufps::EntityManager>();
-        const auto handle = em[mesh_names_cstr[*mesh_selected_index]];
+        const auto &[em, rem] = ufps::services<ufps::EntityManager, ufps::RenderEntityManager>();
+
+        const auto name = mesh_names_cstr[*mesh_selected_index];
+        const auto handle = em.register_entity(name, {name, rem[name], {}});
 
         value.scene.add(handle);
         *value.selected = handle;
