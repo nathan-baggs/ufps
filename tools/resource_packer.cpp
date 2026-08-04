@@ -11,6 +11,7 @@
 #include "serialisation/yaml_serialiser.h"
 #include "utils/compress.h"
 #include "utils/error.h"
+#include "utils/exception.h"
 #include "utils/log.h"
 
 auto main(int argc, char **argv) -> int
@@ -58,12 +59,28 @@ auto main(int argc, char **argv) -> int
             for (const auto &m : models)
             {
                 ufps::log::debug("found model resource: {}", m);
-                const auto &[name, sub_models] = ufps::load_model(resource_loader.load_data_buffer(m));
+                auto [name, sub_models] = ufps::load_model(resource_loader.load_data_buffer(m));
 
                 if (sub_models.empty())
                 {
                     ufps::log::warn("model {} has no submodels, skipping", name);
                     continue;
+                }
+
+                if (name == "SciFiRifle01_2")
+                {
+                    ufps::log::warn("special case for rifle");
+                    sub_models.erase(std::ranges::begin(sub_models) + 2zu, std::ranges::begin(sub_models) + 6zu);
+
+                    for (auto &model : sub_models)
+                    {
+                        model.albedo = "textures\\SciFiRifle01A_Diffuse.dds";
+                        model.ao = "textures\\SciFiRifle01A_AO.dds";
+                        model.emissive = "textures\\SciFiRifle01A_Glow.dds";
+                        model.glossiness = "textures\\SciFiRifle01A_Roughness.dds";
+                        model.normal = "textures\\SciFiRifle01A_Normal.dds";
+                        model.specular = "textures\\SciFiRifle01A_Metallic.dds";
+                    }
                 }
 
                 manifest.models[name] =
@@ -136,18 +153,25 @@ auto main(int argc, char **argv) -> int
             {
                 ufps::log::debug("packing texture: {}", t);
 
-                const auto texture_data = resource_loader.load_data_buffer(t);
-                const auto size = texture_data.size();
+                try
+                {
+                    const auto texture_data = resource_loader.load_data_buffer(t);
+                    const auto size = texture_data.size();
 
-                texture_blob.append_range(std::as_bytes(std::span{texture_data.data(), size}));
+                    texture_blob.append_range(std::as_bytes(std::span{texture_data.data(), size}));
 
-                manifest.textures[t] = {
-                    .offset = static_cast<std::uint32_t>(offset),
-                    .size = static_cast<std::uint32_t>(size),
-                    .is_srgb = t.contains("BaseColor"),
-                };
+                    manifest.textures[t] = {
+                        .offset = static_cast<std::uint32_t>(offset),
+                        .size = static_cast<std::uint32_t>(size),
+                        .is_srgb = t.contains("BaseColor"),
+                    };
 
-                offset += size;
+                    offset += size;
+                }
+                catch (ufps::Exception &e)
+                {
+                    ufps::log::warn("missing texture: {}", t);
+                }
             }
 
             const auto manifest_path = output_configs_dir / "texture_manifest.yaml";
