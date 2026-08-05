@@ -335,31 +335,6 @@ int start()
     auto physics = std::make_unique<ufps::PhysicsSystem>(ufps::DebugRenderMode::ON);
     auto &player_controller = physics->player_controller();
 
-    auto player_actor = ufps::PlayerActor{
-        {{0.0f, 2.0f, 0.0f},
-         {0.0f, 0.0f, -1.0f},
-         {0.0f, 1.0f, 0.0f},
-         std::numbers::pi_v<float> / 4.0f,
-         static_cast<float>(window.render_width()),
-         static_cast<float>(window.render_height()),
-         0.1f,
-         1000.0f},
-        input_map,
-        player_controller};
-
-    auto flycam_actor = ufps::FlyCamActor{
-        {{0.0f, 2.0f, 0.0f},
-         {0.0f, 0.0f, -1.0f},
-         {0.0f, 1.0f, 0.0f},
-         std::numbers::pi_v<float> / 4.0f,
-         static_cast<float>(window.render_width()),
-         static_cast<float>(window.render_height()),
-         0.1f,
-         1000.0f},
-        input_map};
-
-    ufps::Actor *current_actor = std::addressof(player_actor);
-
     auto strm = std::stringstream{};
     auto scene_description_yaml = std::ifstream{"scene.yaml"};
 
@@ -400,6 +375,44 @@ int start()
 
     pulse_light(point_light_handles[0], scene);
     flicker_light(point_light_handles[2], scene);
+
+    const auto &[em, rem] = ufps::services<ufps::EntityManager, ufps::RenderEntityManager>();
+
+    const auto gun_name = "SciFiRifle01_2";
+    const auto gun_handle = em.register_entity(gun_name, {gun_name, rem[gun_name], {}});
+    scene.add(gun_handle);
+    em[gun_handle]->set_transform({{}, {1.0f}, {1.0f, 0.0f, 0.0f, std::numbers::pi_v<float> / 2.0f}});
+
+    auto player_entity_handle = em.register_entity("player", {"player", {}, {}});
+    scene.add(player_entity_handle);
+
+    em[player_entity_handle]->add_child(gun_handle);
+
+    auto player_actor = ufps::PlayerActor{
+        {{0.0f, 2.0f, 0.0f},
+         {0.0f, 0.0f, -1.0f},
+         {0.0f, 1.0f, 0.0f},
+         std::numbers::pi_v<float> / 4.0f,
+         static_cast<float>(window.render_width()),
+         static_cast<float>(window.render_height()),
+         0.1f,
+         1000.0f},
+        player_entity_handle,
+        input_map,
+        player_controller};
+
+    auto flycam_actor = ufps::FlyCamActor{
+        {{0.0f, 2.0f, 0.0f},
+         {0.0f, 0.0f, -1.0f},
+         {0.0f, 1.0f, 0.0f},
+         std::numbers::pi_v<float> / 4.0f,
+         static_cast<float>(window.render_width()),
+         static_cast<float>(window.render_height()),
+         0.1f,
+         1000.0f},
+        input_map};
+
+    ufps::Actor *current_actor = std::addressof(player_actor);
 
     while (running)
     {
@@ -463,7 +476,7 @@ int start()
         awaitable.pump();
         pool.drain();
 
-        renderer.render(scene, current_actor->camera());
+        renderer.render(scene, flycam_actor.camera());
 
         window.swap();
 
