@@ -50,7 +50,9 @@ class Camera
     constexpr auto right() const -> Vector3;
     constexpr auto adjust_yaw(float adjust) -> void;
     constexpr auto adjust_pitch(float adjust) -> void;
+    constexpr auto yaw() const -> float;
     constexpr auto set_yaw(float yaw) -> void;
+    constexpr auto pitch() const -> float;
     constexpr auto set_pitch(float pitch) -> void;
     constexpr auto translate(const Vector3 &translation) -> void;
     constexpr auto fov() const -> float;
@@ -92,7 +94,7 @@ constexpr Camera::Camera(
     , up_(up)
     , right_(Vector3::normalise(Vector3::cross(direction_, up_)))
     , pitch_{}
-    , yaw_{-std::numbers::pi_v<float> / 2.0f}
+    , yaw_{}
     , fov_(fov)
     , width_(width)
     , height_(height)
@@ -177,9 +179,19 @@ constexpr auto Camera::adjust_pitch(float adjust) -> void
     data_.view = Matrix4::look_at(data_.position, data_.position + direction_, up_);
 }
 
+constexpr auto Camera::yaw() const -> float
+{
+    return yaw_;
+}
+
 constexpr auto Camera::set_yaw(float yaw) -> void
 {
     adjust_yaw(yaw - yaw_);
+}
+
+constexpr auto Camera::pitch() const -> float
+{
+    return pitch_;
 }
 
 constexpr auto Camera::set_pitch(float pitch) -> void
