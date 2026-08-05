@@ -133,6 +133,11 @@ constexpr auto Entity::rigid_bodies() const -> std::span<const RigidBodyHandle>
     return rigid_bodies_;
 }
 
+constexpr auto Entity::add_child(EntityHandle child) -> void
+{
+    children_.push_back(child);
+}
+
 constexpr auto Entity::update_transforms(const Transform &local, const Transform &parent) -> void
 {
     transform_ = parent * local;
