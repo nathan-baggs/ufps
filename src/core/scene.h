@@ -1,11 +1,15 @@
 #pragma once
 
+#include <deque>
 #include <optional>
 #include <ranges>
 #include <type_traits>
 #include <vector>
 
 #include "core/entity.h"
+#include "core/entity_manager.h"
+#include "core/render_entity.h"
+#include "core/render_entity_manager.h"
 #include "core/service_locator.h"
 #include "core/sparse_set.h"
 #include "graphics/colour.h"
@@ -13,6 +17,7 @@
 #include "graphics/point_light.h"
 #include "maths/bounded_number.h"
 #include "maths/ray.h"
+#include "maths/transform.h"
 #include "maths/utils.h"
 #include "maths/vector4.h"
 #include "utils/string_map.h"
@@ -24,7 +29,7 @@ using PointLightHandle = SparseSet<PointLight>::handle_type;
 
 struct IntersectionResult
 {
-    Entity *entity;
+    EntityHandle entity;
     Vector3 position;
     float distance;
 };
@@ -120,19 +125,16 @@ class Scene
         ChromaticAberrationOptions chromatic_aberration_options,
         VignetteOptions vignette_options,
         FilmGrainOptions film_grain_options,
-        BloomOptions bloom_options,
-        const StringMap<Entity> &entity_cache);
+        BloomOptions bloom_options);
 
-    constexpr Scene(const Description &description, const StringMap<Entity> &entity_cache);
+    constexpr Scene(const Description &description);
 
     constexpr auto intersect_ray(const Ray &ray) -> std::optional<IntersectionResult>;
 
-    constexpr auto create_entity(std::string_view name) -> Entity *;
+    constexpr auto add(EntityHandle handle) -> void;
 
     template <class Self>
-    auto entities(this Self &&self);
-
-    constexpr auto cache_entity(std::string_view name, Entity entity) -> void;
+    auto &entities(this Self &&self);
 
     constexpr auto &lights(this auto &&self);
 
@@ -154,13 +156,12 @@ class Scene
 
     constexpr auto description(this auto &&self) -> Description;
 
-    constexpr auto remove(const Entity &entity) -> void;
+    constexpr auto remove(EntityHandle handle) -> void;
 
     constexpr auto remove(PointLightHandle light) -> void;
 
   private:
-    std::vector<Entity> entities_;
-    std::vector<Entity> entity_cache_;
+    std::vector<EntityHandle> entities_;
     LightData lights_;
     ToneMapOptions tone_map_options_;
     SSAOOptions ssao_options_;
@@ -181,10 +182,8 @@ constexpr Scene::Scene(
     ChromaticAberrationOptions chromatic_aberration_options,
     VignetteOptions vignette_options,
     FilmGrainOptions film_grain_options,
-    BloomOptions bloom_options,
-    const StringMap<Entity> &entity_cache)
+    BloomOptions bloom_options)
     : entities_{}
-    , entity_cache_{}
     , lights_{std::move(lights)}
     , tone_map_options_{std::move(tone_map_options)}
     , ssao_options_{std::move(ssao_options)}
@@ -194,17 +193,11 @@ constexpr Scene::Scene(
     , vignette_options_{std::move(vignette_options)}
     , film_grain_options_{std::move(film_grain_options)}
     , bloom_options_{std::move(bloom_options)}
-
 {
-    for (const auto &[name, entity] : entity_cache)
-    {
-        cache_entity(name, entity);
-    }
 }
 
-constexpr Scene::Scene(const Description &description, const StringMap<Entity> &entity_cache)
+constexpr Scene::Scene(const Description &description)
     : entities_{}
-    , entity_cache_{}
     , lights_{description.lights}
     , tone_map_options_{description.tone_map_options}
     , ssao_options_{description.ssao_options}
@@ -215,71 +208,78 @@ constexpr Scene::Scene(const Description &description, const StringMap<Entity> &
     , film_grain_options_{description.film_grain_options}
     , bloom_options_{description.bloom_options}
 {
-    for (const auto &[name, entity] : entity_cache)
-    {
-        cache_entity(name, entity);
-    }
+    auto &&[em, rem] = services<EntityManager, RenderEntityManager>();
 
     for (const auto &entity_description : description.entities)
     {
-        const auto cached = std::ranges::find_if(
-            entity_cache_, [&entity_description](const auto &e) { return e.name() == entity_description.name; });
-        expect(cached != std::ranges::cend(entity_cache_), "unknown entity: {}", entity_description.name);
+        const auto new_entity_handle = em.register_entity(
+            entity_description.name,
+            {entity_description.name, rem[entity_description.name], entity_description.transform});
 
-        auto &new_entity = entities_.emplace_back(*cached);
-        new_entity.set_transform(entity_description.transform);
-        new_entity.set_emissive_strength(entity_description.emissive_strength);
+        auto new_entity = em[new_entity_handle];
+        new_entity->set_emissive_strength(entity_description.emissive_strength);
 
         for (const auto &rb_description : entity_description.rigid_bodies)
         {
             const auto rb = service<PhysicsSystem>().create_rigid_body(rb_description);
-            new_entity.add_rigid_body(rb);
+            new_entity->add_rigid_body(rb);
         }
+
+        add(new_entity_handle);
     }
 }
 
 constexpr auto Scene::intersect_ray(const Ray &ray) -> std::optional<IntersectionResult>
 {
-    auto &mesh_manager = service<MeshManager>();
+    auto &&[mesh_manager, rem, em] = services<MeshManager, RenderEntityManager, EntityManager>();
 
     auto result = std::optional<IntersectionResult>{};
     auto min_distance = std::numeric_limits<float>::max();
 
-    for (auto &entity : entities_)
+    for (auto handle : entities_)
     {
-        const auto inv_transform = Matrix4::invert(entity.transform());
+        auto entity = em[handle];
+        if (!entity)
+        {
+            continue;
+        }
+
+        const auto inv_transform = Matrix4::invert(entity->transform());
         const auto transformed_ray =
             Ray{inv_transform * Vector4{ray.origin, 1.0f}, inv_transform * Vector4{ray.direction, 0.0f}};
 
-        if (!!intersect(transformed_ray, entity.aabb()))
+        if (!!intersect(transformed_ray, entity->aabb()))
         {
-            for (const auto &render_entity : entity.render_entities())
+            for (auto render_entity_handle : entity->render_entities())
             {
-                if (!intersect(transformed_ray, render_entity.aabb()))
+                if (auto render_entity = rem[render_entity_handle]; render_entity)
                 {
-                    continue;
-                }
-
-                const auto mesh_view = render_entity.mesh_view();
-                const auto indices = mesh_manager.index_data(mesh_view);
-                const auto vertices = mesh_manager.vertex_data(mesh_view);
-
-                for (const auto &indices : std::views::chunk(indices, 3))
-                {
-                    const auto v0 = vertices[indices[0]].position;
-                    const auto v1 = vertices[indices[1]].position;
-                    const auto v2 = vertices[indices[2]].position;
-
-                    if (const auto distance = intersect(transformed_ray, v0, v1, v2); distance)
+                    if (!intersect(transformed_ray, render_entity->aabb()))
                     {
-                        const auto intersection_point =
-                            transformed_ray.origin + transformed_ray.direction * (*distance);
+                        continue;
+                    }
 
-                        if (*distance < min_distance)
+                    const auto mesh_view = render_entity->mesh_view();
+                    const auto indices = mesh_manager.index_data(mesh_view);
+                    const auto vertices = mesh_manager.vertex_data(mesh_view);
+
+                    for (const auto &indices : std::views::chunk(indices, 3))
+                    {
+                        const auto v0 = vertices[indices[0]].position;
+                        const auto v1 = vertices[indices[1]].position;
+                        const auto v2 = vertices[indices[2]].position;
+
+                        if (const auto distance = intersect(transformed_ray, v0, v1, v2); distance)
                         {
-                            result = IntersectionResult{
-                                .entity = &entity, .position = intersection_point, .distance = *distance};
-                            min_distance = *distance;
+                            const auto intersection_point =
+                                transformed_ray.origin + transformed_ray.direction * (*distance);
+
+                            if (*distance < min_distance)
+                            {
+                                result = IntersectionResult{
+                                    .entity = handle, .position = intersection_point, .distance = *distance};
+                                min_distance = *distance;
+                            }
                         }
                     }
                 }
@@ -290,30 +290,15 @@ constexpr auto Scene::intersect_ray(const Ray &ray) -> std::optional<Intersectio
     return result;
 }
 
-constexpr auto Scene::create_entity(std::string_view name) -> Entity *
+constexpr auto Scene::add(EntityHandle handle) -> void
 {
-    const auto cached = std::ranges::find_if(entity_cache_, [name](const auto &e) { return e.name() == name; });
-    expect(cached != std::ranges::cend(entity_cache_), "unknown entity: {}", name);
-
-    auto &new_entity = entities_.emplace_back(*cached);
-    new_entity.set_transform({});
-
-    return &new_entity;
+    entities_.push_back(handle);
 }
 
 template <class Self>
-auto Scene::entities(this Self &&self)
+auto &Scene::entities(this Self &&self)
 {
-    using SpanType = std::conditional_t<std::is_const_v<std::remove_reference_t<Self>>, const Entity, Entity>;
-    return std::span<SpanType>{self.entities_.data(), self.entities_.data() + self.entities_.size()};
-}
-
-constexpr auto Scene::cache_entity(std::string_view name, Entity entity) -> void
-{
-    const auto cached = std::ranges::find_if(entity_cache_, [name](const auto &e) { return e.name() == name; });
-    expect(cached == std::ranges::cend(entity_cache_), "{} already exists", name);
-
-    entity_cache_.push_back(std::move(entity));
+    return self.entities_;
 }
 
 constexpr auto &Scene::lights(this auto &&self)
@@ -363,6 +348,8 @@ constexpr auto &Scene::bloom_options(this auto &&self)
 
 constexpr auto Scene::description(this auto &&self) -> Description
 {
+    auto &em = service<EntityManager>();
+
     return {
         .tone_map_options = self.tone_map_options_,
         .ssao_options = self.ssao_options_,
@@ -373,13 +360,14 @@ constexpr auto Scene::description(this auto &&self) -> Description
         .film_grain_options = self.film_grain_options_,
         .bloom_options = self.bloom_options_,
         .lights = self.lights_,
-        .entities = self.entities_ | std::views::transform([](const auto &e) { return e.description(); }) |
+        .entities = self.entities_ | std::views::filter([&](auto &e) { return !!em[e]; }) |
+                    std::views::transform([&](auto e) { return em[e]->description(); }) |
                     std::ranges::to<std::vector>()};
 }
 
-constexpr auto Scene::remove(const Entity &entity) -> void
+constexpr auto Scene::remove(EntityHandle handle) -> void
 {
-    const auto iter = std::ranges::find_if(entities_, [&entity](const auto &e) { return &e == &entity; });
+    const auto iter = std::ranges::find(entities_, handle);
     expect(iter != std::ranges::cend(entities_), "entity not found");
 
     entities_.erase(iter);

@@ -7,6 +7,7 @@
 #include <vector>
 
 #include "core/render_entity.h"
+#include "core/render_entity_manager.h"
 #include "core/service_locator.h"
 #include "core/utils.h"
 #include "maths/aabb.h"
@@ -28,10 +29,10 @@ class Entity
         std::vector<RigidBody::Description> rigid_bodies;
     };
 
-    constexpr Entity(std::string name, std::vector<RenderEntity> render_entities, Transform transform);
+    constexpr Entity(std::string name, std::vector<RenderEntityHandle> render_entities, Transform transform);
 
     constexpr auto name() const -> std::string;
-    constexpr auto render_entities() const -> std::span<const RenderEntity>;
+    constexpr auto render_entities() const -> std::span<const RenderEntityHandle>;
     constexpr auto transform() const -> const Transform &;
     constexpr auto set_transform(const Transform &transform) -> void;
     constexpr auto aabb() const -> const AABB &;
@@ -43,14 +44,14 @@ class Entity
 
   private:
     std::string name_;
-    std::vector<RenderEntity> render_entities_;
+    std::vector<RenderEntityHandle> render_entities_;
     std::vector<RigidBodyHandle> rigid_bodies_;
     Transform transform_;
     AABB aabb_;
     float emissive_strength_;
 };
 
-constexpr Entity::Entity(std::string name, std::vector<RenderEntity> render_entities, Transform transform)
+constexpr Entity::Entity(std::string name, std::vector<RenderEntityHandle> render_entities, Transform transform)
     : name_{std::move(name)}
     , render_entities_{std::move(render_entities)}
     , rigid_bodies_{}
@@ -65,7 +66,7 @@ constexpr auto Entity::name() const -> std::string
     return name_;
 }
 
-constexpr auto Entity::render_entities() const -> std::span<const RenderEntity>
+constexpr auto Entity::render_entities() const -> std::span<const RenderEntityHandle>
 {
     return render_entities_;
 }

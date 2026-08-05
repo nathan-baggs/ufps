@@ -13,13 +13,17 @@ class MeshManager;
 class PhysicsSystem;
 class TextureManager;
 class ThreadPool;
+class RenderEntityManager;
+class EntityManager;
 
 using Services = std::tuple<
     std::unique_ptr<AwaitableManager>,
     std::unique_ptr<MeshManager>,
     std::unique_ptr<PhysicsSystem>,
     std::unique_ptr<TextureManager>,
-    std::unique_ptr<ThreadPool>>;
+    std::unique_ptr<ThreadPool>,
+    std::unique_ptr<RenderEntityManager>,
+    std::unique_ptr<EntityManager>>;
 
 namespace impl
 {
@@ -41,6 +45,12 @@ auto service() -> T &
 {
     expect(!!impl::g_services, "g_services not set");
     return *std::get<std::unique_ptr<T>>(*impl::g_services);
+}
+
+template <class... Ts>
+auto services() -> std::tuple<Ts &...>
+{
+    return std::tuple<Ts &...>{service<Ts>()...};
 }
 
 }

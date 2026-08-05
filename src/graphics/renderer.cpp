@@ -12,6 +12,7 @@
 
 #include "core/camera.h"
 #include "core/entity.h"
+#include "core/render_entity_manager.h"
 #include "core/scene.h"
 #include "core/service_locator.h"
 #include "graphics/buffer_writer.h"
@@ -121,34 +122,9 @@ auto create_render_target(
     };
 }
 
-auto sprite() -> ufps::MeshData
-{
-    const ufps::Vector3 positions[] = {
-        {-1.0f, 1.0f, 0.0f}, {-1.0f, -1.0f, 0.0f}, {1.0f, -1.0f, 0.0f}, {1.0f, 1.0f, 0.0f}};
-
-    const ufps::UV uvs[] = {{0.0f, 1.0f}, {0.0f, 0.0f}, {1.0f, 0.0f}, {1.0f, 1.0f}};
-
-    auto indices = std::vector<std::uint32_t>{0, 1, 2, 0, 2, 3};
-
-    return {.vertices = vertices(positions, positions, positions, positions, uvs), .indices = std::move(indices)};
-}
-
 auto create_sprite() -> ufps::Entity
 {
-    auto &texture_manager = ufps::service<ufps::TextureManager>();
-
-    const auto mesh_data = std::vector{sprite()};
-    const auto mesh_views = ufps::service<ufps::MeshManager>().load("sprite", mesh_data);
-    return {
-        "post_process_sprite",
-        {{mesh_views.front(),
-          texture_manager.texture_index("textures\\default_BaseColor.dds"),
-          texture_manager.texture_index("textures\\default_Normal.dds"),
-          texture_manager.texture_index("textures\\default_Metallic.dds"),
-          texture_manager.texture_index("textures\\default_AO.dds"),
-          texture_manager.texture_index("textures\\default_Roughness.dds"),
-          texture_manager.texture_index("textures\\default_Emissive.dds")}},
-        {}};
+    return {"post_process_sprite", ufps::service<ufps::RenderEntityManager>()["sprite"], {}};
 }
 
 auto create_ssao_noise_texture(const ufps::Sampler &sampler) -> std::uint64_t
@@ -473,22 +449,35 @@ auto Renderer::execute_gbuffer_pass(Scene &scene) -> void
 
     auto object_data = std::vector<ObjectData>{};
 
-    for (const auto &entity : scene.entities())
+    auto &&[em, rem] = services<EntityManager, RenderEntityManager>();
+
+    for (auto entity_handle : scene.entities())
     {
+        const auto entity = em[entity_handle];
+
+        if (!entity)
+        {
+            continue;
+        }
+
         object_data.append_range(
-            entity.render_entities() | std::views::transform(
-                                           [&entity](const auto &e)
-                                           {
-                                               return ObjectData{
-                                                   .model = entity.transform(),
-                                                   .albedo_texture_index = e.albedo_texture_bindless_handle(),
-                                                   .normal_texture_index = e.normal_texture_bindless_handle(),
-                                                   .specular_texture_index = e.specular_texture_bindless_handle(),
-                                                   .glossiness_texture_index = e.glossiness_texture_bindless_handle(),
-                                                   .emissive_texture_index = e.emissive_texture_bindless_handle(),
-                                                   .emissive_strength = entity.emissive_strength(),
-                                               };
-                                           }));
+            entity->render_entities() |
+            std::views::transform(
+                [&](auto e)
+                {
+                    auto sub_entity = rem[e];
+                    contract_assert(sub_entity);
+
+                    return ObjectData{
+                        .model = entity->transform(),
+                        .albedo_texture_index = sub_entity->albedo_texture_bindless_handle(),
+                        .normal_texture_index = sub_entity->normal_texture_bindless_handle(),
+                        .specular_texture_index = sub_entity->specular_texture_bindless_handle(),
+                        .glossiness_texture_index = sub_entity->glossiness_texture_bindless_handle(),
+                        .emissive_texture_index = sub_entity->emissive_texture_bindless_handle(),
+                        .emissive_strength = entity->emissive_strength(),
+                    };
+                }));
     }
 
     resize_gpu_buffer(object_data, object_data_buffer_);
