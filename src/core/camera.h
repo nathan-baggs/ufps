@@ -94,7 +94,7 @@ constexpr Camera::Camera(
     , up_(up)
     , right_(Vector3::normalise(Vector3::cross(direction_, up_)))
     , pitch_{}
-    , yaw_{}
+    , yaw_{-std::numbers::pi_v<float> / 2.0f}
     , fov_(fov)
     , width_(width)
     , height_(height)
