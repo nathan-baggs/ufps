@@ -77,6 +77,9 @@ auto PlayerActor::update() -> void
     auto player = em[player_entity_];
     contract_assert(player);
 
-    player->set_transform({camera_.position(), {1.0f}, {-camera_.yaw(), camera_.pitch(), 0.0f}});
+    player->set_transform(
+        {camera_.position(),
+         {1.0f},
+         Quaternion{{0.0f, 1.0f, 0.0f}, -camera_.yaw()} * Quaternion{{0.0f, 0.0f, 1.0f}, camera_.pitch()}});
 }
 }

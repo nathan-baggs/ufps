@@ -72,11 +72,11 @@ constexpr auto operator*(const Quaternion &a, const Quaternion &b) -> Quaternion
 
 constexpr Quaternion::Quaternion(float yaw, float pitch, float roll)
 {
-    const auto qx = Quaternion{{1.0f, 0.0f, 0.0f}, pitch};
-    const auto qy = Quaternion{{0.0f, 1.0f, 0.0f}, yaw};
+    const auto qx = Quaternion{{1.0f, 0.0f, 0.0f}, yaw};
+    const auto qy = Quaternion{{0.0f, 1.0f, 0.0f}, pitch};
     const auto qz = Quaternion{{0.0f, 0.0f, 1.0f}, roll};
 
-    *this = normalise(qx * qy * qz);
+    *this = normalise(qz * qy * qx);
 }
 
 inline auto Quaternion::to_string() const -> std::string

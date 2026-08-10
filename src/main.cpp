@@ -381,7 +381,11 @@ int start()
     const auto gun_name = "SciFiRifle01_2";
     const auto gun_handle = em.register_entity(gun_name, {gun_name, rem[gun_name], {}});
     scene.add(gun_handle);
-    em[gun_handle]->set_transform({{}, {1.0f}, {1.0f, 0.0f, 0.0f, std::numbers::pi_v<float> / 2.0f}});
+    em[gun_handle]->set_transform(
+        {{2.0f, 0.0f, 0.0f},
+         {1.0f},
+         ufps::Quaternion{{0.0f, 1.0f, 0.0f}, std::numbers::pi_v<float> / 2.0f} *
+             ufps::Quaternion{{1.0f, 0.0f, 0.0f}, std::numbers::pi_v<float> / 2.0f}});
 
     auto player_entity_handle = em.register_entity("player", {"player", {}, {}});
     scene.add(player_entity_handle);
@@ -476,7 +480,7 @@ int start()
         awaitable.pump();
         pool.drain();
 
-        renderer.render(scene, flycam_actor.camera());
+        renderer.render(scene, current_actor->camera());
 
         window.swap();
 
