@@ -17,6 +17,9 @@ build:
 run: build
 	./build/src/Debug/ufps.exe
 
+run-stream: build
+	~/.local/bin/run_game.sh
+
 resources: build
 	./build/tools/Debug/resource_packer.exe ./build/ ./assets ./secret-assets
 
