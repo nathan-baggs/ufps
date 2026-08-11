@@ -358,7 +358,8 @@ int start()
         std::move(texture_manager),
         std::move(pool),
         std::make_unique<ufps::RenderEntityManager>(),
-        std::make_unique<ufps::EntityManager>());
+        std::make_unique<ufps::EntityManager>(),
+        std::make_unique<ufps::LightManager>());
     ufps::set_service(services.get());
 
     load_render_entity_manager(*resource_loader);

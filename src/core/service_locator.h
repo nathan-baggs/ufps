@@ -15,6 +15,7 @@ class TextureManager;
 class ThreadPool;
 class RenderEntityManager;
 class EntityManager;
+class LightManager;
 
 using Services = std::tuple<
     std::unique_ptr<AwaitableManager>,
@@ -23,7 +24,8 @@ using Services = std::tuple<
     std::unique_ptr<TextureManager>,
     std::unique_ptr<ThreadPool>,
     std::unique_ptr<RenderEntityManager>,
-    std::unique_ptr<EntityManager>>;
+    std::unique_ptr<EntityManager>,
+    std::unique_ptr<LightManager>>;
 
 namespace impl
 {
