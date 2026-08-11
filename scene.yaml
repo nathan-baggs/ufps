@@ -51,59 +51,57 @@ Description:
       filter_radius: 0.014
       mix_amount: 0.206
       threshold: 0.488
+  ambient:
+    Colour:
+      r: 0.3604061
+      g: 0.35857663
+      b: 0.35857663
   lights:
-    LightData:
-      ambient:
-        Colour:
-          r: 0.3604061
-          g: 0.35857663
-          b: 0.35857663
-      lights:
-        - PointLight:
-            position:
-              Vector3:
-                x: 0.8988724
-                y: 1.7710187
-                z: 0
-            colour:
-              Colour:
-                r: 1
-                g: 0
-                b: 0
-            constant_attenuation: 1
-            linear_attenuation: 0.313
-            quadratic_attenuation: 0.157
-            intensity: 3.0809402
-        - PointLight:
-            position:
-              Vector3:
-                x: 16.71976
-                y: 5.315446
-                z: -0.76703924
-            colour:
-              Colour:
-                r: 1
-                g: 1
-                b: 1
-            constant_attenuation: 1
-            linear_attenuation: 0.36
-            quadratic_attenuation: 0.275
-            intensity: 0.66
-        - PointLight:
-            position:
-              Vector3:
-                x: -6.3984504
-                y: 2.5874157
-                z: -50.03749
-            colour:
-              Colour:
-                r: 1
-                g: 1
-                b: 1
-            constant_attenuation: 1
-            linear_attenuation: 0.36
-            quadratic_attenuation: 0.392
-            intensity: 15
+    - PointLight:
+        position:
+          Vector3:
+            x: 0.8988724
+            y: 1.7710187
+            z: 0
+        colour:
+          Colour:
+            r: 1
+            g: 0
+            b: 0
+        constant_attenuation: 1
+        linear_attenuation: 0.313
+        quadratic_attenuation: 0.157
+        intensity: 3.0809402
+    - PointLight:
+        position:
+          Vector3:
+            x: 16.71976
+            y: 5.315446
+            z: -0.76703924
+        colour:
+          Colour:
+            r: 1
+            g: 1
+            b: 1
+        constant_attenuation: 1
+        linear_attenuation: 0.36
+        quadratic_attenuation: 0.275
+        intensity: 0.66
+    - PointLight:
+        position:
+          Vector3:
+            x: -6.3984504
+            y: 2.5874157
+            z: -50.03749
+        colour:
+          Colour:
+            r: 1
+            g: 1
+            b: 1
+        constant_attenuation: 1
+        linear_attenuation: 0.36
+        quadratic_attenuation: 0.392
+        intensity: 15
   entities:
     - Description:
         name: SM_Corner01_8_8_X
