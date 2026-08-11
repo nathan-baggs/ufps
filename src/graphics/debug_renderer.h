@@ -30,6 +30,15 @@ class DebugRenderer : public Renderer
     auto post_render(Scene &scene, const Camera &camera) -> void override;
 
   private:
+    auto draw_post_processing_window(Scene &scene) -> void;
+    auto draw_scene(Scene &scene, const Camera &camera) -> void;
+    auto draw_logs() -> void;
+    auto draw_bloom_mips() -> void;
+    auto draw_render_targets() -> void;
+    auto draw_metrics() -> void;
+    auto draw_inspector(Scene &scene) -> void;
+    auto draw_gizmo(Scene &scene, const Camera &camera) -> void;
+
     bool enabled_;
     std::optional<MouseButtonEvent> click_;
     std::variant<std::monostate, EntityHandle, PointLightHandle, RigidBodyHandle> selected_;

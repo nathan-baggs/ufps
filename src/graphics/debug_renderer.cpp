@@ -1,9 +1,11 @@
 #include "graphics/debug_renderer.h"
 
 #include <algorithm>
+#include <cstddef>
 #include <cstring>
 #include <format>
 #include <fstream>
+#include <memory>
 #include <meta>
 #include <optional>
 #include <ranges>
@@ -146,71 +148,6 @@ auto create_aabb_lines(const ufps::AABB &aabb, const ufps::Matrix4 &transform, c
     return lines;
 }
 
-struct SaveSceneButton
-{
-    ufps::Scene &scene;
-};
-
-struct AddLightButton
-{
-    ufps::Scene &scene;
-    std::variant<std::monostate, ufps::EntityHandle, ufps::PointLightHandle, ufps::RigidBodyHandle> *selected;
-};
-
-struct Histogram
-{
-    std::vector<float> values;
-};
-
-struct AddEntity
-{
-    ufps::Scene &scene;
-    std::variant<std::monostate, ufps::EntityHandle, ufps::PointLightHandle, ufps::RigidBodyHandle> *selected;
-};
-
-struct DuplicateEntity
-{
-    ufps::Scene &scene;
-    std::variant<std::monostate, ufps::EntityHandle, ufps::PointLightHandle, ufps::RigidBodyHandle> *selected;
-};
-
-struct DeleteEntity
-{
-    ufps::Scene &scene;
-    std::variant<std::monostate, ufps::EntityHandle, ufps::PointLightHandle, ufps::RigidBodyHandle> *selected;
-};
-
-struct Plot
-{
-    std::vector<float> values;
-};
-
-struct TextureController
-{
-    std::uint32_t handle;
-    float width;
-    float height;
-};
-
-template <class T>
-struct Wrapper
-{
-    T &controller;
-};
-
-struct SameLine
-{
-};
-
-struct LogView
-{
-};
-
-constexpr auto clean_name(std::string_view name) -> std::string
-{
-    return std::string{name.substr(name.find_last_of(":") + 1)};
-}
-
 template <float Min, float Max>
 auto create_debug_controller(const std::string &label, ufps::BoundedFloat<Min, Max> &value) -> void
 {
@@ -228,21 +165,6 @@ auto create_debug_controller(const std::string &label, ufps::BoundedUint32<Min, 
     }
 }
 
-auto create_debug_controller(const std::string &label, bool &value) -> void
-{
-    ::ImGui::Checkbox(label.c_str(), &value);
-}
-
-auto create_debug_controller(const std::string &label, float &value) -> void
-{
-    ::ImGui::LabelText(label.c_str(), "%0.2f", value);
-}
-
-auto create_debug_controller(const std::string &label, std::size_t &value) -> void
-{
-    ::ImGui::LabelText(label.c_str(), "%zu", value);
-}
-
 auto create_debug_controller(const std::string &label, ufps::Colour &value) -> void
 {
     float v[3]{};
@@ -254,100 +176,7 @@ auto create_debug_controller(const std::string &label, ufps::Colour &value) -> v
     }
 }
 
-auto create_debug_controller(const std::string &, SaveSceneButton &value) -> void
-{
-    if (::ImGui::Button("save"))
-    {
-        const auto scene_yaml = ufps::yaml::serialise(value.scene.description());
-        ufps::ensure(scene_yaml);
-        auto out = std::ofstream("scene.yaml");
-
-        out << *scene_yaml;
-    }
-}
-
-auto create_debug_controller(const std::string &, AddLightButton &value) -> void
-{
-    if (::ImGui::Button("add light"))
-    {
-        const auto handle = value.scene.lights().lights.emplace(
-            ufps::PointLight{
-                .position = {},
-                .colour = {.r = 1.0f, .g = 1.0f, .b = 1.0f},
-                .constant_attenuation = 1.0f,
-                .linear_attenuation = 0.007f,
-                .quadratic_attenuation = 0.0002f,
-                .intensity = 1.0f});
-        *value.selected = handle;
-    }
-}
-
-auto create_debug_controller(const std::string &label, Histogram &value) -> void
-{
-    ::ImGui::PlotHistogram(
-        label.c_str(),
-        value.values.data(),
-        256,
-        0,
-        nullptr,
-        0.0f,
-        std::ranges::max(value.values),
-        ::ImVec2(::ImGui::GetContentRegionAvail().x, 150.0f));
-}
-
-auto create_debug_controller(const std::string &, AddEntity &value) -> void
-{
-    auto mesh_selected_index = std::optional<std::uint32_t>{};
-
-    auto mesh_names = ufps::service<ufps::MeshManager>().mesh_names();
-    std::ranges::sort(mesh_names);
-    const auto mesh_names_cstr = mesh_names |                                                     //
-                                 std::views::filter([](const auto &e) { return !e.empty(); }) |   //
-                                 std::views::transform([](const auto &e) { return e.c_str(); }) | //
-                                 std::ranges::to<std::vector>();
-
-    if (::ImGui::BeginCombo("mesh_names", mesh_names_cstr.front(), 0))
-    {
-        for (const auto &[index, name] : std::views::enumerate(mesh_names_cstr))
-        {
-            if (::ImGui::Selectable(name))
-            {
-                mesh_selected_index = index;
-            }
-        }
-        ::ImGui::EndCombo();
-    }
-
-    if (mesh_selected_index)
-    {
-        const auto &[em, rem] = ufps::services<ufps::EntityManager, ufps::RenderEntityManager>();
-
-        const auto name = mesh_names_cstr[*mesh_selected_index];
-        const auto handle = em.register_entity(name, {name, rem[name], {}});
-
-        value.scene.add(handle);
-        *value.selected = handle;
-    }
-}
-
-auto create_debug_controller(const std::string &, DeleteEntity &value) -> void
-{
-    if (::ImGui::Button("delete"))
-    {
-        if (auto *selected_entity = std::get_if<ufps::EntityHandle>(value.selected))
-        {
-            value.scene.remove(*selected_entity);
-            *value.selected = std::monostate{};
-        }
-        if (auto *selected_entity = std::get_if<ufps::PointLightHandle>(value.selected))
-        {
-            value.scene.lights().lights.remove(*selected_entity);
-            *value.selected = std::monostate{};
-        }
-    }
-}
-
-auto create_debug_controller(const std::string &, ufps::Matrix4 &value) -> void
+auto create_debug_controller(const std::string &, const ufps::Matrix4 &value) -> void
 {
     ::ImGui::BeginTable(
         "transform", 4, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingFixedFit);
@@ -363,143 +192,6 @@ auto create_debug_controller(const std::string &, ufps::Matrix4 &value) -> void
     }
 
     ::ImGui::EndTable();
-}
-
-auto create_debug_controller(const std::string &, DuplicateEntity &value) -> void
-{
-    if (::ImGui::Button("duplicate"))
-    {
-        if (auto *selected_entity = std::get_if<ufps::EntityHandle>(value.selected))
-        {
-            auto &em = ufps::service<ufps::EntityManager>();
-
-            auto entity = em[*selected_entity];
-            contract_assert(entity);
-
-            auto new_entity_handle = em.register_entity(std::format("{}_1", entity->name()), *entity);
-
-            value.scene.add(new_entity_handle);
-
-            auto new_entity = em[new_entity_handle];
-            contract_assert(new_entity);
-
-            new_entity->set_transform(entity->transform());
-
-            for (const auto handle : entity->rigid_bodies())
-            {
-                new_entity->add_rigid_body(ufps::service<ufps::PhysicsSystem>().duplicate_rigid_body(handle));
-            }
-
-            *value.selected = new_entity_handle;
-        }
-        else if (auto *selected_light = std::get_if<ufps::PointLightHandle>(value.selected))
-        {
-            const auto light = value.scene.lights().lights[*selected_light];
-            ufps::ensure(!!light, "missing light?");
-
-            *value.selected = value.scene.lights().lights.emplace(*light);
-        }
-    }
-}
-auto create_debug_controller(const std::string &, LogView &) -> void
-{
-    static auto auto_scroll = true;
-    static auto force_scroll_to_bottom = false;
-    if (::ImGui::Checkbox("auto scroll", &auto_scroll))
-    {
-        if (auto_scroll)
-        {
-            force_scroll_to_bottom = auto_scroll;
-        }
-    }
-
-    ::ImGui::BeginChild("log output");
-
-    if (auto_scroll && !force_scroll_to_bottom)
-    {
-        const auto scroll_max = ::ImGui::GetScrollMaxY();
-        const auto scroll_current = ::ImGui::GetScrollY();
-
-        if (scroll_max > 0.0f && scroll_current < scroll_max)
-        {
-            auto_scroll = false;
-        }
-    }
-
-    for (const auto &line : ufps::log::history)
-    {
-        switch (line[1])
-        {
-            case 'D': ::ImGui::TextColored({0.0f, 0.5f, 1.0f, 1.0f}, "%s", line.c_str()); break;
-            case 'I': ::ImGui::TextColored({1.0f, 1.0f, 1.0f, 1.0f}, "%s", line.c_str()); break;
-            case 'W': ::ImGui::TextColored({1.0f, 1.0f, 0.0f, 1.0f}, "%s", line.c_str()); break;
-            case 'E': ::ImGui::TextColored({1.0f, 0.0f, 0.0f, 1.0f}, "%s", line.c_str()); break;
-            default: ::ImGui::TextColored({1.0f, 0.412f, 0.706f, 1.0f}, "%s", line.c_str()); break;
-        }
-    }
-
-    if (auto_scroll)
-    {
-        ::ImGui::SetScrollHereY(1.0f);
-    }
-
-    ::ImGui::EndChild();
-
-    force_scroll_to_bottom = false;
-}
-
-auto create_debug_controller(const std::string &, Plot &value) -> void
-{
-    ::ImGui::PlotLines(
-        "frame allocations",
-        value.values.data(),
-        value.values.size(),
-        0,
-        nullptr,
-        0.0f,
-        std::numeric_limits<float>::max(),
-        ::ImVec2(0.0f, 80.0f));
-}
-
-auto create_debug_controller(const std::string &, SameLine &) -> void
-{
-    ::ImGui::SameLine();
-}
-
-auto create_debug_controller(const std::string &, TextureController &value) -> void
-{
-    ::ImGui::Image(value.handle, ::ImVec2(value.width, value.height), ::ImVec2(0.0f, 1.0f), ::ImVec2(1.0f, 0.0f));
-}
-
-template <class T>
-auto create_debug_controls(T &&data) -> void
-{
-    const auto title = std::format("{}", clean_name(std::meta::display_string_of(std::meta::remove_cvref(^^T))));
-
-    ::ImGui::PushID(title.c_str());
-
-    ::ImGui::Text(title.c_str());
-
-    constexpr auto ctx = std::meta::access_context::current();
-
-    template for (constexpr auto &member :
-                  std::define_static_array(std::meta::nonstatic_data_members_of(std::meta::remove_cvref(^^T), ctx)))
-    {
-        const auto label = clean_name(std::meta::display_string_of(member));
-        create_debug_controller(label, data.[:member:]);
-    }
-
-    ::ImGui::PopID();
-}
-
-template <class... Controllers>
-auto create_debug_window(const std::string &name, Controllers &&...controllers)
-{
-    ::ImGui::Begin(name.c_str());
-
-    (create_debug_controls(controllers), ...);
-
-    ::ImGui::End();
 }
 
 }
@@ -582,8 +274,6 @@ auto DebugRenderer::post_render(Scene &scene, const Camera &camera) -> void
         return;
     }
 
-    auto &texture_manager = service<TextureManager>();
-
     light_pass_rt_.fb.unbind();
     ::glBlitNamedFramebuffer(
         gbuffer_rt_.fb.native_handle(),
@@ -645,12 +335,9 @@ auto DebugRenderer::post_render(Scene &scene, const Camera &camera) -> void
         debug_lines_.append_range(physics_debug_renderer->yield_lines());
     }
 
-    auto debug_line_count = 0zu;
-
     if (!debug_lines_.empty())
     {
         debug_line_program_.bind();
-        debug_line_count = debug_lines_.size();
 
         resize_gpu_buffer(debug_lines_, debug_line_buffer_);
         debug_line_buffer_.write(std::as_bytes(std::span{debug_lines_.data(), debug_lines_.size()}), 0zu);
@@ -682,388 +369,14 @@ auto DebugRenderer::post_render(Scene &scene, const Camera &camera) -> void
 
     ::ImGui::DockSpaceOverViewport(0, ::ImGui::GetMainViewport(), ::ImGuiDockNodeFlags_PassthruCentralNode);
 
-    struct BasicSceneInfo
-    {
-        float fps;
-        float debug_lines;
-        SaveSceneButton save_scene;
-        AddLightButton add_light;
-        bool &enable_post_processing;
-    };
-
-    auto average_luminance = 0.0f;
-    ::glGetNamedBufferSubData(
-        average_luminance_buffer_.native_handle(), 0, sizeof(average_luminance), &average_luminance);
-
-    std::uint32_t histogram[256]{};
-    ::glGetNamedBufferSubData(luminance_histogram_buffer_.native_handle(), 0, sizeof(histogram), &histogram);
-
-    auto scaled_histogram =
-        histogram | std::views::transform([](const auto e) { return std::log2(static_cast<float>(e) + 1.0f); }) |
-        std::ranges::to<std::vector>();
-
-    struct Luminance
-    {
-        float average_luminance;
-        Histogram luminance;
-    };
-
-    struct SceneControls
-    {
-        AddEntity add_entity;
-        DeleteEntity delete_entity;
-        SameLine same_line{};
-        DuplicateEntity duplicate_entity;
-    };
-
-    struct RemainingSceneInfo
-    {
-        Colour &ambient;
-        Matrix4 camera_view;
-    };
-
-    create_debug_window(
-        "scene",
-        BasicSceneInfo{
-            .fps = io.Framerate,
-            .debug_lines = static_cast<float>(debug_line_count),
-            .save_scene = {.scene = scene},
-            .add_light = {.scene = scene, .selected = &selected_},
-            .enable_post_processing = enable_post_processing_},
-        scene.tone_map_options(),
-        scene.ssao_options(),
-        scene.bloom_options(),
-        scene.fog_options(),
-        scene.chromatic_aberration_options(),
-        scene.vignette_options(),
-        scene.film_grain_options(),
-        scene.exposure_options(),
-        Luminance{
-            .average_luminance = average_luminance, .luminance = Histogram{.values = std::move(scaled_histogram)}},
-        SceneControls{
-            .add_entity = {.scene = scene, .selected = &selected_},
-            .delete_entity = {.scene = scene, .selected = &selected_},
-            .same_line = {},
-            .duplicate_entity = {.scene = scene, .selected = &selected_}},
-        RemainingSceneInfo{.ambient = scene.lights().ambient, .camera_view = camera.data().view});
-
-    struct LogWindow
-    {
-        LogView view;
-    };
-    create_debug_window("logs", LogWindow{});
-
-    ::ImGui::Begin("bloom_mips");
-
-    static constexpr auto width = 175.0f;
-    const auto aspect_ratio = static_cast<float>(window_.render_width()) / static_cast<float>(window_.render_height());
-
-    for (const auto &mip : bloom_mips_)
-    {
-        ::ImGui::Image(
-            texture_manager.texture(mip.colour_texture_bindless_handle_0)->native_handle(),
-            ::ImVec2(width * aspect_ratio, width),
-            ::ImVec2(0.0f, 1.0f),
-            ::ImVec2(1.0f, 0.0f));
-        ::ImGui::SameLine();
-    }
-
-    ::ImGui::End();
-
-    static auto frame_allocations = Plot{.values = std::vector<float>(1000u)};
-    frame_allocations.values.erase(std::ranges::begin(frame_allocations.values));
-    frame_allocations.values.push_back(static_cast<float>(metrics().frame_allocated_bytes / 1024.0f));
-
-    create_debug_window("metrics", metrics(), Wrapper<Plot>{.controller = frame_allocations});
-
-    struct RenderTargets
-    {
-        TextureController ssao;
-        SameLine same_line_0;
-        TextureController gbuffer_0;
-        SameLine same_line_1;
-        TextureController gbuffer_1;
-        SameLine same_line_2;
-        TextureController gbuffer_2;
-        SameLine same_line_3;
-        TextureController gbuffer_3;
-    };
-
-    create_debug_window(
-        "render_targets",
-        RenderTargets{
-            .ssao =
-                {texture_manager.texture(ssao_blur_rt_.colour_texture_bindless_handle_0)->native_handle(),
-                 width * aspect_ratio,
-                 width},
-            .same_line_0 = {},
-            .gbuffer_0 =
-                {texture_manager.texture(gbuffer_rt_.colour_texture_bindless_handle_0)->native_handle(),
-                 width * aspect_ratio,
-                 width},
-            .same_line_1 = {},
-            .gbuffer_1 =
-                {texture_manager.texture(gbuffer_rt_.colour_texture_bindless_handle_1)->native_handle(),
-                 width * aspect_ratio,
-                 width},
-            .same_line_2 = {},
-            .gbuffer_2 =
-                {texture_manager.texture(gbuffer_rt_.colour_texture_bindless_handle_2)->native_handle(),
-                 width * aspect_ratio,
-                 width},
-            .same_line_3 = {},
-            .gbuffer_3 = {
-                texture_manager.texture(gbuffer_rt_.colour_texture_bindless_handle_3)->native_handle(),
-                width * aspect_ratio,
-                width}});
-
-    if (!std::holds_alternative<std::monostate>(selected_))
-    {
-        ::ImGui::Begin("inspector");
-
-        auto &em = service<EntityManager>();
-
-        if (auto *selected_entity = std::get_if<EntityHandle>(&selected_))
-        {
-            auto entity = em[*selected_entity];
-            contract_assert(entity);
-
-            ::ImGui::Text("entity: %s", entity->name().c_str());
-
-            if (::ImGui::Button("add rigid body"))
-            {
-                const auto body = service<PhysicsSystem>().create_box(
-                    {{-1.0f}, {1.0f}}, entity->transform().position, PhysicsLayer::STATIC);
-                entity->add_rigid_body(body);
-                selected_ = body;
-            }
-
-            auto to_delete = RigidBodyHandle{};
-            auto to_duplicate = RigidBodyHandle{};
-
-            for (const auto &[index, handle] : std::views::enumerate(entity->rigid_bodies()))
-            {
-                {
-                    const auto button_text = std::format("rigid body {}", index);
-                    if (::ImGui::Button(button_text.c_str()))
-                    {
-                        selected_ = handle;
-                        break;
-                    }
-                }
-
-                ::ImGui::SameLine();
-
-                {
-                    const auto button_text = std::format("remove rigid body {}", index);
-                    if (::ImGui::Button(button_text.c_str()))
-                    {
-                        to_delete = handle;
-                        break;
-                    }
-                }
-
-                ::ImGui::SameLine();
-
-                {
-                    const auto button_text = std::format("duplicate rigid body {}", index);
-                    if (::ImGui::Button(button_text.c_str()))
-                    {
-                        to_duplicate = handle;
-                        break;
-                    }
-                }
-            }
-
-            if (to_delete)
-            {
-                service<PhysicsSystem>().remove_rigid_body(to_delete);
-            }
-            if (to_duplicate)
-            {
-                const auto handle = service<PhysicsSystem>().duplicate_rigid_body(to_duplicate);
-                entity->add_rigid_body(handle);
-                selected_ = handle;
-            }
-
-            {
-                auto value = entity->emissive_strength();
-                if (::ImGui::SliderFloat("emissive_strength", &value, 0.0f, 10.0f))
-                {
-                    entity->set_emissive_strength(value);
-                }
-            }
-
-            auto transform = Matrix4{entity->transform()};
-
-            ::ImGui::BeginTable(
-                "transform", 4, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingFixedFit);
-
-            for (auto row = 0; row < 4; ++row)
-            {
-                ::ImGui::TableNextRow();
-                for (auto col = 0; col < 4; ++col)
-                {
-                    ::ImGui::TableSetColumnIndex(col);
-                    ::ImGui::Text("%0.2f", transform[col * 4 + row]);
-                }
-            }
-
-            ::ImGui::EndTable();
-
-            for (auto handle : entity->render_entities())
-            {
-                auto render_entity = rem[handle];
-
-                const auto *albedo_texture = texture_manager.texture(render_entity->albedo_texture_bindless_handle());
-                ::ImGui::Image(
-                    albedo_texture->native_handle(),
-                    ::ImVec2(64.0f, 64.0f),
-                    ::ImVec2(0.0f, 1.0f),
-                    ::ImVec2(1.0f, 0.0f));
-
-                const auto *normal_texture = texture_manager.texture(render_entity->normal_texture_bindless_handle());
-                ::ImGui::SameLine();
-                ::ImGui::Image(
-                    normal_texture->native_handle(),
-                    ::ImVec2(64.0f, 64.0f),
-                    ::ImVec2(0.0f, 1.0f),
-                    ::ImVec2(1.0f, 0.0f));
-
-                const auto *specular_texture =
-                    texture_manager.texture(render_entity->specular_texture_bindless_handle());
-                ::ImGui::SameLine();
-                ::ImGui::Image(
-                    specular_texture->native_handle(),
-                    ::ImVec2(64.0f, 64.0f),
-                    ::ImVec2(0.0f, 1.0f),
-                    ::ImVec2(1.0f, 0.0f));
-
-                const auto *ao_texture = texture_manager.texture(render_entity->ao_texture_bindless_handle());
-                ::ImGui::Image(
-                    ao_texture->native_handle(), ::ImVec2(64.0f, 64.0f), ::ImVec2(0.0f, 1.0f), ::ImVec2(1.0f, 0.0f));
-
-                const auto *glossiness_texture =
-                    texture_manager.texture(render_entity->glossiness_texture_bindless_handle());
-                ::ImGui::SameLine();
-                ::ImGui::Image(
-                    glossiness_texture->native_handle(),
-                    ::ImVec2(64.0f, 64.0f),
-                    ::ImVec2(0.0f, 1.0f),
-                    ::ImVec2(1.0f, 0.0f));
-
-                const auto *emissive_texture =
-                    texture_manager.texture(render_entity->emissive_texture_bindless_handle());
-                ::ImGui::SameLine();
-                ::ImGui::Image(
-                    emissive_texture->native_handle(),
-                    ::ImVec2(64.0f, 64.0f),
-                    ::ImVec2(0.0f, 1.0f),
-                    ::ImVec2(1.0f, 0.0f));
-            }
-
-            const auto &camera_data = camera.data();
-
-            static float snap_translation[3] = {1.0f, 1.0f, 1.0f};
-
-            ::ImGuizmo::Manipulate(
-                camera_data.view.data().data(),
-                camera_data.projection.data().data(),
-                ::ImGuizmo::TRANSLATE | ::ImGuizmo::SCALE | ::ImGuizmo::ROTATE,
-                ::ImGuizmo::WORLD,
-                transform.data().data(),
-                nullptr,
-                snap_translation,
-                nullptr,
-                nullptr);
-
-            entity->set_transform(transform);
-        }
-        else if (auto *selected_light = std::get_if<PointLightHandle>(&selected_))
-        {
-            auto light = scene.lights().lights[*selected_light];
-            ensure(!!light, "missing light?");
-
-            ::ImGui::Text("point light");
-
-            float pos[] = {light->position.x, light->position.y, light->position.z};
-            if (::ImGui::SliderFloat3("position", pos, -100.0f, 100.0f))
-            {
-                light->position = {pos[0], pos[1], pos[2]};
-            }
-
-            float colour[3]{};
-            std::memcpy(colour, &light->colour, sizeof(colour));
-
-            if (::ImGui::ColorPicker3("light colour", colour))
-            {
-                std::memcpy(&light->colour, colour, sizeof(colour));
-            }
-
-            float atten[] = {light->constant_attenuation, light->linear_attenuation, light->quadratic_attenuation};
-            if (::ImGui::SliderFloat3("attenuation", atten, 0.0f, 2.0f))
-            {
-                light->constant_attenuation = atten[0];
-                light->linear_attenuation = atten[1];
-                light->quadratic_attenuation = atten[2];
-            }
-
-            auto intensity = light->intensity;
-            if (::ImGui::SliderFloat("intensity", &intensity, 0.0f, 100.0f))
-            {
-                light->intensity = intensity;
-            }
-
-            auto transform = Matrix4{light->position};
-            const auto &camera_data = camera.data();
-
-            ::ImGuizmo::Manipulate(
-                camera_data.view.data().data(),
-                camera_data.projection.data().data(),
-                ::ImGuizmo::TRANSLATE | ::ImGuizmo::SCALE | ::ImGuizmo::BOUNDS | ::ImGuizmo::ROTATE,
-                ::ImGuizmo::WORLD,
-                transform.data().data(),
-                nullptr,
-                nullptr,
-                nullptr,
-                nullptr);
-
-            const auto new_transform = Transform{transform};
-            light->position = new_transform.position;
-        }
-        else if (auto *selected_rigid_body = std::get_if<RigidBodyHandle>(&selected_))
-        {
-            if (auto rigid_body = service<PhysicsSystem>().rigid_body(*selected_rigid_body); rigid_body)
-            {
-                auto &rb = *rigid_body;
-
-                auto world_matrix = Matrix4{rb.transform()};
-                const auto &camera_data = camera.data();
-
-                ::ImGuizmo::Manipulate(
-                    camera_data.view.data().data(),
-                    camera_data.projection.data().data(),
-                    ::ImGuizmo::TRANSLATE | ::ImGuizmo::SCALE | ::ImGuizmo::ROTATE,
-                    ::ImGuizmo::WORLD,
-                    world_matrix.data().data(),
-                    nullptr,
-                    nullptr,
-                    nullptr,
-                    nullptr);
-
-                if (::ImGuizmo::IsUsing())
-                {
-                    const auto parent = Matrix4{rb.parent_transform()};
-                    const auto inverse_parent = Matrix4::invert(parent);
-                    const auto local = inverse_parent * world_matrix;
-
-                    rb.set_local_transform(local);
-                }
-            }
-        }
-
-        ::ImGui::End();
-    }
+    draw_post_processing_window(scene);
+    draw_scene(scene, camera);
+    draw_logs();
+    draw_bloom_mips();
+    draw_render_targets();
+    draw_metrics();
+    draw_inspector(scene);
+    draw_gizmo(scene, camera);
 
     ::ImGui::Render();
     ::ImGui_ImplOpenGL3_RenderDrawData(::ImGui::GetDrawData());
@@ -1126,5 +439,620 @@ auto DebugRenderer::set_enabled(bool enabled) -> void
 {
     enabled_ = enabled;
     enable_post_processing_ = !enabled_;
+}
+
+auto DebugRenderer::draw_post_processing_window(Scene &scene) -> void
+{
+    if (::ImGui::Begin("Post Processing"))
+    {
+        ::ImGui::PushID("post_processing");
+
+        ::ImGui::Checkbox("enable post processing", std::addressof(enable_post_processing_));
+
+        if (::ImGui::CollapsingHeader("Tone Map Options"))
+        {
+            ::ImGui::PushID("tone_map_options");
+
+            create_debug_controller("max_brightness", scene.tone_map_options().max_brightness);
+            create_debug_controller("contrast", scene.tone_map_options().contrast);
+            create_debug_controller("linear_section_start", scene.tone_map_options().linear_section_start);
+            create_debug_controller("linear_section_length", scene.tone_map_options().linear_section_length);
+            create_debug_controller("black_tightness", scene.tone_map_options().black_tightness);
+            create_debug_controller("pedestal", scene.tone_map_options().pedestal);
+            create_debug_controller("gamma", scene.tone_map_options().gamma);
+
+            ::ImGui::PopID();
+        }
+
+        if (::ImGui::CollapsingHeader("SSAO Options"))
+        {
+            ::ImGui::PushID("ssao_options");
+
+            ::ImGui::Checkbox("enabled", std::addressof(scene.ssao_options().enabled));
+            create_debug_controller("sample_count", scene.ssao_options().sample_count);
+            create_debug_controller("radius", scene.ssao_options().radius);
+            create_debug_controller("bias", scene.ssao_options().bias);
+            create_debug_controller("power", scene.ssao_options().power);
+
+            ::ImGui::PopID();
+        }
+
+        if (::ImGui::CollapsingHeader("Bloom Options"))
+        {
+            ::ImGui::PushID("bloom_options");
+
+            create_debug_controller("filter_radius", scene.bloom_options().filter_radius);
+            create_debug_controller("mix_amount", scene.bloom_options().mix_amount);
+            create_debug_controller("threshold", scene.bloom_options().threshold);
+
+            ::ImGui::PopID();
+        }
+
+        if (::ImGui::CollapsingHeader("Fog Options"))
+        {
+            ::ImGui::PushID("fog_options");
+
+            create_debug_controller("colour", scene.fog_options().colour);
+            create_debug_controller("density", scene.fog_options().density);
+
+            ::ImGui::PopID();
+        }
+
+        if (::ImGui::CollapsingHeader("Chromatci Aberration Options"))
+        {
+            ::ImGui::PushID("chromatic_aberration_options");
+
+            create_debug_controller("red", scene.chromatic_aberration_options().red_offset);
+            create_debug_controller("green", scene.chromatic_aberration_options().green_offset);
+            create_debug_controller("blue", scene.chromatic_aberration_options().blue_offset);
+            create_debug_controller("strength", scene.chromatic_aberration_options().strength);
+
+            ::ImGui::PopID();
+        }
+
+        if (::ImGui::CollapsingHeader("Vignette Options"))
+        {
+            ::ImGui::PushID("vignette_options");
+
+            create_debug_controller("colour", scene.vignette_options().colour);
+            create_debug_controller("strength", scene.vignette_options().strength);
+            create_debug_controller("feather", scene.vignette_options().feather);
+
+            ::ImGui::PopID();
+        }
+
+        if (::ImGui::CollapsingHeader("Film Grain Options"))
+        {
+            ::ImGui::PushID("film_grain_options");
+
+            create_debug_controller("strength", scene.film_grain_options().strength);
+
+            ::ImGui::PopID();
+        }
+
+        ::ImGui::PopID();
+    }
+    ::ImGui::End();
+}
+
+auto DebugRenderer::draw_scene(Scene &scene, const Camera &camera) -> void
+{
+    auto &em = service<EntityManager>();
+
+    if (::ImGui::Begin("Scene"))
+    {
+        ::ImGui::PushID("scene");
+
+        ::ImGui::Text("ambient");
+        create_debug_controller("ambient", scene.lights().ambient);
+        ::ImGui::Text("camera_view");
+        create_debug_controller("camera_view", camera.data().view);
+
+        ::ImGui::Text("entities");
+        const auto entities = scene.entities() |
+                              std::views::transform(
+                                  [&](const auto &e)
+                                  {
+                                      const auto entity = em[e];
+                                      contract_assert(entity);
+                                      return std::make_tuple(entity->name(), e);
+                                  }) |
+                              std::ranges::to<std::vector>();
+
+        if (::ImGui::BeginListBox("entities"))
+        {
+            static auto selected_index = std::optional<std::size_t>{};
+
+            for (const auto &[index, entity] : std::views::enumerate(entities))
+            {
+                const auto &[name, handle] = entity;
+                const auto is_selected = selected_index == index;
+                const auto flags = is_selected ? ::ImGuiSelectableFlags_Highlight : 0;
+
+                if (::ImGui::Selectable(name.data(), is_selected, flags))
+                {
+                    selected_index = index;
+                    selected_ = handle;
+                }
+
+                if (is_selected)
+                {
+                    ::ImGui::SetItemDefaultFocus();
+                }
+            }
+
+            ::ImGui::EndListBox();
+        }
+
+        auto average_luminance = 0.0f;
+        ::glGetNamedBufferSubData(
+            average_luminance_buffer_.native_handle(), 0, sizeof(average_luminance), &average_luminance);
+
+        std::uint32_t histogram[256]{};
+        ::glGetNamedBufferSubData(luminance_histogram_buffer_.native_handle(), 0, sizeof(histogram), &histogram);
+
+        const auto scaled_histogram =
+            histogram | std::views::transform([](const auto e) { return std::log2(static_cast<float>(e) + 1.0f); }) |
+            std::ranges::to<std::vector>();
+
+        ::ImGui::LabelText("average_luminance", "%0.2f", average_luminance);
+        ::ImGui::PlotHistogram(
+            "luminance_histogram",
+            scaled_histogram.data(),
+            256,
+            0,
+            nullptr,
+            0.0f,
+            std::ranges::max(scaled_histogram),
+            ::ImVec2(::ImGui::GetContentRegionAvail().x, 150.0f));
+
+        ::ImGui::PopID();
+    }
+    ::ImGui::End();
+}
+
+auto DebugRenderer::draw_logs() -> void
+{
+    if (::ImGui::Begin("Logs"))
+    {
+        ::ImGui::PushID("logs");
+
+        static auto auto_scroll = true;
+        static auto force_scroll_to_bottom = false;
+        if (::ImGui::Checkbox("auto scroll", &auto_scroll))
+        {
+            if (auto_scroll)
+            {
+                force_scroll_to_bottom = auto_scroll;
+            }
+        }
+
+        ::ImGui::BeginChild("log output");
+
+        if (auto_scroll && !force_scroll_to_bottom)
+        {
+            const auto scroll_max = ::ImGui::GetScrollMaxY();
+            const auto scroll_current = ::ImGui::GetScrollY();
+
+            if (scroll_max > 0.0f && scroll_current < scroll_max)
+            {
+                auto_scroll = false;
+            }
+        }
+
+        for (const auto &line : ufps::log::history)
+        {
+            switch (line[1])
+            {
+                case 'D': ::ImGui::TextColored({0.0f, 0.5f, 1.0f, 1.0f}, "%s", line.c_str()); break;
+                case 'I': ::ImGui::TextColored({1.0f, 1.0f, 1.0f, 1.0f}, "%s", line.c_str()); break;
+                case 'W': ::ImGui::TextColored({1.0f, 1.0f, 0.0f, 1.0f}, "%s", line.c_str()); break;
+                case 'E': ::ImGui::TextColored({1.0f, 0.0f, 0.0f, 1.0f}, "%s", line.c_str()); break;
+                default: ::ImGui::TextColored({1.0f, 0.412f, 0.706f, 1.0f}, "%s", line.c_str()); break;
+            }
+        }
+
+        if (auto_scroll)
+        {
+            ::ImGui::SetScrollHereY(1.0f);
+        }
+
+        ::ImGui::EndChild();
+
+        force_scroll_to_bottom = false;
+
+        ::ImGui::PopID();
+    }
+
+    ::ImGui::End();
+}
+
+auto DebugRenderer::draw_bloom_mips() -> void
+{
+    auto &tm = service<TextureManager>();
+
+    if (::ImGui::Begin("Bloom Mips"))
+    {
+        ::ImGui::PushID("bloom_mips");
+
+        static constexpr auto width = 175.0f;
+        const auto aspect_ratio =
+            static_cast<float>(window_.render_width()) / static_cast<float>(window_.render_height());
+
+        for (const auto &mip : bloom_mips_)
+        {
+            ::ImGui::Image(
+                tm.texture(mip.colour_texture_bindless_handle_0)->native_handle(),
+                ::ImVec2(width * aspect_ratio, width),
+                ::ImVec2(0.0f, 1.0f),
+                ::ImVec2(1.0f, 0.0f));
+            ::ImGui::SameLine();
+        }
+
+        ::ImGui::PopID();
+    }
+
+    ::ImGui::End();
+}
+
+auto DebugRenderer::draw_render_targets() -> void
+{
+    auto &tm = service<TextureManager>();
+
+    if (::ImGui::Begin("Render Targets"))
+    {
+        ::ImGui::PushID("render_targets");
+
+        static constexpr auto width = 175.0f;
+        const auto aspect_ratio =
+            static_cast<float>(window_.render_width()) / static_cast<float>(window_.render_height());
+
+        ::ImGui::Image(
+            tm.texture(ssao_blur_rt_.colour_texture_bindless_handle_0)->native_handle(),
+            ::ImVec2(width * aspect_ratio, width),
+            ::ImVec2(0.0f, 1.0f),
+            ::ImVec2(1.0f, 0.0f));
+        ::ImGui::SameLine();
+
+        ::ImGui::Image(
+            tm.texture(gbuffer_rt_.colour_texture_bindless_handle_0)->native_handle(),
+            ::ImVec2(width * aspect_ratio, width),
+            ::ImVec2(0.0f, 1.0f),
+            ::ImVec2(1.0f, 0.0f));
+        ::ImGui::SameLine();
+
+        ::ImGui::Image(
+            tm.texture(gbuffer_rt_.colour_texture_bindless_handle_1)->native_handle(),
+            ::ImVec2(width * aspect_ratio, width),
+            ::ImVec2(0.0f, 1.0f),
+            ::ImVec2(1.0f, 0.0f));
+        ::ImGui::SameLine();
+
+        ::ImGui::Image(
+            tm.texture(gbuffer_rt_.colour_texture_bindless_handle_2)->native_handle(),
+            ::ImVec2(width * aspect_ratio, width),
+            ::ImVec2(0.0f, 1.0f),
+            ::ImVec2(1.0f, 0.0f));
+        ::ImGui::SameLine();
+
+        ::ImGui::Image(
+            tm.texture(gbuffer_rt_.colour_texture_bindless_handle_3)->native_handle(),
+            ::ImVec2(width * aspect_ratio, width),
+            ::ImVec2(0.0f, 1.0f),
+            ::ImVec2(1.0f, 0.0f));
+        ::ImGui::SameLine();
+
+        ::ImGui::PopID();
+    }
+
+    ::ImGui::End();
+}
+
+auto DebugRenderer::draw_metrics() -> void
+{
+    if (::ImGui::Begin("Metrics"))
+    {
+        ::ImGui::PushID("metrics");
+
+        static auto frame_allocations = std::vector<float>(1000u);
+        frame_allocations.erase(std::ranges::begin(frame_allocations));
+        frame_allocations.push_back(static_cast<float>(metrics().frame_allocated_bytes / 1024.0f));
+
+        ::ImGui::PlotLines(
+            "frame allocations",
+            frame_allocations.data(),
+            frame_allocations.size(),
+            0,
+            nullptr,
+            0.0f,
+            std::numeric_limits<float>::max(),
+            ::ImVec2(0.0f, 80.0f));
+
+        const auto m = metrics();
+
+        ::ImGui::LabelText("total_allocation_count", "%zu", m.total_allocation_count);
+        ::ImGui::LabelText("live_allocation_count", "%zu", m.live_allocation_count);
+        ::ImGui::LabelText("total_allocated_bytes", "%zu", m.total_allocated_bytes);
+        ::ImGui::LabelText("live_allocated_bytes", "%zu", m.live_allocated_bytes);
+        ::ImGui::LabelText("frame_allocated_bytes", "%zu", m.frame_allocated_bytes);
+
+        ::ImGui::PopID();
+    }
+
+    ::ImGui::End();
+}
+
+auto DebugRenderer::draw_inspector(Scene &scene) -> void
+{
+    auto &tm = service<TextureManager>();
+
+    if (!std::holds_alternative<std::monostate>(selected_))
+    {
+        ::ImGui::Begin("Inspector");
+
+        const auto &[em, rem, ps] = services<EntityManager, RenderEntityManager, PhysicsSystem>();
+
+        if (auto *selected_entity = std::get_if<EntityHandle>(&selected_))
+        {
+            auto entity = em[*selected_entity];
+            contract_assert(entity);
+
+            ::ImGui::Text("entity: %s", entity->name().data());
+
+            if (::ImGui::Button("add rigid body"))
+            {
+                const auto body = ps.create_box({{-1.0f}, {1.0f}}, entity->transform().position, PhysicsLayer::STATIC);
+                entity->add_rigid_body(body);
+                selected_ = body;
+            }
+
+            auto to_delete = RigidBodyHandle{};
+            auto to_duplicate = RigidBodyHandle{};
+
+            for (const auto &[index, handle] : std::views::enumerate(entity->rigid_bodies()))
+            {
+                {
+                    const auto button_text = std::format("rigid body {}", index);
+                    if (::ImGui::Button(button_text.c_str()))
+                    {
+                        selected_ = handle;
+                        break;
+                    }
+                }
+
+                ::ImGui::SameLine();
+
+                {
+                    const auto button_text = std::format("remove rigid body {}", index);
+                    if (::ImGui::Button(button_text.c_str()))
+                    {
+                        to_delete = handle;
+                        break;
+                    }
+                }
+
+                ::ImGui::SameLine();
+
+                {
+                    const auto button_text = std::format("duplicate rigid body {}", index);
+                    if (::ImGui::Button(button_text.c_str()))
+                    {
+                        to_duplicate = handle;
+                        break;
+                    }
+                }
+            }
+
+            if (to_delete)
+            {
+                service<PhysicsSystem>().remove_rigid_body(to_delete);
+            }
+            if (to_duplicate)
+            {
+                const auto handle = ps.duplicate_rigid_body(to_duplicate);
+                entity->add_rigid_body(handle);
+                selected_ = handle;
+            }
+
+            {
+                auto value = entity->emissive_strength();
+                if (::ImGui::SliderFloat("emissive_strength", &value, 0.0f, 10.0f))
+                {
+                    entity->set_emissive_strength(value);
+                }
+            }
+
+            auto transform = Matrix4{entity->transform()};
+
+            ::ImGui::BeginTable(
+                "transform", 4, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingFixedFit);
+
+            for (auto row = 0; row < 4; ++row)
+            {
+                ::ImGui::TableNextRow();
+                for (auto col = 0; col < 4; ++col)
+                {
+                    ::ImGui::TableSetColumnIndex(col);
+                    ::ImGui::Text("%0.2f", transform[col * 4 + row]);
+                }
+            }
+
+            ::ImGui::EndTable();
+
+            for (auto handle : entity->render_entities())
+            {
+                auto render_entity = rem[handle];
+
+                const auto *albedo_texture = tm.texture(render_entity->albedo_texture_bindless_handle());
+                ::ImGui::Image(
+                    albedo_texture->native_handle(),
+                    ::ImVec2(64.0f, 64.0f),
+                    ::ImVec2(0.0f, 1.0f),
+                    ::ImVec2(1.0f, 0.0f));
+
+                const auto *normal_texture = tm.texture(render_entity->normal_texture_bindless_handle());
+                ::ImGui::SameLine();
+                ::ImGui::Image(
+                    normal_texture->native_handle(),
+                    ::ImVec2(64.0f, 64.0f),
+                    ::ImVec2(0.0f, 1.0f),
+                    ::ImVec2(1.0f, 0.0f));
+
+                const auto *specular_texture = tm.texture(render_entity->specular_texture_bindless_handle());
+                ::ImGui::SameLine();
+                ::ImGui::Image(
+                    specular_texture->native_handle(),
+                    ::ImVec2(64.0f, 64.0f),
+                    ::ImVec2(0.0f, 1.0f),
+                    ::ImVec2(1.0f, 0.0f));
+
+                const auto *ao_texture = tm.texture(render_entity->ao_texture_bindless_handle());
+                ::ImGui::Image(
+                    ao_texture->native_handle(), ::ImVec2(64.0f, 64.0f), ::ImVec2(0.0f, 1.0f), ::ImVec2(1.0f, 0.0f));
+
+                const auto *glossiness_texture = tm.texture(render_entity->glossiness_texture_bindless_handle());
+                ::ImGui::SameLine();
+                ::ImGui::Image(
+                    glossiness_texture->native_handle(),
+                    ::ImVec2(64.0f, 64.0f),
+                    ::ImVec2(0.0f, 1.0f),
+                    ::ImVec2(1.0f, 0.0f));
+
+                const auto *emissive_texture = tm.texture(render_entity->emissive_texture_bindless_handle());
+                ::ImGui::SameLine();
+                ::ImGui::Image(
+                    emissive_texture->native_handle(),
+                    ::ImVec2(64.0f, 64.0f),
+                    ::ImVec2(0.0f, 1.0f),
+                    ::ImVec2(1.0f, 0.0f));
+            }
+        }
+        else if (auto *selected_light = std::get_if<PointLightHandle>(&selected_))
+        {
+            auto light = scene.lights().lights[*selected_light];
+            ensure(!!light, "missing light?");
+
+            ::ImGui::Text("point light");
+
+            float pos[] = {light->position.x, light->position.y, light->position.z};
+            if (::ImGui::SliderFloat3("position", pos, -100.0f, 100.0f))
+            {
+                light->position = {pos[0], pos[1], pos[2]};
+            }
+
+            float colour[3]{};
+            std::memcpy(colour, &light->colour, sizeof(colour));
+
+            if (::ImGui::ColorPicker3("light colour", colour))
+            {
+                std::memcpy(&light->colour, colour, sizeof(colour));
+            }
+
+            float atten[] = {light->constant_attenuation, light->linear_attenuation, light->quadratic_attenuation};
+            if (::ImGui::SliderFloat3("attenuation", atten, 0.0f, 2.0f))
+            {
+                light->constant_attenuation = atten[0];
+                light->linear_attenuation = atten[1];
+                light->quadratic_attenuation = atten[2];
+            }
+
+            auto intensity = light->intensity;
+            if (::ImGui::SliderFloat("intensity", &intensity, 0.0f, 100.0f))
+            {
+                light->intensity = intensity;
+            }
+        }
+
+        ::ImGui::End();
+    }
+}
+
+auto DebugRenderer::draw_gizmo(Scene &scene, const Camera &camera) -> void
+{
+    const auto &[em, ps] = services<EntityManager, PhysicsSystem>();
+
+    if (!std::holds_alternative<std::monostate>(selected_))
+    {
+        const auto &camera_data = camera.data();
+
+        if (auto *selected_entity = std::get_if<EntityHandle>(&selected_))
+        {
+            auto entity = em[*selected_entity];
+            contract_assert(entity);
+
+            static float snap_translation[3] = {1.0f, 1.0f, 1.0f};
+            auto transform = Matrix4{entity->transform()};
+
+            ::ImGuizmo::Manipulate(
+                camera_data.view.data().data(),
+                camera_data.projection.data().data(),
+                ::ImGuizmo::TRANSLATE | ::ImGuizmo::SCALE | ::ImGuizmo::ROTATE,
+                ::ImGuizmo::WORLD,
+                transform.data().data(),
+                nullptr,
+                snap_translation,
+                nullptr,
+                nullptr);
+
+            if (::ImGuizmo::IsUsing())
+            {
+                entity->set_transform(transform);
+            }
+        }
+        else if (auto *selected_light = std::get_if<PointLightHandle>(&selected_))
+        {
+            auto light = scene.lights().lights[*selected_light];
+            contract_assert(light);
+
+            auto transform = Matrix4{light->position};
+
+            ::ImGuizmo::Manipulate(
+                camera_data.view.data().data(),
+                camera_data.projection.data().data(),
+                ::ImGuizmo::TRANSLATE | ::ImGuizmo::SCALE | ::ImGuizmo::BOUNDS | ::ImGuizmo::ROTATE,
+                ::ImGuizmo::WORLD,
+                transform.data().data(),
+                nullptr,
+                nullptr,
+                nullptr,
+                nullptr);
+
+            if (::ImGuizmo::IsUsing())
+            {
+                const auto new_transform = Transform{transform};
+                light->position = new_transform.position;
+            }
+        }
+        else if (auto *selected_rigid_body = std::get_if<RigidBodyHandle>(&selected_))
+        {
+            if (auto rigid_body = ps.rigid_body(*selected_rigid_body); rigid_body)
+            {
+                auto &rb = *rigid_body;
+
+                auto world_matrix = Matrix4{rb.transform()};
+                const auto &camera_data = camera.data();
+
+                ::ImGuizmo::Manipulate(
+                    camera_data.view.data().data(),
+                    camera_data.projection.data().data(),
+                    ::ImGuizmo::TRANSLATE | ::ImGuizmo::SCALE | ::ImGuizmo::ROTATE,
+                    ::ImGuizmo::WORLD,
+                    world_matrix.data().data(),
+                    nullptr,
+                    nullptr,
+                    nullptr,
+                    nullptr);
+
+                if (::ImGuizmo::IsUsing())
+                {
+                    const auto parent = Matrix4{rb.parent_transform()};
+                    const auto inverse_parent = Matrix4::invert(parent);
+                    const auto local = inverse_parent * world_matrix;
+
+                    rb.set_local_transform(local);
+                }
+            }
+        }
+    }
 }
 }
