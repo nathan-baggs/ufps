@@ -19,6 +19,12 @@ class StorageManager
 
     constexpr auto operator[](handle_type handle);
 
+    constexpr auto remove(handle_type handle) -> void;
+
+    constexpr auto data();
+
+    constexpr auto handles();
+
   private:
     SparseSet<T> objects_;
     StringMap<handle_type> object_names_;
@@ -45,6 +51,24 @@ template <class T>
 constexpr auto StorageManager<T>::operator[](handle_type handle)
 {
     return objects_[handle];
+}
+
+template <class T>
+constexpr auto StorageManager<T>::remove(handle_type handle) -> void
+{
+    objects_.remove(handle);
+}
+
+template <class T>
+constexpr auto StorageManager<T>::data()
+{
+    return objects_.data();
+}
+
+template <class T>
+constexpr auto StorageManager<T>::handles()
+{
+    return objects_.handles();
 }
 
 }
