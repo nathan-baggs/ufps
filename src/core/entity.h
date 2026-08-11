@@ -33,7 +33,7 @@ class Entity
 
     constexpr Entity(std::string name, std::vector<RenderEntityHandle> render_entities, Transform transform);
 
-    constexpr auto name() const -> std::string;
+    constexpr auto name() const -> std::string_view;
     constexpr auto render_entities() const -> std::span<const RenderEntityHandle>;
     constexpr auto transform() const -> const Transform &;
     auto set_transform(const Transform &transform) -> void;
@@ -72,7 +72,7 @@ constexpr Entity::Entity(std::string name, std::vector<RenderEntityHandle> rende
 {
 }
 
-constexpr auto Entity::name() const -> std::string
+constexpr auto Entity::name() const -> std::string_view
 {
     return name_;
 }
