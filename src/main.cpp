@@ -379,7 +379,7 @@ int start()
     const auto &[em, rem] = ufps::services<ufps::EntityManager, ufps::RenderEntityManager>();
 
     const auto gun_name = "SciFiRifle01_2";
-    const auto gun_handle = em.register_entity(gun_name, {gun_name, rem[gun_name], {}});
+    const auto gun_handle = em.insert(gun_name, {gun_name, rem[gun_name], {}});
     scene.add(gun_handle);
     em[gun_handle]->set_transform(
         {{2.0f, 0.0f, 0.0f},
@@ -387,7 +387,7 @@ int start()
          ufps::Quaternion{{0.0f, 1.0f, 0.0f}, std::numbers::pi_v<float> / 2.0f} *
              ufps::Quaternion{{1.0f, 0.0f, 0.0f}, std::numbers::pi_v<float> / 2.0f}});
 
-    auto player_entity_handle = em.register_entity("player", {"player", {}, {}});
+    auto player_entity_handle = em.insert("player", {"player", {}, {}});
     scene.add(player_entity_handle);
 
     em[player_entity_handle]->add_child(gun_handle);

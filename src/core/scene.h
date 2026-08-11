@@ -212,7 +212,7 @@ constexpr Scene::Scene(const Description &description)
 
     for (const auto &entity_description : description.entities)
     {
-        const auto new_entity_handle = em.register_entity(
+        const auto new_entity_handle = em.insert(
             entity_description.name,
             {entity_description.name, rem[entity_description.name], entity_description.transform});
 
