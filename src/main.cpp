@@ -23,6 +23,7 @@
 #include "core/actor.h"
 #include "core/entity_manager.h"
 #include "core/flycam_actor.h"
+#include "core/light_manager.h"
 #include "core/manifest_descriptions.h"
 #include "core/player_actor.h"
 #include "core/render_entity.h"
@@ -226,14 +227,14 @@ auto load_render_entity_manager(ufps::ResourceLoader &resource_loader)
           texture_manager.texture_index("textures\\default_Emissive.dds")}});
 }
 
-auto pulse_light(ufps::PointLightHandle handle, ufps::Scene &scene) -> ufps::Task
+auto pulse_light(ufps::LightHandle handle) -> ufps::Task
 {
-    auto &awaitable = ufps::service<ufps::AwaitableManager>();
+    const auto &[awaitable, lm] = ufps::services<ufps::AwaitableManager, ufps::LightManager>();
     auto fake_time = 0.0f;
 
     for (;;)
     {
-        if (auto light = scene.lights().lights[handle]; light)
+        if (auto light = lm[handle]; light)
         {
             light->intensity = 2.0f + (5.0f * ((std::sin(fake_time) + 1.0f) / 2.0f));
         }
@@ -248,15 +249,15 @@ auto pulse_light(ufps::PointLightHandle handle, ufps::Scene &scene) -> ufps::Tas
     }
 }
 
-auto flicker_light(ufps::PointLightHandle handle, ufps::Scene &scene) -> ufps::Task
+auto flicker_light(ufps::LightHandle handle) -> ufps::Task
 {
-    auto &awaitable = ufps::service<ufps::AwaitableManager>();
+    const auto &[awaitable, lm] = ufps::services<ufps::AwaitableManager, ufps::LightManager>();
 
     for (;;)
     {
         co_await awaitable(3s);
 
-        if (auto light = scene.lights().lights[handle]; light)
+        if (auto light = lm[handle]; light)
         {
             light->intensity = 0.0f;
         }
@@ -268,7 +269,7 @@ auto flicker_light(ufps::PointLightHandle handle, ufps::Scene &scene) -> ufps::T
 
         co_await awaitable(100ms);
 
-        if (auto light = scene.lights().lights[handle]; light)
+        if (auto light = lm[handle]; light)
         {
             light->intensity = 15.0f;
         }
@@ -364,6 +365,8 @@ int start()
 
     load_render_entity_manager(*resource_loader);
 
+    const auto &[em, rem, lm] = ufps::services<ufps::EntityManager, ufps::RenderEntityManager, ufps::LightManager>();
+
     auto renderer = ufps::DebugRenderer{window, *resource_loader};
     auto debug_mode = false;
 
@@ -372,12 +375,10 @@ int start()
 
     auto scene = ufps::Scene{std::move(*scene_description)};
 
-    const auto point_light_handles = scene.lights().lights.handles();
+    const auto point_light_handles = lm.handles();
 
-    pulse_light(point_light_handles[0], scene);
-    flicker_light(point_light_handles[2], scene);
-
-    const auto &[em, rem] = ufps::services<ufps::EntityManager, ufps::RenderEntityManager>();
+    pulse_light(point_light_handles[0]);
+    flicker_light(point_light_handles[2]);
 
     const auto gun_name = "SciFiRifle01_2";
     const auto gun_handle = em.insert(gun_name, {gun_name, rem[gun_name], {}});

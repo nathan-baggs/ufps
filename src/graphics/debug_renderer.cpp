@@ -19,6 +19,7 @@
 #include <variant>
 
 #include "core/entity_manager.h"
+#include "core/light_manager.h"
 #include "core/render_entity_manager.h"
 #include "core/scene.h"
 #include "core/service_locator.h"
@@ -245,7 +246,8 @@ DebugRenderer::~DebugRenderer()
 
 auto DebugRenderer::post_render(Scene &scene, const Camera &camera) -> void
 {
-    auto &&[em, rem] = services<EntityManager, RenderEntityManager>();
+    auto &&[em, rem, mm, lm, ps] =
+        services<EntityManager, RenderEntityManager, MeshManager, LightManager, PhysicsSystem>();
 
     if (std::holds_alternative<EntityHandle>(selected_))
     {
@@ -291,7 +293,7 @@ auto DebugRenderer::post_render(Scene &scene, const Camera &camera) -> void
 
     debug_light_program_.bind();
 
-    const auto [vertex_buffer_handle, index_buffer_handle] = service<MeshManager>().native_handle();
+    const auto [vertex_buffer_handle, index_buffer_handle] = mm.native_handle();
     ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, vertex_buffer_handle);
     ::glBindBufferRange(
         GL_SHADER_STORAGE_BUFFER,
@@ -301,12 +303,12 @@ auto DebugRenderer::post_render(Scene &scene, const Camera &camera) -> void
         sizeof(CameraData));
     ::glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffer_handle);
 
-    const auto cube_parts = service<MeshManager>().mesh("cube");
+    const auto cube_parts = mm.mesh("cube");
     ensure(cube_parts.size() == 1u, "cube mesh should have exactly 1 part");
     const auto cube_indices_offset_bytes = cube_parts.front().index_offset * sizeof(std::uint32_t);
     const auto cube_vertex_offset = cube_parts.front().vertex_offset;
 
-    for (const auto &light : scene.lights().lights.data())
+    for (const auto &light : lm.data())
     {
         const auto light_transform = Transform{light.position, {debug_light_scale}, {}};
         const auto light_model = Matrix4{light_transform};
@@ -329,7 +331,7 @@ auto DebugRenderer::post_render(Scene &scene, const Camera &camera) -> void
 
     debug_light_program_.unbind();
 
-    auto &&physics_debug_renderer = service<PhysicsSystem>().debug_renderer();
+    auto &&physics_debug_renderer = ps.debug_renderer();
     if (physics_debug_renderer)
     {
         debug_lines_.append_range(physics_debug_renderer->yield_lines());
@@ -375,8 +377,8 @@ auto DebugRenderer::post_render(Scene &scene, const Camera &camera) -> void
     draw_bloom_mips();
     draw_render_targets();
     draw_metrics();
-    draw_inspector(scene);
-    draw_gizmo(scene, camera);
+    draw_inspector();
+    draw_gizmo(camera);
 
     ::ImGui::Render();
     ::ImGui_ImplOpenGL3_RenderDrawData(::ImGui::GetDrawData());
@@ -394,9 +396,9 @@ auto DebugRenderer::post_render(Scene &scene, const Camera &camera) -> void
             selected_ = std::monostate{};
         }
 
-        for (auto light_handle : scene.lights().lights.handles())
+        for (const auto &light_handle : lm.handles())
         {
-            const auto light = scene.lights().lights[light_handle];
+            const auto light = lm[light_handle];
 
             if (!light)
             {
@@ -544,7 +546,7 @@ auto DebugRenderer::draw_scene(Scene &scene, const Camera &camera) -> void
         ::ImGui::PushID("scene");
 
         ::ImGui::Text("ambient");
-        create_debug_controller("ambient", scene.lights().ambient);
+        create_debug_controller("ambient", scene.ambient_light());
         ::ImGui::Text("camera_view");
         create_debug_controller("camera_view", camera.data().view);
 
@@ -782,15 +784,14 @@ auto DebugRenderer::draw_metrics() -> void
     ::ImGui::End();
 }
 
-auto DebugRenderer::draw_inspector(Scene &scene) -> void
+auto DebugRenderer::draw_inspector() -> void
 {
-    auto &tm = service<TextureManager>();
-
     if (!std::holds_alternative<std::monostate>(selected_))
     {
         ::ImGui::Begin("Inspector");
 
-        const auto &[em, rem, ps] = services<EntityManager, RenderEntityManager, PhysicsSystem>();
+        const auto &[em, rem, ps, tm, lm] =
+            services<EntityManager, RenderEntityManager, PhysicsSystem, TextureManager, LightManager>();
 
         if (auto *selected_entity = std::get_if<EntityHandle>(&selected_))
         {
@@ -927,10 +928,10 @@ auto DebugRenderer::draw_inspector(Scene &scene) -> void
                     ::ImVec2(1.0f, 0.0f));
             }
         }
-        else if (auto *selected_light = std::get_if<PointLightHandle>(&selected_))
+        else if (auto *selected_light = std::get_if<LightHandle>(&selected_))
         {
-            auto light = scene.lights().lights[*selected_light];
-            ensure(!!light, "missing light?");
+            auto light = lm[*selected_light];
+            contract_assert(light);
 
             ::ImGui::Text("point light");
 
@@ -967,9 +968,9 @@ auto DebugRenderer::draw_inspector(Scene &scene) -> void
     }
 }
 
-auto DebugRenderer::draw_gizmo(Scene &scene, const Camera &camera) -> void
+auto DebugRenderer::draw_gizmo(const Camera &camera) -> void
 {
-    const auto &[em, ps] = services<EntityManager, PhysicsSystem>();
+    const auto &[em, ps, lm] = services<EntityManager, PhysicsSystem, LightManager>();
 
     if (!std::holds_alternative<std::monostate>(selected_))
     {
@@ -999,9 +1000,9 @@ auto DebugRenderer::draw_gizmo(Scene &scene, const Camera &camera) -> void
                 entity->set_transform(transform);
             }
         }
-        else if (auto *selected_light = std::get_if<PointLightHandle>(&selected_))
+        else if (auto *selected_light = std::get_if<LightHandle>(&selected_))
         {
-            auto light = scene.lights().lights[*selected_light];
+            auto light = lm[*selected_light];
             contract_assert(light);
 
             auto transform = Matrix4{light->position};

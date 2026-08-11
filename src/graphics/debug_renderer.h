@@ -36,12 +36,12 @@ class DebugRenderer : public Renderer
     auto draw_bloom_mips() -> void;
     auto draw_render_targets() -> void;
     auto draw_metrics() -> void;
-    auto draw_inspector(Scene &scene) -> void;
-    auto draw_gizmo(Scene &scene, const Camera &camera) -> void;
+    auto draw_inspector() -> void;
+    auto draw_gizmo(const Camera &camera) -> void;
 
     bool enabled_;
     std::optional<MouseButtonEvent> click_;
-    std::variant<std::monostate, EntityHandle, PointLightHandle, RigidBodyHandle> selected_;
+    std::variant<std::monostate, EntityHandle, LightHandle, RigidBodyHandle> selected_;
     std::vector<LineData> debug_lines_;
     MultiBuffer<PersistentBuffer> debug_line_buffer_;
     Program debug_line_program_;

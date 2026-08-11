@@ -12,6 +12,7 @@
 
 #include "core/camera.h"
 #include "core/entity.h"
+#include "core/light_manager.h"
 #include "core/render_entity_manager.h"
 #include "core/scene.h"
 #include "core/service_locator.h"
@@ -178,7 +179,7 @@ Renderer::Renderer(
     , post_processing_command_buffer_{"post_processing_command_buffer"}
     , post_process_sprite_{create_sprite()}
     , camera_buffer_{sizeof(CameraData), "camera_buffer"}
-    , light_buffer_{sizeof(LightData), "light_buffer"}
+    , light_buffer_{1zu, "light_buffer"}
     , object_data_buffer_{sizeof(ObjectData), "object_data_buffer"}
     , luminance_histogram_buffer_{sizeof(std::uint32_t) * 256, "luminance_histogram_buffer"}
     , average_luminance_buffer_{sizeof(float), "average_luminance_buffer"}
@@ -505,21 +506,22 @@ auto Renderer::execute_lighting_pass(Scene &scene) -> void
     const auto auto_bind = AutoBind{light_pass_program_};
 
     {
-        const auto &lights = scene.lights();
+        const auto &ambient = scene.ambient_light();
+        const auto lights = service<LightManager>().data();
 
-        const auto buffer_size_bytes =
-            sizeof(lights.ambient) + sizeof(std::uint32_t) + sizeof(PointLight) * lights.lights.size();
+        const auto buffer_size_bytes = sizeof(ambient) + sizeof(std::uint32_t) + lights.size_bytes();
         if (light_buffer_.size() < buffer_size_bytes)
         {
+            log::warn("resizing light buffer {} -> {}", light_buffer_.size(), buffer_size_bytes);
             light_buffer_ = {buffer_size_bytes, light_buffer_.name()};
             // opengl barrier incase gpu using previous frame
             ::glFinish();
         }
 
         auto writer = BufferWriter{light_buffer_};
-        writer.write(lights.ambient);
-        writer.write(static_cast<std::uint32_t>(lights.lights.size()));
-        writer.write(lights.lights.data());
+        writer.write(ambient);
+        writer.write(static_cast<std::uint32_t>(std::ranges::size(lights)));
+        writer.write(lights);
     }
 
     light_pass_program_.set_uniforms(
