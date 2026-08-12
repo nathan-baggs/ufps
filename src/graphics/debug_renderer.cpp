@@ -45,6 +45,8 @@
 #include "serialisation/yaml_serialiser.h"
 #include "utils/log.h"
 
+using namespace std::literals;
+
 namespace
 {
 
@@ -849,6 +851,19 @@ auto DebugRenderer::draw_inspector() -> void
             contract_assert(entity);
 
             ::ImGui::Text("entity: %s", entity->name().data());
+
+            if (::ImGui::BeginCombo("add render entity group", "Select one", 0))
+            {
+                for (const auto &name : rem.groups())
+                {
+                    if (::ImGui::Selectable(name.c_str(), false))
+                    {
+                        entity->add_render_entities(rem[name]);
+                    }
+                }
+
+                ::ImGui::EndCombo();
+            }
 
             if (::ImGui::Button("add rigid body"))
             {
