@@ -598,6 +598,15 @@ auto DebugRenderer::draw_scene(Scene &scene, const Camera &camera) -> void
     {
         ::ImGui::PushID("scene");
 
+        if (::ImGui::Button("Save"))
+        {
+            const auto scene_yaml = ufps::yaml::serialise(scene.description());
+            contract_assert(scene_yaml);
+            auto out = std::ofstream("scene.yaml");
+
+            out << *scene_yaml;
+        }
+
         ::ImGui::Text("ambient");
         create_debug_controller("ambient", scene.ambient_light());
         ::ImGui::Text("camera_view");
