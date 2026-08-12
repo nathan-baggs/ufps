@@ -116,7 +116,7 @@ class Scene
 
     constexpr auto add(EntityHandle handle) -> void;
 
-    constexpr auto &entities(this auto &&self);
+    constexpr auto entities() const -> std::span<const EntityHandle>;
 
     constexpr auto &ambient_light(this auto &&self);
 
@@ -257,9 +257,9 @@ constexpr auto Scene::add(EntityHandle handle) -> void
     entities_.push_back(handle);
 }
 
-constexpr auto &Scene::entities(this auto &&self)
+constexpr auto Scene::entities() const -> std::span<const EntityHandle>
 {
-    return self.entities_;
+    return entities_;
 }
 
 constexpr auto &Scene::ambient_light(this auto &&self)
