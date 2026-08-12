@@ -402,7 +402,7 @@ auto DebugRenderer::post_render(Scene &scene, const Camera &camera) -> void
     draw_bloom_mips();
     draw_render_targets();
     draw_metrics();
-    draw_inspector();
+    draw_inspector(scene);
     draw_gizmo(camera);
 
     ::ImGui::Render();
@@ -836,7 +836,7 @@ auto DebugRenderer::draw_metrics() -> void
     ::ImGui::End();
 }
 
-auto DebugRenderer::draw_inspector() -> void
+auto DebugRenderer::draw_inspector(Scene &scene) -> void
 {
     if (!std::holds_alternative<std::monostate>(selected_))
     {
@@ -851,6 +851,16 @@ auto DebugRenderer::draw_inspector() -> void
             contract_assert(entity);
 
             ::ImGui::Text("entity: %s", entity->name().data());
+
+            if (::ImGui::Button("Add Child Entity"))
+            {
+                static auto counter = 0zu;
+                const auto handle = em.insert({std::format("{}_child_{}", entity->name(), counter++), {}, {}});
+
+                entity->add_child(handle);
+                scene.add(handle);
+                selected_ = handle;
+            }
 
             if (::ImGui::BeginCombo("add render entity group", "Select one", 0))
             {
@@ -1047,14 +1057,14 @@ auto DebugRenderer::draw_gizmo(const Camera &camera) -> void
             contract_assert(entity);
 
             static float snap_translation[3] = {1.0f, 1.0f, 1.0f};
-            auto transform = Matrix4{entity->transform()};
+            auto world_matrix = Matrix4{entity->transform()};
 
             ::ImGuizmo::Manipulate(
                 camera_data.view.data().data(),
                 camera_data.projection.data().data(),
                 ::ImGuizmo::TRANSLATE | ::ImGuizmo::SCALE | ::ImGuizmo::ROTATE,
                 ::ImGuizmo::WORLD,
-                transform.data().data(),
+                world_matrix.data().data(),
                 nullptr,
                 snap_translation,
                 nullptr,
@@ -1062,7 +1072,11 @@ auto DebugRenderer::draw_gizmo(const Camera &camera) -> void
 
             if (::ImGuizmo::IsUsing())
             {
-                entity->set_transform(transform);
+                const auto parent = Matrix4{entity->parent_transform()};
+                const auto inverse_parent = Matrix4::invert(parent);
+                const auto local = inverse_parent * world_matrix;
+
+                entity->set_transform(local);
             }
         }
         else if (auto *selected_light = std::get_if<LightHandle>(&selected_))
