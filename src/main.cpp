@@ -388,8 +388,10 @@ int start()
     pulse_light(point_light_handles[0]);
     flicker_light(point_light_handles[2]);
 
-    auto player_entity_handle = em.insert({"player", {}, {}});
-    scene.add(player_entity_handle);
+    const auto entity_handles = em.handles();
+    auto player_entity_handle = std::ranges::find_if(entity_handles, [&](auto e) { return em[e]->name() == "player"; });
+    ufps::ensure(player_entity_handle != std::ranges::cend(entity_handles), "no player in scene");
+    scene.add(*player_entity_handle);
 
     auto player_actor = ufps::PlayerActor{
         {{0.0f, 2.0f, 0.0f},
@@ -400,7 +402,7 @@ int start()
          static_cast<float>(window.render_height()),
          0.1f,
          1000.0f},
-        player_entity_handle,
+        *player_entity_handle,
         input_map,
         player_controller};
 
