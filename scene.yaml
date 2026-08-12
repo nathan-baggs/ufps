@@ -17,7 +17,6 @@ Description:
       power: 2
   exposure_options:
     ExposureOptions:
-      enabled: false
       min_log_luminance: -1.208
       max_log_luminance: 3.264
   fog_options:
@@ -71,7 +70,7 @@ Description:
         constant_attenuation: 1
         linear_attenuation: 0.313
         quadratic_attenuation: 0.157
-        intensity: 3.0809402
+        intensity: 3.9357395
     - PointLight:
         position:
           Vector3:
@@ -275,6 +274,19 @@ Description:
                   x: 1.970745
                   y: 1.646917
                   z: 2.3483603
+        render_entities:
+          - SM_Corner01_8_8_X
+          - SM_Corner01_8_8_X
+          - SM_Corner01_8_8_X
+          - SM_Corner01_8_8_X
+          - SM_Corner01_8_8_X
+          - SM_Corner01_8_8_X
+          - SM_Corner01_8_8_X
+          - SM_Corner01_8_8_X
+          - SM_Corner01_8_8_X
+          - SM_Corner01_8_8_X
+          - SM_Corner01_8_8_X
+        children: ~
     - Description:
         name: SM_Corridor039_12_06_Top_B_02
         emissive_strength: 1
@@ -287,9 +299,9 @@ Description:
                 z: 1.04904175e-05
             scale:
               Vector3:
-                x: 0.9999165
+                x: 0.9999164
                 y: 1
-                z: 0.9999165
+                z: 0.9999164
             rotation:
               Quaternion:
                 x: 0
@@ -309,6 +321,13 @@ Description:
                 y: 6.999999
                 z: 6
         rigid_bodies: ~
+        render_entities:
+          - SM_Corridor039_12_06_Top_B_02
+          - SM_Corridor039_12_06_Top_B_02
+          - SM_Corridor039_12_06_Top_B_02
+          - SM_Corridor039_12_06_Top_B_02
+          - SM_Corridor039_12_06_Top_B_02
+        children: ~
     - Description:
         name: SM_Corridor045_04_04
         emissive_strength: 1
@@ -321,9 +340,9 @@ Description:
                 z: 2.3841862e-06
             scale:
               Vector3:
-                x: 0.99963474
+                x: 0.9996346
                 y: 1
-                z: 0.99963474
+                z: 0.9996346
             rotation:
               Quaternion:
                 x: 0
@@ -343,6 +362,14 @@ Description:
                 y: 2.0976985
                 z: 8.34465e-07
         rigid_bodies: ~
+        render_entities:
+          - SM_Corridor045_04_04
+          - SM_Corridor045_04_04
+          - SM_Corridor045_04_04
+          - SM_Corridor045_04_04
+          - SM_Corridor045_04_04
+          - SM_Corridor045_04_04
+        children: ~
     - Description:
         name: SM_Corridor042_12_06_Bottom_B
         emissive_strength: 1
@@ -377,6 +404,16 @@ Description:
                 y: 3.9999998
                 z: 6
         rigid_bodies: ~
+        render_entities:
+          - SM_Corridor042_12_06_Bottom_B
+          - SM_Corridor042_12_06_Bottom_B
+          - SM_Corridor042_12_06_Bottom_B
+          - SM_Corridor042_12_06_Bottom_B
+          - SM_Corridor042_12_06_Bottom_B
+          - SM_Corridor042_12_06_Bottom_B
+          - SM_Corridor042_12_06_Bottom_B
+          - SM_Corridor042_12_06_Bottom_B
+        children: ~
     - Description:
         name: SM_Corridor043_12_06_Bottom_B
         emissive_strength: 1
@@ -389,9 +426,9 @@ Description:
                 z: 2.2172928e-05
             scale:
               Vector3:
-                x: 0.99995834
+                x: 0.9999582
                 y: 1
-                z: 0.99995834
+                z: 0.9999582
             rotation:
               Quaternion:
                 x: 0
@@ -411,6 +448,16 @@ Description:
                 y: 3.9999998
                 z: 6
         rigid_bodies: ~
+        render_entities:
+          - SM_Corridor043_12_06_Bottom_B
+          - SM_Corridor043_12_06_Bottom_B
+          - SM_Corridor043_12_06_Bottom_B
+          - SM_Corridor043_12_06_Bottom_B
+          - SM_Corridor043_12_06_Bottom_B
+          - SM_Corridor043_12_06_Bottom_B
+          - SM_Corridor043_12_06_Bottom_B
+          - SM_Corridor043_12_06_Bottom_B
+        children: ~
     - Description:
         name: SM_Windows03_12_4
         emissive_strength: 1
@@ -445,6 +492,13 @@ Description:
                 y: 5
                 z: 0
         rigid_bodies: ~
+        render_entities:
+          - SM_Windows03_12_4
+          - SM_Windows03_12_4
+          - SM_Windows03_12_4
+          - SM_Windows03_12_4
+          - SM_Windows03_12_4
+        children: ~
     - Description:
         name: SM_Corridor036_12_06_Top_B_02
         emissive_strength: 1
@@ -479,6 +533,13 @@ Description:
                 y: 6.999999
                 z: 6
         rigid_bodies: ~
+        render_entities:
+          - SM_Corridor036_12_06_Top_B_02
+          - SM_Corridor036_12_06_Top_B_02
+          - SM_Corridor036_12_06_Top_B_02
+          - SM_Corridor036_12_06_Top_B_02
+          - SM_Corridor036_12_06_Top_B_02
+        children: ~
     - Description:
         name: SM_Corridor045_04_04
         emissive_strength: 1
@@ -491,9 +552,9 @@ Description:
                 z: 4.5299534e-05
             scale:
               Vector3:
-                x: 0.99960566
+                x: 0.99960554
                 y: 1
-                z: 0.99960566
+                z: 0.99960554
             rotation:
               Quaternion:
                 x: 0
@@ -513,6 +574,14 @@ Description:
                 y: 2.0976985
                 z: 8.34465e-07
         rigid_bodies: ~
+        render_entities:
+          - SM_Corridor045_04_04
+          - SM_Corridor045_04_04
+          - SM_Corridor045_04_04
+          - SM_Corridor045_04_04
+          - SM_Corridor045_04_04
+          - SM_Corridor045_04_04
+        children: ~
     - Description:
         name: SM_Corridor042_12_06_Bottom_B
         emissive_strength: 1
@@ -547,6 +616,16 @@ Description:
                 y: 3.9999998
                 z: 6
         rigid_bodies: ~
+        render_entities:
+          - SM_Corridor042_12_06_Bottom_B
+          - SM_Corridor042_12_06_Bottom_B
+          - SM_Corridor042_12_06_Bottom_B
+          - SM_Corridor042_12_06_Bottom_B
+          - SM_Corridor042_12_06_Bottom_B
+          - SM_Corridor042_12_06_Bottom_B
+          - SM_Corridor042_12_06_Bottom_B
+          - SM_Corridor042_12_06_Bottom_B
+        children: ~
     - Description:
         name: SM_Corridor043_12_06_Bottom_B
         emissive_strength: 1
@@ -559,9 +638,9 @@ Description:
                 z: 0.00017738344
             scale:
               Vector3:
-                x: 0.99993575
+                x: 0.9999356
                 y: 1
-                z: 0.99993575
+                z: 0.9999356
             rotation:
               Quaternion:
                 x: 0
@@ -581,6 +660,16 @@ Description:
                 y: 3.9999998
                 z: 6
         rigid_bodies: ~
+        render_entities:
+          - SM_Corridor043_12_06_Bottom_B
+          - SM_Corridor043_12_06_Bottom_B
+          - SM_Corridor043_12_06_Bottom_B
+          - SM_Corridor043_12_06_Bottom_B
+          - SM_Corridor043_12_06_Bottom_B
+          - SM_Corridor043_12_06_Bottom_B
+          - SM_Corridor043_12_06_Bottom_B
+          - SM_Corridor043_12_06_Bottom_B
+        children: ~
     - Description:
         name: SM_Corridor039_12_06_Top_B_02
         emissive_strength: 1
@@ -593,9 +682,9 @@ Description:
                 z: 7.486344e-05
             scale:
               Vector3:
-                x: 0.99989927
+                x: 0.99989915
                 y: 1
-                z: 0.99989927
+                z: 0.99989915
             rotation:
               Quaternion:
                 x: 0
@@ -615,6 +704,13 @@ Description:
                 y: 6.999999
                 z: 6
         rigid_bodies: ~
+        render_entities:
+          - SM_Corridor039_12_06_Top_B_02
+          - SM_Corridor039_12_06_Top_B_02
+          - SM_Corridor039_12_06_Top_B_02
+          - SM_Corridor039_12_06_Top_B_02
+          - SM_Corridor039_12_06_Top_B_02
+        children: ~
     - Description:
         name: SM_Corridor036_12_06_Top_B_02
         emissive_strength: 1
@@ -649,6 +745,13 @@ Description:
                 y: 6.999999
                 z: 6
         rigid_bodies: ~
+        render_entities:
+          - SM_Corridor036_12_06_Top_B_02
+          - SM_Corridor036_12_06_Top_B_02
+          - SM_Corridor036_12_06_Top_B_02
+          - SM_Corridor036_12_06_Top_B_02
+          - SM_Corridor036_12_06_Top_B_02
+        children: ~
     - Description:
         name: SM_Windows03_12_4
         emissive_strength: 1
@@ -683,6 +786,13 @@ Description:
                 y: 5
                 z: 0
         rigid_bodies: ~
+        render_entities:
+          - SM_Windows03_12_4
+          - SM_Windows03_12_4
+          - SM_Windows03_12_4
+          - SM_Windows03_12_4
+          - SM_Windows03_12_4
+        children: ~
     - Description:
         name: SM_Corridor019_06_08_B
         emissive_strength: 1
@@ -717,6 +827,16 @@ Description:
                 y: 4.4271092
                 z: 4.7683716e-07
         rigid_bodies: ~
+        render_entities:
+          - SM_Corridor019_06_08_B
+          - SM_Corridor019_06_08_B
+          - SM_Corridor019_06_08_B
+          - SM_Corridor019_06_08_B
+          - SM_Corridor019_06_08_B
+          - SM_Corridor019_06_08_B
+          - SM_Corridor019_06_08_B
+          - SM_Corridor019_06_08_B
+        children: ~
     - Description:
         name: SM_Corridor018_06_08_B
         emissive_strength: 1
@@ -751,6 +871,16 @@ Description:
                 y: 4.279462
                 z: 3.7758843e-17
         rigid_bodies: ~
+        render_entities:
+          - SM_Corridor018_06_08_B
+          - SM_Corridor018_06_08_B
+          - SM_Corridor018_06_08_B
+          - SM_Corridor018_06_08_B
+          - SM_Corridor018_06_08_B
+          - SM_Corridor018_06_08_B
+          - SM_Corridor018_06_08_B
+          - SM_Corridor018_06_08_B
+        children: ~
     - Description:
         name: SM_Corridor018_06_08_B
         emissive_strength: 1
@@ -785,6 +915,16 @@ Description:
                 y: 4.279462
                 z: 3.7758843e-17
         rigid_bodies: ~
+        render_entities:
+          - SM_Corridor018_06_08_B
+          - SM_Corridor018_06_08_B
+          - SM_Corridor018_06_08_B
+          - SM_Corridor018_06_08_B
+          - SM_Corridor018_06_08_B
+          - SM_Corridor018_06_08_B
+          - SM_Corridor018_06_08_B
+          - SM_Corridor018_06_08_B
+        children: ~
     - Description:
         name: SM_Corridor018_06_08_B
         emissive_strength: 1
@@ -819,6 +959,16 @@ Description:
                 y: 4.279462
                 z: 3.7758843e-17
         rigid_bodies: ~
+        render_entities:
+          - SM_Corridor018_06_08_B
+          - SM_Corridor018_06_08_B
+          - SM_Corridor018_06_08_B
+          - SM_Corridor018_06_08_B
+          - SM_Corridor018_06_08_B
+          - SM_Corridor018_06_08_B
+          - SM_Corridor018_06_08_B
+          - SM_Corridor018_06_08_B
+        children: ~
     - Description:
         name: SM_Corner06_12_12_B_L
         emissive_strength: 1
@@ -853,6 +1003,18 @@ Description:
                 y: 4.4271092
                 z: 12.000001
         rigid_bodies: ~
+        render_entities:
+          - SM_Corner06_12_12_B_L
+          - SM_Corner06_12_12_B_L
+          - SM_Corner06_12_12_B_L
+          - SM_Corner06_12_12_B_L
+          - SM_Corner06_12_12_B_L
+          - SM_Corner06_12_12_B_L
+          - SM_Corner06_12_12_B_L
+          - SM_Corner06_12_12_B_L
+          - SM_Corner06_12_12_B_L
+          - SM_Corner06_12_12_B_L
+        children: ~
     - Description:
         name: SM_Windows05_6_4
         emissive_strength: 1
@@ -865,9 +1027,9 @@ Description:
                 z: -50.00003
             scale:
               Vector3:
-                x: 0.9999408
+                x: 0.9999407
                 y: 1
-                z: 0.9999408
+                z: 0.9999407
             rotation:
               Quaternion:
                 x: 0
@@ -887,6 +1049,13 @@ Description:
                 y: 4.279462
                 z: 0
         rigid_bodies: ~
+        render_entities:
+          - SM_Windows05_6_4
+          - SM_Windows05_6_4
+          - SM_Windows05_6_4
+          - SM_Windows05_6_4
+          - SM_Windows05_6_4
+        children: ~
     - Description:
         name: SM_Detail13
         emissive_strength: 1
@@ -921,6 +1090,9 @@ Description:
                 y: 0.44238245
                 z: 0.21634865
         rigid_bodies: ~
+        render_entities:
+          - SM_Detail13
+        children: ~
     - Description:
         name: SM_Generator
         emissive_strength: 10
@@ -955,6 +1127,10 @@ Description:
                 y: 1.4152939
                 z: 1.0975153
         rigid_bodies: ~
+        render_entities:
+          - SM_Generator
+          - SM_Generator
+        children: ~
     - Description:
         name: SM_Monitor
         emissive_strength: 1
@@ -967,9 +1143,9 @@ Description:
                 z: -6
             scale:
               Vector3:
-                x: 0.99991655
+                x: 0.99991643
                 y: 1
-                z: 0.99991655
+                z: 0.99991643
             rotation:
               Quaternion:
                 x: 0
@@ -989,6 +1165,10 @@ Description:
                 y: 0.36726955
                 z: 0.58520603
         rigid_bodies: ~
+        render_entities:
+          - SM_Monitor
+          - SM_Monitor
+        children: ~
     - Description:
         name: SM_Fan03
         emissive_strength: 1
@@ -1023,3 +1203,117 @@ Description:
                 y: -1.536452
                 z: 0.654063
         rigid_bodies: ~
+        render_entities:
+          - SM_Fan03
+        children: ~
+    - Description:
+        name: player
+        emissive_strength: 1
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: 0
+                y: 2.0442564
+                z: 0
+            scale:
+              Vector3:
+                x: 1.0000001
+                y: 0.99999994
+                z: 1
+            rotation:
+              Quaternion:
+                x: -0.014995892
+                y: 0.7139849
+                z: -0.01469893
+                w: 0.69984615
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: 3.4028235e+38
+                y: 3.4028235e+38
+                z: 3.4028235e+38
+            max:
+              Vector3:
+                x: -3.4028235e+38
+                y: -3.4028235e+38
+                z: -3.4028235e+38
+        rigid_bodies: ~
+        render_entities: ~
+        children:
+          - player_child_0
+    - Description:
+        name: player
+        emissive_strength: 1
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: 0
+                y: 2.0442564
+                z: 0
+            scale:
+              Vector3:
+                x: 1.0000001
+                y: 0.99999994
+                z: 1
+            rotation:
+              Quaternion:
+                x: -0.014995892
+                y: 0.7139849
+                z: -0.01469893
+                w: 0.69984615
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: 3.4028235e+38
+                y: 3.4028235e+38
+                z: 3.4028235e+38
+            max:
+              Vector3:
+                x: -3.4028235e+38
+                y: -3.4028235e+38
+                z: -3.4028235e+38
+        rigid_bodies: ~
+        render_entities: ~
+        children:
+          - player_child_0
+    - Description:
+        name: player_child_0
+        emissive_strength: 1
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: -0.017233202
+                y: 1.134609
+                z: -0.86154777
+            scale:
+              Vector3:
+                x: 1.0000128
+                y: 0.9999936
+                z: 1
+            rotation:
+              Quaternion:
+                x: -0.014995954
+                y: 0.7139849
+                z: -0.014698865
+                w: 0.69984615
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: -0.053433396
+                y: -0.5502794
+                z: -0.14810744
+            max:
+              Vector3:
+                x: 0.053433403
+                y: 0.41483355
+                z: 0.13504946
+        rigid_bodies: ~
+        render_entities:
+          - SciFiRifle01_2
+        children: ~

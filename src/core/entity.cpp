@@ -10,6 +10,34 @@
 namespace ufps
 {
 
+auto Entity::description() const -> Entity::Description
+{
+    const auto &[em, rem, ps] = services<EntityManager, RenderEntityManager, PhysicsSystem>();
+
+    auto render_entities = render_entities_ | std::views::filter([&](auto e) { return !!rem[e]; }) |
+                           std::views::transform([&](auto e) { return std::string{rem[e]->group_name()}; }) |
+                           std::ranges::to<std::vector>();
+    std::ranges::sort(render_entities);
+    const auto [first, last] = std::ranges::unique(render_entities);
+    render_entities.erase(first, last);
+
+    return {
+        .name = name_,
+        .emissive_strength = emissive_strength_,
+        .transform = transform_,
+        .aabb = aabb_,
+        .rigid_bodies = rigid_bodies_ | std::views::transform([&](auto e) { return ps.rigid_body(e); }) |
+                        std::views::filter([](const auto &e) { return !!e; }) |
+                        std::views::transform([](const auto &e) { return e->description(); }) |
+                        std::ranges::to<std::vector>(),
+        .render_entities = std::move(render_entities),
+        .children = children_ | std::views::transform([&](auto e) { return em[e]; }) |
+                    std::views::filter([](const auto &e) { return !!e; }) |
+                    std::views::transform([](const auto &e) { return std::string{e->name()}; }) |
+                    std::ranges::to<std::vector>(),
+    };
+}
+
 auto Entity::set_transform(const Transform &transform) -> void
 {
     auto &&[em, ps] = services<EntityManager, PhysicsSystem>();

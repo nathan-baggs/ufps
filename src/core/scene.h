@@ -173,6 +173,8 @@ constexpr Scene::Scene(const Description &description)
         log::debug("inserted light");
     }
 
+    auto lookup = StringMap<EntityHandle>{};
+
     for (const auto &entity_description : description.entities)
     {
         const auto new_entity_handle = em.insert({entity_description.name, {}, entity_description.transform});
@@ -192,6 +194,20 @@ constexpr Scene::Scene(const Description &description)
         }
 
         add(new_entity_handle);
+        lookup[entity_description.name] = new_entity_handle;
+    }
+
+    for (const auto &entity_description : description.entities)
+    {
+        const auto &entity = lookup[entity_description.name];
+
+        for (const auto &child : entity_description.children)
+        {
+            const auto child_handle = lookup.find(child);
+            ensure(child_handle != std::ranges::cend(lookup), "child {} not found", child);
+
+            em[entity]->add_child(child_handle->second);
+        }
     }
 }
 
