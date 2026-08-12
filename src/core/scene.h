@@ -175,11 +175,15 @@ constexpr Scene::Scene(const Description &description)
 
     for (const auto &entity_description : description.entities)
     {
-        const auto new_entity_handle =
-            em.insert({entity_description.name, rem[entity_description.name], entity_description.transform});
+        const auto new_entity_handle = em.insert({entity_description.name, {}, entity_description.transform});
 
         auto new_entity = em[new_entity_handle];
         new_entity->set_emissive_strength(entity_description.emissive_strength);
+
+        for (const auto &group_name : entity_description.render_entities)
+        {
+            new_entity->add_render_entities(rem[group_name]);
+        }
 
         for (const auto &rb_description : entity_description.rigid_bodies)
         {
@@ -320,9 +324,8 @@ constexpr auto Scene::description(this auto &&self) -> Description
         .vignette_options = self.vignette_options_,
         .film_grain_options = self.film_grain_options_,
         .bloom_options = self.bloom_options_,
-        .ambient = self.lights_.ambient,
-        .lights = self.lights_.lights | std::views::filter([&](auto &e) { return !!lm[e]; }) |
-                  std::views::transform([&](auto e) { return *em[e]; }) | std::ranges::to<std::vector>(),
+        .ambient = self.ambient_,
+        .lights = lm.data() | std::ranges::to<std::vector>(),
         .entities = self.entities_ | std::views::filter([&](auto &e) { return !!em[e]; }) |
                     std::views::transform([&](auto e) { return em[e]->description(); }) |
                     std::ranges::to<std::vector>()};
