@@ -207,7 +207,14 @@ auto load_render_entity_manager(ufps::ResourceLoader &resource_loader)
             const auto emissive_index = texture_manager.bindless_handle(emissive);
 
             render_entities.push_back(
-                {mesh_view, albedo_index, normal_index, specular_index, ao_index, glossiness_index, emissive_index});
+                {name,
+                 mesh_view,
+                 albedo_index,
+                 normal_index,
+                 specular_index,
+                 ao_index,
+                 glossiness_index,
+                 emissive_index});
         }
 
         rem.register_group(name, std::move(render_entities));
@@ -218,7 +225,8 @@ auto load_render_entity_manager(ufps::ResourceLoader &resource_loader)
 
     rem.register_group(
         "sprite",
-        {{mesh_views.front(),
+        {{"sprite",
+          mesh_views.front(),
           texture_manager.texture_index("textures\\default_BaseColor.dds"),
           texture_manager.texture_index("textures\\default_Normal.dds"),
           texture_manager.texture_index("textures\\default_Metallic.dds"),
