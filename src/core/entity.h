@@ -37,6 +37,7 @@ class Entity
     constexpr auto render_entities() const -> std::span<const RenderEntityHandle>;
     constexpr auto add_render_entities(std::span<const RenderEntityHandle> render_entities);
     constexpr auto transform() const -> const Transform &;
+    constexpr auto parent_transform() const -> const Transform &;
     auto set_transform(const Transform &transform) -> void;
     constexpr auto aabb() const -> const AABB &;
     constexpr auto description() const -> Description;
@@ -44,10 +45,10 @@ class Entity
     constexpr auto set_emissive_strength(float strength) -> void;
     constexpr auto add_rigid_body(RigidBodyHandle handle);
     constexpr auto rigid_bodies() const -> std::span<const RigidBodyHandle>;
-    constexpr auto add_child(EntityHandle child) -> void;
+    auto add_child(EntityHandle child) -> void;
 
   private:
-    constexpr auto update_transforms(const Transform &local, const Transform &parent) -> void;
+    auto update_transforms(const Transform &local, const Transform &parent) -> void;
     constexpr auto set_parent_transform(const Transform &transform) -> void;
 
     std::string name_;
@@ -94,6 +95,11 @@ constexpr auto Entity::transform() const -> const Transform &
     return transform_;
 }
 
+constexpr auto Entity::parent_transform() const -> const Transform &
+{
+    return parent_transform_;
+}
+
 constexpr auto Entity::aabb() const -> const AABB &
 {
     return aabb_;
@@ -138,18 +144,6 @@ constexpr auto Entity::add_rigid_body(RigidBodyHandle handle)
 constexpr auto Entity::rigid_bodies() const -> std::span<const RigidBodyHandle>
 {
     return rigid_bodies_;
-}
-
-constexpr auto Entity::add_child(EntityHandle child) -> void
-{
-    children_.push_back(child);
-}
-
-constexpr auto Entity::update_transforms(const Transform &local, const Transform &parent) -> void
-{
-    transform_ = parent * local;
-    local_transform_ = local;
-    parent_transform_ = parent;
 }
 
 constexpr auto Entity::set_parent_transform(const Transform &transform) -> void

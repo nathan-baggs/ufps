@@ -31,4 +31,31 @@ auto Entity::set_transform(const Transform &transform) -> void
     }
 }
 
+auto Entity::update_transforms(const Transform &local, const Transform &parent) -> void
+{
+    transform_ = parent * local;
+    local_transform_ = local;
+    parent_transform_ = parent;
+
+    auto &&[em, ps] = services<EntityManager, PhysicsSystem>();
+
+    for (auto handle : children_)
+    {
+        const auto child = em[handle];
+        child->set_parent_transform(transform_);
+    }
+}
+
+auto Entity::add_child(EntityHandle child) -> void
+{
+    auto &em = service<EntityManager>();
+
+    const auto entity = em[child];
+    contract_assert(entity);
+
+    entity->set_parent_transform(transform_);
+
+    children_.push_back(child);
+}
+
 }
