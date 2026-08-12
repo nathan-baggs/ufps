@@ -35,6 +35,7 @@ class Entity
 
     constexpr auto name() const -> std::string_view;
     constexpr auto render_entities() const -> std::span<const RenderEntityHandle>;
+    constexpr auto add_render_entities(std::span<const RenderEntityHandle> render_entities);
     constexpr auto transform() const -> const Transform &;
     auto set_transform(const Transform &transform) -> void;
     constexpr auto aabb() const -> const AABB &;
@@ -80,6 +81,12 @@ constexpr auto Entity::name() const -> std::string_view
 constexpr auto Entity::render_entities() const -> std::span<const RenderEntityHandle>
 {
     return render_entities_;
+}
+
+constexpr auto Entity::add_render_entities(std::span<const RenderEntityHandle> render_entities)
+{
+    render_entities_.append_range(render_entities);
+    aabb_ = create_aabb(render_entities_);
 }
 
 constexpr auto Entity::transform() const -> const Transform &
