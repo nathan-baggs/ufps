@@ -204,6 +204,7 @@ namespace ufps
 DebugRenderer::DebugRenderer(const Window &window, ResourceLoader &resource_loader)
     : Renderer{window, resource_loader}
     , enabled_{false}
+    , snap_enabled_{false}
     , click_{}
     , selected_{std::monostate{}}
     , debug_lines_{}
@@ -852,6 +853,8 @@ auto DebugRenderer::draw_inspector(Scene &scene) -> void
 
             ::ImGui::Text("entity: %s", entity->name().data());
 
+            ::ImGui::Checkbox("Enable snap", std::addressof(snap_enabled_));
+
             if (::ImGui::Button("Add Child Entity"))
             {
                 static auto counter = 0zu;
@@ -1066,7 +1069,7 @@ auto DebugRenderer::draw_gizmo(const Camera &camera) -> void
                 ::ImGuizmo::WORLD,
                 world_matrix.data().data(),
                 nullptr,
-                snap_translation,
+                snap_enabled_ ? snap_translation : nullptr,
                 nullptr,
                 nullptr);
 

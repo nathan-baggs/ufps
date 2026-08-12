@@ -40,6 +40,7 @@ class DebugRenderer : public Renderer
     auto draw_gizmo(const Camera &camera) -> void;
 
     bool enabled_;
+    bool snap_enabled_;
     std::optional<MouseButtonEvent> click_;
     std::variant<std::monostate, EntityHandle, LightHandle, RigidBodyHandle> selected_;
     std::vector<LineData> debug_lines_;
