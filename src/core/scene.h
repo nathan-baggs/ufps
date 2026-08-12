@@ -169,15 +169,14 @@ constexpr Scene::Scene(const Description &description)
 
     for (auto &&[index, light] : std::views::enumerate(description.lights))
     {
-        lm.insert(std::format("light{}", index), light);
+        lm.insert(light);
         log::debug("inserted light");
     }
 
     for (const auto &entity_description : description.entities)
     {
-        const auto new_entity_handle = em.insert(
-            entity_description.name,
-            {entity_description.name, rem[entity_description.name], entity_description.transform});
+        const auto new_entity_handle =
+            em.insert({entity_description.name, rem[entity_description.name], entity_description.transform});
 
         auto new_entity = em[new_entity_handle];
         new_entity->set_emissive_strength(entity_description.emissive_strength);
