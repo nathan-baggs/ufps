@@ -1,6 +1,7 @@
 #include <filesystem>
 #include <fstream>
 #include <ranges>
+#include <unordered_map>
 #include <unordered_set>
 
 #include <yaml-cpp/yaml.h>
@@ -13,6 +14,28 @@
 #include "utils/error.h"
 #include "utils/exception.h"
 #include "utils/log.h"
+
+using namespace std::literals;
+
+namespace
+{
+
+struct Textures
+{
+    std::string albedo_texture;
+    std::string normal_texture;
+    std::string specular_texture;
+    std::string ao_texture;
+    std::string glossiness_texture;
+    std::string emissive_texture;
+};
+
+struct ModelTextures
+{
+    std::unordered_map<std::string, std::vector<Textures>> models;
+};
+
+}
 
 auto main(int argc, char **argv) -> int
 {
@@ -38,6 +61,10 @@ auto main(int argc, char **argv) -> int
         auto resource_loader = ufps::FileResourceLoader{resource_dirs};
         auto models =
             resource_loader.resources("models") | std::views::filter([](const auto &e) { return e.ends_with(".fbx"); });
+
+        const auto model_textures_map = resource_loader.load_string("configs\\model_textures.yaml");
+        const auto model_textures = ufps::yaml::deserialise<ModelTextures>(model_textures_map);
+        ufps::ensure(model_textures);
 
         auto vertex_offset = 0zu;
         auto index_offset = 0zu;
@@ -67,40 +94,36 @@ auto main(int argc, char **argv) -> int
                     continue;
                 }
 
-                if (name == "SciFiRifle01_2")
-                {
-                    ufps::log::warn("special case for rifle");
-                    sub_models.erase(std::ranges::begin(sub_models) + 2zu, std::ranges::begin(sub_models) + 6zu);
-
-                    for (auto &model : sub_models)
-                    {
-                        model.albedo = "textures\\SciFiRifle01A_Diffuse.dds";
-                        model.ao = "textures\\SciFiRifle01A_AO.dds";
-                        model.emissive = "textures\\SciFiRifle01A_Glow.dds";
-                        model.glossiness = "textures\\SciFiRifle01A_Roughness.dds";
-                        model.normal = "textures\\SciFiRifle01A_Normal.dds";
-                        model.specular = "textures\\SciFiRifle01A_Metallic.dds";
-                    }
-                }
-
                 manifest.models[name] =
-                    sub_models |
+                    std::views::enumerate(sub_models) |
                     std::views::transform(
-                        [&](const auto &model)
+                        [&](const auto &e)
                         {
+                            const auto &[index, model] = e;
+
                             const auto &mesh_data = model.mesh_data;
                             const auto vertex_count = mesh_data.vertices.size();
                             const auto index_count = mesh_data.indices.size();
 
-                            const auto albedo_name = model.albedo ? *model.albedo : "textures\\default_BaseColor.dds";
-                            const auto normal_name = model.normal ? *model.normal : "textures\\default_Normal.dds";
-                            const auto specular_name =
-                                model.specular ? *model.specular : "textures\\default_Metallic.dds";
-                            const auto ao_name = model.ao ? *model.ao : "textures\\default_AO.dds";
-                            const auto glossiness_name =
-                                model.glossiness ? *model.glossiness : "textures\\default_Roughness.dds";
-                            const auto emissive_name =
-                                model.emissive ? *model.emissive : "textures\\default_Emissive.dds";
+                            const auto &textures = model_textures->models.find(name);
+
+                            auto albedo_name = "textures\\default_BaseColor.dds"s;
+                            auto normal_name = "textures\\default_Normal.dds"s;
+                            auto specular_name = "textures\\default_Metallic.dds"s;
+                            auto ao_name = "textures\\default_AO.dds"s;
+                            auto glossiness_name = "textures\\default_Roughness.dds"s;
+                            auto emissive_name = "textures\\default_Emissive.dds"s;
+
+                            if (textures != std::ranges::cend(model_textures->models))
+                            {
+                                ufps::log::debug("{}", index);
+                                albedo_name = textures->second[index].albedo_texture;
+                                normal_name = textures->second[index].normal_texture;
+                                specular_name = textures->second[index].specular_texture;
+                                ao_name = textures->second[index].ao_texture;
+                                glossiness_name = textures->second[index].glossiness_texture;
+                                emissive_name = textures->second[index].emissive_texture;
+                            }
 
                             texture_names.insert(albedo_name);
                             texture_names.insert(normal_name);
