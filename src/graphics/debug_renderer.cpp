@@ -223,6 +223,7 @@ DebugRenderer::DebugRenderer(const Window &window, ResourceLoader &resource_load
           "shaders\\debug_light.frag",
           "debug_light_fragment_shader",
           "debug_light_program")}
+    , highlight_render_entity_{}
 {
     IMGUI_CHECKVERSION();
     ::ImGui::CreateContext();
@@ -258,15 +259,16 @@ auto DebugRenderer::post_render(Scene &scene, const Camera &camera) -> void
         auto entity = em[selected_entity];
         contract_assert(entity);
 
-        auto aabb_lines =
-            entity->render_entities() |
-            std::views::transform(
-                [&](auto e)
-                {
-                    auto render_entity = rem[e];
-                    return create_aabb_lines(render_entity->aabb(), entity->transform(), {0.0f, 0.2f, 0.0f});
-                }) |
-            std::views::join;
+        auto aabb_lines = entity->render_entities() |
+                          std::views::transform(
+                              [&](auto e)
+                              {
+                                  auto render_entity = rem[e];
+                                  const auto colour =
+                                      e == highlight_render_entity_ ? colours::magenta : Colour{0.0f, 0.2f, 0.0f};
+                                  return create_aabb_lines(render_entity->aabb(), entity->transform(), colour);
+                              }) |
+                          std::views::join;
 
         debug_lines_.append_range(aabb_lines);
         debug_lines_.append_range(create_aabb_lines(entity->aabb(), entity->transform(), {0.0f, 1.0f, 0.0f}));
@@ -897,125 +899,164 @@ auto DebugRenderer::draw_inspector(Scene &scene) -> void
                 selected_ = body;
             }
 
-            auto to_delete = RigidBodyHandle{};
-            auto to_duplicate = RigidBodyHandle{};
-
-            for (const auto &[index, handle] : std::views::enumerate(entity->rigid_bodies()))
             {
+
+                auto to_delete = RigidBodyHandle{};
+                auto to_duplicate = RigidBodyHandle{};
+
+                for (const auto &[index, handle] : std::views::enumerate(entity->rigid_bodies()))
                 {
-                    const auto button_text = std::format("rigid body {}", index);
-                    if (::ImGui::Button(button_text.c_str()))
                     {
-                        selected_ = handle;
-                        break;
+                        const auto button_text = std::format("rigid body {}", index);
+                        if (::ImGui::Button(button_text.c_str()))
+                        {
+                            selected_ = handle;
+                            break;
+                        }
+                    }
+
+                    ::ImGui::SameLine();
+
+                    {
+                        const auto button_text = std::format("remove rigid body {}", index);
+                        if (::ImGui::Button(button_text.c_str()))
+                        {
+                            to_delete = handle;
+                            break;
+                        }
+                    }
+
+                    ::ImGui::SameLine();
+
+                    {
+                        const auto button_text = std::format("duplicate rigid body {}", index);
+                        if (::ImGui::Button(button_text.c_str()))
+                        {
+                            to_duplicate = handle;
+                            break;
+                        }
                     }
                 }
 
-                ::ImGui::SameLine();
+                if (to_delete)
+                {
+                    service<PhysicsSystem>().remove_rigid_body(to_delete);
+                }
+                if (to_duplicate)
+                {
+                    const auto handle = ps.duplicate_rigid_body(to_duplicate);
+                    entity->add_rigid_body(handle);
+                    selected_ = handle;
+                }
 
                 {
-                    const auto button_text = std::format("remove rigid body {}", index);
-                    if (::ImGui::Button(button_text.c_str()))
+                    auto value = entity->emissive_strength();
+                    if (::ImGui::SliderFloat("emissive_strength", &value, 0.0f, 10.0f))
                     {
-                        to_delete = handle;
-                        break;
+                        entity->set_emissive_strength(value);
                     }
                 }
 
-                ::ImGui::SameLine();
+                auto transform = Matrix4{entity->transform()};
 
+                ::ImGui::BeginTable(
+                    "transform", 4, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingFixedFit);
+
+                for (auto row = 0; row < 4; ++row)
                 {
-                    const auto button_text = std::format("duplicate rigid body {}", index);
-                    if (::ImGui::Button(button_text.c_str()))
+                    ::ImGui::TableNextRow();
+                    for (auto col = 0; col < 4; ++col)
                     {
-                        to_duplicate = handle;
-                        break;
+                        ::ImGui::TableSetColumnIndex(col);
+                        ::ImGui::Text("%0.2f", transform[col * 4 + row]);
                     }
                 }
-            }
 
-            if (to_delete)
-            {
-                service<PhysicsSystem>().remove_rigid_body(to_delete);
-            }
-            if (to_duplicate)
-            {
-                const auto handle = ps.duplicate_rigid_body(to_duplicate);
-                entity->add_rigid_body(handle);
-                selected_ = handle;
+                ::ImGui::EndTable();
             }
 
             {
-                auto value = entity->emissive_strength();
-                if (::ImGui::SliderFloat("emissive_strength", &value, 0.0f, 10.0f))
+                auto to_delete = RenderEntityHandle{};
+                auto to_highlight = RenderEntityHandle{};
+
+                for (const auto &[index, handle] : std::views::enumerate(entity->render_entities()))
                 {
-                    entity->set_emissive_strength(value);
+                    auto render_entity = rem[handle];
+
+                    const auto header = std::format("render_entity {}", index);
+
+                    if (::ImGui::CollapsingHeader(header.c_str()))
+                    {
+                        ::ImGui::PushID(index);
+
+                        if (::ImGui::Button("Delete"))
+                        {
+                            to_delete = handle;
+                        }
+
+                        if (::ImGui::IsItemHovered())
+                        {
+                            log::debug("hover {}", index);
+                            to_highlight = handle;
+                        }
+
+                        const auto *albedo_texture = tm.texture(render_entity->albedo_texture_bindless_handle());
+                        ::ImGui::Image(
+                            albedo_texture->native_handle(),
+                            ::ImVec2(64.0f, 64.0f),
+                            ::ImVec2(0.0f, 1.0f),
+                            ::ImVec2(1.0f, 0.0f));
+
+                        const auto *normal_texture = tm.texture(render_entity->normal_texture_bindless_handle());
+                        ::ImGui::SameLine();
+                        ::ImGui::Image(
+                            normal_texture->native_handle(),
+                            ::ImVec2(64.0f, 64.0f),
+                            ::ImVec2(0.0f, 1.0f),
+                            ::ImVec2(1.0f, 0.0f));
+
+                        const auto *specular_texture = tm.texture(render_entity->specular_texture_bindless_handle());
+                        ::ImGui::SameLine();
+                        ::ImGui::Image(
+                            specular_texture->native_handle(),
+                            ::ImVec2(64.0f, 64.0f),
+                            ::ImVec2(0.0f, 1.0f),
+                            ::ImVec2(1.0f, 0.0f));
+
+                        const auto *ao_texture = tm.texture(render_entity->ao_texture_bindless_handle());
+                        ::ImGui::Image(
+                            ao_texture->native_handle(),
+                            ::ImVec2(64.0f, 64.0f),
+                            ::ImVec2(0.0f, 1.0f),
+                            ::ImVec2(1.0f, 0.0f));
+
+                        const auto *glossiness_texture =
+                            tm.texture(render_entity->glossiness_texture_bindless_handle());
+                        ::ImGui::SameLine();
+                        ::ImGui::Image(
+                            glossiness_texture->native_handle(),
+                            ::ImVec2(64.0f, 64.0f),
+                            ::ImVec2(0.0f, 1.0f),
+                            ::ImVec2(1.0f, 0.0f));
+
+                        const auto *emissive_texture = tm.texture(render_entity->emissive_texture_bindless_handle());
+                        ::ImGui::SameLine();
+                        ::ImGui::Image(
+                            emissive_texture->native_handle(),
+                            ::ImVec2(64.0f, 64.0f),
+                            ::ImVec2(0.0f, 1.0f),
+                            ::ImVec2(1.0f, 0.0f));
+
+                        ::ImGui::PopID();
+                    }
                 }
-            }
 
-            auto transform = Matrix4{entity->transform()};
-
-            ::ImGui::BeginTable(
-                "transform", 4, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingFixedFit);
-
-            for (auto row = 0; row < 4; ++row)
-            {
-                ::ImGui::TableNextRow();
-                for (auto col = 0; col < 4; ++col)
+                if (to_delete)
                 {
-                    ::ImGui::TableSetColumnIndex(col);
-                    ::ImGui::Text("%0.2f", transform[col * 4 + row]);
+                    entity->remove_render_entity(to_delete);
                 }
-            }
 
-            ::ImGui::EndTable();
-
-            for (auto handle : entity->render_entities())
-            {
-                auto render_entity = rem[handle];
-
-                const auto *albedo_texture = tm.texture(render_entity->albedo_texture_bindless_handle());
-                ::ImGui::Image(
-                    albedo_texture->native_handle(),
-                    ::ImVec2(64.0f, 64.0f),
-                    ::ImVec2(0.0f, 1.0f),
-                    ::ImVec2(1.0f, 0.0f));
-
-                const auto *normal_texture = tm.texture(render_entity->normal_texture_bindless_handle());
-                ::ImGui::SameLine();
-                ::ImGui::Image(
-                    normal_texture->native_handle(),
-                    ::ImVec2(64.0f, 64.0f),
-                    ::ImVec2(0.0f, 1.0f),
-                    ::ImVec2(1.0f, 0.0f));
-
-                const auto *specular_texture = tm.texture(render_entity->specular_texture_bindless_handle());
-                ::ImGui::SameLine();
-                ::ImGui::Image(
-                    specular_texture->native_handle(),
-                    ::ImVec2(64.0f, 64.0f),
-                    ::ImVec2(0.0f, 1.0f),
-                    ::ImVec2(1.0f, 0.0f));
-
-                const auto *ao_texture = tm.texture(render_entity->ao_texture_bindless_handle());
-                ::ImGui::Image(
-                    ao_texture->native_handle(), ::ImVec2(64.0f, 64.0f), ::ImVec2(0.0f, 1.0f), ::ImVec2(1.0f, 0.0f));
-
-                const auto *glossiness_texture = tm.texture(render_entity->glossiness_texture_bindless_handle());
-                ::ImGui::SameLine();
-                ::ImGui::Image(
-                    glossiness_texture->native_handle(),
-                    ::ImVec2(64.0f, 64.0f),
-                    ::ImVec2(0.0f, 1.0f),
-                    ::ImVec2(1.0f, 0.0f));
-
-                const auto *emissive_texture = tm.texture(render_entity->emissive_texture_bindless_handle());
-                ::ImGui::SameLine();
-                ::ImGui::Image(
-                    emissive_texture->native_handle(),
-                    ::ImVec2(64.0f, 64.0f),
-                    ::ImVec2(0.0f, 1.0f),
-                    ::ImVec2(1.0f, 0.0f));
+                highlight_render_entity_ = to_highlight;
             }
         }
         else if (auto *selected_light = std::get_if<LightHandle>(&selected_))
