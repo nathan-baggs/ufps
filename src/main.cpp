@@ -453,6 +453,7 @@ int start()
                         }
 
                         input_map.set(arg);
+                        renderer.add_key_event(arg);
                     }
                     else if constexpr (std::same_as<T, ufps::MouseEvent>)
                     {

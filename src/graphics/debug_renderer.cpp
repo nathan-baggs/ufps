@@ -16,13 +16,16 @@
 #include <ImGuizmo.h>
 #include <backends/imgui_impl_opengl3.h>
 #include <backends/imgui_impl_win32.h>
+#include <utility>
 #include <variant>
+#include <windows.h>
 
 #include "core/entity_manager.h"
 #include "core/light_manager.h"
 #include "core/render_entity_manager.h"
 #include "core/scene.h"
 #include "core/service_locator.h"
+#include "events/key.h"
 #include "events/mouse_button_event.h"
 #include "graphics/colour.h"
 #include "graphics/line_data.h"
@@ -509,6 +512,32 @@ auto DebugRenderer::add_mouse_event(const MouseButtonEvent &evt) -> void
     }
 }
 
+auto DebugRenderer::add_key_event(const KeyEvent &evt) -> void
+{
+    auto &io = ::ImGui::GetIO();
+
+    if (evt.state() == KeyState::DOWN)
+    {
+        ::BYTE key_state[256] = {};
+        ::GetKeyboardState(key_state);
+
+        const auto scan_code = ::MapVirtualKeyA(std::to_underlying(evt.key()), MAPVK_VK_TO_VSC);
+        auto chr = ::WORD{};
+        if (::ToAscii(std::to_underlying(evt.key()), scan_code, key_state, &chr, 0) == 1)
+        {
+            io.AddInputCharacter(chr);
+        }
+    }
+
+    switch (evt.key())
+    {
+        using enum Key;
+
+        case BACKSPACE: io.AddKeyEvent(::ImGuiKey_Backspace, evt.state() == KeyState::DOWN); break;
+        default: break;
+    }
+}
+
 auto DebugRenderer::set_enabled(bool enabled) -> void
 {
     enabled_ = enabled;
@@ -896,7 +925,21 @@ auto DebugRenderer::draw_inspector(Scene &scene) -> void
             auto entity = em[*selected_entity];
             contract_assert(entity);
 
-            ::ImGui::Text("entity: %s", entity->name().data());
+            ::ImGui::Text("entity");
+            ::ImGui::SameLine();
+
+            static auto buffer = std::array<char, 256>{};
+            const auto name = entity->name();
+            ensure(std::ranges::size(name) < std::ranges::size(buffer), "{} too long", name);
+            std::ranges::copy(std::ranges::begin(name), std::ranges::end(name) + 1zu, std::ranges::begin(buffer));
+
+            ::ImGui::InputText("Name", std::ranges::data(buffer), std::ranges::size(buffer));
+            ::ImGui::SameLine();
+            if (::ImGui::Button("Set Name"))
+            {
+                entity->set_name(std::string(std::ranges::data(buffer)));
+                log::debug("new name: {}", std::ranges::data(buffer));
+            }
 
             ::ImGui::Checkbox("Enable snap", std::addressof(snap_enabled_));
 
