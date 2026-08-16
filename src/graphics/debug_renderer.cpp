@@ -925,6 +925,22 @@ auto DebugRenderer::draw_inspector(Scene &scene) -> void
             auto entity = em[*selected_entity];
             contract_assert(entity);
 
+            ::ImGui::PushStyleColor(ImGuiCol_Button, ::ImVec4(0.80f, 0.15f, 0.15f, 1.00f));
+            ::ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ::ImVec4(0.95f, 0.25f, 0.25f, 1.00f));
+            ::ImGui::PushStyleColor(ImGuiCol_ButtonActive, ::ImVec4(0.65f, 0.10f, 0.10f, 1.00f));
+
+            if (::ImGui::Button("Delete"))
+            {
+                scene.remove(*selected_entity);
+                selected_ = std::monostate{};
+                ::ImGui::PopStyleColor(3);
+                ::ImGui::End();
+
+                return;
+            }
+
+            ::ImGui::PopStyleColor(3);
+
             ::ImGui::Text("entity");
             ::ImGui::SameLine();
 
@@ -956,37 +972,68 @@ auto DebugRenderer::draw_inspector(Scene &scene) -> void
             {
                 auto to_delete = EntityHandle{};
                 auto to_highlight = EntityHandle{};
+                auto to_duplicate = EntityHandle{};
 
                 for (const auto &[index, handle] : std::views::enumerate(entity->children()))
                 {
-                    const auto header = std::format("child_entity {}", index);
+                    const auto child = em[handle];
+                    contract_assert(child);
+
+                    const auto header = std::format("child_entity {}", child->name());
 
                     if (::ImGui::CollapsingHeader(header.c_str()))
                     {
                         ::ImGui::PushID(index);
 
-                        if (::ImGui::IsItemHovered())
-                        {
-                            log::debug("hover {}", index);
-                            to_highlight = handle;
-                        }
+                        ::ImGui::PushStyleColor(ImGuiCol_Button, ::ImVec4(0.80f, 0.15f, 0.15f, 1.00f));
+                        ::ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ::ImVec4(0.95f, 0.25f, 0.25f, 1.00f));
+                        ::ImGui::PushStyleColor(ImGuiCol_ButtonActive, ::ImVec4(0.65f, 0.10f, 0.10f, 1.00f));
 
                         if (::ImGui::Button("Delete"))
                         {
                             to_delete = handle;
                         }
 
+                        ::ImGui::PopStyleColor(3);
+
+                        ::ImGui::SameLine();
+
                         if (::ImGui::Button("Select"))
                         {
                             selected_ = handle;
                         }
 
+                        ::ImGui::SameLine();
+
+                        if (::ImGui::Button("Duplicate"))
+                        {
+                            to_duplicate = handle;
+                        }
+
                         ::ImGui::PopID();
+                    }
+
+                    if (::ImGui::IsItemHovered())
+                    {
+                        log::debug("hover {}", index);
+                        to_highlight = handle;
                     }
                 }
 
                 if (to_delete)
                 {
+                }
+
+                if (to_duplicate)
+                {
+                    const auto child = em[to_duplicate];
+                    static int counter = 0;
+
+                    const auto name = std::format("{}_copy_{}", child->name(), counter++);
+                    const auto handle = em.insert({name, child->render_entities(), child->transform()});
+                    scene.add(handle);
+                    entity->add_child(handle);
+                    selected_ = handle;
                 }
 
                 highlight_entity_ = to_highlight;
@@ -1114,7 +1161,6 @@ auto DebugRenderer::draw_inspector(Scene &scene) -> void
                         if (::ImGui::Button("Select"))
                         {
                             selected_ = handle;
-                            break;
                         }
 
                         ::ImGui::SameLine();
@@ -1122,7 +1168,6 @@ auto DebugRenderer::draw_inspector(Scene &scene) -> void
                         if (::ImGui::Button("Delete"))
                         {
                             to_delete = handle;
-                            break;
                         }
 
                         ::ImGui::SameLine();
@@ -1130,7 +1175,6 @@ auto DebugRenderer::draw_inspector(Scene &scene) -> void
                         if (::ImGui::Button("Duplicate"))
                         {
                             to_duplicate = handle;
-                            break;
                         }
 
                         ::ImGui::PopID();
