@@ -70,7 +70,7 @@ Description:
         constant_attenuation: 1
         linear_attenuation: 0.313
         quadratic_attenuation: 0.157
-        intensity: 6.992005
+        intensity: 2.5279257
     - PointLight:
         position:
           Vector3:
@@ -145,6 +145,7 @@ Description:
           - north_corridor_6
           - north_corridor_7
           - big_room_0
+        camera: ~
     - Description:
         name: player
         emissive_strength: 1
@@ -152,20 +153,20 @@ Description:
           Transform:
             position:
               Vector3:
-                x: -0.6324581
-                y: 2.0212407
-                z: -1.124957
+                x: 0
+                y: 0.021240827
+                z: 0
             scale:
               Vector3:
                 x: 1
                 y: 1
-                z: 1
+                z: 1.0000001
             rotation:
               Quaternion:
-                x: -0.019260608
-                y: 0.7131821
-                z: -0.018916994
-                w: 0.70045877
+                x: 0.0633994
+                y: 0.22496265
+                z: 0.16400851
+                w: 0.95837027
         aabb:
           AABB:
             min:
@@ -182,6 +183,31 @@ Description:
         render_entities: ~
         children:
           - gun
+        camera:
+          - Description:
+              transform:
+                Transform:
+                  position:
+                    Vector3:
+                      x: 0
+                      y: 2
+                      z: 0
+                  scale:
+                    Vector3:
+                      x: 1
+                      y: 1
+                      z: 1
+                  rotation:
+                    Quaternion:
+                      x: 0
+                      y: 0
+                      z: 0
+                      w: 1
+              fov: 0.7853982
+              width: 3840
+              height: 2160
+              near_plane: 0.1
+              far_plane: 1000
     - Description:
         name: gun
         emissive_strength: 1
@@ -189,20 +215,20 @@ Description:
           Transform:
             position:
               Vector3:
-                x: 0.9957068
-                y: -0.254133
-                z: 0.3813572
+                x: -0.06040743
+                y: 0.8618953
+                z: -0.72905684
             scale:
               Vector3:
-                x: 0.99999624
-                y: 1.0000107
-                z: 1.000003
+                x: 0.9999963
+                y: 1.000011
+                z: 1.0000031
             rotation:
               Quaternion:
-                x: -0.49891278
-                y: 0.50108707
-                z: 0.49786478
-                w: 0.50212395
+                x: -0.09998412
+                y: 0.27095675
+                z: 0.91814274
+                w: -0.27129236
         aabb:
           AABB:
             min:
@@ -219,6 +245,7 @@ Description:
         render_entities:
           - SciFiRifle01_1
         children: ~
+        camera: ~
     - Description:
         name: world_colliders
         emissive_strength: 1
@@ -278,6 +305,7 @@ Description:
                   z: 146.28583
         render_entities: ~
         children: ~
+        camera: ~
     - Description:
         name: north_corridor_0
         emissive_strength: 1
@@ -287,7 +315,7 @@ Description:
               Vector3:
                 x: 0
                 y: 0
-                z: -8
+                z: -2
             scale:
               Vector3:
                 x: 1
@@ -315,6 +343,7 @@ Description:
         render_entities:
           - SM_Corridor009_06_08_B
         children: ~
+        camera: ~
     - Description:
         name: north_corridor_1
         emissive_strength: 1
@@ -324,7 +353,7 @@ Description:
               Vector3:
                 x: 0
                 y: 0
-                z: -16
+                z: -10
             scale:
               Vector3:
                 x: 1
@@ -352,6 +381,7 @@ Description:
         render_entities:
           - SM_Corridor053_08_08_A
         children: ~
+        camera: ~
     - Description:
         name: north_corridor_3
         emissive_strength: 1
@@ -361,7 +391,7 @@ Description:
               Vector3:
                 x: -5.002451
                 y: 0
-                z: -21.00392
+                z: -15.00392
             scale:
               Vector3:
                 x: 1.0000099
@@ -389,6 +419,7 @@ Description:
         render_entities:
           - SM_Corridor051_02_04_A
         children: ~
+        camera: ~
     - Description:
         name: north_corridor_6
         emissive_strength: 1
@@ -398,7 +429,7 @@ Description:
               Vector3:
                 x: -9.002941
                 y: 0
-                z: -21.00441
+                z: -15.00441
             scale:
               Vector3:
                 x: 1.0000087
@@ -426,6 +457,7 @@ Description:
         render_entities:
           - SM_Corner05_8_8_A_L
         children: ~
+        camera: ~
     - Description:
         name: north_corridor_7
         emissive_strength: 1
@@ -435,7 +467,7 @@ Description:
               Vector3:
                 x: -17
                 y: 0
-                z: -29
+                z: -23
             scale:
               Vector3:
                 x: 1
@@ -463,6 +495,7 @@ Description:
         render_entities:
           - SM_Corridor019_06_08_B
         children: ~
+        camera: ~
     - Description:
         name: big_room_0
         emissive_strength: 1
@@ -472,7 +505,7 @@ Description:
               Vector3:
                 x: -13
                 y: 0
-                z: -51
+                z: -45
             scale:
               Vector3:
                 x: 1
@@ -500,6 +533,7 @@ Description:
         render_entities: ~
         children:
           - big_room_0_child_1
+        camera: ~
     - Description:
         name: big_room_0_child_1
         emissive_strength: 1
@@ -507,9 +541,9 @@ Description:
           Transform:
             position:
               Vector3:
-                x: 1
+                x: -38
                 y: 0
-                z: 0
+                z: -141
             scale:
               Vector3:
                 x: 1
@@ -537,3 +571,4 @@ Description:
         render_entities:
           - SM_FloorPanel10_07_04
         children: ~
+        camera: ~
