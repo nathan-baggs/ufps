@@ -2,6 +2,7 @@
 
 #include "core/actor.h"
 #include "core/camera_manager.h"
+#include "core/entity_manager.h"
 #include "events/input_map.h"
 
 namespace ufps
@@ -9,12 +10,13 @@ namespace ufps
 class FlyCamActor : public Actor
 {
   public:
-    FlyCamActor(CameraHandle camera, const InputMap &input_map);
+    FlyCamActor(CameraHandle camera, EntityHandle entity, const InputMap &input_map);
     ~FlyCamActor() override = default;
 
     auto update() -> void override;
 
   private:
     const InputMap &input_map_;
+    EntityHandle entity_;
 };
 }

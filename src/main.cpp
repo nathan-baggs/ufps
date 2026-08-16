@@ -398,15 +398,10 @@ int start()
     auto player_actor =
         ufps::PlayerActor{em[*player_entity_handle]->camera(), *player_entity_handle, input_map, player_controller};
 
-    const auto flycam_camera_handle = cm.insert(
-        {{{0.0f, 2.0f, 0.0f}, {1.0f}, {}},
-         std::numbers::pi_v<float> / 4.0f,
-         static_cast<float>(window.render_width()),
-         static_cast<float>(window.render_height()),
-         0.1f,
-         1000.0f});
+    auto flycam_entity_handle = std::ranges::find_if(entity_handles, [&](auto e) { return em[e]->name() == "flycam"; });
+    ufps::ensure(flycam_entity_handle != std::ranges::cend(entity_handles), "no flycam in scene");
 
-    auto flycam_actor = ufps::FlyCamActor{flycam_camera_handle, input_map};
+    auto flycam_actor = ufps::FlyCamActor{em[*flycam_entity_handle]->camera(), *flycam_entity_handle, input_map};
 
     ufps::Actor *current_actor = std::addressof(player_actor);
 
