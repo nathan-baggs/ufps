@@ -38,7 +38,9 @@ enum class Key
     Z = 0x5a,
     SHIFT = VK_SHIFT,
     SPACE = VK_SPACE,
-    F1 = VK_F1
+    F1 = VK_F1,
+    DEL = VK_DELETE,
+    BACKSPACE = VK_BACK,
 };
 
 enum class KeyState
