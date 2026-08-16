@@ -4,6 +4,7 @@
 #include <variant>
 #include <vector>
 
+#include "core/camera_manager.h"
 #include "core/entity.h"
 #include "core/entity_manager.h"
 #include "core/scene.h"
@@ -46,7 +47,7 @@ class DebugRenderer : public Renderer
     bool enabled_;
     bool snap_enabled_;
     std::optional<MouseButtonEvent> click_;
-    std::variant<std::monostate, EntityHandle, LightHandle, RigidBodyHandle> selected_;
+    std::variant<std::monostate, EntityHandle, LightHandle, RigidBodyHandle, CameraHandle> selected_;
     std::vector<LineData> debug_lines_;
     MultiBuffer<PersistentBuffer> debug_line_buffer_;
     Program debug_line_program_;

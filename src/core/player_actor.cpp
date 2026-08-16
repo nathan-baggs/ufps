@@ -45,11 +45,11 @@ namespace ufps
 {
 
 PlayerActor::PlayerActor(
-    Camera camera,
+    CameraHandle camera,
     EntityHandle player_entity,
     const InputMap &input_map,
     VirtualCharacterController &character_controller)
-    : Actor{std::move(camera)}
+    : Actor{camera}
     , input_map_{input_map}
     , character_controller_{character_controller}
     , player_entity_{player_entity}
@@ -58,28 +58,23 @@ PlayerActor::PlayerActor(
 
 auto PlayerActor::update() -> void
 {
-    if (input_map_.delta_x != 0.0f)
-    {
-        camera_.adjust_yaw(input_map_.delta_x);
-    }
+    const auto &[em, cm] = services<EntityManager, CameraManager>();
 
-    if (input_map_.delta_y != 0.0f)
-    {
-        camera_.adjust_pitch(-input_map_.delta_y);
-    }
+    const auto camera = cm[camera_];
+    contract_assert(camera);
 
-    character_controller_.set_walk_direction(walk_direction(input_map_, camera_));
+    static auto yaw = 0.0f;
+    static auto pitch = 0.0f;
 
-    static const auto camera_offset = Vector3{0.0f, 2.0f, 0.0f};
-    camera_.set_position(character_controller_.position() + camera_offset);
+    yaw += input_map_.delta_y;
+    pitch -= input_map_.delta_x;
 
-    auto &em = service<EntityManager>();
+    character_controller_.set_walk_direction(walk_direction(input_map_, *camera));
+
     auto player = em[player_entity_];
     contract_assert(player);
 
-    player->set_transform(
-        {camera_.position(),
-         {1.0f},
-         Quaternion{{0.0f, 1.0f, 0.0f}, -camera_.yaw()} * Quaternion{{0.0f, 0.0f, 1.0f}, camera_.pitch()}});
+    const auto new_transform = Transform{character_controller_.position(), {1.0f}, Quaternion(yaw, pitch, 0.0f)};
+    player->set_transform(new_transform);
 }
 }

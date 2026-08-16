@@ -11,6 +11,7 @@
 #include <string_view>
 
 #include "core/camera.h"
+#include "core/camera_manager.h"
 #include "core/entity.h"
 #include "core/light_manager.h"
 #include "core/render_entity_manager.h"
@@ -353,9 +354,12 @@ Renderer::Renderer(
     }
 }
 
-auto Renderer::render(Scene &scene, const Camera &camera) -> void
+auto Renderer::render(Scene &scene, CameraHandle handle) -> void
 {
-    camera_buffer_.write(camera.data_view(), 0zu);
+    const auto camera = service<CameraManager>()[handle];
+    contract_assert(camera);
+
+    camera_buffer_.write(camera->data_view(), 0zu);
 
     execute_gbuffer_pass(scene);
     execute_lighting_pass(scene);
@@ -375,7 +379,7 @@ auto Renderer::render(Scene &scene, const Camera &camera) -> void
         final_fb_ = &light_pass_rt_.fb;
     }
 
-    post_render(scene, camera);
+    post_render(scene, *camera);
 
     command_buffer_.advance();
     camera_buffer_.advance();

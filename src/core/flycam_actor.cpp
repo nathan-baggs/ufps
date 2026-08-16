@@ -7,7 +7,7 @@
 
 namespace
 {
-auto walk_direction(const ufps::InputMap &input_map, const ufps::Camera &camera) -> ufps::Vector3
+[[maybe_unused]] auto walk_direction(const ufps::InputMap &input_map, const ufps::Camera &camera) -> ufps::Vector3
 {
     auto direction = ufps::Vector3{};
 
@@ -51,25 +51,25 @@ auto walk_direction(const ufps::InputMap &input_map, const ufps::Camera &camera)
 namespace ufps
 {
 
-FlyCamActor::FlyCamActor(Camera camera, const InputMap &input_map)
-    : Actor{std::move(camera)}
+FlyCamActor::FlyCamActor(CameraHandle camera, const InputMap &input_map)
+    : Actor{camera}
     , input_map_{input_map}
 {
 }
 
 auto FlyCamActor::update() -> void
 {
-    if (input_map_.delta_x != 0.0f)
-    {
-        camera_.adjust_yaw(input_map_.delta_x);
-    }
-
-    if (input_map_.delta_y != 0.0f)
-    {
-        camera_.adjust_pitch(-input_map_.delta_y);
-    }
-
-    static const auto speed = 0.1f;
-    camera_.translate(walk_direction(input_map_, camera_) * speed);
+    // if (input_map_.delta_x != 0.0f)
+    // {
+    //     camera_.adjust_yaw(input_map_.delta_x);
+    // }
+    //
+    // if (input_map_.delta_y != 0.0f)
+    // {
+    //     camera_.adjust_pitch(-input_map_.delta_y);
+    // }
+    //
+    // static const auto speed = 0.1f;
+    // camera_.translate(walk_direction(input_map_, camera_) * speed);
 }
 }

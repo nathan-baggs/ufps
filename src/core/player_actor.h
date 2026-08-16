@@ -2,6 +2,7 @@
 
 #include "core/actor.h"
 #include "core/camera.h"
+#include "core/camera_manager.h"
 #include "core/entity_manager.h"
 #include "events/input_map.h"
 #include "events/key.h"
@@ -13,7 +14,7 @@ class PlayerActor : public Actor
 {
   public:
     PlayerActor(
-        Camera camera,
+        CameraHandle camera,
         EntityHandle player_entity,
         const InputMap &input_map,
         VirtualCharacterController &character_controller);

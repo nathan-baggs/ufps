@@ -1,6 +1,8 @@
 #pragma once
 
 #include "core/camera.h"
+#include "core/camera_manager.h"
+#include "core/service_locator.h"
 
 namespace ufps
 {
@@ -8,7 +10,7 @@ namespace ufps
 class Actor
 {
   public:
-    constexpr Actor(Camera camera);
+    constexpr Actor(CameraHandle camera);
     virtual ~Actor() = default;
     Actor(const Actor &) = delete;
     auto operator=(const Actor &) -> Actor & = delete;
@@ -20,11 +22,11 @@ class Actor
     constexpr auto &camera(this auto &&self);
 
   protected:
-    Camera camera_;
+    CameraHandle camera_;
 };
 
-constexpr Actor::Actor(Camera camera)
-    : camera_{std::move(camera)}
+constexpr Actor::Actor(CameraHandle camera)
+    : camera_{camera}
 {
 }
 

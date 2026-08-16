@@ -35,7 +35,7 @@ class Renderer
     Renderer(const Window &window, ResourceLoader &resource_loader);
     virtual ~Renderer() = default;
 
-    auto render(Scene &scene, const Camera &camera) -> void;
+    auto render(Scene &scene, CameraHandle camera) -> void;
 
   protected:
     static auto create_program(
