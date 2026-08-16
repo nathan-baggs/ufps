@@ -5,12 +5,14 @@
 #include <vector>
 
 #include "core/entity.h"
+#include "core/entity_manager.h"
 #include "core/scene.h"
 #include "events/mouse_button_event.h"
 #include "graphics/line_data.h"
 #include "graphics/point_light.h"
 #include "graphics/renderer.h"
 #include "graphics/window.h"
+#include "physics/physics_system.h"
 #include "resources/resource_loader.h"
 
 namespace ufps
@@ -48,6 +50,8 @@ class DebugRenderer : public Renderer
     Program debug_line_program_;
     Program debug_light_program_;
     RenderEntityHandle highlight_render_entity_;
+    EntityHandle highlight_entity_;
+    RigidBodyHandle highlight_rigid_body_;
 };
 
 }
