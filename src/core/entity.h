@@ -6,6 +6,7 @@
 #include <string>
 #include <vector>
 
+#include "core/camera_manager.h"
 #include "core/render_entity.h"
 #include "core/render_entity_manager.h"
 #include "core/service_locator.h"
@@ -31,6 +32,7 @@ class Entity
         std::vector<RigidBody::Description> rigid_bodies;
         std::vector<std::string> render_entities;
         std::vector<std::string> children;
+        std::optional<Camera::Description> camera;
     };
 
     constexpr Entity(std::string name, std::span<const RenderEntityHandle> render_entities, Transform transform);
@@ -52,6 +54,8 @@ class Entity
     constexpr auto rigid_bodies() const -> std::span<const RigidBodyHandle>;
     auto add_child(EntityHandle child) -> void;
     constexpr auto children() -> std::span<const EntityHandle>;
+    auto camera() const -> CameraHandle;
+    auto set_camera(CameraHandle handle) -> void;
 
   private:
     auto update_transforms(const Transform &local, const Transform &parent) -> void;
@@ -66,6 +70,7 @@ class Entity
     AABB aabb_;
     float emissive_strength_;
     std::vector<EntityHandle> children_;
+    CameraHandle camera_;
 };
 
 constexpr Entity::Entity(std::string name, std::span<const RenderEntityHandle> render_entities, Transform transform)

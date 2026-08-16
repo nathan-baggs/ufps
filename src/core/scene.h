@@ -165,12 +165,12 @@ constexpr Scene::Scene(const Description &description)
     , film_grain_options_{description.film_grain_options}
     , bloom_options_{description.bloom_options}
 {
-    auto &&[em, rem, ps, lm] = services<EntityManager, RenderEntityManager, PhysicsSystem, LightManager>();
+    auto &&[em, rem, ps, lm, cm] =
+        services<EntityManager, RenderEntityManager, PhysicsSystem, LightManager, CameraManager>();
 
-    for (auto &&[index, light] : std::views::enumerate(description.lights))
+    for (auto &light : description.lights)
     {
         lm.insert(light);
-        log::debug("inserted light");
     }
 
     auto lookup = StringMap<EntityHandle>{};
@@ -191,6 +191,12 @@ constexpr Scene::Scene(const Description &description)
         {
             const auto rb = ps.create_rigid_body(rb_description);
             new_entity->add_rigid_body(rb);
+        }
+
+        if (entity_description.camera)
+        {
+            const auto camera_handle = cm.insert(*entity_description.camera);
+            new_entity->set_camera(camera_handle);
         }
 
         add(new_entity_handle);
@@ -329,7 +335,7 @@ constexpr auto &Scene::bloom_options(this auto &&self)
 
 constexpr auto Scene::description(this auto &&self) -> Description
 {
-    const auto &[em, lm] = services<EntityManager, LightManager>();
+    const auto &[em, lm, cm] = services<EntityManager, LightManager, CameraManager>();
 
     return {
         .tone_map_options = self.tone_map_options_,
@@ -344,7 +350,8 @@ constexpr auto Scene::description(this auto &&self) -> Description
         .lights = lm.data() | std::ranges::to<std::vector>(),
         .entities = self.entities_ | std::views::filter([&](auto &e) { return !!em[e]; }) |
                     std::views::transform([&](auto e) { return em[e]->description(); }) |
-                    std::ranges::to<std::vector>()};
+                    std::ranges::to<std::vector>(),
+    };
 }
 
 constexpr auto Scene::remove(EntityHandle handle) -> void
