@@ -20,6 +20,7 @@
 #include <variant>
 #include <windows.h>
 
+#include "core/camera_manager.h"
 #include "core/entity_manager.h"
 #include "core/light_manager.h"
 #include "core/render_entity_manager.h"
@@ -154,6 +155,47 @@ auto create_aabb_lines(const ufps::AABB &aabb, const ufps::Matrix4 &transform, c
     return lines;
 }
 
+auto draw_frustum(
+    const ufps::Vector3 &cam_pos,
+    const ufps::Matrix4 &view,
+    const ufps::Matrix4 &proj,
+    const ufps::Colour &colour,
+    float debug_distance = 3.0f) -> std::vector<ufps::LineData>
+{
+    auto lines = std::vector<ufps::LineData>{};
+
+    const auto inv_vp = ufps::Matrix4::invert(proj * view);
+
+    constexpr auto ndc_far_corners = std::array<ufps::Vector4, 4>{{
+        {-1.0f, 1.0f, 1.0f, 1.0f},
+        {1.0f, 1.0f, 1.0f, 1.0f},
+        {1.0f, -1.0f, 1.0f, 1.0f},
+        {-1.0f, -1.0f, 1.0f, 1.0f},
+    }};
+
+    auto far_corners = std::array<ufps::Vector3, 4>{};
+    for (auto i = 0zu; i < 4zu; ++i)
+    {
+        const auto world_h = inv_vp * ndc_far_corners[i];
+        const auto world_pos = ufps::Vector3(world_h) / world_h.w;
+        const auto ray_dir = ufps::Vector3::normalise(world_pos - cam_pos);
+
+        far_corners[i] = cam_pos + ray_dir * debug_distance;
+    }
+
+    for (auto i = 0zu; i < 4zu; ++i)
+    {
+        draw_line(cam_pos, far_corners[i], colour, lines);
+    }
+
+    for (auto i = 0zu; i < 4zu; ++i)
+    {
+        draw_line(far_corners[i], far_corners[(i + 1) % 4], colour, lines);
+    }
+
+    return lines;
+}
+
 template <float Min, float Max>
 auto create_debug_controller(const std::string &label, ufps::BoundedFloat<Min, Max> &value) -> void
 {
@@ -253,8 +295,8 @@ DebugRenderer::~DebugRenderer()
 
 auto DebugRenderer::post_render(Scene &scene, const Camera &camera) -> void
 {
-    auto &&[em, rem, mm, lm, ps] =
-        services<EntityManager, RenderEntityManager, MeshManager, LightManager, PhysicsSystem>();
+    auto &&[em, rem, mm, lm, ps, cm] =
+        services<EntityManager, RenderEntityManager, MeshManager, LightManager, PhysicsSystem, CameraManager>();
 
     if (std::holds_alternative<EntityHandle>(selected_))
     {
@@ -354,15 +396,13 @@ auto DebugRenderer::post_render(Scene &scene, const Camera &camera) -> void
             cube_vertex_offset);
     }
 
-    for (const auto entity_handle : scene.entities() | std::views::filter(
-                                                           [&](auto e)
-                                                           {
-                                                               const auto entity = em[e];
-                                                               return entity &&
-                                                                      std::ranges::empty(entity->render_entities());
-                                                           }))
+    for (const auto entity_handle : scene.entities())
     {
         const auto entity = em[entity_handle];
+        if (!entity)
+        {
+            continue;
+        }
 
         const auto light_transform = Transform{entity->transform().position, {debug_light_scale / 4.0f}, {}};
         const auto light_model = Matrix4{light_transform};
@@ -375,6 +415,31 @@ auto DebugRenderer::post_render(Scene &scene, const Camera &camera) -> void
             GL_UNSIGNED_INT,
             reinterpret_cast<const void *>(cube_indices_offset_bytes),
             cube_vertex_offset);
+
+        const auto camera = cm[entity->camera()];
+        if (camera)
+        {
+            const auto light_transform =
+                Transform{camera->transform().position, {debug_light_scale / 4.0f}, camera->transform().rotation};
+            const auto light_model = Matrix4{light_transform};
+
+            debug_light_program_.set_uniforms(light_model, colours::azure);
+
+            const auto camera_data = camera->data();
+
+            if (entity->name() != "flycam")
+            {
+                debug_lines_.append_range(
+                    draw_frustum(camera_data.position, camera_data.view, camera_data.projection, colours::azure, 1.5f));
+            }
+
+            ::glDrawElementsBaseVertex(
+                GL_TRIANGLES,
+                36,
+                GL_UNSIGNED_INT,
+                reinterpret_cast<const void *>(cube_indices_offset_bytes),
+                cube_vertex_offset);
+        }
     }
 
     debug_light_program_.unbind();
@@ -470,15 +535,13 @@ auto DebugRenderer::post_render(Scene &scene, const Camera &camera) -> void
             }
         }
 
-        for (const auto entity_handle : scene.entities() | std::views::filter(
-                                                               [&](auto e)
-                                                               {
-                                                                   const auto entity = em[e];
-                                                                   return entity &&
-                                                                          std::ranges::empty(entity->render_entities());
-                                                               }))
+        for (const auto entity_handle : scene.entities())
         {
             const auto entity = em[entity_handle];
+            if (!entity)
+            {
+                continue;
+            }
 
             const auto entity_transform = Transform{entity->transform().position, {debug_light_scale / 4.0f}, {}};
             const auto entity_model = Matrix4{entity_transform};
