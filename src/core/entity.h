@@ -33,7 +33,7 @@ class Entity
         std::vector<std::string> children;
     };
 
-    constexpr Entity(std::string name, std::vector<RenderEntityHandle> render_entities, Transform transform);
+    constexpr Entity(std::string name, std::span<const RenderEntityHandle> render_entities, Transform transform);
 
     constexpr auto name() const -> std::string_view;
     constexpr auto set_name(std::string name) -> void;
@@ -68,9 +68,9 @@ class Entity
     std::vector<EntityHandle> children_;
 };
 
-constexpr Entity::Entity(std::string name, std::vector<RenderEntityHandle> render_entities, Transform transform)
+constexpr Entity::Entity(std::string name, std::span<const RenderEntityHandle> render_entities, Transform transform)
     : name_{std::move(name)}
-    , render_entities_{std::move(render_entities)}
+    , render_entities_{std::ranges::cbegin(render_entities), std::ranges::cend(render_entities)}
     , rigid_bodies_{}
     , local_transform_{std::move(transform)}
     , parent_transform_{{}, {1.0f}, {}}
