@@ -375,7 +375,8 @@ int start()
 
     load_render_entity_manager(*resource_loader);
 
-    const auto &[em, rem, lm] = ufps::services<ufps::EntityManager, ufps::RenderEntityManager, ufps::LightManager>();
+    const auto &[em, rem, lm, cm] =
+        ufps::services<ufps::EntityManager, ufps::RenderEntityManager, ufps::LightManager, ufps::CameraManager>();
 
     auto renderer = ufps::DebugRenderer{window, *resource_loader};
     auto debug_mode = false;
@@ -394,29 +395,18 @@ int start()
     auto player_entity_handle = std::ranges::find_if(entity_handles, [&](auto e) { return em[e]->name() == "player"; });
     ufps::ensure(player_entity_handle != std::ranges::cend(entity_handles), "no player in scene");
 
-    auto player_actor = ufps::PlayerActor{
-        {{0.0f, 2.0f, 0.0f},
-         {0.0f, 0.0f, -1.0f},
-         {0.0f, 1.0f, 0.0f},
-         std::numbers::pi_v<float> / 4.0f,
-         static_cast<float>(window.render_width()),
-         static_cast<float>(window.render_height()),
-         0.1f,
-         1000.0f},
-        *player_entity_handle,
-        input_map,
-        player_controller};
+    auto player_actor =
+        ufps::PlayerActor{em[*player_entity_handle]->camera(), *player_entity_handle, input_map, player_controller};
 
-    auto flycam_actor = ufps::FlyCamActor{
-        {{0.0f, 2.0f, 0.0f},
-         {0.0f, 0.0f, -1.0f},
-         {0.0f, 1.0f, 0.0f},
+    const auto flycam_camera_handle = cm.insert(
+        {{{0.0f, 2.0f, 0.0f}, {1.0f}, {}},
          std::numbers::pi_v<float> / 4.0f,
          static_cast<float>(window.render_width()),
          static_cast<float>(window.render_height()),
          0.1f,
-         1000.0f},
-        input_map};
+         1000.0f});
+
+    auto flycam_actor = ufps::FlyCamActor{flycam_camera_handle, input_map};
 
     ufps::Actor *current_actor = std::addressof(player_actor);
 
