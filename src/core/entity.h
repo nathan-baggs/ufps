@@ -50,6 +50,7 @@ class Entity
     constexpr auto add_rigid_body(RigidBodyHandle handle);
     constexpr auto rigid_bodies() const -> std::span<const RigidBodyHandle>;
     auto add_child(EntityHandle child) -> void;
+    constexpr auto children() -> std::span<const EntityHandle>;
 
   private:
     auto update_transforms(const Transform &local, const Transform &parent) -> void;
@@ -138,5 +139,10 @@ constexpr auto Entity::rigid_bodies() const -> std::span<const RigidBodyHandle>
 constexpr auto Entity::set_parent_transform(const Transform &transform) -> void
 {
     update_transforms(local_transform_, transform);
+}
+
+constexpr auto Entity::children() -> std::span<const EntityHandle>
+{
+    return children_;
 }
 }
