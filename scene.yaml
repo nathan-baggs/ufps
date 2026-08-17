@@ -70,7 +70,7 @@ Description:
         constant_attenuation: 1
         linear_attenuation: 0.313
         quadratic_attenuation: 0.157
-        intensity: 2.5279257
+        intensity: 2.0810285
     - PointLight:
         position:
           Vector3:
@@ -147,6 +147,67 @@ Description:
           - big_room_0
         camera: ~
     - Description:
+        name: flycam
+        emissive_strength: 1
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: 0.25030336
+                y: 2
+                z: 13.231616
+            scale:
+              Vector3:
+                x: 1
+                y: 1
+                z: 1
+            rotation:
+              Quaternion:
+                x: 0.0012985623
+                y: -0.99811655
+                z: 0.056954335
+                w: 0.022757119
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: 3.4028235e+38
+                y: 3.4028235e+38
+                z: 3.4028235e+38
+            max:
+              Vector3:
+                x: -3.4028235e+38
+                y: -3.4028235e+38
+                z: -3.4028235e+38
+        rigid_bodies: ~
+        render_entities: ~
+        children: ~
+        camera:
+          - Description:
+              transform:
+                Transform:
+                  position:
+                    Vector3:
+                      x: 0
+                      y: 0
+                      z: 0
+                  scale:
+                    Vector3:
+                      x: 1
+                      y: 1
+                      z: 1
+                  rotation:
+                    Quaternion:
+                      x: 0
+                      y: 0
+                      z: 0
+                      w: 1
+              fov: 0.7853982
+              width: 3840
+              height: 2160
+              near_plane: 0.1
+              far_plane: 1000
+    - Description:
         name: player
         emissive_strength: 1
         transform:
@@ -154,19 +215,19 @@ Description:
             position:
               Vector3:
                 x: 0
-                y: 0.021240827
+                y: 2
                 z: 0
             scale:
               Vector3:
                 x: 1
                 y: 1
-                z: 1.0000001
+                z: 1
             rotation:
               Quaternion:
-                x: 0.0633994
-                y: 0.22496265
-                z: 0.16400851
-                w: 0.95837027
+                x: 0.001999599
+                y: -0.019998629
+                z: 3.9997314e-05
+                w: 0.99979806
         aabb:
           AABB:
             min:
@@ -190,7 +251,7 @@ Description:
                   position:
                     Vector3:
                       x: 0
-                      y: 2
+                      y: 0
                       z: 0
                   scale:
                     Vector3:
@@ -215,20 +276,20 @@ Description:
           Transform:
             position:
               Vector3:
-                x: -0.06040743
-                y: 0.8618953
-                z: -0.72905684
+                x: -0.3217458
+                y: -0.21345997
+                z: 0.7940682
             scale:
               Vector3:
-                x: 0.9999963
-                y: 1.000011
-                z: 1.0000031
+                x: 0.95807797
+                y: 0.9404042
+                z: 0.94636256
             rotation:
               Quaternion:
-                x: -0.09998412
-                y: 0.27095675
-                z: 0.91814274
-                w: -0.27129236
+                x: -0.7140176
+                y: 0.037674222
+                z: 0.023861978
+                w: 0.698706
         aabb:
           AABB:
             min:
@@ -315,7 +376,7 @@ Description:
               Vector3:
                 x: 0
                 y: 0
-                z: -2
+                z: -8
             scale:
               Vector3:
                 x: 1
@@ -353,7 +414,7 @@ Description:
               Vector3:
                 x: 0
                 y: 0
-                z: -10
+                z: -16
             scale:
               Vector3:
                 x: 1
@@ -391,7 +452,7 @@ Description:
               Vector3:
                 x: -5.002451
                 y: 0
-                z: -15.00392
+                z: -21.00392
             scale:
               Vector3:
                 x: 1.0000099
@@ -429,7 +490,7 @@ Description:
               Vector3:
                 x: -9.002941
                 y: 0
-                z: -15.00441
+                z: -21.00441
             scale:
               Vector3:
                 x: 1.0000087
@@ -467,7 +528,7 @@ Description:
               Vector3:
                 x: -17
                 y: 0
-                z: -23
+                z: -29
             scale:
               Vector3:
                 x: 1
@@ -505,7 +566,7 @@ Description:
               Vector3:
                 x: -13
                 y: 0
-                z: -45
+                z: -35
             scale:
               Vector3:
                 x: 1
@@ -541,9 +602,9 @@ Description:
           Transform:
             position:
               Vector3:
-                x: -38
+                x: -103
                 y: 0
-                z: -141
+                z: -336
             scale:
               Vector3:
                 x: 1
