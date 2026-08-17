@@ -44,6 +44,7 @@ class Entity
     constexpr auto remove_render_entity(RenderEntityHandle handle) //
         pre(std::ranges::contains(render_entities_, handle));
     constexpr auto transform() const -> const Transform &;
+    constexpr auto local_transform() const -> const Transform &;
     constexpr auto parent_transform() const -> const Transform &;
     auto set_transform(const Transform &transform) -> void;
     constexpr auto aabb() const -> const AABB &;
@@ -114,6 +115,11 @@ constexpr auto Entity::remove_render_entity(RenderEntityHandle handle)
 constexpr auto Entity::transform() const -> const Transform &
 {
     return transform_;
+}
+
+constexpr auto Entity::local_transform() const -> const Transform &
+{
+    return local_transform_;
 }
 
 constexpr auto Entity::parent_transform() const -> const Transform &
