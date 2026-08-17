@@ -354,8 +354,9 @@ Renderer::Renderer(
     }
 }
 
-auto Renderer::render(Scene &scene, CameraHandle handle) -> void
+auto Renderer::render(Scene &scene) -> void
 {
+    const auto handle = service<CameraHandle>();
     const auto camera = service<CameraManager>()[handle];
     contract_assert(camera);
 

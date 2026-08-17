@@ -1357,6 +1357,11 @@ auto DebugRenderer::draw_inspector(Scene &scene) -> void
                 }
                 else
                 {
+                    if (::ImGui::Button("Look Through"))
+                    {
+                        service<CameraHandle>() = camera_handle;
+                    }
+
                     if (::ImGui::Button("Select"))
                     {
                         selected_ = camera_handle;
@@ -1416,6 +1421,11 @@ auto DebugRenderer::draw_inspector(Scene &scene) -> void
         else if (auto *selected_camera = std::get_if<CameraHandle>(&selected_))
         {
             auto camera = cm[*selected_camera];
+
+            if (::ImGui::Button("Look Through"))
+            {
+                service<CameraHandle>() = *selected_camera;
+            }
 
             const auto transforms =
                 std::array<Matrix4, 3u>{camera->transform(), camera->local_transform(), camera->parent_transform()};

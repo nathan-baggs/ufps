@@ -370,7 +370,8 @@ int start()
         std::make_unique<ufps::RenderEntityManager>(),
         std::make_unique<ufps::EntityManager>(),
         std::make_unique<ufps::LightManager>(),
-        std::make_unique<ufps::CameraManager>());
+        std::make_unique<ufps::CameraManager>(),
+        ufps::CameraHandle{});
     ufps::set_service(services.get());
 
     load_render_entity_manager(*resource_loader);
@@ -436,6 +437,7 @@ int start()
                             renderer.set_enabled(debug_mode);
                             current_actor = debug_mode ? static_cast<ufps::Actor *>(&flycam_actor)
                                                        : static_cast<ufps::Actor *>(&player_actor);
+                            ufps::service<ufps::CameraHandle>() = current_actor->camera();
                         }
 
                         input_map.set(arg);
@@ -467,7 +469,7 @@ int start()
         awaitable.pump();
         pool.drain();
 
-        renderer.render(scene, current_actor->camera());
+        renderer.render(scene);
 
         window.swap();
 
