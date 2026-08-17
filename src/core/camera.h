@@ -75,6 +75,7 @@ class Camera
     constexpr auto set_transform(const Transform &transform) -> void;
     constexpr auto parent_transform() const -> const Transform &;
     constexpr auto set_parent_transform(const Transform &transform) -> void;
+    constexpr auto local_transform() const -> const Transform &;
     constexpr auto fov() const -> float;
     constexpr auto width() const -> float;
     constexpr auto height() const -> float;
@@ -192,6 +193,11 @@ constexpr auto Camera::set_transform(const Transform &transform) -> void
 constexpr auto Camera::parent_transform() const -> const Transform &
 {
     return parent_transform_;
+}
+
+constexpr auto Camera::local_transform() const -> const Transform &
+{
+    return local_transform_;
 }
 
 constexpr auto Camera::fov() const -> float
