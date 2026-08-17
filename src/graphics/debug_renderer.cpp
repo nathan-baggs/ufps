@@ -404,6 +404,11 @@ auto DebugRenderer::post_render(Scene &scene, const Camera &camera) -> void
             continue;
         }
 
+        if (entity->name() == "flycam")
+        {
+            continue;
+        }
+
         const auto light_transform = Transform{entity->transform().position, {debug_light_scale / 4.0f}, {}};
         const auto light_model = Matrix4{light_transform};
 
@@ -427,11 +432,8 @@ auto DebugRenderer::post_render(Scene &scene, const Camera &camera) -> void
 
             const auto camera_data = camera->data();
 
-            if (entity->name() != "flycam")
-            {
-                debug_lines_.append_range(
-                    draw_frustum(camera_data.position, camera_data.view, camera_data.projection, colours::azure, 1.5f));
-            }
+            debug_lines_.append_range(
+                draw_frustum(camera_data.position, camera_data.view, camera_data.projection, colours::azure, 1.5f));
 
             ::glDrawElementsBaseVertex(
                 GL_TRIANGLES,
@@ -493,6 +495,14 @@ auto DebugRenderer::post_render(Scene &scene, const Camera &camera) -> void
     draw_inspector(scene);
     draw_gizmo(camera);
 
+    static auto first = false;
+    if (!first)
+    {
+        ::ImGui::SetWindowFocus("Render Targets");
+        ::ImGui::SetWindowFocus("Scene");
+        first = true;
+    }
+
     ::ImGui::Render();
     ::ImGui_ImplOpenGL3_RenderDrawData(::ImGui::GetDrawData());
 
@@ -543,6 +553,11 @@ auto DebugRenderer::post_render(Scene &scene, const Camera &camera) -> void
                 continue;
             }
 
+            if (entity->name() == "flycam")
+            {
+                continue;
+            }
+
             const auto entity_transform = Transform{entity->transform().position, {debug_light_scale / 4.0f}, {}};
             const auto entity_model = Matrix4{entity_transform};
 
@@ -556,6 +571,25 @@ auto DebugRenderer::post_render(Scene &scene, const Camera &camera) -> void
                 if (!intersection || entity_intersection < intersection->distance)
                 {
                     selected_ = entity_handle;
+                }
+            }
+
+            const auto camera = cm[entity->camera()];
+            if (camera)
+            {
+                const auto camera_transform = Transform{camera->transform().position, {debug_light_scale / 4.0f}, {}};
+                const auto camera_model = Matrix4{camera_transform};
+                const auto debug_entity_aabb = ufps::AABB{
+                    .min = camera_model * Vector4{-1.0f, -1.0f, -1.0f, 1.0f},
+                    .max = camera_model * Vector4{1.0f},
+                };
+
+                if (const auto camera_intersection = intersect(pick_ray, debug_entity_aabb); camera_intersection)
+                {
+                    if (!intersection || camera_intersection < intersection->distance)
+                    {
+                        selected_ = entity->camera();
+                    }
                 }
             }
         }
@@ -1271,22 +1305,32 @@ auto DebugRenderer::draw_inspector(Scene &scene) -> void
                     }
                 }
 
-                auto transform = Matrix4{entity->transform()};
+                const auto transforms =
+                    std::array<Matrix4, 3u>{entity->transform(), entity->local_transform(), entity->parent_transform()};
+                const auto transform_names = std::array<std::string, 3u>{"world", "local", "parent"};
 
-                ::ImGui::BeginTable(
-                    "transform", 4, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingFixedFit);
-
-                for (auto row = 0; row < 4; ++row)
+                for (const auto &[transform, name] : std::views::zip(transforms, transform_names))
                 {
-                    ::ImGui::TableNextRow();
-                    for (auto col = 0; col < 4; ++col)
-                    {
-                        ::ImGui::TableSetColumnIndex(col);
-                        ::ImGui::Text("%0.2f", transform[col * 4 + row]);
-                    }
-                }
+                    ::ImGui::Text(name.c_str());
+                    ::ImGui::SameLine();
 
-                ::ImGui::EndTable();
+                    ::ImGui::BeginTable(
+                        name.c_str(),
+                        4,
+                        ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingFixedFit);
+
+                    for (auto row = 0; row < 4; ++row)
+                    {
+                        ::ImGui::TableNextRow();
+                        for (auto col = 0; col < 4; ++col)
+                        {
+                            ::ImGui::TableSetColumnIndex(col);
+                            ::ImGui::Text("%0.2f", transform[col * 4 + row]);
+                        }
+                    }
+
+                    ::ImGui::EndTable();
+                }
             }
         }
         else if (auto *selected_light = std::get_if<LightHandle>(&selected_))
@@ -1331,7 +1375,7 @@ auto DebugRenderer::draw_inspector(Scene &scene) -> void
 
 auto DebugRenderer::draw_gizmo(const Camera &camera) -> void
 {
-    const auto &[em, ps, lm] = services<EntityManager, PhysicsSystem, LightManager>();
+    const auto &[em, ps, lm, cm] = services<EntityManager, PhysicsSystem, LightManager, CameraManager>();
 
     if (!std::holds_alternative<std::monostate>(selected_))
     {
@@ -1348,7 +1392,7 @@ auto DebugRenderer::draw_gizmo(const Camera &camera) -> void
             ::ImGuizmo::Manipulate(
                 camera_data.view.data().data(),
                 camera_data.projection.data().data(),
-                ::ImGuizmo::TRANSLATE | ::ImGuizmo::SCALE | ::ImGuizmo::ROTATE,
+                ::ImGuizmo::TRANSLATE | ::ImGuizmo::ROTATE,
                 ::ImGuizmo::WORLD,
                 world_matrix.data().data(),
                 nullptr,
@@ -1375,7 +1419,7 @@ auto DebugRenderer::draw_gizmo(const Camera &camera) -> void
             ::ImGuizmo::Manipulate(
                 camera_data.view.data().data(),
                 camera_data.projection.data().data(),
-                ::ImGuizmo::TRANSLATE | ::ImGuizmo::SCALE | ::ImGuizmo::BOUNDS | ::ImGuizmo::ROTATE,
+                ::ImGuizmo::TRANSLATE | ::ImGuizmo::ROTATE,
                 ::ImGuizmo::WORLD,
                 transform.data().data(),
                 nullptr,
@@ -1396,7 +1440,6 @@ auto DebugRenderer::draw_gizmo(const Camera &camera) -> void
                 auto &rb = *rigid_body;
 
                 auto world_matrix = Matrix4{rb.transform()};
-                const auto &camera_data = camera.data();
 
                 ::ImGuizmo::Manipulate(
                     camera_data.view.data().data(),
@@ -1417,6 +1460,33 @@ auto DebugRenderer::draw_gizmo(const Camera &camera) -> void
 
                     rb.set_local_transform(local);
                 }
+            }
+        }
+        else if (auto *selected_camera = std::get_if<CameraHandle>(&selected_))
+        {
+            auto camera = cm[*selected_camera];
+            contract_assert(camera);
+
+            auto world_matrix = Matrix4{camera->transform()};
+
+            ::ImGuizmo::Manipulate(
+                camera_data.view.data().data(),
+                camera_data.projection.data().data(),
+                ::ImGuizmo::TRANSLATE | ::ImGuizmo::ROTATE,
+                ::ImGuizmo::WORLD,
+                world_matrix.data().data(),
+                nullptr,
+                nullptr,
+                nullptr,
+                nullptr);
+
+            if (::ImGuizmo::IsUsing())
+            {
+                const auto parent = Matrix4{camera->parent_transform()};
+                const auto inverse_parent = Matrix4::invert(parent);
+                const auto local = inverse_parent * world_matrix;
+
+                camera->set_transform(local);
             }
         }
     }
