@@ -1427,6 +1427,12 @@ auto DebugRenderer::draw_inspector(Scene &scene) -> void
                 service<CameraHandle>() = *selected_camera;
             }
 
+            auto fov = camera->fov();
+            if (::ImGui::SliderFloat("fov", &fov, 0.7609f, 1.5323f))
+            {
+                camera->set_fov(fov);
+            }
+
             const auto transforms =
                 std::array<Matrix4, 3u>{camera->transform(), camera->local_transform(), camera->parent_transform()};
             const auto transform_names = std::array<std::string, 3u>{"world", "local", "parent"};

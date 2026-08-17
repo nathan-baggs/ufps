@@ -77,6 +77,7 @@ class Camera
     constexpr auto set_parent_transform(const Transform &transform) -> void;
     constexpr auto local_transform() const -> const Transform &;
     constexpr auto fov() const -> float;
+    constexpr auto set_fov(float fov) -> void;
     constexpr auto width() const -> float;
     constexpr auto height() const -> float;
     constexpr auto near_plane() const -> float;
@@ -203,6 +204,12 @@ constexpr auto Camera::local_transform() const -> const Transform &
 constexpr auto Camera::fov() const -> float
 {
     return fov_;
+}
+
+constexpr auto Camera::set_fov(float fov) -> void
+{
+    fov_ = fov;
+    data_.projection = Matrix4::perspective(fov, width_, height_, near_plane_, far_plane_);
 }
 
 constexpr auto Camera::width() const -> float
