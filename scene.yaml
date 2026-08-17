@@ -12,9 +12,9 @@ Description:
     SSAOOptions:
       enabled: true
       sample_count: 64
-      radius: 0.75
-      bias: 0.039
-      power: 2
+      radius: 2
+      bias: 0.1
+      power: 1.495
   exposure_options:
     ExposureOptions:
       min_log_luminance: -1.208
@@ -70,7 +70,7 @@ Description:
         constant_attenuation: 1
         linear_attenuation: 0.313
         quadratic_attenuation: 0.157
-        intensity: 2.0810285
+        intensity: 5.5248337
     - PointLight:
         position:
           Vector3:
@@ -153,9 +153,9 @@ Description:
           Transform:
             position:
               Vector3:
-                x: 0.25030336
+                x: -9.338356
                 y: 2
-                z: 13.231616
+                z: -19.346159
             scale:
               Vector3:
                 x: 1
@@ -163,10 +163,10 @@ Description:
                 z: 1
             rotation:
               Quaternion:
-                x: 0.0012985623
-                y: -0.99811655
-                z: 0.056954335
-                w: 0.022757119
+                x: -0.020658521
+                y: 0.7014153
+                z: -0.020346753
+                w: -0.71216285
         aabb:
           AABB:
             min:
@@ -214,9 +214,9 @@ Description:
           Transform:
             position:
               Vector3:
-                x: 0
+                x: -10.290918
                 y: 2
-                z: 0
+                z: -18.697372
             scale:
               Vector3:
                 x: 1
@@ -224,10 +224,10 @@ Description:
                 z: 1
             rotation:
               Quaternion:
-                x: 0.001999599
-                y: -0.019998629
-                z: 3.9997314e-05
-                w: 0.99979806
+                x: 0.0007131007
+                y: 0.70114684
+                z: 0.0007012299
+                w: -0.7130162
         aabb:
           AABB:
             min:

@@ -717,8 +717,8 @@ auto Renderer::execute_ssao_pass(Scene &scene) -> void
         ssao_program_.set_uniforms(
             gbuffer_rt_.colour_texture_bindless_handle_1,
             gbuffer_rt_.colour_texture_bindless_handle_2,
-            static_cast<float>(gbuffer_rt_.fb.width()),
-            static_cast<float>(gbuffer_rt_.fb.height()),
+            static_cast<float>(ssao_rt_.fb.width()),
+            static_cast<float>(ssao_rt_.fb.height()),
             scene.ssao_options().sample_count,
             scene.ssao_options().radius,
             scene.ssao_options().bias,
