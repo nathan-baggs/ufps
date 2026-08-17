@@ -27,7 +27,7 @@ auto Entity::description() const -> Entity::Description
     return {
         .name = name_,
         .emissive_strength = emissive_strength_,
-        .transform = transform_,
+        .transform = local_transform_,
         .aabb = aabb_,
         .rigid_bodies = rigid_bodies_ | std::views::transform([&](auto e) { return ps.rigid_body(e); }) |
                         std::views::filter([](const auto &e) { return !!e; }) |
