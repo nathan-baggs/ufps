@@ -53,6 +53,7 @@ PlayerActor::PlayerActor(
     , input_map_{input_map}
     , character_controller_{character_controller}
 {
+    service<CameraHandle>() = camera_;
 }
 
 auto PlayerActor::update() -> void
