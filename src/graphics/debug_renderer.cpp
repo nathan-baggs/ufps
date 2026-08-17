@@ -1014,8 +1014,8 @@ auto DebugRenderer::draw_inspector(Scene &scene) -> void
     {
         ::ImGui::Begin("Inspector");
 
-        const auto &[em, rem, ps, tm, lm] =
-            services<EntityManager, RenderEntityManager, PhysicsSystem, TextureManager, LightManager>();
+        const auto &[em, rem, ps, tm, lm, cm] =
+            services<EntityManager, RenderEntityManager, PhysicsSystem, TextureManager, LightManager, CameraManager>();
 
         if (auto *selected_entity = std::get_if<EntityHandle>(&selected_))
         {
@@ -1166,10 +1166,14 @@ auto DebugRenderer::draw_inspector(Scene &scene) -> void
                     {
                         ::ImGui::PushID(index);
 
+                        ::ImGui::PushStyleColor(ImGuiCol_Button, ::ImVec4(0.80f, 0.15f, 0.15f, 1.00f));
+                        ::ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ::ImVec4(0.95f, 0.25f, 0.25f, 1.00f));
+                        ::ImGui::PushStyleColor(ImGuiCol_ButtonActive, ::ImVec4(0.65f, 0.10f, 0.10f, 1.00f));
                         if (::ImGui::Button("Delete"))
                         {
                             to_delete = handle;
                         }
+                        ::ImGui::PopStyleColor(3);
 
                         const auto *albedo_texture = tm.texture(render_entity->albedo_texture_bindless_handle());
                         ::ImGui::Image(
@@ -1262,10 +1266,14 @@ auto DebugRenderer::draw_inspector(Scene &scene) -> void
 
                         ::ImGui::SameLine();
 
+                        ::ImGui::PushStyleColor(ImGuiCol_Button, ::ImVec4(0.80f, 0.15f, 0.15f, 1.00f));
+                        ::ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ::ImVec4(0.95f, 0.25f, 0.25f, 1.00f));
+                        ::ImGui::PushStyleColor(ImGuiCol_ButtonActive, ::ImVec4(0.65f, 0.10f, 0.10f, 1.00f));
                         if (::ImGui::Button("Delete"))
                         {
                             to_delete = handle;
                         }
+                        ::ImGui::PopStyleColor(3);
 
                         ::ImGui::SameLine();
 
@@ -1332,6 +1340,43 @@ auto DebugRenderer::draw_inspector(Scene &scene) -> void
                     ::ImGui::EndTable();
                 }
             }
+
+            {
+                const auto camera_handle = entity->camera();
+                if (!camera_handle || !cm[camera_handle])
+                {
+                    if (::ImGui::Button("Add camera"))
+                    {
+                        const auto new_handle =
+                            cm.insert({{}, std::numbers::pi_v<float> / 4.0f, 1920.0f, 1080.0f, 0.1f, 1000.0f});
+                        cm[new_handle]->set_parent_transform(entity->transform());
+
+                        entity->set_camera(new_handle);
+                        selected_ = new_handle;
+                    }
+                }
+                else
+                {
+                    if (::ImGui::Button("Select"))
+                    {
+                        selected_ = camera_handle;
+                    }
+
+                    ::ImGui::SameLine();
+
+                    ::ImGui::PushStyleColor(ImGuiCol_Button, ::ImVec4(0.80f, 0.15f, 0.15f, 1.00f));
+                    ::ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ::ImVec4(0.95f, 0.25f, 0.25f, 1.00f));
+                    ::ImGui::PushStyleColor(ImGuiCol_ButtonActive, ::ImVec4(0.65f, 0.10f, 0.10f, 1.00f));
+
+                    if (::ImGui::Button("Delete"))
+                    {
+                        entity->set_camera({});
+                        cm.remove(camera_handle);
+                    }
+
+                    ::ImGui::PopStyleColor(3);
+                }
+            }
         }
         else if (auto *selected_light = std::get_if<LightHandle>(&selected_))
         {
@@ -1366,6 +1411,35 @@ auto DebugRenderer::draw_inspector(Scene &scene) -> void
             if (::ImGui::SliderFloat("intensity", &intensity, 0.0f, 100.0f))
             {
                 light->intensity = intensity;
+            }
+        }
+        else if (auto *selected_camera = std::get_if<CameraHandle>(&selected_))
+        {
+            auto camera = cm[*selected_camera];
+
+            const auto transforms =
+                std::array<Matrix4, 3u>{camera->transform(), camera->local_transform(), camera->parent_transform()};
+            const auto transform_names = std::array<std::string, 3u>{"world", "local", "parent"};
+
+            for (const auto &[transform, name] : std::views::zip(transforms, transform_names))
+            {
+                ::ImGui::Text(name.c_str());
+                ::ImGui::SameLine();
+
+                ::ImGui::BeginTable(
+                    name.c_str(), 4, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingFixedFit);
+
+                for (auto row = 0; row < 4; ++row)
+                {
+                    ::ImGui::TableNextRow();
+                    for (auto col = 0; col < 4; ++col)
+                    {
+                        ::ImGui::TableSetColumnIndex(col);
+                        ::ImGui::Text("%0.2f", transform[col * 4 + row]);
+                    }
+                }
+
+                ::ImGui::EndTable();
             }
         }
 
