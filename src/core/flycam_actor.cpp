@@ -5,6 +5,7 @@
 #include "core/entity_manager.h"
 #include "events/input_map.h"
 #include "maths/vector3.h"
+#include "utils/error.h"
 
 namespace
 {
@@ -52,10 +53,9 @@ namespace
 namespace ufps
 {
 
-FlyCamActor::FlyCamActor(CameraHandle camera, EntityHandle entity, const InputMap &input_map)
-    : Actor{camera}
+FlyCamActor::FlyCamActor(EntityHandle entity, const InputMap &input_map)
+    : Actor{entity}
     , input_map_{input_map}
-    , entity_{entity}
 {
 }
 
@@ -66,13 +66,13 @@ auto FlyCamActor::update() -> void
     const auto camera = cm[camera_];
     contract_assert(camera);
 
-    static auto yaw = 0.0f;
     static auto pitch = 0.0f;
+    static auto yaw = std::numbers::pi_v<float>;
 
-    yaw += input_map_.delta_y;
-    pitch -= input_map_.delta_x;
+    pitch += input_map_.delta_y;
+    yaw -= input_map_.delta_x;
 
-    auto e = em[entity_];
+    const auto e = em[entity_];
     contract_assert(e);
 
     static const auto speed = 0.1f;

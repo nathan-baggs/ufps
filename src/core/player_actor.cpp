@@ -7,6 +7,7 @@
 #include "events/input_map.h"
 #include "maths/quaternion.h"
 #include "maths/vector3.h"
+#include "utils/error.h"
 
 namespace
 {
@@ -45,14 +46,12 @@ namespace ufps
 {
 
 PlayerActor::PlayerActor(
-    CameraHandle camera,
-    EntityHandle player_entity,
+    EntityHandle entity,
     const InputMap &input_map,
     VirtualCharacterController &character_controller)
-    : Actor{camera}
+    : Actor{entity}
     , input_map_{input_map}
     , character_controller_{character_controller}
-    , player_entity_{player_entity}
 {
 }
 
@@ -63,18 +62,22 @@ auto PlayerActor::update() -> void
     const auto camera = cm[camera_];
     contract_assert(camera);
 
-    static auto yaw = 0.0f;
     static auto pitch = 0.0f;
+    static auto yaw = std::numbers::pi_v<float>;
 
-    yaw += input_map_.delta_y;
-    pitch -= input_map_.delta_x;
+    pitch += input_map_.delta_y;
+    yaw -= input_map_.delta_x;
 
     character_controller_.set_walk_direction(walk_direction(input_map_, *camera));
 
-    auto player = em[player_entity_];
+    auto player = em[entity_];
     contract_assert(player);
 
-    const auto new_transform = Transform{character_controller_.position(), {1.0f}, Quaternion(yaw, pitch, 0.0f)};
+    const auto &transform = player->transform();
+
+    auto new_transform = Transform{character_controller_.position(), {1.0f}, Quaternion(yaw, pitch, 0.0f)};
+    new_transform.position.y = transform.position.y;
+
     player->set_transform(new_transform);
 }
 }

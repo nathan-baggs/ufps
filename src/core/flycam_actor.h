@@ -10,13 +10,12 @@ namespace ufps
 class FlyCamActor : public Actor
 {
   public:
-    FlyCamActor(CameraHandle camera, EntityHandle entity, const InputMap &input_map);
+    FlyCamActor(EntityHandle entity, const InputMap &input_map);
     ~FlyCamActor() override = default;
 
     auto update() -> void override;
 
   private:
     const InputMap &input_map_;
-    EntityHandle entity_;
 };
 }
