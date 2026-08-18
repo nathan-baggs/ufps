@@ -70,7 +70,7 @@ Description:
         constant_attenuation: 1
         linear_attenuation: 0.313
         quadratic_attenuation: 0.157
-        intensity: 6.2577167
+        intensity: 4.0934963
     - PointLight:
         position:
           Vector3:
@@ -143,8 +143,8 @@ Description:
           - north_corridor_1
           - north_corridor_3
           - north_corridor_6
-          - north_corridor_7
           - big_room_0
+          - north_corridor_7
         camera: ~
     - Description:
         name: flycam
@@ -153,9 +153,9 @@ Description:
           Transform:
             position:
               Vector3:
-                x: 0.4117661
-                y: 1.3461131
-                z: 8.422707
+                x: 15.697445
+                y: 7.701411
+                z: -33.873627
             scale:
               Vector3:
                 x: 1
@@ -163,10 +163,10 @@ Description:
                 z: 1
             rotation:
               Quaternion:
-                x: -0.0039697043
-                y: 0.9957882
-                z: -0.052826837
-                w: -0.0748291
+                x: -0.14564897
+                y: 0.56596684
+                z: -0.102404065
+                w: -0.8049729
         aabb:
           AABB:
             min:
@@ -214,9 +214,9 @@ Description:
           Transform:
             position:
               Vector3:
-                x: -0.43684232
+                x: 0
                 y: 2
-                z: -17.017517
+                z: 0
             scale:
               Vector3:
                 x: 1
@@ -224,10 +224,10 @@ Description:
                 z: 1
             rotation:
               Quaternion:
-                x: 0.06266968
-                y: 0.0954628
-                z: -0.0060221283
-                w: 0.9934401
+                x: -0.029498998
+                y: 0.9600069
+                z: 0.2553824
+                w: 0.11088957
         aabb:
           AABB:
             min:
@@ -750,7 +750,7 @@ Description:
         children: ~
         camera: ~
     - Description:
-        name: north_corridor_7
+        name: big_room_0
         emissive_strength: 1
         transform:
           Transform:
@@ -758,45 +758,7 @@ Description:
               Vector3:
                 x: -17
                 y: 0
-                z: -29
-            scale:
-              Vector3:
-                x: 1
-                y: 1
-                z: 1
-            rotation:
-              Quaternion:
-                x: 0
-                y: 0
-                z: 0
-                w: 1
-        aabb:
-          AABB:
-            min:
-              Vector3:
-                x: -4.093223
-                y: -0.38264126
-                z: -8
-            max:
-              Vector3:
-                x: 4.104806
-                y: 4.4271092
-                z: 4.7683716e-07
-        rigid_bodies: ~
-        render_entities:
-          - SM_Corridor019_06_08_B
-        children: ~
-        camera: ~
-    - Description:
-        name: big_room_0
-        emissive_strength: 1
-        transform:
-          Transform:
-            position:
-              Vector3:
-                x: -13
-                y: 0
-                z: -35
+                z: -44
             scale:
               Vector3:
                 x: 1
@@ -824,6 +786,14 @@ Description:
         render_entities: ~
         children:
           - big_room_0_child_1
+          - big_room_0_child_2
+          - big_room_0_child_5
+          - big_room_0_child_6
+          - big_room_0_child_8
+          - big_room_0_child_9
+          - big_room_0_child_10
+          - big_room_0_child_11
+          - big_room_0_child_0
         camera: ~
     - Description:
         name: big_room_0_child_1
@@ -861,5 +831,385 @@ Description:
         rigid_bodies: ~
         render_entities:
           - SM_FloorPanel10_07_04
+        children: ~
+        camera: ~
+    - Description:
+        name: north_corridor_7
+        emissive_strength: 1
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: -17
+                y: 0
+                z: -37
+            scale:
+              Vector3:
+                x: 1.0000092
+                y: 1
+                z: 1.0000092
+            rotation:
+              Quaternion:
+                x: 0
+                y: 1
+                z: 0
+                w: -1.6038457e-06
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: -3.327793
+                y: -0.1192618
+                z: -8
+            max:
+              Vector3:
+                x: 4.081047
+                y: 4.279462
+                z: 3.7758843e-17
+        rigid_bodies: ~
+        render_entities:
+          - SM_Corridor018_06_08_B
+        children: ~
+        camera: ~
+    - Description:
+        name: big_room_0_child_2
+        emissive_strength: 1
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: 0
+                y: 0
+                z: 6
+            scale:
+              Vector3:
+                x: 1
+                y: 1
+                z: 1
+            rotation:
+              Quaternion:
+                x: 0
+                y: 0
+                z: 0
+                w: 1
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: -7.0000005
+                y: -0.11926174
+                z: -0.08054194
+            max:
+              Vector3:
+                x: 7.0000005
+                y: 9
+                z: 1.0899264
+        rigid_bodies: ~
+        render_entities:
+          - SM_CorridorEnd11_E
+        children: ~
+        camera: ~
+    - Description:
+        name: big_room_0_child_4
+        emissive_strength: 1
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: 0
+                y: 0
+                z: 0
+            scale:
+              Vector3:
+                x: 1
+                y: 1
+                z: 1
+            rotation:
+              Quaternion:
+                x: 0
+                y: 0
+                z: 0
+                w: 1
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: -7
+                y: -0.38264126
+                z: 0
+            max:
+              Vector3:
+                x: 7
+                y: 3.9999995
+                z: 6
+        rigid_bodies: ~
+        render_entities:
+          - SM_Corridor033_12_06_Bottom_B
+        children: ~
+        camera: ~
+    - Description:
+        name: big_room_0_child_5
+        emissive_strength: 1
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: 0
+                y: 0
+                z: 0
+            scale:
+              Vector3:
+                x: 1.0000106
+                y: 1
+                z: 1.0000106
+            rotation:
+              Quaternion:
+                x: 0
+                y: 1
+                z: 0
+                w: 4.1909072e-07
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: -7
+                y: -0.2937603
+                z: 0
+            max:
+              Vector3:
+                x: 7.0794563
+                y: 3.9999998
+                z: 6
+        rigid_bodies: ~
+        render_entities:
+          - SM_Corridor042_12_06_Bottom_B
+        children: ~
+        camera: ~
+    - Description:
+        name: big_room_0_child_6
+        emissive_strength: 1
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: 0
+                y: 0
+                z: -12
+            scale:
+              Vector3:
+                x: 1
+                y: 1
+                z: 1
+            rotation:
+              Quaternion:
+                x: 0
+                y: 0
+                z: 0
+                w: 1
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: -7
+                y: -0.2937603
+                z: 0
+            max:
+              Vector3:
+                x: 7
+                y: 3.9999998
+                z: 6
+        rigid_bodies: ~
+        render_entities:
+          - SM_Corridor038_12_06_Bottom_B
+        children: ~
+        camera: ~
+    - Description:
+        name: big_room_0_child_8
+        emissive_strength: 1
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: 0
+                y: 0
+                z: -13
+            scale:
+              Vector3:
+                x: 1
+                y: 1
+                z: 1
+            rotation:
+              Quaternion:
+                x: 0
+                y: 0
+                z: 0
+                w: 1
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: -7.0000005
+                y: -0.11926174
+                z: -0.04244995
+            max:
+              Vector3:
+                x: 7.0000005
+                y: 9
+                z: 1.04245
+        rigid_bodies: ~
+        render_entities:
+          - SM_CorridorEnd08_E
+        children: ~
+        camera: ~
+    - Description:
+        name: big_room_0_child_9
+        emissive_strength: 1
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: 0
+                y: 0
+                z: 0
+            scale:
+              Vector3:
+                x: 1
+                y: 1
+                z: 1
+            rotation:
+              Quaternion:
+                x: 0
+                y: 0
+                z: 0
+                w: 1
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: -7
+                y: 3.999999
+                z: -5.9604645e-08
+            max:
+              Vector3:
+                x: 7
+                y: 8.990585
+                z: 6
+        rigid_bodies: ~
+        render_entities:
+          - SM_Corridor037_12_06_Top_B_04
+        children: ~
+        camera: ~
+    - Description:
+        name: big_room_0_child_10
+        emissive_strength: 1
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: 0
+                y: 0
+                z: -6
+            scale:
+              Vector3:
+                x: 1
+                y: 1
+                z: 1
+            rotation:
+              Quaternion:
+                x: 0
+                y: 0
+                z: 0
+                w: 1
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: -7
+                y: 3.9999998
+                z: -1.5210224e-08
+            max:
+              Vector3:
+                x: 7
+                y: 8.990585
+                z: 6
+        rigid_bodies: ~
+        render_entities:
+          - SM_Corridor041_12_06_Top_B_04
+        children: ~
+        camera: ~
+    - Description:
+        name: big_room_0_child_11
+        emissive_strength: 1
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: 0
+                y: 0
+                z: -12
+            scale:
+              Vector3:
+                x: 1
+                y: 1
+                z: 1
+            rotation:
+              Quaternion:
+                x: 0
+                y: 0
+                z: 0
+                w: 1
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: -7
+                y: 3.999999
+                z: -5.9604645e-08
+            max:
+              Vector3:
+                x: 7
+                y: 8.990585
+                z: 6
+        rigid_bodies: ~
+        render_entities:
+          - SM_Corridor037_12_06_Top_B_04
+        children: ~
+        camera: ~
+    - Description:
+        name: big_room_0_child_0
+        emissive_strength: 1
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: 0
+                y: 0
+                z: 0
+            scale:
+              Vector3:
+                x: 1
+                y: 1
+                z: 1
+            rotation:
+              Quaternion:
+                x: 0
+                y: 0
+                z: 0
+                w: 1
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: -7
+                y: -0.38264126
+                z: 0
+            max:
+              Vector3:
+                x: 7
+                y: 3.9999995
+                z: 6
+        rigid_bodies: ~
+        render_entities:
+          - SM_Corridor033_12_06_Bottom_B
         children: ~
         camera: ~
