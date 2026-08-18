@@ -11,6 +11,95 @@
 namespace ufps
 {
 
+Entity::Entity(std::string name, std::span<const RenderEntityHandle> render_entities, Transform transform)
+    : name_{std::move(name)}
+    , render_entities_{std::ranges::cbegin(render_entities), std::ranges::cend(render_entities)}
+    , rigid_bodies_{}
+    , local_transform_{std::move(transform)}
+    , parent_transform_{{}, {1.0f}, {}}
+    , transform_{parent_transform_ * local_transform_}
+    , aabb_{create_aabb(render_entities_)}
+    , emissive_strength_{1.0f}
+{
+}
+
+auto Entity::name() const -> std::string_view
+{
+    return name_;
+}
+
+auto Entity::set_name(std::string name) -> void
+{
+    name_ = std::move(name);
+}
+
+auto Entity::render_entities() const -> std::span<const RenderEntityHandle>
+{
+    return render_entities_;
+}
+
+auto Entity::add_render_entities(std::span<const RenderEntityHandle> render_entities) -> void
+{
+    render_entities_.append_range(render_entities);
+    aabb_ = create_aabb(render_entities_);
+}
+
+auto Entity::remove_render_entity(RenderEntityHandle handle) -> void
+{
+    std::erase(render_entities_, handle);
+}
+
+auto Entity::transform() const -> const Transform &
+{
+    return transform_;
+}
+
+auto Entity::local_transform() const -> const Transform &
+{
+    return local_transform_;
+}
+
+auto Entity::parent_transform() const -> const Transform &
+{
+    return parent_transform_;
+}
+
+auto Entity::aabb() const -> const AABB &
+{
+    return aabb_;
+}
+
+auto Entity::emissive_strength() const -> float
+{
+    return emissive_strength_;
+}
+
+auto Entity::set_emissive_strength(float strength) -> void
+{
+    emissive_strength_ = strength;
+}
+
+auto Entity::add_rigid_body(RigidBodyHandle handle) -> void
+{
+    rigid_bodies_.push_back(handle);
+    service<PhysicsSystem>().rigid_body(handle)->set_parent_transform(transform_);
+}
+
+auto Entity::rigid_bodies() const -> std::span<const RigidBodyHandle>
+{
+    return rigid_bodies_;
+}
+
+auto Entity::set_parent_transform(const Transform &transform) -> void
+{
+    update_transforms(local_transform_, transform);
+}
+
+auto Entity::children() -> std::span<const EntityHandle>
+{
+    return children_;
+}
+
 auto Entity::description() const -> Entity::Description
 {
     const auto &[em, rem, ps, cm] = services<EntityManager, RenderEntityManager, PhysicsSystem, CameraManager>();

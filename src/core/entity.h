@@ -35,32 +35,51 @@ class Entity
         std::optional<Camera::Description> camera;
     };
 
-    constexpr Entity(std::string name, std::span<const RenderEntityHandle> render_entities, Transform transform);
+    Entity(std::string name, std::span<const RenderEntityHandle> render_entities, Transform transform);
 
-    constexpr auto name() const -> std::string_view;
-    constexpr auto set_name(std::string name) -> void;
-    constexpr auto render_entities() const -> std::span<const RenderEntityHandle>;
-    constexpr auto add_render_entities(std::span<const RenderEntityHandle> render_entities);
-    constexpr auto remove_render_entity(RenderEntityHandle handle) //
+    auto name() const -> std::string_view;
+
+    auto set_name(std::string name) -> void;
+
+    auto render_entities() const -> std::span<const RenderEntityHandle>;
+
+    auto add_render_entities(std::span<const RenderEntityHandle> render_entities) -> void;
+
+    auto remove_render_entity(RenderEntityHandle handle) -> void //
         pre(std::ranges::contains(render_entities_, handle));
-    constexpr auto transform() const -> const Transform &;
-    constexpr auto local_transform() const -> const Transform &;
-    constexpr auto parent_transform() const -> const Transform &;
+
+    auto transform() const -> const Transform &;
+
+    auto local_transform() const -> const Transform &;
+
+    auto parent_transform() const -> const Transform &;
+
     auto set_transform(const Transform &transform) -> void;
-    constexpr auto aabb() const -> const AABB &;
+
+    auto aabb() const -> const AABB &;
+
     auto description() const -> Description;
-    constexpr auto emissive_strength() const -> float;
-    constexpr auto set_emissive_strength(float strength) -> void;
-    constexpr auto add_rigid_body(RigidBodyHandle handle);
-    constexpr auto rigid_bodies() const -> std::span<const RigidBodyHandle>;
+
+    auto emissive_strength() const -> float;
+
+    auto set_emissive_strength(float strength) -> void;
+
+    auto add_rigid_body(RigidBodyHandle handle) -> void;
+
+    auto rigid_bodies() const -> std::span<const RigidBodyHandle>;
+
     auto add_child(EntityHandle child) -> void;
-    constexpr auto children() -> std::span<const EntityHandle>;
+
+    auto children() -> std::span<const EntityHandle>;
+
     auto camera() const -> CameraHandle;
+
     auto set_camera(CameraHandle handle) -> void;
 
   private:
     auto update_transforms(const Transform &local, const Transform &parent) -> void;
-    constexpr auto set_parent_transform(const Transform &transform) -> void;
+
+    auto set_parent_transform(const Transform &transform) -> void;
 
     std::string name_;
     std::vector<RenderEntityHandle> render_entities_;
@@ -74,92 +93,4 @@ class Entity
     CameraHandle camera_;
 };
 
-constexpr Entity::Entity(std::string name, std::span<const RenderEntityHandle> render_entities, Transform transform)
-    : name_{std::move(name)}
-    , render_entities_{std::ranges::cbegin(render_entities), std::ranges::cend(render_entities)}
-    , rigid_bodies_{}
-    , local_transform_{std::move(transform)}
-    , parent_transform_{{}, {1.0f}, {}}
-    , transform_{parent_transform_ * local_transform_}
-    , aabb_{create_aabb(render_entities_)}
-    , emissive_strength_{1.0f}
-{
-}
-
-constexpr auto Entity::name() const -> std::string_view
-{
-    return name_;
-}
-
-constexpr auto Entity::set_name(std::string name) -> void
-{
-    name_ = std::move(name);
-}
-
-constexpr auto Entity::render_entities() const -> std::span<const RenderEntityHandle>
-{
-    return render_entities_;
-}
-
-constexpr auto Entity::add_render_entities(std::span<const RenderEntityHandle> render_entities)
-{
-    render_entities_.append_range(render_entities);
-    aabb_ = create_aabb(render_entities_);
-}
-
-constexpr auto Entity::remove_render_entity(RenderEntityHandle handle)
-{
-    std::erase(render_entities_, handle);
-}
-
-constexpr auto Entity::transform() const -> const Transform &
-{
-    return transform_;
-}
-
-constexpr auto Entity::local_transform() const -> const Transform &
-{
-    return local_transform_;
-}
-
-constexpr auto Entity::parent_transform() const -> const Transform &
-{
-    return parent_transform_;
-}
-
-constexpr auto Entity::aabb() const -> const AABB &
-{
-    return aabb_;
-}
-
-constexpr auto Entity::emissive_strength() const -> float
-{
-    return emissive_strength_;
-}
-
-constexpr auto Entity::set_emissive_strength(float strength) -> void
-{
-    emissive_strength_ = strength;
-}
-
-constexpr auto Entity::add_rigid_body(RigidBodyHandle handle)
-{
-    rigid_bodies_.push_back(handle);
-    service<PhysicsSystem>().rigid_body(handle)->set_parent_transform(transform_);
-}
-
-constexpr auto Entity::rigid_bodies() const -> std::span<const RigidBodyHandle>
-{
-    return rigid_bodies_;
-}
-
-constexpr auto Entity::set_parent_transform(const Transform &transform) -> void
-{
-    update_transforms(local_transform_, transform);
-}
-
-constexpr auto Entity::children() -> std::span<const EntityHandle>
-{
-    return children_;
-}
 }
