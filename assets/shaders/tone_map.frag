@@ -24,6 +24,7 @@ layout(bindless_sampler, location = 8) uniform sampler2D u_ssao_texture;
 layout(bindless_sampler, location = 9) uniform sampler2D u_depth_texture;
 layout(location = 10) uniform vec3 u_fog_colour;
 layout(location = 11) uniform float u_fog_density;
+layout(bindless_sampler, location = 12) uniform sampler2D u_normal_texture;
 
 layout(location = 0) in vec2 in_uv;
 
@@ -64,8 +65,10 @@ void main()
     float depth = length(frag_pos - eye);
     float occlusion = texture(u_ssao_texture, in_uv).r;
 
+    float ssao_scale = texture(u_normal_texture, in_uv).w;
+
     in_colour *= (0.18 / max(average, 0.0001));
-    in_colour *= occlusion;
+    in_colour *= max(occlusion, (1.0f - ssao_scale));
     in_colour = fog(depth, in_colour);
 
     vec3 tone_mapped_colour = uchimura(in_colour, u_P, u_a, u_m, u_l, u_c, u_b);

@@ -63,7 +63,7 @@ auto create_render_target(
     std::uint32_t height,
     ufps::Sampler &sampler,
     std::string_view name,
-    ufps::TextureFormat format = ufps::TextureFormat::RGB16F) -> ufps::RenderTarget
+    ufps::TextureFormat format = ufps::TextureFormat::RGBA16F) -> ufps::RenderTarget
 {
     auto &texture_manager = ufps::service<ufps::TextureManager>();
 
@@ -178,10 +178,12 @@ Renderer::Renderer(
     , dummy_vao_{0u, [](auto e) { ::glDeleteVertexArrays(1u, &e); }}
     , command_buffer_{"gbuffer_command_buffer"}
     , post_processing_command_buffer_{"post_processing_command_buffer"}
+    , gun_command_buffer_{"gun_command_buffer"}
     , post_process_sprite_{create_sprite()}
     , camera_buffer_{sizeof(CameraData), "camera_buffer"}
     , light_buffer_{1zu, "light_buffer"}
     , object_data_buffer_{sizeof(ObjectData), "object_data_buffer"}
+    , gun_object_data_buffer_{sizeof(ObjectData), "gun_object_data_buffer"}
     , luminance_histogram_buffer_{sizeof(std::uint32_t) * 256, "luminance_histogram_buffer"}
     , average_luminance_buffer_{sizeof(float), "average_luminance_buffer"}
     , ssao_samples_buffer_{sizeof(Vector4) * 64, "ssao_samples_buffer"}
@@ -367,12 +369,9 @@ auto Renderer::render(Scene &scene) -> void
 
     if (enable_post_processing_)
     {
-        execute_bloom_pass(scene);
         execute_luminance_histogram_pass(scene);
         execute_average_luminance_pass(scene);
         execute_ssao_pass(scene);
-        execute_tone_mapping_pass(scene);
-        execute_chromatic_aberration_pass(scene);
         final_fb_ = &chromatic_aberration_rt_.fb;
     }
     else
@@ -380,12 +379,26 @@ auto Renderer::render(Scene &scene) -> void
         final_fb_ = &light_pass_rt_.fb;
     }
 
+    ::glDisable(GL_BLEND);
+    execute_gun_gbuffer_pass(scene);
+    execute_gun_lighting_pass(scene);
+    ::glEnable(GL_BLEND);
+
+    if (enable_post_processing_)
+    {
+        execute_bloom_pass(scene);
+        execute_tone_mapping_pass(scene);
+        execute_chromatic_aberration_pass(scene);
+    }
+
     post_render(scene, *camera);
 
     command_buffer_.advance();
+    gun_command_buffer_.advance();
     camera_buffer_.advance();
     light_buffer_.advance();
     object_data_buffer_.advance();
+    gun_object_data_buffer_.advance();
 }
 
 auto Renderer::post_render(Scene &, const Camera &) -> void
@@ -438,6 +451,8 @@ auto Renderer::execute_gbuffer_pass(Scene &scene) -> void
     gbuffer_rt_.fb.bind();
     ::glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+    ::glDepthRange(0.1f, 1.0f);
+
     const auto auto_bind = AutoBind{gbuffer_program_};
 
     const auto [vertex_buffer_handle, index_buffer_handle] = service<MeshManager>().native_handle();
@@ -486,6 +501,8 @@ auto Renderer::execute_gbuffer_pass(Scene &scene) -> void
                 }));
     }
 
+    gbuffer_program_.set_uniform(0zu, 1.0f);
+
     resize_gpu_buffer(object_data, object_data_buffer_);
     object_data_buffer_.write(std::as_bytes(std::span{object_data.data(), object_data.size()}), 0zu);
     ::glBindBufferRange(
@@ -501,6 +518,78 @@ auto Renderer::execute_gbuffer_pass(Scene &scene) -> void
         reinterpret_cast<const void *>(command_buffer_.offset_bytes()),
         command_count,
         0);
+}
+
+auto Renderer::execute_gun_gbuffer_pass(Scene &scene) -> void
+{
+    auto &&[em, rem] = services<EntityManager, RenderEntityManager>();
+
+    const auto gun = em[scene.gun()];
+    if (!gun)
+    {
+        return;
+    }
+
+    gbuffer_rt_.fb.bind();
+
+    if (enable_post_processing_)
+    {
+        ::glDepthRange(0.0f, 0.1f);
+    }
+
+    const auto auto_bind = AutoBind{gbuffer_program_};
+
+    const auto [vertex_buffer_handle, index_buffer_handle] = service<MeshManager>().native_handle();
+    ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, vertex_buffer_handle);
+    ::glBindBufferRange(
+        GL_SHADER_STORAGE_BUFFER,
+        1,
+        camera_buffer_.native_handle(),
+        camera_buffer_.frame_offset_bytes(),
+        sizeof(CameraData));
+    ::glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffer_handle);
+
+    const auto command_count = gun_command_buffer_.build(*gun);
+    ::glBindBuffer(GL_DRAW_INDIRECT_BUFFER, gun_command_buffer_.native_handle());
+
+    auto object_data = gun->render_entities() |
+                       std::views::transform(
+                           [&](auto e)
+                           {
+                               auto sub_entity = rem[e];
+                               contract_assert(sub_entity);
+
+                               return ObjectData{
+                                   .model = gun->transform(),
+                                   .albedo_texture_index = sub_entity->albedo_texture_bindless_handle(),
+                                   .normal_texture_index = sub_entity->normal_texture_bindless_handle(),
+                                   .specular_texture_index = sub_entity->specular_texture_bindless_handle(),
+                                   .glossiness_texture_index = sub_entity->glossiness_texture_bindless_handle(),
+                                   .emissive_texture_index = sub_entity->emissive_texture_bindless_handle(),
+                                   .emissive_strength = gun->emissive_strength(),
+                               };
+                           }) |
+                       std::ranges::to<std::vector>();
+
+    gbuffer_program_.set_uniform(0zu, 0.0f);
+
+    resize_gpu_buffer(object_data, gun_object_data_buffer_);
+    gun_object_data_buffer_.write(std::as_bytes(std::span{object_data.data(), object_data.size()}), 0zu);
+    ::glBindBufferRange(
+        GL_SHADER_STORAGE_BUFFER,
+        2,
+        gun_object_data_buffer_.native_handle(),
+        gun_object_data_buffer_.frame_offset_bytes(),
+        gun_object_data_buffer_.size());
+
+    ::glMultiDrawElementsIndirect(
+        GL_TRIANGLES,
+        GL_UNSIGNED_INT,
+        reinterpret_cast<const void *>(gun_command_buffer_.offset_bytes()),
+        command_count,
+        0);
+
+    ::glDepthRange(0.1f, 1.0f);
 }
 
 auto Renderer::execute_lighting_pass(Scene &scene) -> void
@@ -557,6 +646,46 @@ auto Renderer::execute_lighting_pass(Scene &scene) -> void
         reinterpret_cast<const void *>(post_processing_command_buffer_.offset_bytes()),
         1u,
         0);
+}
+
+auto Renderer::execute_gun_lighting_pass(Scene &) -> void
+{
+    light_pass_rt_.fb.bind();
+
+    ::glDepthRange(0.0f, 0.1f);
+
+    const auto auto_bind = AutoBind{light_pass_program_};
+
+    light_pass_program_.set_uniforms(
+        gbuffer_rt_.colour_texture_bindless_handle_0,
+        gbuffer_rt_.colour_texture_bindless_handle_1,
+        gbuffer_rt_.colour_texture_bindless_handle_2,
+        gbuffer_rt_.colour_texture_bindless_handle_3,
+        gbuffer_rt_.colour_texture_bindless_handle_4);
+
+    const auto [vertex_buffer_handle, index_buffer_handle] = service<MeshManager>().native_handle();
+    ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, vertex_buffer_handle);
+    ::glBindBufferRange(
+        GL_SHADER_STORAGE_BUFFER,
+        1,
+        light_buffer_.native_handle(),
+        light_buffer_.frame_offset_bytes(),
+        light_buffer_.size());
+    ::glBindBufferRange(
+        GL_SHADER_STORAGE_BUFFER,
+        2,
+        camera_buffer_.native_handle(),
+        camera_buffer_.frame_offset_bytes(),
+        sizeof(CameraData));
+    ::glBindBuffer(GL_DRAW_INDIRECT_BUFFER, post_processing_command_buffer_.native_handle());
+    ::glMultiDrawElementsIndirect(
+        GL_TRIANGLES,
+        GL_UNSIGNED_INT,
+        reinterpret_cast<const void *>(post_processing_command_buffer_.offset_bytes()),
+        1u,
+        0);
+
+    ::glDepthRange(0.1f, 1.0f);
 }
 
 auto Renderer::execute_bloom_pass([[maybe_unused]] Scene &scene) -> void
@@ -787,7 +916,8 @@ auto Renderer::execute_tone_mapping_pass(Scene &scene) -> void
         ssao_blur_rt_.colour_texture_bindless_handle_0,
         gbuffer_rt_.colour_texture_bindless_handle_2,
         scene.fog_options().colour,
-        scene.fog_options().density);
+        scene.fog_options().density,
+        gbuffer_rt_.colour_texture_bindless_handle_1);
     ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, vertex_buffer_handle);
     ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, average_luminance_buffer_.native_handle());
     ::glBindBufferRange(
