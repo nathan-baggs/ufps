@@ -118,6 +118,8 @@ class Scene
 
     constexpr auto entities() const -> std::span<const EntityHandle>;
 
+    constexpr auto gun() const -> EntityHandle;
+
     constexpr auto &ambient_light(this auto &&self);
 
     constexpr auto &tone_map_options(this auto &&self);
@@ -142,6 +144,7 @@ class Scene
 
   private:
     std::vector<EntityHandle> entities_;
+    EntityHandle gun_;
     Colour ambient_;
     ToneMapOptions tone_map_options_;
     SSAOOptions ssao_options_;
@@ -155,6 +158,7 @@ class Scene
 
 constexpr Scene::Scene(const Description &description)
     : entities_{}
+    , gun_{}
     , ambient_{description.ambient}
     , tone_map_options_{description.tone_map_options}
     , ssao_options_{description.ssao_options}
@@ -199,7 +203,15 @@ constexpr Scene::Scene(const Description &description)
             new_entity->set_camera(camera_handle);
         }
 
-        add(new_entity_handle);
+        if (new_entity->name() == "gun")
+        {
+            gun_ = new_entity_handle;
+        }
+        else
+        {
+            add(new_entity_handle);
+        }
+
         lookup[entity_description.name] = new_entity_handle;
     }
 
@@ -286,6 +298,11 @@ constexpr auto Scene::add(EntityHandle handle) -> void
 constexpr auto Scene::entities() const -> std::span<const EntityHandle>
 {
     return entities_;
+}
+
+constexpr auto Scene::gun() const -> EntityHandle
+{
+    return gun_;
 }
 
 constexpr auto &Scene::ambient_light(this auto &&self)
