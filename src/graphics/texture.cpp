@@ -26,6 +26,7 @@ auto to_opengl(ufps::TextureFormat format, bool include_size) -> ::GLenum
         case SRGBA: return include_size ? GL_SRGB8_ALPHA8 : GL_RGBA;
         case R16F: return include_size ? GL_RG16F : GL_RG;
         case RGB16F: return include_size ? GL_RGB16F : GL_RGB;
+        case RGBA16F: return include_size ? GL_RGBA16F : GL_RGBA;
         case DEPTH24: return GL_DEPTH_COMPONENT24;
         case BC5U: return GL_COMPRESSED_RG_RGTC2;
         case BC7: return GL_COMPRESSED_RGBA_BPTC_UNORM;
@@ -60,7 +61,8 @@ Texture::Texture(const TextureData &texture, const std::string &name, const Samp
         }
         else
         {
-            const auto type = texture.format == TextureFormat::R16F || texture.format == TextureFormat::RGB16F
+            const auto type = texture.format == TextureFormat::R16F || texture.format == TextureFormat::RGB16F ||
+                                      texture.format == TextureFormat::RGBA16F
                                   ? GL_FLOAT
                                   : GL_UNSIGNED_BYTE;
 

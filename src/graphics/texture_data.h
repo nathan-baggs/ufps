@@ -18,6 +18,7 @@ enum class TextureFormat
     SRGBA,
     R16F,
     RGB16F,
+    RGBA16F,
     DEPTH24,
     BC5U,
     BC7,
