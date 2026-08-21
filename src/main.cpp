@@ -22,6 +22,7 @@
 #include "concurrency/thread_pool.h"
 #include "core/actor.h"
 #include "core/camera_manager.h"
+#include "core/entity.h"
 #include "core/entity_manager.h"
 #include "core/flycam_actor.h"
 #include "core/light_manager.h"
@@ -236,29 +237,37 @@ auto load_render_entity_manager(ufps::ResourceLoader &resource_loader)
           texture_manager.texture_index("textures\\default_Emissive.dds")}});
 }
 
-auto pulse_light(ufps::LightHandle handle) -> ufps::Task
+[[maybe_unused]] auto pulse_light(ufps::EntityHandle handle) -> ufps::Task
 {
-    const auto &[awaitable, lm] = ufps::services<ufps::AwaitableManager, ufps::LightManager>();
+    const auto &[awaitable, em, lm] = ufps::services<ufps::AwaitableManager, ufps::EntityManager, ufps::LightManager>();
     auto fake_time = 0.0f;
 
     for (;;)
     {
-        if (auto light = lm[handle]; light)
-        {
-            light->intensity = 2.0f + (5.0f * ((std::sin(fake_time) + 1.0f) / 2.0f));
-        }
-        else
+        const auto entity = em[handle];
+        if (!entity)
         {
             ufps::log::info("ending pulse_light coroutine");
             co_return;
         }
+
+        const auto light = lm[entity->light()];
+        if (!light)
+        {
+            ufps::log::info("ending pulse_light coroutine");
+            co_return;
+        }
+
+        entity->set_emissive_strength(2.0f + (5.0f * ((std::sin(fake_time) + 1.0f) / 2.0f)));
+        light->intensity = 2.0f + (5.0f * ((std::sin(fake_time) + 1.0f) / 2.0f));
+
         fake_time += 0.1f;
 
         co_await awaitable;
     }
 }
 
-auto flicker_light(ufps::LightHandle handle) -> ufps::Task
+[[maybe_unused]] auto flicker_light(ufps::LightHandle handle) -> ufps::Task
 {
     const auto &[awaitable, lm] = ufps::services<ufps::AwaitableManager, ufps::LightManager>();
 
@@ -389,8 +398,23 @@ int start()
 
     const auto point_light_handles = lm.handles();
 
-    pulse_light(point_light_handles[0]);
-    flicker_light(point_light_handles[2]);
+    auto alert_light = ufps::EntityHandle{};
+    for (const auto handle : em.handles())
+    {
+        const auto entity = em[handle];
+        if (!entity)
+        {
+            continue;
+        }
+
+        if (entity->name() == "north_corridor_0_alert_light")
+        {
+            alert_light = handle;
+        }
+    }
+
+    pulse_light(alert_light);
+    // flicker_light(point_light_handles[2]);
 
     const auto entity_handles = em.handles();
     auto player_entity_handle = std::ranges::find_if(entity_handles, [&](auto e) { return em[e]->name() == "player"; });

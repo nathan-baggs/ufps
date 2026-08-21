@@ -21,6 +21,7 @@
 #include "maths/transform.h"
 #include "maths/utils.h"
 #include "maths/vector4.h"
+#include "utils/log.h"
 #include "utils/string_map.h"
 
 namespace ufps
@@ -106,7 +107,6 @@ class Scene
         FilmGrainOptions film_grain_options;
         BloomOptions bloom_options;
         Colour ambient;
-        std::vector<PointLight> lights;
         std::vector<Entity::Description> entities;
     };
 
@@ -172,11 +172,6 @@ constexpr Scene::Scene(const Description &description)
     auto &&[em, rem, ps, lm, cm] =
         services<EntityManager, RenderEntityManager, PhysicsSystem, LightManager, CameraManager>();
 
-    for (auto &light : description.lights)
-    {
-        lm.insert(light);
-    }
-
     auto lookup = StringMap<EntityHandle>{};
 
     for (const auto &entity_description : description.entities)
@@ -203,6 +198,12 @@ constexpr Scene::Scene(const Description &description)
             new_entity->set_camera(camera_handle);
         }
 
+        if (entity_description.light)
+        {
+            const auto light_handle = lm.insert(*entity_description.light);
+            new_entity->set_light(light_handle);
+        }
+
         if (new_entity->name() == "gun")
         {
             gun_ = new_entity_handle;
@@ -221,6 +222,14 @@ constexpr Scene::Scene(const Description &description)
 
         for (const auto &child : entity_description.children)
         {
+            log::debug("{} {} {}", em[entity]->name(), child, !!gun_);
+
+            if (em[entity]->name() == "player" && child == "gun" && gun_)
+            {
+                em[entity]->add_child(gun_);
+                continue;
+            }
+
             const auto child_handle = lookup.find(child);
             ensure(child_handle != std::ranges::cend(lookup), "child {} not found", child);
 
@@ -352,7 +361,16 @@ constexpr auto &Scene::bloom_options(this auto &&self)
 
 constexpr auto Scene::description(this auto &&self) -> Description
 {
-    const auto &[em, lm, cm] = services<EntityManager, LightManager, CameraManager>();
+    const auto &[em, cm] = services<EntityManager, CameraManager>();
+
+    auto entities = self.entities_ | std::views::filter([&](auto &e) { return !!em[e]; }) |
+                    std::views::transform([&](auto e) { return em[e]->description(); }) |
+                    std::ranges::to<std::vector>();
+
+    if (const auto gun = em[self.gun_]; gun)
+    {
+        entities.push_back(gun->description());
+    }
 
     return {
         .tone_map_options = self.tone_map_options_,
@@ -364,10 +382,7 @@ constexpr auto Scene::description(this auto &&self) -> Description
         .film_grain_options = self.film_grain_options_,
         .bloom_options = self.bloom_options_,
         .ambient = self.ambient_,
-        .lights = lm.data() | std::ranges::to<std::vector>(),
-        .entities = self.entities_ | std::views::filter([&](auto &e) { return !!em[e]; }) |
-                    std::views::transform([&](auto e) { return em[e]->description(); }) |
-                    std::ranges::to<std::vector>(),
+        .entities = std::move(entities),
     };
 }
 

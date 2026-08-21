@@ -1382,6 +1382,47 @@ auto DebugRenderer::draw_inspector(Scene &scene) -> void
                     ::ImGui::PopStyleColor(3);
                 }
             }
+
+            {
+                ::ImGui::Text("Light");
+
+                ::ImGui::PushID("light");
+
+                if (const auto light = entity->light(); light)
+                {
+
+                    if (::ImGui::Button("Select"))
+                    {
+                        selected_ = light;
+                    }
+
+                    ::ImGui::SameLine();
+
+                    ::ImGui::PushStyleColor(ImGuiCol_Button, ::ImVec4(0.80f, 0.15f, 0.15f, 1.00f));
+                    ::ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ::ImVec4(0.95f, 0.25f, 0.25f, 1.00f));
+                    ::ImGui::PushStyleColor(ImGuiCol_ButtonActive, ::ImVec4(0.65f, 0.10f, 0.10f, 1.00f));
+
+                    if (::ImGui::Button("Delete"))
+                    {
+                        entity->set_camera({});
+                        lm.remove(light);
+                    }
+
+                    ::ImGui::PopStyleColor(3);
+                }
+                else
+                {
+                    if (::ImGui::Button("Add"))
+                    {
+                        const auto new_light =
+                            lm.insert({entity->transform().position, colours::white, 1.0f, 0.313f, 0.157f, 1.0f});
+                        entity->set_light(new_light);
+                        selected_ = new_light;
+                    }
+                }
+
+                ::ImGui::PopID();
+            }
         }
         else if (auto *selected_light = std::get_if<LightHandle>(&selected_))
         {

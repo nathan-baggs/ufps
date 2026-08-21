@@ -7,6 +7,7 @@
 #include <vector>
 
 #include "core/camera_manager.h"
+#include "core/light_manager.h"
 #include "core/render_entity.h"
 #include "core/render_entity_manager.h"
 #include "core/service_locator.h"
@@ -33,6 +34,7 @@ class Entity
         std::vector<std::string> render_entities;
         std::vector<std::string> children;
         std::optional<Camera::Description> camera;
+        std::optional<PointLight> light;
     };
 
     Entity(std::string name, std::span<const RenderEntityHandle> render_entities, Transform transform);
@@ -68,6 +70,10 @@ class Entity
 
     auto rigid_bodies() const -> std::span<const RigidBodyHandle>;
 
+    auto light() const -> LightHandle;
+
+    auto set_light(LightHandle handle) -> void;
+
     auto add_child(EntityHandle child) -> void;
 
     auto children() -> std::span<const EntityHandle>;
@@ -84,6 +90,7 @@ class Entity
     std::string name_;
     std::vector<RenderEntityHandle> render_entities_;
     std::vector<RigidBodyHandle> rigid_bodies_;
+    LightHandle light_;
     Transform local_transform_;
     Transform parent_transform_;
     Transform transform_;

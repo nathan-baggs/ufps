@@ -4,6 +4,7 @@
 
 #include "core/camera_manager.h"
 #include "core/entity_manager.h"
+#include "core/light_manager.h"
 #include "core/service_locator.h"
 #include "maths/transform.h"
 #include "physics/physics_system.h"
@@ -15,6 +16,7 @@ Entity::Entity(std::string name, std::span<const RenderEntityHandle> render_enti
     : name_{std::move(name)}
     , render_entities_{std::ranges::cbegin(render_entities), std::ranges::cend(render_entities)}
     , rigid_bodies_{}
+    , light_{}
     , local_transform_{std::move(transform)}
     , parent_transform_{{}, {1.0f}, {}}
     , transform_{parent_transform_ * local_transform_}
@@ -90,6 +92,16 @@ auto Entity::rigid_bodies() const -> std::span<const RigidBodyHandle>
     return rigid_bodies_;
 }
 
+auto Entity::light() const -> LightHandle
+{
+    return light_;
+}
+
+auto Entity::set_light(LightHandle handle) -> void
+{
+    light_ = handle;
+}
+
 auto Entity::set_parent_transform(const Transform &transform) -> void
 {
     update_transforms(local_transform_, transform);
@@ -102,7 +114,8 @@ auto Entity::children() -> std::span<const EntityHandle>
 
 auto Entity::description() const -> Entity::Description
 {
-    const auto &[em, rem, ps, cm] = services<EntityManager, RenderEntityManager, PhysicsSystem, CameraManager>();
+    const auto &[em, rem, ps, cm, lm] =
+        services<EntityManager, RenderEntityManager, PhysicsSystem, CameraManager, LightManager>();
 
     auto render_entities = render_entities_ | std::views::filter([&](auto e) { return !!rem[e]; }) |
                            std::views::transform([&](auto e) { return std::string{rem[e]->group_name()}; }) |
@@ -112,6 +125,9 @@ auto Entity::description() const -> Entity::Description
     render_entities.erase(first, last);
 
     const auto camera = cm[camera_];
+    const auto light = lm[light_];
+
+    log::debug("{} {}", name_, std::ranges::size(children_));
 
     return {
         .name = name_,
@@ -127,12 +143,14 @@ auto Entity::description() const -> Entity::Description
                     std::views::filter([](const auto &e) { return !!e; }) |
                     std::views::transform([](const auto &e) { return std::string{e->name()}; }) |
                     std::ranges::to<std::vector>(),
-        .camera = camera.transform([](const auto &e) { return e.description(); })};
+        .camera = camera.transform([](const auto &e) { return e.description(); }),
+        .light = light.transform([](const auto &e) { return e; }),
+    };
 }
 
 auto Entity::set_transform(const Transform &transform) -> void
 {
-    auto &&[em, ps, cm] = services<EntityManager, PhysicsSystem, CameraManager>();
+    auto &&[em, ps, cm, lm] = services<EntityManager, PhysicsSystem, CameraManager, LightManager>();
 
     update_transforms(transform, parent_transform_);
 
@@ -156,6 +174,14 @@ auto Entity::set_transform(const Transform &transform) -> void
         contract_assert(camera);
 
         camera->set_parent_transform(transform_);
+    }
+
+    if (light_)
+    {
+        const auto light = lm[light_];
+        contract_assert(light);
+
+        light->position = transform_.position;
     }
 }
 
