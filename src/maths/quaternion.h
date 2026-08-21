@@ -70,6 +70,12 @@ constexpr auto operator*(const Quaternion &a, const Quaternion &b) -> Quaternion
         (b.x * -a.x) + (b.y * -a.y) + (b.z * -a.z) + (b.w * a.w)};
 }
 
+constexpr auto operator*=(Quaternion &a, const Quaternion &b) -> Quaternion &
+{
+    a = a * b;
+    return a;
+}
+
 constexpr Quaternion::Quaternion(float yaw, float pitch, float roll)
 {
     const auto qx = Quaternion{{1.0f, 0.0f, 0.0f}, pitch};
