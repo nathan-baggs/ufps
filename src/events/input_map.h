@@ -6,6 +6,7 @@
 
 #include "events/key.h"
 #include "events/key_event.h"
+#include "events/mouse_button_event.h"
 
 namespace ufps
 {
@@ -80,6 +81,8 @@ class InputMap
     float delta_x;
 
     float delta_y;
+
+    std::optional<MouseButtonEvent> mouse_event;
 
   private:
     std::bitset<impl::size()> map_;
