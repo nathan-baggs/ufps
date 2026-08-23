@@ -29,6 +29,7 @@
 #include "events/key.h"
 #include "events/mouse_button_event.h"
 #include "graphics/colour.h"
+#include "graphics/debug_layer.h"
 #include "graphics/line_data.h"
 #include "graphics/mesh_manager.h"
 #include "graphics/opengl.h"
@@ -252,15 +253,6 @@ DebugRenderer::DebugRenderer(const Window &window, ResourceLoader &resource_load
     , snap_enabled_{false}
     , click_{}
     , selected_{std::monostate{}}
-    , debug_lines_{}
-    , debug_line_buffer_{sizeof(LineData) * 2u, "line_data_buffer"}
-    , debug_line_program_{create_program(
-          resource_loader,
-          "shaders\\line.vert",
-          "line_vertex_shader",
-          "shaders\\line.frag",
-          "line_fragment_shader",
-          "line_program")}
     , debug_light_program_{create_program(
           resource_loader,
           "shaders\\debug_light.vert",
@@ -295,8 +287,14 @@ DebugRenderer::~DebugRenderer()
 
 auto DebugRenderer::post_render(Scene &scene, const Camera &camera) -> void
 {
-    auto &&[em, rem, mm, lm, ps, cm] =
-        services<EntityManager, RenderEntityManager, MeshManager, LightManager, PhysicsSystem, CameraManager>();
+    auto &&[em, rem, mm, lm, ps, cm, dl] = services<
+        EntityManager,
+        RenderEntityManager,
+        MeshManager,
+        LightManager,
+        PhysicsSystem,
+        CameraManager,
+        DebugLayer>();
 
     if (std::holds_alternative<EntityHandle>(selected_))
     {
@@ -344,19 +342,6 @@ auto DebugRenderer::post_render(Scene &scene, const Camera &camera) -> void
     }
 
     light_pass_rt_.fb.unbind();
-    ::glBlitNamedFramebuffer(
-        gbuffer_rt_.fb.native_handle(),
-        0,
-        0u,
-        0u,
-        gbuffer_rt_.fb.width(),
-        gbuffer_rt_.fb.height(),
-        0u,
-        0u,
-        gbuffer_rt_.fb.width(),
-        gbuffer_rt_.fb.height(),
-        GL_DEPTH_BUFFER_BIT,
-        GL_NEAREST);
 
     debug_light_program_.bind();
 
@@ -446,13 +431,14 @@ auto DebugRenderer::post_render(Scene &scene, const Camera &camera) -> void
 
     debug_light_program_.unbind();
 
-    auto &&physics_debug_renderer = ps.debug_renderer();
-    if (physics_debug_renderer)
+    auto debug_layer_lines = dl.yield_lines(DebugLayerType::DEBUG);
+    while (!std::ranges::empty(debug_layer_lines))
     {
-        debug_lines_.append_range(physics_debug_renderer->yield_lines());
+        debug_lines_.push_back(debug_layer_lines.front());
+        debug_layer_lines.pop();
     }
 
-    if (!debug_lines_.empty())
+    if (!std::ranges::empty(debug_lines_))
     {
         debug_line_program_.bind();
 
@@ -469,7 +455,6 @@ auto DebugRenderer::post_render(Scene &scene, const Camera &camera) -> void
 
         debug_lines_.clear();
 
-        debug_line_buffer_.advance();
         debug_line_program_.unbind();
     }
 

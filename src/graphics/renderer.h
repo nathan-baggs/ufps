@@ -6,6 +6,7 @@
 #include "core/scene.h"
 #include "graphics/command_buffer.h"
 #include "graphics/frame_buffer.h"
+#include "graphics/line_data.h"
 #include "graphics/multi_buffer.h"
 #include "graphics/opengl.h"
 #include "graphics/persistent_buffer.h"
@@ -91,6 +92,9 @@ class Renderer
     RenderTarget bloom_rt_;
     FrameBuffer *final_fb_;
     bool enable_post_processing_;
+    std::vector<LineData> debug_lines_;
+    Buffer debug_line_buffer_;
+    Program debug_line_program_;
 
   private:
     auto execute_gbuffer_pass(Scene &scene) -> void;

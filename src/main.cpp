@@ -36,6 +36,7 @@
 #include "events/key.h"
 #include "events/key_event.h"
 #include "graphics/colour.h"
+#include "graphics/debug_layer.h"
 #include "graphics/debug_renderer.h"
 #include "graphics/mesh_data.h"
 #include "graphics/mesh_manager.h"
@@ -380,7 +381,8 @@ int start()
         std::make_unique<ufps::EntityManager>(),
         std::make_unique<ufps::LightManager>(),
         std::make_unique<ufps::CameraManager>(),
-        ufps::CameraHandle{});
+        ufps::CameraHandle{},
+        std::make_unique<ufps::DebugLayer>());
     ufps::set_service(services.get());
 
     load_render_entity_manager(*resource_loader);

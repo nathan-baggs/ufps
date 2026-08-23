@@ -19,6 +19,7 @@
 #include "core/service_locator.h"
 #include "graphics/buffer_writer.h"
 #include "graphics/command_buffer.h"
+#include "graphics/debug_layer.h"
 #include "graphics/frame_buffer.h"
 #include "graphics/mesh_manager.h"
 #include "graphics/object_data.h"
@@ -310,6 +311,15 @@ Renderer::Renderer(
           "bloom"),}
     ,final_fb_{}
     , enable_post_processing_{true}
+    , debug_lines_{}
+    , debug_line_buffer_{sizeof(LineData) * 2u, "line_data_buffer"}
+    , debug_line_program_{create_program(
+          resource_loader,
+          "shaders\\line.vert",
+          "line_vertex_shader",
+          "shaders\\line.frag",
+          "line_fragment_shader",
+          "line_program")}
 {
     post_processing_command_buffer_.build(post_process_sprite_);
 
@@ -418,6 +428,49 @@ auto Renderer::post_render(Scene &, const Camera &) -> void
         final_fb_->height(),
         GL_COLOR_BUFFER_BIT,
         GL_NEAREST);
+
+    ::glBlitNamedFramebuffer(
+        gbuffer_rt_.fb.native_handle(),
+        0,
+        0u,
+        0u,
+        gbuffer_rt_.fb.width(),
+        gbuffer_rt_.fb.height(),
+        0u,
+        0u,
+        gbuffer_rt_.fb.width(),
+        gbuffer_rt_.fb.height(),
+        GL_DEPTH_BUFFER_BIT,
+        GL_NEAREST);
+
+    auto &dl = service<DebugLayer>();
+
+    auto debug_layer_lines = dl.yield_lines(DebugLayerType::DEFAULT);
+    while (!std::ranges::empty(debug_layer_lines))
+    {
+        debug_lines_.push_back(debug_layer_lines.front());
+        debug_layer_lines.pop();
+    }
+
+    if (!std::ranges::empty(debug_lines_))
+    {
+        debug_line_program_.bind();
+
+        resize_gpu_buffer(debug_lines_, debug_line_buffer_);
+        debug_line_buffer_.write(std::as_bytes(std::span{debug_lines_.data(), debug_lines_.size()}), 0zu);
+        ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, debug_line_buffer_.native_handle());
+        ::glBindBufferRange(
+            GL_SHADER_STORAGE_BUFFER,
+            1,
+            camera_buffer_.native_handle(),
+            camera_buffer_.frame_offset_bytes(),
+            sizeof(CameraData));
+        ::glDrawArrays(GL_LINES, 0, debug_lines_.size());
+
+        debug_lines_.clear();
+
+        debug_line_program_.unbind();
+    }
 }
 
 auto Renderer::create_program(

@@ -2,7 +2,6 @@
 
 #include <vector>
 
-#include "graphics/line_data.h"
 #include "physics/jolt.h"
 
 namespace ufps
@@ -17,11 +16,6 @@ class PhysicsDebugRenderer : public ::JPH::DebugRendererSimple
         -> void override;
 
     auto DrawText3D(::JPH::RVec3Arg, const std::string_view &, ::JPH::ColorArg, float) -> void override;
-
-    auto yield_lines() -> std::vector<LineData>;
-
-  private:
-    std::vector<LineData> lines_;
 };
 
 }
