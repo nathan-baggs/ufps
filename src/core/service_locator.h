@@ -19,6 +19,7 @@ class RenderEntityManager;
 class EntityManager;
 class LightManager;
 class CameraManager;
+class DebugLayer;
 
 using CameraHandle = SparseSet<Camera>::handle_type;
 
@@ -32,7 +33,8 @@ using Services = std::tuple<
     std::unique_ptr<EntityManager>,
     std::unique_ptr<LightManager>,
     std::unique_ptr<CameraManager>,
-    CameraHandle>;
+    CameraHandle,
+    std::unique_ptr<DebugLayer>>;
 
 namespace impl
 {
