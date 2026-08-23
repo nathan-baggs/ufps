@@ -20,6 +20,10 @@ inline constexpr Colour black{.r = 0.0f, .g = 0.0f, .b = 0.0f};
 inline constexpr Colour yellow{.r = 1.0f, .g = 1.0f, .b = 0.0f};
 inline constexpr Colour magenta{.r = 1.0f, .g = 0.0f, .b = 1.0f};
 inline constexpr Colour green{.r = 0.0f, .g = 1.0f, .b = 0.0f};
+inline constexpr Colour red{.r = 1.0f, .g = 0.0f, .b = 0.0f};
+inline constexpr Colour hot_pink{.r = 1.0f, .g = 0.412f, .b = 0.706f};
+inline constexpr Colour dark_pink{.r = 1.0f, .g = 0.66f, .b = 0.0f};
+inline constexpr Colour blue{.r = 0.0f, .g = 0.0f, .b = 1.0f};
 }
 
 inline auto to_string(const Colour &obj) -> std::string
