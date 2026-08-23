@@ -109,9 +109,9 @@ Description:
           Transform:
             position:
               Vector3:
-                x: -10.972599
-                y: 1.7890872
-                z: -18.69732
+                x: -1.9519284
+                y: 2
+                z: 2.921236
             scale:
               Vector3:
                 x: 1
@@ -119,10 +119,10 @@ Description:
                 z: 1
             rotation:
               Quaternion:
-                x: 0.021227265
-                y: -0.72832614
-                z: 0.022585403
-                w: 0.68452936
+                x: 0.002244024
+                y: 0.992037
+                z: -0.0178586
+                w: 0.1246545
         aabb:
           AABB:
             min:
@@ -171,9 +171,9 @@ Description:
           Transform:
             position:
               Vector3:
-                x: -0.6115605
-                y: 1.8277693
-                z: 2.0590892
+                x: -0.06125992
+                y: 2
+                z: 2.3654382
             scale:
               Vector3:
                 x: 1
@@ -181,10 +181,10 @@ Description:
                 z: 1
             rotation:
               Quaternion:
-                x: -0.0014275977
-                y: 0.9985405
-                z: -0.041963935
-                w: -0.033969983
+                x: 0.0014053669
+                y: 0.99859416
+                z: -0.036964897
+                w: 0.037965514
         aabb:
           AABB:
             min:
@@ -201,6 +201,7 @@ Description:
         render_entities: ~
         children:
           - gun
+          - player_child_0
         camera:
           - Description:
               transform:
@@ -1154,7 +1155,7 @@ Description:
         light: ~
     - Description:
         name: north_corridor_0_alert_light
-        emissive_strength: 6.8772388
+        emissive_strength: 2.002305
         transform:
           Transform:
             position:
@@ -1205,7 +1206,7 @@ Description:
               constant_attenuation: 1.027
               linear_attenuation: 1.692
               quadratic_attenuation: 1.319
-              intensity: 6.8772388
+              intensity: 2.002305
     - Description:
         name: level_child_0
         emissive_strength: 1
@@ -1314,6 +1315,45 @@ Description:
               linear_attenuation: 0.313
               quadratic_attenuation: 0.157
               intensity: 0.617
+    - Description:
+        name: player_child_0
+        emissive_strength: 1
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: -3.1387012e-07
+                y: 0
+                z: 3.5902557
+            scale:
+              Vector3:
+                x: 0.01
+                y: 0.01
+                z: 0.01
+            rotation:
+              Quaternion:
+                x: 0
+                y: 0
+                z: 0
+                w: 1
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: -1
+                y: -1
+                z: 0
+            max:
+              Vector3:
+                x: 1
+                y: 1
+                z: 0
+        rigid_bodies: ~
+        render_entities:
+          - sprite
+        children: ~
+        camera: ~
+        light: ~
     - Description:
         name: gun
         emissive_strength: 1
