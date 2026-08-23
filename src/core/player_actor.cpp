@@ -3,9 +3,13 @@
 #include "core/actor.h"
 #include "core/camera.h"
 #include "core/entity_manager.h"
+#include "core/scene.h"
 #include "core/service_locator.h"
 #include "events/input_map.h"
+#include "graphics/colour.h"
+#include "graphics/debug_layer.h"
 #include "maths/quaternion.h"
+#include "maths/ray.h"
 #include "maths/vector3.h"
 #include "utils/error.h"
 
@@ -48,17 +52,19 @@ namespace ufps
 PlayerActor::PlayerActor(
     EntityHandle entity,
     const InputMap &input_map,
-    VirtualCharacterController &character_controller)
+    VirtualCharacterController &character_controller,
+    const Scene &scene)
     : Actor{entity}
     , input_map_{input_map}
     , character_controller_{character_controller}
+    , scene_{scene}
 {
     service<CameraHandle>() = camera_;
 }
 
 auto PlayerActor::update() -> void
 {
-    const auto &[em, cm] = services<EntityManager, CameraManager>();
+    const auto &[em, cm, dl] = services<EntityManager, CameraManager, DebugLayer>();
 
     const auto camera = cm[camera_];
     contract_assert(camera);
@@ -80,5 +86,45 @@ auto PlayerActor::update() -> void
     new_transform.position.y = transform.position.y;
 
     player->set_transform(new_transform);
+
+    static auto handle_click = true;
+
+    if (const auto mouse_event = input_map_.mouse_event; mouse_event)
+    {
+        if (handle_click && mouse_event->state() == MouseButtonState::DOWN)
+        {
+            const auto bullet_ray = Ray{camera->transform().position, camera->direction() * 100.0f};
+
+            if (const auto intersection = scene_.intersect_ray(bullet_ray); intersection)
+            {
+                pew_pew_lines_.push_back(
+                    std::make_tuple(
+                        intersection->position, intersection->position + (intersection->normal * 0.5f), colours::blue));
+
+                pew_pew_lines_.push_back(
+                    std::make_tuple(
+                        bullet_ray.origin,
+                        bullet_ray.origin + (bullet_ray.direction * intersection->distance),
+                        colours::hot_pink));
+            }
+            else
+            {
+                pew_pew_lines_.push_back(
+                    std::make_tuple(
+                        bullet_ray.origin, bullet_ray.origin + (bullet_ray.direction * 100.0f), colours::red));
+            }
+
+            handle_click = false;
+        }
+    }
+    else
+    {
+        handle_click = true;
+    }
+
+    for (const auto &[start, end, colour] : pew_pew_lines_)
+    {
+        dl.push_line(start, end, colour, DebugLayerType::DEFAULT);
+    }
 }
 }

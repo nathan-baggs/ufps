@@ -4,6 +4,7 @@
 #include "core/camera.h"
 #include "core/camera_manager.h"
 #include "core/entity_manager.h"
+#include "core/scene.h"
 #include "events/input_map.h"
 #include "events/key.h"
 #include "physics/virtual_character_controller.h"
@@ -13,7 +14,11 @@ namespace ufps
 class PlayerActor : public Actor
 {
   public:
-    PlayerActor(EntityHandle entity, const InputMap &input_map, VirtualCharacterController &character_controller);
+    PlayerActor(
+        EntityHandle entity,
+        const InputMap &input_map,
+        VirtualCharacterController &character_controller,
+        const Scene &scene);
     ~PlayerActor() override = default;
 
     auto update() -> void override;
@@ -21,5 +26,7 @@ class PlayerActor : public Actor
   private:
     const InputMap &input_map_;
     VirtualCharacterController &character_controller_;
+    std::vector<std::tuple<Vector3, Vector3, Colour>> pew_pew_lines_;
+    const Scene &scene_;
 };
 }

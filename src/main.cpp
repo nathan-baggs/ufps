@@ -422,7 +422,7 @@ int start()
     auto player_entity_handle = std::ranges::find_if(entity_handles, [&](auto e) { return em[e]->name() == "player"; });
     ufps::ensure(player_entity_handle != std::ranges::cend(entity_handles), "no player in scene");
 
-    auto player_actor = ufps::PlayerActor{*player_entity_handle, input_map, player_controller};
+    auto player_actor = ufps::PlayerActor{*player_entity_handle, input_map, player_controller, scene};
 
     auto flycam_entity_handle = std::ranges::find_if(entity_handles, [&](auto e) { return em[e]->name() == "flycam"; });
     ufps::ensure(flycam_entity_handle != std::ranges::cend(entity_handles), "no flycam in scene");
@@ -441,6 +441,7 @@ int start()
 
         input_map.delta_x = 0.0f;
         input_map.delta_y = 0.0f;
+        input_map.mouse_event = std::nullopt;
 
         auto event = window.pump_event();
         while (event && running)
@@ -480,6 +481,7 @@ int start()
                     }
                     else if constexpr (std::same_as<T, ufps::MouseButtonEvent>)
                     {
+                        input_map.mouse_event = arg;
                         renderer.add_mouse_event(arg);
                     }
                 },

@@ -452,6 +452,9 @@ auto Renderer::post_render(Scene &, const Camera &) -> void
         debug_layer_lines.pop();
     }
 
+    static auto c = int{};
+    log::debug("rendering {} lines [{}]", std::ranges::size(debug_lines_), c++);
+
     if (!std::ranges::empty(debug_lines_))
     {
         debug_line_program_.bind();

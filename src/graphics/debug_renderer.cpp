@@ -287,6 +287,13 @@ DebugRenderer::~DebugRenderer()
 
 auto DebugRenderer::post_render(Scene &scene, const Camera &camera) -> void
 {
+    Renderer::post_render(scene, camera);
+
+    if (!enabled_)
+    {
+        return;
+    }
+
     auto &&[em, rem, mm, lm, ps, cm, dl] = services<
         EntityManager,
         RenderEntityManager,
@@ -332,13 +339,6 @@ auto DebugRenderer::post_render(Scene &scene, const Camera &camera) -> void
         contract_assert(rb);
         debug_lines_.append_range(
             create_aabb_lines({.min = {-1.0f}, .max = {1.0f}}, rb->transform(), colours::magenta));
-    }
-
-    Renderer::post_render(scene, camera);
-
-    if (!enabled_)
-    {
-        return;
     }
 
     light_pass_rt_.fb.unbind();

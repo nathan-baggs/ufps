@@ -17,9 +17,11 @@
 #include "graphics/mesh_manager.h"
 #include "graphics/point_light.h"
 #include "maths/bounded_number.h"
+#include "maths/matrix4.h"
 #include "maths/ray.h"
 #include "maths/transform.h"
 #include "maths/utils.h"
+#include "maths/vector3.h"
 #include "maths/vector4.h"
 #include "utils/log.h"
 #include "utils/string_map.h"
@@ -31,6 +33,7 @@ struct IntersectionResult
 {
     EntityHandle entity;
     Vector3 position;
+    Vector3 normal;
     float distance;
 };
 
@@ -112,7 +115,7 @@ class Scene
 
     constexpr Scene(const Description &description);
 
-    constexpr auto intersect_ray(const Ray &ray) -> std::optional<IntersectionResult>;
+    constexpr auto intersect_ray(const Ray &ray) const -> std::optional<IntersectionResult>;
 
     constexpr auto add(EntityHandle handle) -> void;
 
@@ -238,7 +241,7 @@ constexpr Scene::Scene(const Description &description)
     }
 }
 
-constexpr auto Scene::intersect_ray(const Ray &ray) -> std::optional<IntersectionResult>
+constexpr auto Scene::intersect_ray(const Ray &ray) const -> std::optional<IntersectionResult>
 {
     auto &&[mesh_manager, rem, em] = services<MeshManager, RenderEntityManager, EntityManager>();
 
@@ -285,8 +288,24 @@ constexpr auto Scene::intersect_ray(const Ray &ray) -> std::optional<Intersectio
 
                             if (*distance < min_distance)
                             {
+                                const auto normal = -Vector3::normalise(Vector3::cross(v2 - v0, v1 - v0));
+                                const auto transform = Matrix4{entity->transform()};
+                                const auto transformed_normal = transform * Vector4{normal, 0.0f};
+
+                                const auto distance_vec = Vector4{*distance, 0.0f};
+                                const auto transformed_distance = transform * distance_vec;
+
+                                const auto transformed_intersection = transform * Vector4{intersection_point, 1.0f};
+
                                 result = IntersectionResult{
-                                    .entity = handle, .position = intersection_point, .distance = *distance};
+                                    .entity = handle,
+                                    .position =
+                                        {transformed_intersection.x,
+                                         transformed_intersection.y,
+                                         transformed_intersection.z},
+                                    .normal = {transformed_normal.x, transformed_normal.y, transformed_normal.z},
+                                    .distance = transformed_distance.x,
+                                };
                                 min_distance = *distance;
                             }
                         }
