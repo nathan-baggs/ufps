@@ -17,6 +17,8 @@ layout(location = 2) out vec4 out_pos;
 layout(location = 3) out vec4 out_specular;
 layout(location = 4) out vec4 out_emissive;
 
+layout(location = 0) uniform float u_mask;
+
 void main()
 {
     vec3 n;
@@ -25,7 +27,7 @@ void main()
     n = normalize(in_tbn * n);
 
     out_colour = vec4(texture(sampler2D(in_albedo_tex_bindless_handle), in_uv).rgb, 1.0);
-    out_normal = vec4(n, 1.0);
+    out_normal = vec4(n, u_mask);
     out_pos = in_frag_position;
 
     float specular = texture(sampler2D(in_specular_tex_bindless_handle), in_uv).r;

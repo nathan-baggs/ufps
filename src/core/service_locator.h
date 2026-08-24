@@ -3,6 +3,8 @@
 #include <memory>
 #include <tuple>
 
+#include "core/camera.h"
+#include "core/sparse_set.h"
 #include "utils/error.h"
 
 namespace ufps
@@ -15,6 +17,11 @@ class TextureManager;
 class ThreadPool;
 class RenderEntityManager;
 class EntityManager;
+class LightManager;
+class CameraManager;
+class DebugLayer;
+
+using CameraHandle = SparseSet<Camera>::handle_type;
 
 using Services = std::tuple<
     std::unique_ptr<AwaitableManager>,
@@ -23,7 +30,11 @@ using Services = std::tuple<
     std::unique_ptr<TextureManager>,
     std::unique_ptr<ThreadPool>,
     std::unique_ptr<RenderEntityManager>,
-    std::unique_ptr<EntityManager>>;
+    std::unique_ptr<EntityManager>,
+    std::unique_ptr<LightManager>,
+    std::unique_ptr<CameraManager>,
+    CameraHandle,
+    std::unique_ptr<DebugLayer>>;
 
 namespace impl
 {
@@ -45,6 +56,13 @@ auto service() -> T &
 {
     expect(!!impl::g_services, "g_services not set");
     return *std::get<std::unique_ptr<T>>(*impl::g_services);
+}
+
+template <>
+inline auto service<CameraHandle>() -> CameraHandle &
+{
+    expect(!!impl::g_services, "g_services not set");
+    return std::get<CameraHandle>(*impl::g_services);
 }
 
 template <class... Ts>

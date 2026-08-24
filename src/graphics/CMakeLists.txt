@@ -1,6 +1,7 @@
 target_sources(ufpslib PRIVATE
   buffer.cpp
   command_buffer.cpp
+  debug_layer.cpp
   debug_renderer.cpp
   frame_buffer.cpp
   mesh_manager.cpp

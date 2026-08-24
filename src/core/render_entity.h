@@ -49,6 +49,7 @@ class RenderEntity
 {
   public:
     constexpr RenderEntity(
+        std::string group_name,
         MeshView mesh_view,
         std::uint64_t albedo_texture_bindless_handle,
         std::uint64_t normal_texture_bindless_handle,
@@ -57,6 +58,7 @@ class RenderEntity
         std::uint64_t glossiness_texture_bindless_handle,
         std::uint64_t emissive_texture_bindless_handle);
 
+    constexpr auto group_name() const -> std::string_view;
     constexpr auto mesh_view() const -> MeshView;
     constexpr auto albedo_texture_bindless_handle() const -> std::uint64_t;
     constexpr auto normal_texture_bindless_handle() const -> std::uint64_t;
@@ -67,6 +69,7 @@ class RenderEntity
     constexpr auto aabb() const -> const AABB &;
 
   private:
+    std::string group_name_;
     MeshView mesh_view_;
     std::uint64_t albedo_texture_bindless_handle_;
     std::uint64_t normal_texture_bindless_handle_;
@@ -78,6 +81,7 @@ class RenderEntity
 };
 
 constexpr RenderEntity::RenderEntity(
+    std::string group_name,
     MeshView mesh_view,
     std::uint64_t albedo_texture_bindless_handle,
     std::uint64_t normal_texture_bindless_handle,
@@ -85,7 +89,8 @@ constexpr RenderEntity::RenderEntity(
     std::uint64_t ao_texture_bindless_handle,
     std::uint64_t glossiness_texture_bindless_handle,
     std::uint64_t emissive_texture_bindless_handle)
-    : mesh_view_{mesh_view}
+    : group_name_{std::move(group_name)}
+    , mesh_view_{mesh_view}
     , albedo_texture_bindless_handle_{albedo_texture_bindless_handle}
     , normal_texture_bindless_handle_{normal_texture_bindless_handle}
     , specular_texture_bindless_handle_{specular_texture_bindless_handle}
@@ -94,6 +99,11 @@ constexpr RenderEntity::RenderEntity(
     , emissive_texture_bindless_handle_{emissive_texture_bindless_handle}
     , aabb_{impl::calculate_aabb(mesh_view_)}
 {
+}
+
+constexpr auto RenderEntity::group_name() const -> std::string_view
+{
+    return group_name_;
 }
 
 constexpr auto RenderEntity::mesh_view() const -> MeshView

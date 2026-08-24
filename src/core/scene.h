@@ -8,6 +8,7 @@
 
 #include "core/entity.h"
 #include "core/entity_manager.h"
+#include "core/light_manager.h"
 #include "core/render_entity.h"
 #include "core/render_entity_manager.h"
 #include "core/service_locator.h"
@@ -16,28 +17,24 @@
 #include "graphics/mesh_manager.h"
 #include "graphics/point_light.h"
 #include "maths/bounded_number.h"
+#include "maths/matrix4.h"
 #include "maths/ray.h"
 #include "maths/transform.h"
 #include "maths/utils.h"
+#include "maths/vector3.h"
 #include "maths/vector4.h"
+#include "utils/log.h"
 #include "utils/string_map.h"
 
 namespace ufps
 {
 
-using PointLightHandle = SparseSet<PointLight>::handle_type;
-
 struct IntersectionResult
 {
     EntityHandle entity;
     Vector3 position;
+    Vector3 normal;
     float distance;
-};
-
-struct LightData
-{
-    Colour ambient;
-    SparseSet<PointLight> lights;
 };
 
 struct ToneMapOptions
@@ -112,31 +109,21 @@ class Scene
         VignetteOptions vignette_options;
         FilmGrainOptions film_grain_options;
         BloomOptions bloom_options;
-        LightData lights;
+        Colour ambient;
         std::vector<Entity::Description> entities;
     };
 
-    constexpr Scene(
-        LightData lights,
-        ToneMapOptions tone_map_options,
-        SSAOOptions ssao_options,
-        ExposureOptions exposure_options,
-        FogOptions fog_options,
-        ChromaticAberrationOptions chromatic_aberration_options,
-        VignetteOptions vignette_options,
-        FilmGrainOptions film_grain_options,
-        BloomOptions bloom_options);
-
     constexpr Scene(const Description &description);
 
-    constexpr auto intersect_ray(const Ray &ray) -> std::optional<IntersectionResult>;
+    constexpr auto intersect_ray(const Ray &ray) const -> std::optional<IntersectionResult>;
 
     constexpr auto add(EntityHandle handle) -> void;
 
-    template <class Self>
-    auto &entities(this Self &&self);
+    constexpr auto entities() const -> std::span<const EntityHandle>;
 
-    constexpr auto &lights(this auto &&self);
+    constexpr auto gun() const -> EntityHandle;
+
+    constexpr auto &ambient_light(this auto &&self);
 
     constexpr auto &tone_map_options(this auto &&self);
 
@@ -158,11 +145,10 @@ class Scene
 
     constexpr auto remove(EntityHandle handle) -> void;
 
-    constexpr auto remove(PointLightHandle light) -> void;
-
   private:
     std::vector<EntityHandle> entities_;
-    LightData lights_;
+    EntityHandle gun_;
+    Colour ambient_;
     ToneMapOptions tone_map_options_;
     SSAOOptions ssao_options_;
     ExposureOptions exposure_options_;
@@ -173,32 +159,10 @@ class Scene
     BloomOptions bloom_options_;
 };
 
-constexpr Scene::Scene(
-    LightData lights,
-    ToneMapOptions tone_map_options,
-    SSAOOptions ssao_options,
-    ExposureOptions exposure_options,
-    FogOptions fog_options,
-    ChromaticAberrationOptions chromatic_aberration_options,
-    VignetteOptions vignette_options,
-    FilmGrainOptions film_grain_options,
-    BloomOptions bloom_options)
-    : entities_{}
-    , lights_{std::move(lights)}
-    , tone_map_options_{std::move(tone_map_options)}
-    , ssao_options_{std::move(ssao_options)}
-    , exposure_options_{std::move(exposure_options)}
-    , fog_options_{fog_options}
-    , chromatic_aberration_options_{std::move(chromatic_aberration_options)}
-    , vignette_options_{std::move(vignette_options)}
-    , film_grain_options_{std::move(film_grain_options)}
-    , bloom_options_{std::move(bloom_options)}
-{
-}
-
 constexpr Scene::Scene(const Description &description)
     : entities_{}
-    , lights_{description.lights}
+    , gun_{}
+    , ambient_{description.ambient}
     , tone_map_options_{description.tone_map_options}
     , ssao_options_{description.ssao_options}
     , exposure_options_{description.exposure_options}
@@ -208,28 +172,74 @@ constexpr Scene::Scene(const Description &description)
     , film_grain_options_{description.film_grain_options}
     , bloom_options_{description.bloom_options}
 {
-    auto &&[em, rem] = services<EntityManager, RenderEntityManager>();
+    auto &&[em, rem, ps, lm, cm] =
+        services<EntityManager, RenderEntityManager, PhysicsSystem, LightManager, CameraManager>();
+
+    auto lookup = StringMap<EntityHandle>{};
 
     for (const auto &entity_description : description.entities)
     {
-        const auto new_entity_handle = em.register_entity(
-            entity_description.name,
-            {entity_description.name, rem[entity_description.name], entity_description.transform});
+        const auto new_entity_handle = em.insert({entity_description.name, {}, entity_description.transform});
 
         auto new_entity = em[new_entity_handle];
         new_entity->set_emissive_strength(entity_description.emissive_strength);
 
+        for (const auto &group_name : entity_description.render_entities)
+        {
+            new_entity->add_render_entities(rem[group_name]);
+        }
+
         for (const auto &rb_description : entity_description.rigid_bodies)
         {
-            const auto rb = service<PhysicsSystem>().create_rigid_body(rb_description);
+            const auto rb = ps.create_rigid_body(rb_description);
             new_entity->add_rigid_body(rb);
         }
 
-        add(new_entity_handle);
+        if (entity_description.camera)
+        {
+            const auto camera_handle = cm.insert(*entity_description.camera);
+            new_entity->set_camera(camera_handle);
+        }
+
+        if (entity_description.light)
+        {
+            const auto light_handle = lm.insert(*entity_description.light);
+            new_entity->set_light(light_handle);
+        }
+
+        if (new_entity->name() == "gun")
+        {
+            gun_ = new_entity_handle;
+        }
+        else
+        {
+            add(new_entity_handle);
+        }
+
+        lookup[entity_description.name] = new_entity_handle;
+    }
+
+    for (const auto &entity_description : description.entities)
+    {
+        const auto &entity = lookup[entity_description.name];
+
+        for (const auto &child : entity_description.children)
+        {
+            if (em[entity]->name() == "player" && child == "gun" && gun_)
+            {
+                em[entity]->add_child(gun_);
+                continue;
+            }
+
+            const auto child_handle = lookup.find(child);
+            ensure(child_handle != std::ranges::cend(lookup), "child {} not found", child);
+
+            em[entity]->add_child(child_handle->second);
+        }
     }
 }
 
-constexpr auto Scene::intersect_ray(const Ray &ray) -> std::optional<IntersectionResult>
+constexpr auto Scene::intersect_ray(const Ray &ray) const -> std::optional<IntersectionResult>
 {
     auto &&[mesh_manager, rem, em] = services<MeshManager, RenderEntityManager, EntityManager>();
 
@@ -276,8 +286,24 @@ constexpr auto Scene::intersect_ray(const Ray &ray) -> std::optional<Intersectio
 
                             if (*distance < min_distance)
                             {
+                                const auto normal = -Vector3::normalise(Vector3::cross(v2 - v0, v1 - v0));
+                                const auto transform = Matrix4{entity->transform()};
+                                const auto transformed_normal = transform * Vector4{normal, 0.0f};
+
+                                const auto distance_vec = Vector4{*distance, 0.0f};
+                                const auto transformed_distance = transform * distance_vec;
+
+                                const auto transformed_intersection = transform * Vector4{intersection_point, 1.0f};
+
                                 result = IntersectionResult{
-                                    .entity = handle, .position = intersection_point, .distance = *distance};
+                                    .entity = handle,
+                                    .position =
+                                        {transformed_intersection.x,
+                                         transformed_intersection.y,
+                                         transformed_intersection.z},
+                                    .normal = {transformed_normal.x, transformed_normal.y, transformed_normal.z},
+                                    .distance = transformed_distance.x,
+                                };
                                 min_distance = *distance;
                             }
                         }
@@ -295,15 +321,19 @@ constexpr auto Scene::add(EntityHandle handle) -> void
     entities_.push_back(handle);
 }
 
-template <class Self>
-auto &Scene::entities(this Self &&self)
+constexpr auto Scene::entities() const -> std::span<const EntityHandle>
 {
-    return self.entities_;
+    return entities_;
 }
 
-constexpr auto &Scene::lights(this auto &&self)
+constexpr auto Scene::gun() const -> EntityHandle
 {
-    return self.lights_;
+    return gun_;
+}
+
+constexpr auto &Scene::ambient_light(this auto &&self)
+{
+    return self.ambient_;
 }
 
 constexpr auto &Scene::tone_map_options(this auto &&self)
@@ -348,7 +378,16 @@ constexpr auto &Scene::bloom_options(this auto &&self)
 
 constexpr auto Scene::description(this auto &&self) -> Description
 {
-    auto &em = service<EntityManager>();
+    const auto &[em, cm] = services<EntityManager, CameraManager>();
+
+    auto entities = self.entities_ | std::views::filter([&](auto &e) { return !!em[e]; }) |
+                    std::views::transform([&](auto e) { return em[e]->description(); }) |
+                    std::ranges::to<std::vector>();
+
+    if (const auto gun = em[self.gun_]; gun)
+    {
+        entities.push_back(gun->description());
+    }
 
     return {
         .tone_map_options = self.tone_map_options_,
@@ -359,10 +398,9 @@ constexpr auto Scene::description(this auto &&self) -> Description
         .vignette_options = self.vignette_options_,
         .film_grain_options = self.film_grain_options_,
         .bloom_options = self.bloom_options_,
-        .lights = self.lights_,
-        .entities = self.entities_ | std::views::filter([&](auto &e) { return !!em[e]; }) |
-                    std::views::transform([&](auto e) { return em[e]->description(); }) |
-                    std::ranges::to<std::vector>()};
+        .ambient = self.ambient_,
+        .entities = std::move(entities),
+    };
 }
 
 constexpr auto Scene::remove(EntityHandle handle) -> void
@@ -373,8 +411,4 @@ constexpr auto Scene::remove(EntityHandle handle) -> void
     entities_.erase(iter);
 }
 
-constexpr auto Scene::remove(PointLightHandle light) -> void
-{
-    lights_.lights.remove(light);
-}
 }

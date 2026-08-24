@@ -5,7 +5,9 @@
 #include "core/camera.h"
 #include "core/scene.h"
 #include "graphics/command_buffer.h"
+#include "graphics/debug_layer.h"
 #include "graphics/frame_buffer.h"
+#include "graphics/line_data.h"
 #include "graphics/multi_buffer.h"
 #include "graphics/opengl.h"
 #include "graphics/persistent_buffer.h"
@@ -35,7 +37,7 @@ class Renderer
     Renderer(const Window &window, ResourceLoader &resource_loader);
     virtual ~Renderer() = default;
 
-    auto render(Scene &scene, const Camera &camera) -> void;
+    auto render(Scene &scene) -> void;
 
   protected:
     static auto create_program(
@@ -54,14 +56,18 @@ class Renderer
 
     virtual auto post_render(Scene &scene, const Camera &camera) -> void;
 
+    auto execute_debug_layer(DebugLayerType type) -> void;
+
     const Window &window_;
     AutoRelease<::GLuint> dummy_vao_;
     CommandBuffer command_buffer_;
     CommandBuffer post_processing_command_buffer_;
+    CommandBuffer gun_command_buffer_;
     Entity post_process_sprite_;
     MultiBuffer<PersistentBuffer> camera_buffer_;
     MultiBuffer<PersistentBuffer> light_buffer_;
     MultiBuffer<PersistentBuffer> object_data_buffer_;
+    MultiBuffer<PersistentBuffer> gun_object_data_buffer_;
     Buffer luminance_histogram_buffer_;
     Buffer average_luminance_buffer_;
     Buffer ssao_samples_buffer_;
@@ -89,10 +95,15 @@ class Renderer
     RenderTarget bloom_rt_;
     FrameBuffer *final_fb_;
     bool enable_post_processing_;
+    Buffer debug_line_buffer_;
+    Program debug_line_program_;
+    Program debug_light_program_;
 
   private:
     auto execute_gbuffer_pass(Scene &scene) -> void;
+    auto execute_gun_gbuffer_pass(Scene &scene) -> void;
     auto execute_lighting_pass(Scene &scene) -> void;
+    auto execute_gun_lighting_pass(Scene &scene) -> void;
     auto execute_bloom_pass(Scene &scene) -> void;
     auto execute_luminance_histogram_pass(Scene &scene) -> void;
     auto execute_average_luminance_pass(Scene &scene) -> void;

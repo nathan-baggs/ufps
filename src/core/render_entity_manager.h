@@ -22,6 +22,8 @@ class RenderEntityManager
 
     constexpr auto operator[](RenderEntityHandle handle);
 
+    constexpr auto groups();
+
   private:
     SparseSet<RenderEntity> entities_;
     StringMap<std::vector<RenderEntityHandle>> entity_groups_;
@@ -46,6 +48,11 @@ constexpr auto RenderEntityManager::operator[](std::string_view name) -> std::ve
 constexpr auto RenderEntityManager::operator[](RenderEntityHandle handle)
 {
     return entities_[handle];
+}
+
+constexpr auto RenderEntityManager::groups()
+{
+    return std::views::keys(entity_groups_);
 }
 
 }

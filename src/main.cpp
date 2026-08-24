@@ -21,8 +21,11 @@
 #include "concurrency/task.h"
 #include "concurrency/thread_pool.h"
 #include "core/actor.h"
+#include "core/camera_manager.h"
+#include "core/entity.h"
 #include "core/entity_manager.h"
 #include "core/flycam_actor.h"
+#include "core/light_manager.h"
 #include "core/manifest_descriptions.h"
 #include "core/player_actor.h"
 #include "core/render_entity.h"
@@ -33,6 +36,7 @@
 #include "events/key.h"
 #include "events/key_event.h"
 #include "graphics/colour.h"
+#include "graphics/debug_layer.h"
 #include "graphics/debug_renderer.h"
 #include "graphics/mesh_data.h"
 #include "graphics/mesh_manager.h"
@@ -206,7 +210,14 @@ auto load_render_entity_manager(ufps::ResourceLoader &resource_loader)
             const auto emissive_index = texture_manager.bindless_handle(emissive);
 
             render_entities.push_back(
-                {mesh_view, albedo_index, normal_index, specular_index, ao_index, glossiness_index, emissive_index});
+                {name,
+                 mesh_view,
+                 albedo_index,
+                 normal_index,
+                 specular_index,
+                 ao_index,
+                 glossiness_index,
+                 emissive_index});
         }
 
         rem.register_group(name, std::move(render_entities));
@@ -217,7 +228,8 @@ auto load_render_entity_manager(ufps::ResourceLoader &resource_loader)
 
     rem.register_group(
         "sprite",
-        {{mesh_views.front(),
+        {{"sprite",
+          mesh_views.front(),
           texture_manager.texture_index("textures\\default_BaseColor.dds"),
           texture_manager.texture_index("textures\\default_Normal.dds"),
           texture_manager.texture_index("textures\\default_Metallic.dds"),
@@ -226,37 +238,45 @@ auto load_render_entity_manager(ufps::ResourceLoader &resource_loader)
           texture_manager.texture_index("textures\\default_Emissive.dds")}});
 }
 
-auto pulse_light(ufps::PointLightHandle handle, ufps::Scene &scene) -> ufps::Task
+[[maybe_unused]] auto pulse_light(ufps::EntityHandle handle) -> ufps::Task
 {
-    auto &awaitable = ufps::service<ufps::AwaitableManager>();
+    const auto &[awaitable, em, lm] = ufps::services<ufps::AwaitableManager, ufps::EntityManager, ufps::LightManager>();
     auto fake_time = 0.0f;
 
     for (;;)
     {
-        if (auto light = scene.lights().lights[handle]; light)
-        {
-            light->intensity = 2.0f + (5.0f * ((std::sin(fake_time) + 1.0f) / 2.0f));
-        }
-        else
+        const auto entity = em[handle];
+        if (!entity)
         {
             ufps::log::info("ending pulse_light coroutine");
             co_return;
         }
+
+        const auto light = lm[entity->light()];
+        if (!light)
+        {
+            ufps::log::info("ending pulse_light coroutine");
+            co_return;
+        }
+
+        entity->set_emissive_strength(2.0f + (5.0f * ((std::sin(fake_time) + 1.0f) / 2.0f)));
+        light->intensity = 2.0f + (5.0f * ((std::sin(fake_time) + 1.0f) / 2.0f));
+
         fake_time += 0.1f;
 
         co_await awaitable;
     }
 }
 
-auto flicker_light(ufps::PointLightHandle handle, ufps::Scene &scene) -> ufps::Task
+[[maybe_unused]] auto flicker_light(ufps::LightHandle handle) -> ufps::Task
 {
-    auto &awaitable = ufps::service<ufps::AwaitableManager>();
+    const auto &[awaitable, lm] = ufps::services<ufps::AwaitableManager, ufps::LightManager>();
 
     for (;;)
     {
         co_await awaitable(3s);
 
-        if (auto light = scene.lights().lights[handle]; light)
+        if (auto light = lm[handle]; light)
         {
             light->intensity = 0.0f;
         }
@@ -268,7 +288,7 @@ auto flicker_light(ufps::PointLightHandle handle, ufps::Scene &scene) -> ufps::T
 
         co_await awaitable(100ms);
 
-        if (auto light = scene.lights().lights[handle]; light)
+        if (auto light = lm[handle]; light)
         {
             light->intensity = 15.0f;
         }
@@ -335,31 +355,6 @@ int start()
     auto physics = std::make_unique<ufps::PhysicsSystem>(ufps::DebugRenderMode::ON);
     auto &player_controller = physics->player_controller();
 
-    auto player_actor = ufps::PlayerActor{
-        {{0.0f, 2.0f, 0.0f},
-         {0.0f, 0.0f, -1.0f},
-         {0.0f, 1.0f, 0.0f},
-         std::numbers::pi_v<float> / 4.0f,
-         static_cast<float>(window.render_width()),
-         static_cast<float>(window.render_height()),
-         0.1f,
-         1000.0f},
-        input_map,
-        player_controller};
-
-    auto flycam_actor = ufps::FlyCamActor{
-        {{0.0f, 2.0f, 0.0f},
-         {0.0f, 0.0f, -1.0f},
-         {0.0f, 1.0f, 0.0f},
-         std::numbers::pi_v<float> / 4.0f,
-         static_cast<float>(window.render_width()),
-         static_cast<float>(window.render_height()),
-         0.1f,
-         1000.0f},
-        input_map};
-
-    ufps::Actor *current_actor = std::addressof(player_actor);
-
     auto strm = std::stringstream{};
     auto scene_description_yaml = std::ifstream{"scene.yaml"};
 
@@ -383,10 +378,17 @@ int start()
         std::move(texture_manager),
         std::move(pool),
         std::make_unique<ufps::RenderEntityManager>(),
-        std::make_unique<ufps::EntityManager>());
+        std::make_unique<ufps::EntityManager>(),
+        std::make_unique<ufps::LightManager>(),
+        std::make_unique<ufps::CameraManager>(),
+        ufps::CameraHandle{},
+        std::make_unique<ufps::DebugLayer>());
     ufps::set_service(services.get());
 
     load_render_entity_manager(*resource_loader);
+
+    const auto &[em, rem, lm, cm] =
+        ufps::services<ufps::EntityManager, ufps::RenderEntityManager, ufps::LightManager, ufps::CameraManager>();
 
     auto renderer = ufps::DebugRenderer{window, *resource_loader};
     auto debug_mode = false;
@@ -396,10 +398,38 @@ int start()
 
     auto scene = ufps::Scene{std::move(*scene_description)};
 
-    const auto point_light_handles = scene.lights().lights.handles();
+    const auto point_light_handles = lm.handles();
 
-    pulse_light(point_light_handles[0], scene);
-    flicker_light(point_light_handles[2], scene);
+    auto alert_light = ufps::EntityHandle{};
+    for (const auto handle : em.handles())
+    {
+        const auto entity = em[handle];
+        if (!entity)
+        {
+            continue;
+        }
+
+        if (entity->name() == "north_corridor_0_alert_light")
+        {
+            alert_light = handle;
+        }
+    }
+
+    pulse_light(alert_light);
+    // flicker_light(point_light_handles[2]);
+
+    const auto entity_handles = em.handles();
+    auto player_entity_handle = std::ranges::find_if(entity_handles, [&](auto e) { return em[e]->name() == "player"; });
+    ufps::ensure(player_entity_handle != std::ranges::cend(entity_handles), "no player in scene");
+
+    auto player_actor = ufps::PlayerActor{*player_entity_handle, input_map, player_controller, scene};
+
+    auto flycam_entity_handle = std::ranges::find_if(entity_handles, [&](auto e) { return em[e]->name() == "flycam"; });
+    ufps::ensure(flycam_entity_handle != std::ranges::cend(entity_handles), "no flycam in scene");
+
+    auto flycam_actor = ufps::FlyCamActor{*flycam_entity_handle, input_map};
+
+    ufps::Actor *current_actor = std::addressof(player_actor);
 
     while (running)
     {
@@ -411,6 +441,7 @@ int start()
 
         input_map.delta_x = 0.0f;
         input_map.delta_y = 0.0f;
+        input_map.mouse_event = std::nullopt;
 
         auto event = window.pump_event();
         while (event && running)
@@ -433,9 +464,11 @@ int start()
                             renderer.set_enabled(debug_mode);
                             current_actor = debug_mode ? static_cast<ufps::Actor *>(&flycam_actor)
                                                        : static_cast<ufps::Actor *>(&player_actor);
+                            ufps::service<ufps::CameraHandle>() = current_actor->camera();
                         }
 
                         input_map.set(arg);
+                        renderer.add_key_event(arg);
                     }
                     else if constexpr (std::same_as<T, ufps::MouseEvent>)
                     {
@@ -448,6 +481,7 @@ int start()
                     }
                     else if constexpr (std::same_as<T, ufps::MouseButtonEvent>)
                     {
+                        input_map.mouse_event = arg;
                         renderer.add_mouse_event(arg);
                     }
                 },
@@ -463,7 +497,7 @@ int start()
         awaitable.pump();
         pool.drain();
 
-        renderer.render(scene, current_actor->camera());
+        renderer.render(scene);
 
         window.swap();
 

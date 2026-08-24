@@ -2,12 +2,14 @@
 
 #include "core/actor.h"
 #include "core/camera.h"
+#include "core/entity_manager.h"
 #include "events/input_map.h"
 #include "maths/vector3.h"
+#include "utils/error.h"
 
 namespace
 {
-auto walk_direction(const ufps::InputMap &input_map, const ufps::Camera &camera) -> ufps::Vector3
+[[maybe_unused]] auto walk_direction(const ufps::InputMap &input_map, const ufps::Camera &camera) -> ufps::Vector3
 {
     auto direction = ufps::Vector3{};
 
@@ -51,25 +53,33 @@ auto walk_direction(const ufps::InputMap &input_map, const ufps::Camera &camera)
 namespace ufps
 {
 
-FlyCamActor::FlyCamActor(Camera camera, const InputMap &input_map)
-    : Actor{std::move(camera)}
+FlyCamActor::FlyCamActor(EntityHandle entity, const InputMap &input_map)
+    : Actor{entity}
     , input_map_{input_map}
 {
 }
 
 auto FlyCamActor::update() -> void
 {
-    if (input_map_.delta_x != 0.0f)
-    {
-        camera_.adjust_yaw(input_map_.delta_x);
-    }
+    const auto &[em, cm] = services<EntityManager, CameraManager>();
 
-    if (input_map_.delta_y != 0.0f)
-    {
-        camera_.adjust_pitch(-input_map_.delta_y);
-    }
+    const auto camera = cm[camera_];
+    contract_assert(camera);
+
+    static auto pitch = 0.0f;
+    static auto yaw = std::numbers::pi_v<float>;
+
+    pitch += input_map_.delta_y;
+    yaw -= input_map_.delta_x;
+
+    const auto e = em[entity_];
+    contract_assert(e);
 
     static const auto speed = 0.1f;
-    camera_.translate(walk_direction(input_map_, camera_) * speed);
+    const auto transform = e->transform();
+    const auto new_transform = Transform{
+        transform.position + (walk_direction(input_map_, *camera) * speed), {1.0f}, Quaternion(yaw, pitch, 0.0f)};
+
+    e->set_transform(new_transform);
 }
 }

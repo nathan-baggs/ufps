@@ -5,6 +5,7 @@
 #include <exception>
 #include <expected>
 #include <meta>
+#include <optional>
 #include <ranges>
 #include <sstream>
 #include <string>
@@ -17,6 +18,7 @@
 #include "maths/matrix4.h"
 #include "utils/exception.h"
 #include "utils/formatter.h"
+#include "yaml-cpp/node/node.h"
 
 namespace ufps::yaml
 {
@@ -51,6 +53,9 @@ concept Sparse = requires { typename T::handle_type; };
 
 template <class T>
 concept Enum = std::is_enum_v<T>;
+
+template <class T, class S>
+concept CanPushBack = requires(T t, S s) { t.push_back(s); };
 
 template <Class T>
 auto do_serialise(const T &obj) -> std::expected<::YAML::Node, std::string>;
@@ -212,7 +217,14 @@ auto do_deserialise(const ::YAML::Node &node) -> std::expected<T, std::string>
             return std::unexpected(inner_element.error());
         }
 
-        obj.push_back(std::move(*inner_element));
+        if constexpr (CanPushBack<T, typename T::value_type>)
+        {
+            obj.push_back(std::move(*inner_element));
+        }
+        else
+        {
+            obj = *inner_element;
+        }
     }
 
     return obj;
