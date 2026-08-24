@@ -127,8 +127,6 @@ auto Entity::description() const -> Entity::Description
     const auto camera = cm[camera_];
     const auto light = lm[light_];
 
-    log::debug("{} {}", name_, std::ranges::size(children_));
-
     return {
         .name = name_,
         .emissive_strength = emissive_strength_,

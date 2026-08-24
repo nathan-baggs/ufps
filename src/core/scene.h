@@ -225,8 +225,6 @@ constexpr Scene::Scene(const Description &description)
 
         for (const auto &child : entity_description.children)
         {
-            log::debug("{} {} {}", em[entity]->name(), child, !!gun_);
-
             if (em[entity]->name() == "player" && child == "gun" && gun_)
             {
                 em[entity]->add_child(gun_);
