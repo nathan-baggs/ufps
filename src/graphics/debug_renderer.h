@@ -48,7 +48,6 @@ class DebugRenderer : public Renderer
     bool snap_enabled_;
     std::optional<MouseButtonEvent> click_;
     std::variant<std::monostate, EntityHandle, LightHandle, RigidBodyHandle, CameraHandle> selected_;
-    Program debug_light_program_;
     RenderEntityHandle highlight_render_entity_;
     EntityHandle highlight_entity_;
     RigidBodyHandle highlight_rigid_body_;

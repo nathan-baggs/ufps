@@ -5,6 +5,7 @@
 #include "core/camera.h"
 #include "core/scene.h"
 #include "graphics/command_buffer.h"
+#include "graphics/debug_layer.h"
 #include "graphics/frame_buffer.h"
 #include "graphics/line_data.h"
 #include "graphics/multi_buffer.h"
@@ -55,6 +56,8 @@ class Renderer
 
     virtual auto post_render(Scene &scene, const Camera &camera) -> void;
 
+    auto execute_debug_layer(DebugLayerType type) -> void;
+
     const Window &window_;
     AutoRelease<::GLuint> dummy_vao_;
     CommandBuffer command_buffer_;
@@ -92,9 +95,9 @@ class Renderer
     RenderTarget bloom_rt_;
     FrameBuffer *final_fb_;
     bool enable_post_processing_;
-    std::vector<LineData> debug_lines_;
     Buffer debug_line_buffer_;
     Program debug_line_program_;
+    Program debug_light_program_;
 
   private:
     auto execute_gbuffer_pass(Scene &scene) -> void;

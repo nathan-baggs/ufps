@@ -75,128 +75,6 @@ auto screen_ray(const ufps::MouseButtonEvent &evt, const ufps::Window &window, c
     return {origin_ws, dir_ws};
 }
 
-auto draw_line(
-    const ufps::Vector3 &start,
-    const ufps::Vector3 &end,
-    const ufps::Colour &colour,
-    std::vector<ufps::LineData> &lines) -> void
-{
-    lines.push_back({start, colour});
-    lines.push_back({end, colour});
-}
-
-auto create_aabb_lines(const ufps::AABB &aabb, const ufps::Matrix4 &transform, const ufps::Colour &colour)
-    -> std::vector<ufps::LineData>
-{
-    auto lines = std::vector<ufps::LineData>{};
-
-    draw_line(
-        transform * ufps::Vector4{aabb.max.x, aabb.max.y, aabb.max.z, 1.0f},
-        transform * ufps::Vector4{aabb.min.x, aabb.max.y, aabb.max.z, 1.0f},
-        colour,
-        lines);
-    draw_line(
-        transform * ufps::Vector4{aabb.min.x, aabb.max.y, aabb.max.z, 1.0f},
-        transform * ufps::Vector4{aabb.min.x, aabb.max.y, aabb.min.z, 1.0f},
-        colour,
-        lines);
-    draw_line(
-        transform * ufps::Vector4{aabb.min.x, aabb.max.y, aabb.min.z, 1.0f},
-        transform * ufps::Vector4{aabb.max.x, aabb.max.y, aabb.min.z, 1.0f},
-        colour,
-        lines);
-    draw_line(
-        transform * ufps::Vector4{aabb.max.x, aabb.max.y, aabb.min.z, 1.0f},
-        transform * ufps::Vector4{aabb.max.x, aabb.max.y, aabb.max.z, 1.0f},
-        colour,
-        lines);
-
-    draw_line(
-        transform * ufps::Vector4{aabb.max.x, aabb.max.y, aabb.max.z, 1.0f},
-        transform * ufps::Vector4{aabb.max.x, aabb.min.y, aabb.max.z, 1.0f},
-        colour,
-        lines);
-    draw_line(
-        transform * ufps::Vector4{aabb.min.x, aabb.max.y, aabb.max.z, 1.0f},
-        transform * ufps::Vector4{aabb.min.x, aabb.min.y, aabb.max.z, 1.0f},
-        colour,
-        lines);
-    draw_line(
-        transform * ufps::Vector4{aabb.min.x, aabb.max.y, aabb.min.z, 1.0f},
-        transform * ufps::Vector4{aabb.min.x, aabb.min.y, aabb.min.z, 1.0f},
-        colour,
-        lines);
-    draw_line(
-        transform * ufps::Vector4{aabb.max.x, aabb.max.y, aabb.min.z, 1.0f},
-        transform * ufps::Vector4{aabb.max.x, aabb.min.y, aabb.min.z, 1.0f},
-        colour,
-        lines);
-
-    draw_line(
-        transform * ufps::Vector4{aabb.max.x, aabb.min.y, aabb.max.z, 1.0f},
-        transform * ufps::Vector4{aabb.min.x, aabb.min.y, aabb.max.z, 1.0f},
-        colour,
-        lines);
-    draw_line(
-        transform * ufps::Vector4{aabb.min.x, aabb.min.y, aabb.max.z, 1.0f},
-        transform * ufps::Vector4{aabb.min.x, aabb.min.y, aabb.min.z, 1.0f},
-        colour,
-        lines);
-    draw_line(
-        transform * ufps::Vector4{aabb.min.x, aabb.min.y, aabb.min.z, 1.0f},
-        transform * ufps::Vector4{aabb.max.x, aabb.min.y, aabb.min.z, 1.0f},
-        colour,
-        lines);
-    draw_line(
-        transform * ufps::Vector4{aabb.max.x, aabb.min.y, aabb.min.z, 1.0f},
-        transform * ufps::Vector4{aabb.max.x, aabb.min.y, aabb.max.z, 1.0f},
-        colour,
-        lines);
-
-    return lines;
-}
-
-auto draw_frustum(
-    const ufps::Vector3 &cam_pos,
-    const ufps::Matrix4 &view,
-    const ufps::Matrix4 &proj,
-    const ufps::Colour &colour,
-    float debug_distance = 3.0f) -> std::vector<ufps::LineData>
-{
-    auto lines = std::vector<ufps::LineData>{};
-
-    const auto inv_vp = ufps::Matrix4::invert(proj * view);
-
-    constexpr auto ndc_far_corners = std::array<ufps::Vector4, 4>{{
-        {-1.0f, 1.0f, 1.0f, 1.0f},
-        {1.0f, 1.0f, 1.0f, 1.0f},
-        {1.0f, -1.0f, 1.0f, 1.0f},
-        {-1.0f, -1.0f, 1.0f, 1.0f},
-    }};
-
-    auto far_corners = std::array<ufps::Vector3, 4>{};
-    for (auto i = 0zu; i < 4zu; ++i)
-    {
-        const auto world_h = inv_vp * ndc_far_corners[i];
-        const auto world_pos = ufps::Vector3(world_h) / world_h.w;
-        const auto ray_dir = ufps::Vector3::normalise(world_pos - cam_pos);
-
-        far_corners[i] = cam_pos + ray_dir * debug_distance;
-    }
-
-    for (auto i = 0zu; i < 4zu; ++i)
-    {
-        draw_line(cam_pos, far_corners[i], colour, lines);
-    }
-
-    for (auto i = 0zu; i < 4zu; ++i)
-    {
-        draw_line(far_corners[i], far_corners[(i + 1) % 4], colour, lines);
-    }
-
-    return lines;
-}
-
 template <float Min, float Max>
 auto create_debug_controller(const std::string &label, ufps::BoundedFloat<Min, Max> &value) -> void
 {
@@ -253,13 +131,6 @@ DebugRenderer::DebugRenderer(const Window &window, ResourceLoader &resource_load
     , snap_enabled_{false}
     , click_{}
     , selected_{std::monostate{}}
-    , debug_light_program_{create_program(
-          resource_loader,
-          "shaders\\debug_light.vert",
-          "debug_light_vertex_shader",
-          "shaders\\debug_light.frag",
-          "debug_light_fragment_shader",
-          "debug_light_program")}
     , highlight_render_entity_{}
 {
     IMGUI_CHECKVERSION();
@@ -309,76 +180,38 @@ auto DebugRenderer::post_render(Scene &scene, const Camera &camera) -> void
         auto entity = em[selected_entity];
         contract_assert(entity);
 
-        auto aabb_lines = entity->render_entities() |
-                          std::views::transform(
-                              [&](auto e)
-                              {
-                                  auto render_entity = rem[e];
-                                  const auto colour =
-                                      e == highlight_render_entity_ ? colours::magenta : Colour{0.0f, 0.2f, 0.0f};
-                                  return create_aabb_lines(render_entity->aabb(), entity->transform(), colour);
-                              }) |
-                          std::views::join;
+        for (const auto &e : entity->render_entities())
+        {
+            auto render_entity = rem[e];
+            contract_assert(render_entity);
 
-        debug_lines_.append_range(aabb_lines);
+            const auto colour = e == highlight_render_entity_ ? colours::magenta : Colour{0.0f, 0.2f, 0.0f};
+
+            dl.push_aabb(render_entity->aabb(), entity->transform(), colour);
+        }
 
         const auto colour = selected_entity == highlight_entity_ ? colours::magenta : colours::green;
-        debug_lines_.append_range(create_aabb_lines(entity->aabb(), entity->transform(), colour));
+        dl.push_aabb(entity->aabb(), entity->transform(), colour);
     }
 
     if (highlight_entity_)
     {
         auto entity = em[highlight_entity_];
         contract_assert(entity);
-        debug_lines_.append_range(create_aabb_lines(entity->aabb(), entity->transform(), colours::magenta));
+        dl.push_aabb(entity->aabb(), entity->transform(), colours::magenta);
     }
 
     if (highlight_rigid_body_)
     {
         const auto rb = ps.rigid_body(highlight_rigid_body_);
         contract_assert(rb);
-        debug_lines_.append_range(
-            create_aabb_lines({.min = {-1.0f}, .max = {1.0f}}, rb->transform(), colours::magenta));
+        dl.push_aabb({.min = {-1.0f}, .max = {1.0f}}, rb->transform(), colours::magenta);
     }
-
-    light_pass_rt_.fb.unbind();
-
-    debug_light_program_.bind();
-
-    const auto [vertex_buffer_handle, index_buffer_handle] = mm.native_handle();
-    ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, vertex_buffer_handle);
-    ::glBindBufferRange(
-        GL_SHADER_STORAGE_BUFFER,
-        1,
-        camera_buffer_.native_handle(),
-        camera_buffer_.frame_offset_bytes(),
-        sizeof(CameraData));
-    ::glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffer_handle);
-
-    const auto cube_parts = mm.mesh("cube");
-    ensure(cube_parts.size() == 1u, "cube mesh should have exactly 1 part");
-    const auto cube_indices_offset_bytes = cube_parts.front().index_offset * sizeof(std::uint32_t);
-    const auto cube_vertex_offset = cube_parts.front().vertex_offset;
 
     for (const auto &light : lm.data())
     {
         const auto light_transform = Transform{light.position, {debug_light_scale}, {}};
-        const auto light_model = Matrix4{light_transform};
-
-        const auto debug_light_aabb = ufps::AABB{
-            .min = light_model * Vector4{-1.0f, -1.0f, -1.0f, 1.0f},
-            .max = light_model * Vector4{1.0f},
-        };
-        debug_lines_.append_range(create_aabb_lines(debug_light_aabb, {}, {1.0f, 0.0f, 0.0f}));
-
-        debug_light_program_.set_uniforms(light_model, light.colour);
-
-        ::glDrawElementsBaseVertex(
-            GL_TRIANGLES,
-            36,
-            GL_UNSIGNED_INT,
-            reinterpret_cast<const void *>(cube_indices_offset_bytes),
-            cube_vertex_offset);
+        dl.push_cube(light_transform, light.colour);
     }
 
     for (const auto entity_handle : scene.entities())
@@ -395,68 +228,19 @@ auto DebugRenderer::post_render(Scene &scene, const Camera &camera) -> void
         }
 
         const auto light_transform = Transform{entity->transform().position, {debug_light_scale / 4.0f}, {}};
-        const auto light_model = Matrix4{light_transform};
-
-        debug_light_program_.set_uniforms(light_model, colours::yellow);
-
-        ::glDrawElementsBaseVertex(
-            GL_TRIANGLES,
-            36,
-            GL_UNSIGNED_INT,
-            reinterpret_cast<const void *>(cube_indices_offset_bytes),
-            cube_vertex_offset);
+        dl.push_cube(light_transform, colours::yellow);
 
         const auto camera = cm[entity->camera()];
         if (camera)
         {
-            const auto light_transform =
+            const auto camera_transform =
                 Transform{camera->transform().position, {debug_light_scale / 4.0f}, camera->transform().rotation};
-            const auto light_model = Matrix4{light_transform};
-
-            debug_light_program_.set_uniforms(light_model, colours::azure);
-
-            const auto camera_data = camera->data();
-
-            debug_lines_.append_range(
-                draw_frustum(camera_data.position, camera_data.view, camera_data.projection, colours::azure, 1.5f));
-
-            ::glDrawElementsBaseVertex(
-                GL_TRIANGLES,
-                36,
-                GL_UNSIGNED_INT,
-                reinterpret_cast<const void *>(cube_indices_offset_bytes),
-                cube_vertex_offset);
+            dl.push_cube(camera_transform, colours::azure);
+            dl.push_frustrum(*camera, colours::azure);
         }
     }
 
-    debug_light_program_.unbind();
-
-    auto debug_layer_lines = dl.yield_lines(DebugLayerType::DEBUG);
-    while (!std::ranges::empty(debug_layer_lines))
-    {
-        debug_lines_.push_back(debug_layer_lines.front());
-        debug_layer_lines.pop();
-    }
-
-    if (!std::ranges::empty(debug_lines_))
-    {
-        debug_line_program_.bind();
-
-        resize_gpu_buffer(debug_lines_, debug_line_buffer_);
-        debug_line_buffer_.write(std::as_bytes(std::span{debug_lines_.data(), debug_lines_.size()}), 0zu);
-        ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, debug_line_buffer_.native_handle());
-        ::glBindBufferRange(
-            GL_SHADER_STORAGE_BUFFER,
-            1,
-            camera_buffer_.native_handle(),
-            camera_buffer_.frame_offset_bytes(),
-            sizeof(CameraData));
-        ::glDrawArrays(GL_LINES, 0, debug_lines_.size());
-
-        debug_lines_.clear();
-
-        debug_line_program_.unbind();
-    }
+    execute_debug_layer(DebugLayerType::DEBUG);
 
     auto &io = ::ImGui::GetIO();
 
@@ -1036,7 +820,6 @@ auto DebugRenderer::draw_inspector(Scene &scene) -> void
             if (::ImGui::Button("Set Name"))
             {
                 entity->set_name(std::string(std::ranges::data(buffer)));
-                log::debug("new name: {}", std::ranges::data(buffer));
             }
 
             ::ImGui::Checkbox("Enable snap", std::addressof(snap_enabled_));
@@ -1097,7 +880,6 @@ auto DebugRenderer::draw_inspector(Scene &scene) -> void
 
                     if (::ImGui::IsItemHovered())
                     {
-                        log::debug("hover {}", index);
                         to_highlight = handle;
                     }
                 }
