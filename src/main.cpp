@@ -17,6 +17,7 @@
 
 #include "config.h"
 
+#include "audio/audio_manager.h"
 #include "concurrency/awaitable_manager.h"
 #include "concurrency/task.h"
 #include "concurrency/thread_pool.h"
@@ -382,7 +383,8 @@ int start()
         std::make_unique<ufps::LightManager>(),
         std::make_unique<ufps::CameraManager>(),
         ufps::CameraHandle{},
-        std::make_unique<ufps::DebugLayer>());
+        std::make_unique<ufps::DebugLayer>(),
+        std::make_unique<ufps::AudioManager>(*resource_loader));
     ufps::set_service(services.get());
 
     load_render_entity_manager(*resource_loader);
