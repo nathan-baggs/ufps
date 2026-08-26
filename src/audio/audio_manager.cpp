@@ -5,9 +5,12 @@
 #include <ranges>
 #include <vector>
 
+#include <xaudio2.h>
+
 #include "audio/track.h"
 #include "resources/resource_loader.h"
 #include "utils/data_buffer.h"
+#include "utils/error.h"
 #include "utils/log.h"
 #include "utils/string_map.h"
 
@@ -40,7 +43,37 @@ namespace ufps
 
 AudioManager::AudioManager(ResourceLoader &resource_loader)
     : tracks_{}
+    , xaudio_{}
+    , mastering_voice_{}
+    , voices_{}
 {
+    ensure(::XAudio2Create(std::out_ptr(xaudio_), 0, XAUDIO2_DEFAULT_PROCESSOR) == S_OK, "failed to create xaudio2");
+
+    ensure(
+        xaudio_->CreateMasteringVoice(
+            std::out_ptr(mastering_voice_),
+            XAUDIO2_DEFAULT_CHANNELS,
+            XAUDIO2_DEFAULT_SAMPLERATE,
+            0u,
+            nullptr,
+            nullptr) == S_OK,
+        "failed to create mastering voice");
+
+    const auto format = ::WAVEFORMATEX{
+        .wFormatTag = WAVE_FORMAT_PCM,
+        .nChannels = 1,
+        .nSamplesPerSec = 48000,
+        .nAvgBytesPerSec = 48000 * 2,
+        .nBlockAlign = 2,
+        .wBitsPerSample = 16,
+        .cbSize = 0,
+    };
+
+    for (auto &voice : voices_)
+    {
+        ensure(xaudio_->CreateSourceVoice(std::out_ptr(voice), &format) == S_OK, "failed to create voice");
+    }
+
     for (const auto &resource :
          resource_loader.resources("sounds") | std::views::filter([](const auto &e) { return e.ends_with(".wav"); }))
     {
@@ -75,10 +108,50 @@ AudioManager::AudioManager(ResourceLoader &resource_loader)
             log::error("failed to parse wav: {} {}", resource, data_chunk.error());
         }
 
-        tracks_[resource.substr(resource.find_last_of('\\'))] = Track{
+        tracks_[resource.substr(resource.find_last_of('\\') + 1zu)] = Track{
             .format = {std::ranges::cbegin(*fmt_chunk), std::ranges::cend(*fmt_chunk)},
             .data = {std::ranges::cbegin(*data_chunk), std::ranges::cend(*data_chunk)},
         };
     }
+}
+
+auto AudioManager::play(std::string_view track_name) -> void
+{
+    const auto track = tracks_.find(track_name);
+    if (track == std::ranges::cend(tracks_))
+    {
+        log::warn("tried to play missing track: {}", track_name);
+        return;
+    }
+
+    for (const auto &voice : voices_)
+    {
+        auto state = ::XAUDIO2_VOICE_STATE{};
+        voice->GetState(&state, 0u);
+
+        if (state.pCurrentBufferContext != nullptr)
+        {
+            continue;
+        }
+
+        const auto buffer = ::XAUDIO2_BUFFER{
+            .Flags = XAUDIO2_END_OF_STREAM,
+            .AudioBytes = static_cast<::UINT32>(std::ranges::size(track->second.data)),
+            .pAudioData = reinterpret_cast<const ::BYTE *>(std::ranges::data(track->second.data)),
+            .PlayBegin = 0,
+            .PlayLength = 0,
+            .LoopBegin = 0,
+            .LoopLength = 0,
+            .LoopCount = 0,
+            .pContext = nullptr,
+        };
+
+        ensure(voice->SubmitSourceBuffer(&buffer) == S_OK, "failed to set source");
+        ensure(voice->Start(0) == S_OK, "failed to start sound");
+
+        return;
+    }
+
+    log::warn("no free voice");
 }
 }
