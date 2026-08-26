@@ -1,5 +1,6 @@
 #include "core/player_actor.h"
 
+#include "audio/audio_manager.h"
 #include "core/actor.h"
 #include "core/camera.h"
 #include "core/entity_manager.h"
@@ -64,7 +65,7 @@ PlayerActor::PlayerActor(
 
 auto PlayerActor::update() -> void
 {
-    const auto &[em, cm, dl] = services<EntityManager, CameraManager, DebugLayer>();
+    const auto &[em, cm, dl, am] = services<EntityManager, CameraManager, DebugLayer, AudioManager>();
 
     const auto camera = cm[camera_];
     contract_assert(camera);
@@ -93,6 +94,8 @@ auto PlayerActor::update() -> void
     {
         if (handle_click && mouse_event->state() == MouseButtonState::DOWN)
         {
+            am.play("Specter Bullet.wav");
+
             const auto bullet_ray = Ray{camera->transform().position, camera->direction() * 100.0f};
 
             if (const auto intersection = scene_.intersect_ray(bullet_ray); intersection)
