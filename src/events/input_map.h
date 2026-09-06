@@ -19,7 +19,7 @@ constexpr auto min_max_val() -> std::pair<std::size_t, std::size_t>
     auto min = std::numeric_limits<std::size_t>::max();
     auto max = std::size_t{};
 
-    template for (constexpr auto e : std::define_static_array(std::meta::enumerators_of(^^ufps::Key)))
+    template for (constexpr auto e : std::define_static_array(std::meta::enumerators_of(^^Key)))
     {
         const auto val = std::to_underlying([:e:]);
 
@@ -43,7 +43,7 @@ constexpr auto size() -> std::size_t
     return max - min + 1zu;
 }
 
-constexpr auto to_index(ufps::Key k) -> std::size_t
+constexpr auto to_index(Key k) -> std::size_t
 {
     const auto &[min, _] = min_max_val();
     return std::to_underlying(k) - min;
@@ -61,19 +61,25 @@ class InputMap
     {
     }
 
-    constexpr auto set(ufps::KeyEvent event) -> void
+    constexpr auto set(KeyEvent event) -> void
     {
         const auto index = impl::to_index(event.key());
         map_.set(index, event.state() == KeyState::DOWN);
     }
 
-    constexpr auto is_set(ufps::Key key) const -> bool
+    constexpr auto is_set(Key key) const -> bool
     {
         const auto index = impl::to_index(key);
         return map_[index];
     }
 
-    constexpr auto operator[](ufps::Key key) const -> bool
+    template <Key... Keys>
+    constexpr auto is_any_set() const -> bool
+    {
+        return (is_set(Keys) || ...);
+    }
+
+    constexpr auto operator[](Key key) const -> bool
     {
         return is_set(key);
     }
