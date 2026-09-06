@@ -23,6 +23,7 @@
 #include "concurrency/thread_pool.h"
 #include "core/actor.h"
 #include "core/camera_manager.h"
+#include "core/clock.h"
 #include "core/entity.h"
 #include "core/entity_manager.h"
 #include "core/flycam_actor.h"
@@ -439,6 +440,9 @@ int start()
 
     am.play("ToTheSpace.wav", ufps::PlayMode::LOOP);
 
+    auto delta = ufps::Duration{};
+    auto start_time = ufps::Clock::now();
+
     while (running)
     {
         auto &awaitable = ufps::service<ufps::AwaitableManager>();
@@ -498,7 +502,7 @@ int start()
             event = window.pump_event();
         }
 
-        current_actor->update();
+        current_actor->update(delta);
 
         physics.update();
 
@@ -512,6 +516,9 @@ int start()
         const auto end_frame_allocated_bytes = ufps::g_metrics.total_allocated_bytes.load(std::memory_order_relaxed);
         ufps::g_metrics.frame_allocated_bytes.store(
             end_frame_allocated_bytes - begin_frame_allocated_bytes, std::memory_order_relaxed);
+
+        delta = std::chrono::duration_cast<ufps::Duration>(ufps::Clock::now() - start_time);
+        start_time = ufps::Clock::now();
     }
 
     ufps::service<ufps::AwaitableManager>().pump();

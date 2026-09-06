@@ -2,6 +2,7 @@
 
 #include "core/actor.h"
 #include "core/camera.h"
+#include "core/clock.h"
 #include "core/entity_manager.h"
 #include "events/input_map.h"
 #include "maths/vector3.h"
@@ -59,7 +60,7 @@ FlyCamActor::FlyCamActor(EntityHandle entity, const InputMap &input_map)
 {
 }
 
-auto FlyCamActor::update() -> void
+auto FlyCamActor::update(Duration) -> void
 {
     const auto &[em, cm] = services<EntityManager, CameraManager>();
 

@@ -2,6 +2,7 @@
 
 #include "core/camera.h"
 #include "core/camera_manager.h"
+#include "core/clock.h"
 #include "core/entity_manager.h"
 #include "core/service_locator.h"
 
@@ -18,7 +19,7 @@ class Actor
     Actor(Actor &&) = default;
     auto operator=(Actor &&) -> Actor & = default;
 
-    virtual auto update() -> void = 0;
+    virtual auto update(Duration delta) -> void = 0;
 
     constexpr auto &camera(this auto &&self);
 

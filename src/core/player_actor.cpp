@@ -3,6 +3,7 @@
 #include "audio/audio_manager.h"
 #include "core/actor.h"
 #include "core/camera.h"
+#include "core/clock.h"
 #include "core/entity_manager.h"
 #include "core/scene.h"
 #include "core/service_locator.h"
@@ -13,6 +14,8 @@
 #include "maths/ray.h"
 #include "maths/vector3.h"
 #include "utils/error.h"
+
+using namespace std::literals;
 
 namespace
 {
@@ -59,13 +62,24 @@ PlayerActor::PlayerActor(
     , input_map_{input_map}
     , character_controller_{character_controller}
     , scene_{scene}
+    , walk_sound_timer_{}
 {
     service<CameraHandle>() = camera_;
 }
 
-auto PlayerActor::update() -> void
+auto PlayerActor::update(Duration delta) -> void
 {
     const auto &[em, cm, dl, am] = services<EntityManager, CameraManager, DebugLayer, AudioManager>();
+
+    if (input_map_.is_any_set<Key::W, Key::A, Key::S, Key::D>())
+    {
+        walk_sound_timer_ += delta;
+        if (walk_sound_timer_ >= 600ms)
+        {
+            am.play("LowMetal_Mono_01.wav");
+            walk_sound_timer_ = {};
+        }
+    }
 
     const auto camera = cm[camera_];
     contract_assert(camera);
