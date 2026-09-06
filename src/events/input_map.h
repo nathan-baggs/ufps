@@ -57,6 +57,7 @@ class InputMap
     constexpr InputMap()
         : delta_x{}
         , delta_y{}
+        , mouse_down{false}
         , map_{}
     {
     }
@@ -88,7 +89,7 @@ class InputMap
 
     float delta_y;
 
-    std::optional<MouseButtonEvent> mouse_event;
+    bool mouse_down;
 
   private:
     std::bitset<impl::size()> map_;
