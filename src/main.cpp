@@ -453,7 +453,6 @@ int start()
 
         input_map.delta_x = 0.0f;
         input_map.delta_y = 0.0f;
-        input_map.mouse_event = std::nullopt;
 
         auto event = window.pump_event();
         while (event && running)
@@ -493,7 +492,7 @@ int start()
                     }
                     else if constexpr (std::same_as<T, ufps::MouseButtonEvent>)
                     {
-                        input_map.mouse_event = arg;
+                        input_map.mouse_down = arg.state() == ufps::MouseButtonState::DOWN;
                         renderer.add_mouse_event(arg);
                     }
                 },

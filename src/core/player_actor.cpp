@@ -71,9 +71,11 @@ auto PlayerActor::update(Duration delta) -> void
 {
     const auto &[em, cm, dl, am] = services<EntityManager, CameraManager, DebugLayer, AudioManager>();
 
+    shoot_timer_ += delta;
+    walk_sound_timer_ += delta;
+
     if (input_map_.is_any_set<Key::W, Key::A, Key::S, Key::D>())
     {
-        walk_sound_timer_ += delta;
         if (walk_sound_timer_ >= 600ms)
         {
             am.play("LowMetal_Mono_01.wav");
@@ -102,12 +104,12 @@ auto PlayerActor::update(Duration delta) -> void
 
     player->set_transform(new_transform);
 
-    static auto handle_click = true;
-
-    if (const auto mouse_event = input_map_.mouse_event; mouse_event)
+    if (input_map_.mouse_down)
     {
-        if (handle_click && mouse_event->state() == MouseButtonState::DOWN)
+        if (shoot_timer_ >= 100ms)
         {
+            shoot_timer_ = {};
+
             am.play("Specter Bullet.wav");
 
             const auto bullet_ray = Ray{camera->transform().position, camera->direction() * 100.0f};
@@ -130,13 +132,7 @@ auto PlayerActor::update(Duration delta) -> void
                     std::make_tuple(
                         bullet_ray.origin, bullet_ray.origin + (bullet_ray.direction * 100.0f), colours::red));
             }
-
-            handle_click = false;
         }
-    }
-    else
-    {
-        handle_click = true;
     }
 
     for (const auto &[start, end, colour] : pew_pew_lines_)

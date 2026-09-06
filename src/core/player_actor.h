@@ -30,5 +30,6 @@ class PlayerActor : public Actor
     std::vector<std::tuple<Vector3, Vector3, Colour>> pew_pew_lines_;
     const Scene &scene_;
     Duration walk_sound_timer_;
+    Duration shoot_timer_;
 };
 }
