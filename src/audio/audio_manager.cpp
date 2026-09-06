@@ -42,7 +42,8 @@ namespace ufps
 {
 
 AudioManager::AudioManager(ResourceLoader &resource_loader)
-    : tracks_{}
+    : voice_callback_{*this}
+    , tracks_{}
     , xaudio_{}
     , mastering_voice_{}
     , voices_{}
@@ -69,9 +70,13 @@ AudioManager::AudioManager(ResourceLoader &resource_loader)
         .cbSize = 0,
     };
 
-    for (auto &voice : voices_)
+    for (auto &[voice, is_free] : voices_)
     {
-        ensure(xaudio_->CreateSourceVoice(std::out_ptr(voice), &format) == S_OK, "failed to create voice");
+        ensure(
+            xaudio_->CreateSourceVoice(
+                std::out_ptr(voice), &format, 0, XAUDIO2_DEFAULT_FREQ_RATIO, std::addressof(voice_callback_)) == S_OK,
+            "failed to create voice");
+        is_free = true;
     }
 
     for (const auto &resource :
@@ -124,15 +129,16 @@ auto AudioManager::play(std::string_view track_name) -> void
         return;
     }
 
-    for (const auto &voice : voices_)
-    {
-        auto state = ::XAUDIO2_VOICE_STATE{};
-        voice->GetState(&state, 0u);
+    auto next_voice = std::ranges::find(voices_, true, &Voice::is_free);
 
-        if (state.pCurrentBufferContext != nullptr)
-        {
-            continue;
-        }
+    if (next_voice != std::ranges::end(voices_))
+    {
+        auto &[voice, is_free] = *next_voice;
+        is_free = false;
+
+        const auto index = std::ranges::distance(std::ranges::begin(voices_), next_voice);
+        void *index_as_void_ptr{};
+        std::memcpy(&index_as_void_ptr, &index, sizeof(index));
 
         const auto buffer = ::XAUDIO2_BUFFER{
             .Flags = XAUDIO2_END_OF_STREAM,
@@ -143,15 +149,15 @@ auto AudioManager::play(std::string_view track_name) -> void
             .LoopBegin = 0,
             .LoopLength = 0,
             .LoopCount = 0,
-            .pContext = nullptr,
+            .pContext = index_as_void_ptr,
         };
 
         ensure(voice->SubmitSourceBuffer(&buffer) == S_OK, "failed to set source");
         ensure(voice->Start(0) == S_OK, "failed to start sound");
-
-        return;
     }
-
-    log::warn("no free voice");
+    else
+    {
+        log::warn("no free voice");
+    }
 }
 }
