@@ -120,7 +120,7 @@ AudioManager::AudioManager(ResourceLoader &resource_loader)
     }
 }
 
-auto AudioManager::play(std::string_view track_name) -> void
+auto AudioManager::play(std::string_view track_name, PlayMode mode) -> void
 {
     const auto track = tracks_.find(track_name);
     if (track == std::ranges::cend(tracks_))
@@ -148,7 +148,7 @@ auto AudioManager::play(std::string_view track_name) -> void
             .PlayLength = 0,
             .LoopBegin = 0,
             .LoopLength = 0,
-            .LoopCount = 0,
+            .LoopCount = mode == PlayMode::LOOP ? XAUDIO2_LOOP_INFINITE : 0u,
             .pContext = index_as_void_ptr,
         };
 

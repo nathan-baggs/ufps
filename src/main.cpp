@@ -437,7 +437,7 @@ int start()
 
     ufps::Actor *current_actor = std::addressof(player_actor);
 
-    am.play("ToTheSpace.wav");
+    am.play("ToTheSpace.wav", ufps::PlayMode::LOOP);
 
     while (running)
     {
