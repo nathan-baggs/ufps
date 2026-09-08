@@ -100,6 +100,58 @@ constexpr const std::uint8_t tone_map_vert[] = {
 #embed "../../assets/shaders/tone_map.vert"
 };
 
+constexpr const std::uint8_t bloom_downsample_frag[] = {
+#embed "../../assets/shaders/bloom_downsample.frag"
+};
+
+constexpr const std::uint8_t bloom_downsample_vert[] = {
+#embed "../../assets/shaders/bloom_downsample.vert"
+};
+
+constexpr const std::uint8_t bloom_mix_frag[] = {
+#embed "../../assets/shaders/bloom_mix.frag"
+};
+
+constexpr const std::uint8_t bloom_mix_vert[] = {
+#embed "../../assets/shaders/bloom_mix.vert"
+};
+
+constexpr const std::uint8_t bloom_upsample_frag[] = {
+#embed "../../assets/shaders/bloom_upsample.frag"
+};
+
+constexpr const std::uint8_t bloom_upsample_vert[] = {
+#embed "../../assets/shaders/bloom_upsample.vert"
+};
+
+constexpr const std::uint8_t chromatic_aberration_frag[] = {
+#embed "../../assets/shaders/chromatic_aberration.frag"
+};
+
+constexpr const std::uint8_t chromatic_aberration_vert[] = {
+#embed "../../assets/shaders/chromatic_aberration.vert"
+};
+
+constexpr const std::uint8_t to_the_space_wav[] = {
+#embed "../../secret-assets/sounds/ToTheSpace.wav"
+};
+
+constexpr const std::uint8_t specter_bullet_wav[] = {
+#embed "../../secret-assets/sounds/Specter Bullet.wav"
+};
+
+constexpr const std::uint8_t red_planet_wav[] = {
+#embed "../../secret-assets/sounds/RedPlanet.wav"
+};
+
+constexpr const std::uint8_t ambience_space_station_wav[] = {
+#embed "../../secret-assets/sounds/Ambience_Space Station.wav"
+};
+
+constexpr const std::uint8_t low_metal_mono_01_wav[] = {
+#embed "../../secret-assets/sounds/LowMetal_Mono_01.wav"
+};
+
 constexpr const std::uint8_t scene_config[] = {
 #embed "../../scene.yaml"
 };
@@ -143,6 +195,19 @@ EmbeddedResourceLoader::EmbeddedResourceLoader()
         {"shaders\\ssao_blur.frag", std::span{ssao_blur_frag, sizeof(ssao_blur_frag)}},
         {"shaders\\tone_map.frag", std::span{tone_map_frag, sizeof(tone_map_frag)}},
         {"shaders\\tone_map.vert", std::span{tone_map_vert, sizeof(tone_map_vert)}},
+        {"shaders\\bloom_downsample.frag", std::span{bloom_downsample_frag, sizeof(bloom_downsample_frag)}},
+        {"shaders\\bloom_downsample.vert", std::span{bloom_downsample_vert, sizeof(bloom_downsample_vert)}},
+        {"shaders\\bloom_mix.frag", std::span{bloom_mix_frag, sizeof(bloom_mix_frag)}},
+        {"shaders\\bloom_mix.vert", std::span{bloom_mix_vert, sizeof(bloom_mix_vert)}},
+        {"shaders\\bloom_upsample.frag", std::span{bloom_upsample_frag, sizeof(bloom_upsample_frag)}},
+        {"shaders\\bloom_upsample.vert", std::span{bloom_upsample_vert, sizeof(bloom_upsample_vert)}},
+        {"shaders\\chromatic_aberration.frag", std::span{chromatic_aberration_frag, sizeof(chromatic_aberration_frag)}},
+        {"shaders\\chromatic_aberration.vert", std::span{chromatic_aberration_vert, sizeof(chromatic_aberration_vert)}},
+        {"sounds\\Ambience_Space Station.wav", std::span{ambience_space_station_wav, sizeof(ambience_space_station_wav)}},
+        {"sounds\\LowMetal_Mono_01.wav", std::span{low_metal_mono_01_wav, sizeof(low_metal_mono_01_wav)}},
+        {"sounds\\RedPlanet.wav", std::span{red_planet_wav, sizeof(red_planet_wav)}},
+        {"sounds\\Specter Bullet.wav", std::span{specter_bullet_wav, sizeof(specter_bullet_wav)}},
+        {"sounds\\ToTheSpace.wav", std::span{to_the_space_wav, sizeof(to_the_space_wav)}},
     };
 }
 
@@ -160,5 +225,22 @@ auto EmbeddedResourceLoader::load_data_buffer(std::string_view name) -> DataBuff
     expect(resource != std::ranges::cend(lookup_), "resource {} does not exist", name);
 
     return to_container<DataBuffer>(resource->second);
+}
+
+auto EmbeddedResourceLoader::resources(std::string_view type) -> std::vector<std::string>
+{
+    auto prefix = std::string{type};
+    prefix += '\\';
+
+    auto result = std::vector<std::string>{};
+    for (const auto &entry : lookup_)
+    {
+        if (entry.first.starts_with(prefix))
+        {
+            result.push_back(entry.first);
+        }
+    }
+
+    return result;
 }
 }

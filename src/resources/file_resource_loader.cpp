@@ -103,7 +103,7 @@ auto FileResourceLoader::load_data_buffer(std::string_view name) -> DataBuffer
 
 auto FileResourceLoader::resources(std::string_view type) -> std::vector<std::string>
 {
-    return roots_ |
+    return roots_ | std::views::filter([&](const auto &e) { return std::filesystem::is_directory(e / type); }) |
            std::views::transform(
                [&](const auto &e)
                {

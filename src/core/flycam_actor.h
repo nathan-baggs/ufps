@@ -2,6 +2,7 @@
 
 #include "core/actor.h"
 #include "core/camera_manager.h"
+#include "core/clock.h"
 #include "core/entity_manager.h"
 #include "events/input_map.h"
 
@@ -13,7 +14,7 @@ class FlyCamActor : public Actor
     FlyCamActor(EntityHandle entity, const InputMap &input_map);
     ~FlyCamActor() override = default;
 
-    auto update() -> void override;
+    auto update(Duration delta) -> void override;
 
   private:
     const InputMap &input_map_;

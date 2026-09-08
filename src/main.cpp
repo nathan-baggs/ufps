@@ -17,11 +17,13 @@
 
 #include "config.h"
 
+#include "audio/audio_manager.h"
 #include "concurrency/awaitable_manager.h"
 #include "concurrency/task.h"
 #include "concurrency/thread_pool.h"
 #include "core/actor.h"
 #include "core/camera_manager.h"
+#include "core/clock.h"
 #include "core/entity.h"
 #include "core/entity_manager.h"
 #include "core/flycam_actor.h"
@@ -382,13 +384,18 @@ int start()
         std::make_unique<ufps::LightManager>(),
         std::make_unique<ufps::CameraManager>(),
         ufps::CameraHandle{},
-        std::make_unique<ufps::DebugLayer>());
+        std::make_unique<ufps::DebugLayer>(),
+        std::make_unique<ufps::AudioManager>(*resource_loader));
     ufps::set_service(services.get());
 
     load_render_entity_manager(*resource_loader);
 
-    const auto &[em, rem, lm, cm] =
-        ufps::services<ufps::EntityManager, ufps::RenderEntityManager, ufps::LightManager, ufps::CameraManager>();
+    const auto &[em, rem, lm, cm, am] = ufps::services<
+        ufps::EntityManager,
+        ufps::RenderEntityManager,
+        ufps::LightManager,
+        ufps::CameraManager,
+        ufps::AudioManager>();
 
     auto renderer = ufps::DebugRenderer{window, *resource_loader};
     auto debug_mode = false;
@@ -431,6 +438,11 @@ int start()
 
     ufps::Actor *current_actor = std::addressof(player_actor);
 
+    am.play("ToTheSpace.wav", ufps::PlayMode::LOOP);
+
+    auto delta = ufps::Duration{};
+    auto start_time = ufps::Clock::now();
+
     while (running)
     {
         auto &awaitable = ufps::service<ufps::AwaitableManager>();
@@ -441,7 +453,6 @@ int start()
 
         input_map.delta_x = 0.0f;
         input_map.delta_y = 0.0f;
-        input_map.mouse_event = std::nullopt;
 
         auto event = window.pump_event();
         while (event && running)
@@ -481,7 +492,7 @@ int start()
                     }
                     else if constexpr (std::same_as<T, ufps::MouseButtonEvent>)
                     {
-                        input_map.mouse_event = arg;
+                        input_map.mouse_down = arg.state() == ufps::MouseButtonState::DOWN;
                         renderer.add_mouse_event(arg);
                     }
                 },
@@ -490,7 +501,7 @@ int start()
             event = window.pump_event();
         }
 
-        current_actor->update();
+        current_actor->update(delta);
 
         physics.update();
 
@@ -504,6 +515,9 @@ int start()
         const auto end_frame_allocated_bytes = ufps::g_metrics.total_allocated_bytes.load(std::memory_order_relaxed);
         ufps::g_metrics.frame_allocated_bytes.store(
             end_frame_allocated_bytes - begin_frame_allocated_bytes, std::memory_order_relaxed);
+
+        delta = std::chrono::duration_cast<ufps::Duration>(ufps::Clock::now() - start_time);
+        start_time = ufps::Clock::now();
     }
 
     ufps::service<ufps::AwaitableManager>().pump();
