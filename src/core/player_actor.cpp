@@ -12,6 +12,8 @@
 #include "graphics/debug_layer.h"
 #include "maths/quaternion.h"
 #include "maths/ray.h"
+#include "maths/spring.h"
+#include "maths/transform.h"
 #include "maths/vector3.h"
 #include "utils/error.h"
 
@@ -63,6 +65,7 @@ PlayerActor::PlayerActor(
     , character_controller_{character_controller}
     , scene_{scene}
     , walk_sound_timer_{}
+    , recoil_spring_{0.0f, 0.0f, 0.0f, 2.0f * std::numbers::pi_v<float>, Spring::DampingMode::CRITICAL, 1.0f}
 {
     service<CameraHandle>() = camera_;
 }
@@ -92,6 +95,8 @@ auto PlayerActor::update(Duration delta) -> void
     pitch += input_map_.delta_y;
     yaw -= input_map_.delta_x;
 
+    const auto &[pos, _] = recoil_spring_.update(delta);
+
     character_controller_.set_walk_direction(walk_direction(input_map_, *camera));
 
     auto player = em[entity_];
@@ -100,6 +105,7 @@ auto PlayerActor::update(Duration delta) -> void
     const auto &transform = player->transform();
 
     auto new_transform = Transform{character_controller_.position(), {1.0f}, Quaternion(yaw, pitch, 0.0f)};
+    new_transform = new_transform * Transform{{}, {1.0f}, {0.0f, -pos, 0.0f}};
     new_transform.position.y = transform.position.y;
 
     player->set_transform(new_transform);
@@ -111,6 +117,7 @@ auto PlayerActor::update(Duration delta) -> void
             shoot_timer_ = {};
 
             am.play("Specter Bullet.wav");
+            recoil_spring_.add_position(0.05f);
 
             const auto bullet_ray = Ray{camera->transform().position, camera->direction() * 100.0f};
 

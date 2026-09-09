@@ -8,6 +8,7 @@
 #include "core/scene.h"
 #include "events/input_map.h"
 #include "events/key.h"
+#include "maths/spring.h"
 #include "physics/virtual_character_controller.h"
 
 namespace ufps
@@ -31,5 +32,6 @@ class PlayerActor : public Actor
     const Scene &scene_;
     Duration walk_sound_timer_;
     Duration shoot_timer_;
+    Spring recoil_spring_;
 };
 }
