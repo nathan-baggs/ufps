@@ -57,15 +57,18 @@ namespace ufps
 
 PlayerActor::PlayerActor(
     EntityHandle entity,
+    EntityHandle gun,
     const InputMap &input_map,
     VirtualCharacterController &character_controller,
     const Scene &scene)
     : Actor{entity}
+    , gun_{gun}
     , input_map_{input_map}
     , character_controller_{character_controller}
     , scene_{scene}
     , walk_sound_timer_{}
     , recoil_spring_{0.0f, 0.0f, 0.0f, 2.0f * std::numbers::pi_v<float>, Spring::DampingMode::CRITICAL, 1.0f}
+    , turn_spring_{0.0f, 0.0f, 0.0f, 4.0f * std::numbers::pi_v<float>, Spring::DampingMode::CRITICAL, 1.0f}
 {
     service<CameraHandle>() = camera_;
 }
@@ -109,6 +112,23 @@ auto PlayerActor::update(Duration delta) -> void
     new_transform.position.y = transform.position.y;
 
     player->set_transform(new_transform);
+
+    auto gun = em[gun_];
+    contract_assert(gun);
+
+    const auto &[gun_pos, _] = turn_spring_.update(delta);
+
+    static auto gun_roll = float{};
+    const auto roll_delta = gun_pos - gun_roll;
+    gun_roll = gun_pos;
+
+    static auto gun_pitch = float{};
+    const auto pitch_delta = pos - gun_pitch;
+    gun_pitch = pos;
+
+    turn_spring_.add_position(input_map_.delta_x * 0.05f);
+    auto gun_transform = gun->local_transform() * Transform{{}, {1.0f}, Quaternion(0.0f, -pitch_delta, -roll_delta)};
+    gun->set_transform(gun_transform);
 
     if (input_map_.mouse_down)
     {

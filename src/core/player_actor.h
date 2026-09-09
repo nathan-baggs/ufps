@@ -18,6 +18,7 @@ class PlayerActor : public Actor
   public:
     PlayerActor(
         EntityHandle entity,
+        EntityHandle gun,
         const InputMap &input_map,
         VirtualCharacterController &character_controller,
         const Scene &scene);
@@ -26,6 +27,7 @@ class PlayerActor : public Actor
     auto update(Duration delta) -> void override;
 
   private:
+    EntityHandle gun_;
     const InputMap &input_map_;
     VirtualCharacterController &character_controller_;
     std::vector<std::tuple<Vector3, Vector3, Colour>> pew_pew_lines_;
@@ -33,5 +35,6 @@ class PlayerActor : public Actor
     Duration walk_sound_timer_;
     Duration shoot_timer_;
     Spring recoil_spring_;
+    Spring turn_spring_;
 };
 }

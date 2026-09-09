@@ -429,7 +429,7 @@ int start()
     auto player_entity_handle = std::ranges::find_if(entity_handles, [&](auto e) { return em[e]->name() == "player"; });
     ufps::ensure(player_entity_handle != std::ranges::cend(entity_handles), "no player in scene");
 
-    auto player_actor = ufps::PlayerActor{*player_entity_handle, input_map, player_controller, scene};
+    auto player_actor = ufps::PlayerActor{*player_entity_handle, scene.gun(), input_map, player_controller, scene};
 
     auto flycam_entity_handle = std::ranges::find_if(entity_handles, [&](auto e) { return em[e]->name() == "flycam"; });
     ufps::ensure(flycam_entity_handle != std::ranges::cend(entity_handles), "no flycam in scene");
