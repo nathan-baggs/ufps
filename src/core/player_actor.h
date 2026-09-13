@@ -36,5 +36,8 @@ class PlayerActor : public Actor
     Duration shoot_timer_;
     Spring recoil_spring_;
     Spring turn_spring_;
+    float yaw_;
+    float pitch_;
+    float recoil_target_;
 };
 }

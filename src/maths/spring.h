@@ -11,12 +11,6 @@ namespace ufps
 class Spring
 {
   public:
-    struct State
-    {
-        float position;
-        float velocity;
-    };
-
     enum class DampingMode
     {
         OVER,
@@ -32,12 +26,15 @@ class Spring
         DampingMode damping_mode,
         float damping_ratio);
 
-    constexpr auto add_position(float pos_delta) -> void;
+    constexpr auto add_impulse(float pos_delta) -> void;
 
-    constexpr auto update(Duration delta) -> State;
+    constexpr auto set_equilibrium_position(float equilibrium) -> void;
+
+    constexpr auto update(Duration delta) -> float;
 
   private:
-    State state_;
+    float position_;
+    float velocity_;
     float equilibrium_position_;
     float angular_frequency_;
     DampingMode damping_mode_;
@@ -55,7 +52,8 @@ constexpr Spring::Spring(
     float angular_frequency,
     DampingMode damping_mode,
     float damping_ratio)
-    : state_{.position = position, .velocity = velocity}
+    : position_{position}
+    , velocity_{velocity}
     , equilibrium_position_{equilibrium_position}
     , angular_frequency_{angular_frequency}
     , damping_mode_{damping_mode}
@@ -78,12 +76,17 @@ constexpr Spring::Spring(
     }
 }
 
-constexpr auto Spring::add_position(float pos_delta) -> void
+constexpr auto Spring::add_impulse(float pos_delta) -> void
 {
-    state_.position += pos_delta;
+    position_ += pos_delta;
 }
 
-constexpr auto Spring::update(Duration delta) -> State
+constexpr auto Spring::set_equilibrium_position(float equilibrium) -> void
+{
+    equilibrium_position_ = equilibrium;
+}
+
+constexpr auto Spring::update(Duration delta) -> float
 {
     const auto delta_time = std::chrono::duration_cast<std::chrono::duration<float>>(delta).count();
 
@@ -156,13 +159,13 @@ constexpr auto Spring::update(Duration delta) -> State
         };
     }
 
-    const auto old_pos = state_.position - equilibrium_position_;
-    const auto old_vel = state_.velocity;
+    const auto old_pos = position_ - equilibrium_position_;
+    const auto old_vel = velocity_;
 
-    state_.position = old_pos * pos_pos_coef_ + old_vel * pos_vel_coef_ + equilibrium_position_;
-    state_.velocity = old_pos * vel_pos_coef_ + old_vel * vel_vel_coef_;
+    position_ = old_pos * pos_pos_coef_ + old_vel * pos_vel_coef_ + equilibrium_position_;
+    velocity_ = old_pos * vel_pos_coef_ + old_vel * vel_vel_coef_;
 
-    return state_;
+    return position_;
 }
 
 }

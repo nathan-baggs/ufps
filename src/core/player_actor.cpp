@@ -69,6 +69,9 @@ PlayerActor::PlayerActor(
     , walk_sound_timer_{}
     , recoil_spring_{0.0f, 0.0f, 0.0f, 2.0f * std::numbers::pi_v<float>, Spring::DampingMode::CRITICAL, 1.0f}
     , turn_spring_{0.0f, 0.0f, 0.0f, 4.0f * std::numbers::pi_v<float>, Spring::DampingMode::CRITICAL, 1.0f}
+    , yaw_{std::numbers::pi_v<float>}
+    , pitch_{}
+    , recoil_target_{}
 {
     service<CameraHandle>() = camera_;
 }
@@ -92,52 +95,14 @@ auto PlayerActor::update(Duration delta) -> void
     const auto camera = cm[camera_];
     contract_assert(camera);
 
-    static auto pitch = 0.0f;
-    static auto yaw = std::numbers::pi_v<float>;
-
-    pitch += input_map_.delta_y;
-    yaw -= input_map_.delta_x;
-
-    const auto &[pos, _] = recoil_spring_.update(delta);
-
-    character_controller_.set_walk_direction(walk_direction(input_map_, *camera));
-
-    auto player = em[entity_];
-    contract_assert(player);
-
-    const auto &transform = player->transform();
-
-    auto new_transform = Transform{character_controller_.position(), {1.0f}, Quaternion(yaw, pitch, 0.0f)};
-    new_transform = new_transform * Transform{{}, {1.0f}, {0.0f, -pos, 0.0f}};
-    new_transform.position.y = transform.position.y;
-
-    player->set_transform(new_transform);
-
-    auto gun = em[gun_];
-    contract_assert(gun);
-
-    const auto &[gun_pos, _] = turn_spring_.update(delta);
-
-    static auto gun_roll = float{};
-    const auto roll_delta = gun_pos - gun_roll;
-    gun_roll = gun_pos;
-
-    static auto gun_pitch = float{};
-    const auto pitch_delta = pos - gun_pitch;
-    gun_pitch = pos;
-
-    turn_spring_.add_position(input_map_.delta_x * 0.05f);
-    auto gun_transform = gun->local_transform() * Transform{{}, {1.0f}, Quaternion(0.0f, -pitch_delta, -roll_delta)};
-    gun->set_transform(gun_transform);
-
     if (input_map_.mouse_down)
     {
         if (shoot_timer_ >= 100ms)
         {
             shoot_timer_ = {};
+            recoil_target_ += 0.02f;
 
             am.play("Specter Bullet.wav");
-            recoil_spring_.add_position(0.05f);
 
             const auto bullet_ray = Ray{camera->transform().position, camera->direction() * 100.0f};
 
@@ -161,6 +126,57 @@ auto PlayerActor::update(Duration delta) -> void
             }
         }
     }
+    else
+    {
+        recoil_target_ = {};
+    }
+
+    recoil_spring_.set_equilibrium_position(recoil_target_);
+    const auto recoil = recoil_spring_.update(delta);
+
+    auto mouse_delta = input_map_.delta_y;
+
+    if (mouse_delta > 0.0f && recoil > 0.0f)
+    {
+        const auto compensation = std::min(mouse_delta, recoil);
+        recoil_spring_.add_impulse(-compensation);
+        recoil_target_ = std::max(0.0f, recoil_target_ - compensation);
+        recoil_spring_.set_equilibrium_position(recoil_target_);
+
+        mouse_delta -= compensation;
+    }
+
+    pitch_ += mouse_delta;
+    yaw_ -= input_map_.delta_x;
+
+    character_controller_.set_walk_direction(walk_direction(input_map_, *camera));
+
+    auto player = em[entity_];
+    contract_assert(player);
+
+    const auto &transform = player->transform();
+
+    auto new_transform = Transform{character_controller_.position(), {1.0f}, Quaternion(yaw_, pitch_ - recoil, 0.0f)};
+    new_transform.position.y = transform.position.y;
+
+    player->set_transform(new_transform);
+
+    auto gun = em[gun_];
+    contract_assert(gun);
+
+    const auto gun_pos = turn_spring_.update(delta);
+
+    static auto gun_roll = float{};
+    const auto roll_delta = gun_pos - gun_roll;
+    gun_roll = gun_pos;
+
+    static auto gun_pitch = float{};
+    const auto pitch_delta = recoil - gun_pitch;
+    gun_pitch = recoil;
+
+    turn_spring_.add_impulse(input_map_.delta_x * 0.05f);
+    auto gun_transform = gun->local_transform() * Transform{{}, {1.0f}, Quaternion(0.0f, -pitch_delta, -roll_delta)};
+    gun->set_transform(gun_transform);
 
     for (const auto &[start, end, colour] : pew_pew_lines_)
     {
