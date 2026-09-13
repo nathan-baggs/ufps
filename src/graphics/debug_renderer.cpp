@@ -10,19 +10,20 @@
 #include <optional>
 #include <ranges>
 #include <string>
+#include <utility>
+#include <variant>
 
 #include <imgui.h>
 
 #include <ImGuizmo.h>
 #include <backends/imgui_impl_opengl3.h>
 #include <backends/imgui_impl_win32.h>
-#include <utility>
-#include <variant>
 #include <windows.h>
 
 #include "core/camera_manager.h"
 #include "core/entity_manager.h"
 #include "core/light_manager.h"
+#include "core/player_actor.h"
 #include "core/render_entity_manager.h"
 #include "core/scene.h"
 #include "core/service_locator.h"
@@ -125,13 +126,14 @@ auto create_debug_controller(const std::string &, const ufps::Matrix4 &value) ->
 
 namespace ufps
 {
-DebugRenderer::DebugRenderer(const Window &window, ResourceLoader &resource_loader)
+DebugRenderer::DebugRenderer(const Window &window, ResourceLoader &resource_loader, PlayerActor &player_actor)
     : Renderer{window, resource_loader}
     , enabled_{false}
     , snap_enabled_{false}
     , click_{}
     , selected_{std::monostate{}}
     , highlight_render_entity_{}
+    , player_actor_{player_actor}
 {
     IMGUI_CHECKVERSION();
     ::ImGui::CreateContext();
@@ -263,6 +265,7 @@ auto DebugRenderer::post_render(Scene &scene, const Camera &camera) -> void
     draw_metrics();
     draw_inspector(scene);
     draw_gizmo(camera);
+    draw_player_info();
 
     static auto first = false;
     if (!first)
@@ -1389,4 +1392,19 @@ auto DebugRenderer::draw_gizmo(const Camera &camera) -> void
         }
     }
 }
+
+auto DebugRenderer::draw_player_info() -> void
+{
+    if (::ImGui::Begin("PlayerInfo"))
+    {
+        ::ImGui::PushID("player_info");
+
+        ::ImGui::Button("Save");
+
+        ::ImGui::PopID();
+    }
+
+    ::ImGui::End();
+}
+
 }

@@ -398,9 +398,6 @@ int start()
         ufps::CameraManager,
         ufps::AudioManager>();
 
-    auto renderer = ufps::DebugRenderer{window, *resource_loader};
-    auto debug_mode = false;
-
     auto scene_description = ufps::yaml::deserialise<ufps::Scene::Description>(strm.str());
     ufps::ensure(scene_description);
 
@@ -446,6 +443,9 @@ int start()
 
     auto delta = ufps::Duration{};
     auto start_time = ufps::Clock::now();
+
+    auto renderer = ufps::DebugRenderer{window, *resource_loader, player_actor};
+    auto debug_mode = false;
 
     while (running)
     {
