@@ -1405,6 +1405,11 @@ auto DebugRenderer::draw_player_info() -> void
 
         if (::ImGui::Button("Save"))
         {
+            const auto gun_yaml = ufps::yaml::serialise(desc);
+            contract_assert(gun_yaml);
+            auto out = std::ofstream("gun.yaml");
+
+            out << *gun_yaml;
         }
 
         auto fire_rate = BoundedUint32<0u, 10'000u>{

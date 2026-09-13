@@ -7,6 +7,7 @@
 #include <meta>
 #include <optional>
 #include <ranges>
+#include <ratio>
 #include <sstream>
 #include <string>
 #include <string_view>
@@ -14,17 +15,23 @@
 
 #include <yaml-cpp/yaml.h>
 
+#include "core/clock.h"
 #include "maths/bounded_number.h"
 #include "maths/matrix4.h"
 #include "utils/exception.h"
 #include "utils/formatter.h"
-#include "yaml-cpp/node/node.h"
 
 namespace ufps::yaml
 {
 
 namespace impl
 {
+
+struct DurationValue
+{
+    std::uint64_t value;
+    std::string units;
+};
 
 template <class T>
 concept Bounded = requires {
@@ -66,6 +73,19 @@ auto do_deserialise(const ::YAML::Node &node) -> std::expected<T, std::string>;
 auto do_serialise(const BaseType auto &obj) -> std::expected<::YAML::Node, std::string>
 {
     return ::YAML::Node{obj};
+}
+
+inline auto do_serialise(const Duration &obj) -> std::expected<::YAML::Node, std::string>
+{
+    const auto value =
+        DurationValue{.value = static_cast<std::uint64_t>(obj.count()), .units = std::format("{:%q}", obj)};
+    auto inner_object = do_serialise(value);
+    if (!inner_object)
+    {
+        return std::unexpected(inner_object.error());
+    }
+
+    return *inner_object;
 }
 
 template <Bounded T>

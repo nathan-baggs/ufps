@@ -1,0 +1,5 @@
+Description:
+  fire_rate:
+    DurationValue:
+      value: 100000
+      units: us
