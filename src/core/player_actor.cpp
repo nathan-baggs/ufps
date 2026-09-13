@@ -69,6 +69,7 @@ PlayerActor::PlayerActor(
     , walk_sound_timer_{}
     , recoil_spring_{0.0f, 0.0f, 0.0f, 2.0f * std::numbers::pi_v<float>}
     , turn_spring_{0.0f, 0.0f, 0.0f, 4.0f * std::numbers::pi_v<float>}
+    , bob_spring_{0.0f, 0.0f, 0.0f, 4.0f * std::numbers::pi_v<float>, 0.5f}
     , yaw_{std::numbers::pi_v<float>}
     , pitch_{}
     , recoil_target_{}
@@ -88,6 +89,7 @@ auto PlayerActor::update(Duration delta) -> void
         if (walk_sound_timer_ >= 600ms)
         {
             am.play("LowMetal_Mono_01.wav");
+            bob_spring_.add_impulse(0.01f);
             walk_sound_timer_ = {};
         }
     }
@@ -174,8 +176,15 @@ auto PlayerActor::update(Duration delta) -> void
     const auto pitch_delta = recoil - gun_pitch;
     gun_pitch = recoil;
 
+    const auto bob_amount = bob_spring_.update(delta);
+
+    static auto bob = float{};
+    const auto bob_delta = bob_amount - bob;
+    bob = bob_amount;
+
     turn_spring_.add_impulse(input_map_.delta_x * 0.05f);
     auto gun_transform = gun->local_transform() * Transform{{}, {1.0f}, Quaternion(0.0f, -pitch_delta, -roll_delta)};
+    gun_transform.position.y += bob_delta;
     gun->set_transform(gun_transform);
 
     for (const auto &[start, end, colour] : pew_pew_lines_)
