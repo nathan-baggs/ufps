@@ -1,6 +1,7 @@
 #pragma once
 
 #include <algorithm>
+#include <chrono>
 #include <concepts>
 #include <exception>
 #include <expected>
@@ -200,6 +201,23 @@ template <BaseType T>
 auto do_deserialise(const ::YAML::Node &node) -> std::expected<T, std::string>
 {
     return node.as<T>();
+}
+
+template <>
+inline auto do_deserialise(const ::YAML::Node &node) -> std::expected<Duration, std::string>
+{
+    const auto value = do_deserialise<DurationValue>(node);
+    if (!value)
+    {
+        return std::unexpected(value.error());
+    }
+
+    if (value->units == "us")
+    {
+        return std::chrono::microseconds{value->value};
+    }
+
+    return std::unexpected(std::format("unknown units: {}", value->units));
 }
 
 template <Bounded T>

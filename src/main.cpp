@@ -403,6 +403,13 @@ int start()
 
     auto scene = ufps::Scene{std::move(*scene_description)};
 
+    strm = {};
+    auto gun_description_yaml = std::ifstream{"gun.yaml"};
+    strm << gun_description_yaml.rdbuf();
+
+    auto gun_description = ufps::yaml::deserialise<ufps::Gun::Description>(strm.str());
+    ufps::ensure(gun_description);
+
     const auto point_light_handles = lm.handles();
 
     auto alert_light = ufps::EntityHandle{};
@@ -423,7 +430,7 @@ int start()
     pulse_light(alert_light);
     // flicker_light(point_light_handles[2]);
 
-    auto gun = ufps::Gun{ufps::Gun::Description{.fire_rate = 100ms}};
+    auto gun = ufps::Gun{std::move(*gun_description)};
 
     const auto entity_handles = em.handles();
     auto player_entity_handle = std::ranges::find_if(entity_handles, [&](auto e) { return em[e]->name() == "player"; });
