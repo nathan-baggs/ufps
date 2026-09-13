@@ -27,6 +27,7 @@
 #include "core/entity.h"
 #include "core/entity_manager.h"
 #include "core/flycam_actor.h"
+#include "core/gun.h"
 #include "core/light_manager.h"
 #include "core/manifest_descriptions.h"
 #include "core/player_actor.h"
@@ -425,11 +426,14 @@ int start()
     pulse_light(alert_light);
     // flicker_light(point_light_handles[2]);
 
+    auto gun = ufps::Gun{ufps::Gun::Description{.fire_rate = 100ms}};
+
     const auto entity_handles = em.handles();
     auto player_entity_handle = std::ranges::find_if(entity_handles, [&](auto e) { return em[e]->name() == "player"; });
     ufps::ensure(player_entity_handle != std::ranges::cend(entity_handles), "no player in scene");
 
-    auto player_actor = ufps::PlayerActor{*player_entity_handle, scene.gun(), input_map, player_controller, scene};
+    auto player_actor =
+        ufps::PlayerActor{*player_entity_handle, scene.gun(), std::move(gun), input_map, player_controller, scene};
 
     auto flycam_entity_handle = std::ranges::find_if(entity_handles, [&](auto e) { return em[e]->name() == "flycam"; });
     ufps::ensure(flycam_entity_handle != std::ranges::cend(entity_handles), "no flycam in scene");
