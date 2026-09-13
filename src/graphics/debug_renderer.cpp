@@ -1,6 +1,7 @@
 #include "graphics/debug_renderer.h"
 
 #include <algorithm>
+#include <chrono>
 #include <cstddef>
 #include <cstring>
 #include <format>
@@ -9,6 +10,7 @@
 #include <meta>
 #include <optional>
 #include <ranges>
+#include <ratio>
 #include <string>
 #include <utility>
 #include <variant>
@@ -1399,7 +1401,20 @@ auto DebugRenderer::draw_player_info() -> void
     {
         ::ImGui::PushID("player_info");
 
-        ::ImGui::Button("Save");
+        auto desc = player_actor_.gun().description();
+
+        if (::ImGui::Button("Save"))
+        {
+        }
+
+        auto fire_rate = BoundedUint32<0u, 10'000u>{
+            static_cast<std::uint32_t>(std::chrono::duration_cast<std::chrono::milliseconds>(desc.fire_rate).count())};
+
+        create_debug_controller("fire_rate", fire_rate);
+
+        desc.fire_rate = std::chrono::milliseconds{fire_rate};
+
+        player_actor_.set_gun(Gun{desc});
 
         ::ImGui::PopID();
     }
