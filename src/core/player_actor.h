@@ -26,6 +26,9 @@ class PlayerActor : public Actor
         const Scene &scene);
     ~PlayerActor() override = default;
 
+    auto gun() const -> const Gun &;
+    auto set_gun(Gun gun) -> void;
+
     auto update(Duration delta) -> void override;
 
   private:

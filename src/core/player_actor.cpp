@@ -76,6 +76,16 @@ PlayerActor::PlayerActor(
     service<CameraHandle>() = camera_;
 }
 
+auto PlayerActor::gun() const -> const Gun &
+{
+    return gun_;
+}
+
+auto PlayerActor::set_gun(Gun gun) -> void
+{
+    gun_ = std::move(gun);
+}
+
 auto PlayerActor::update(Duration delta) -> void
 {
     const auto &[em, cm, dl, am] = services<EntityManager, CameraManager, DebugLayer, AudioManager>();
