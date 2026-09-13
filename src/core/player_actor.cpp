@@ -67,8 +67,8 @@ PlayerActor::PlayerActor(
     , character_controller_{character_controller}
     , scene_{scene}
     , walk_sound_timer_{}
-    , recoil_spring_{0.0f, 0.0f, 0.0f, 2.0f * std::numbers::pi_v<float>, Spring::DampingMode::CRITICAL, 1.0f}
-    , turn_spring_{0.0f, 0.0f, 0.0f, 4.0f * std::numbers::pi_v<float>, Spring::DampingMode::CRITICAL, 1.0f}
+    , recoil_spring_{0.0f, 0.0f, 0.0f, 2.0f * std::numbers::pi_v<float>}
+    , turn_spring_{0.0f, 0.0f, 0.0f, 4.0f * std::numbers::pi_v<float>}
     , yaw_{std::numbers::pi_v<float>}
     , pitch_{}
     , recoil_target_{}
