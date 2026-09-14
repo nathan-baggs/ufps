@@ -14,3 +14,9 @@ Description:
     DurationValue:
       value: 107000
       units: us
+  kick_distance: 0.042
+  kick_pitch: 0.077
+  kick_settle_time:
+    DurationValue:
+      value: 86000
+      units: us

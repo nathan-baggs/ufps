@@ -1455,6 +1455,24 @@ auto DebugRenderer::draw_player_info() -> void
             player_actor_.set_gun(Gun{desc});
         }
 
+        if (create_debug_controller("kick_distance", desc.kick_distance))
+        {
+            player_actor_.set_gun(Gun{desc});
+        }
+
+        if (create_debug_controller("kick_pitch", desc.kick_pitch))
+        {
+            player_actor_.set_gun(Gun{desc});
+        }
+
+        auto kick_settle_time = BoundedUint32<0u, 1'000u>{static_cast<std::uint32_t>(
+            std::chrono::duration_cast<std::chrono::milliseconds>(desc.kick_settle_time).count())};
+        if (create_debug_controller("kick_settle_time", kick_settle_time))
+        {
+            desc.kick_settle_time = std::chrono::milliseconds{kick_settle_time};
+            player_actor_.set_gun(Gun{desc});
+        }
+
         ::ImGui::PopID();
     }
 

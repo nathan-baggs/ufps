@@ -38,6 +38,10 @@ Gun::Gun(Description description)
     , pitch_gain_{description.pitch_gain}
     , pitch_settle_time_{description.pitch_settle_time}
     , recoil_target_{}
+    , kick_spring_{0.0f, 0.0f, 0.0f, duration_to_angular_frequency(description.kick_settle_time)}
+    , kick_distance_{description.kick_distance}
+    , kick_pitch_{description.kick_pitch}
+    , kick_settle_time_{description.kick_settle_time}
 {
 }
 
@@ -59,6 +63,8 @@ auto Gun::update(Duration delta, Entity &entity, const InputMap &input_map, cons
     {
         if (shoot_timer_ >= fire_rate_)
         {
+            kick_spring_.add_impulse(1.0f);
+
             shoot_timer_ = {};
             recoil_target_ += shot_recoil_;
 
@@ -93,7 +99,14 @@ auto Gun::update(Duration delta, Entity &entity, const InputMap &input_map, cons
     pitch_spring_.add_impulse(input_map.delta_y * pitch_gain_);
     const auto pitch_offset = pitch_spring_.update(delta);
 
-    auto gun_transform = rest_transform_ * Transform{{}, {1.0f}, Quaternion(0.0f, -pitch_offset, yaw_offset)};
+    const auto kick_recoil = kick_spring_.update(delta);
+
+    auto gun_transform =
+        rest_transform_ *
+        Transform{
+            {0.0f, 0.0f, kick_distance_ * kick_recoil},
+            {1.0f},
+            Quaternion(0.0f, -pitch_offset, yaw_offset + static_cast<float>(kick_pitch_) * kick_recoil)};
     entity.set_transform(gun_transform);
 
     return result;
@@ -107,6 +120,10 @@ auto Gun::description() const -> Description
         .yaw_gain = yaw_gain_,
         .yaw_settle_time = yaw_settle_time_,
         .pitch_gain = pitch_gain_,
-        .pitch_settle_time = pitch_settle_time_};
+        .pitch_settle_time = pitch_settle_time_,
+        .kick_distance = kick_distance_,
+        .kick_pitch = kick_pitch_,
+        .kick_settle_time = kick_settle_time_,
+    };
 }
 }
