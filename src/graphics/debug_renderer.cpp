@@ -1429,6 +1429,32 @@ auto DebugRenderer::draw_player_info() -> void
             player_actor_.set_gun(Gun{desc});
         }
 
+        if (create_debug_controller("yaw_gain", desc.yaw_gain))
+        {
+            player_actor_.set_gun(Gun{desc});
+        }
+
+        auto yaw_settle_time = BoundedUint32<0u, 1'000u>{static_cast<std::uint32_t>(
+            std::chrono::duration_cast<std::chrono::milliseconds>(desc.yaw_settle_time).count())};
+        if (create_debug_controller("yaw_settle_time", yaw_settle_time))
+        {
+            desc.yaw_settle_time = std::chrono::milliseconds{yaw_settle_time};
+            player_actor_.set_gun(Gun{desc});
+        }
+
+        if (create_debug_controller("pitch_gain", desc.pitch_gain))
+        {
+            player_actor_.set_gun(Gun{desc});
+        }
+
+        auto pitch_settle_time = BoundedUint32<0u, 1'000u>{static_cast<std::uint32_t>(
+            std::chrono::duration_cast<std::chrono::milliseconds>(desc.pitch_settle_time).count())};
+        if (create_debug_controller("pitch_settle_time", pitch_settle_time))
+        {
+            desc.pitch_settle_time = std::chrono::milliseconds{pitch_settle_time};
+            player_actor_.set_gun(Gun{desc});
+        }
+
         ::ImGui::PopID();
     }
 

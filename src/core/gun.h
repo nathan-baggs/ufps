@@ -9,6 +9,7 @@
 #include "events/input_map.h"
 #include "maths/ray.h"
 #include "maths/spring.h"
+#include "maths/transform.h"
 
 namespace ufps
 {
@@ -20,6 +21,10 @@ class Gun
     {
         Duration fire_rate;
         BoundedFloat<0.0f, 1.0f> shot_recoil;
+        BoundedFloat<0.0f, 2.0f> yaw_gain;
+        Duration yaw_settle_time;
+        BoundedFloat<0.0f, 2.0f> pitch_gain;
+        Duration pitch_settle_time;
     };
 
     struct UpdateResult
@@ -36,12 +41,18 @@ class Gun
     auto description() const -> Description;
 
   private:
+    Transform rest_transform_;
+    bool rest_transform_set_;
     Duration shoot_timer_;
     Duration fire_rate_;
     BoundedFloat<0.0f, 1.0f> shot_recoil_;
     Spring recoil_spring_;
-    Spring turn_spring_;
-    Spring bob_spring_;
+    Spring yaw_spring_;
+    BoundedFloat<0.0f, 2.0f> yaw_gain_;
+    Duration yaw_settle_time_;
+    Spring pitch_spring_;
+    BoundedFloat<0.0f, 2.0f> pitch_gain_;
+    Duration pitch_settle_time_;
     float recoil_target_;
 };
 

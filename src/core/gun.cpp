@@ -10,22 +10,45 @@
 #include "events/input_map.h"
 #include "maths/spring.h"
 
+namespace
+{
+
+constexpr auto duration_to_angular_frequency(ufps::Duration duration) -> float
+{
+    constexpr static auto settling_constant = 5.8339f;
+    return settling_constant / std::chrono::duration_cast<std::chrono::duration<float>>(duration).count();
+}
+
+}
+
 namespace ufps
 {
 
 Gun::Gun(Description description)
-    : shoot_timer_{}
+    : rest_transform_{}
+    , rest_transform_set_{false}
+    , shoot_timer_{}
     , fire_rate_{description.fire_rate}
     , shot_recoil_{description.shot_recoil}
     , recoil_spring_{0.0f, 0.0f, 0.0f, 2.0f * std::numbers::pi_v<float>}
-    , turn_spring_{0.0f, 0.0f, 0.0f, 4.0f * std::numbers::pi_v<float>}
-    , bob_spring_{0.0f, 0.0f, 0.0f, 4.0f * std::numbers::pi_v<float>, 0.5f}
+    , yaw_spring_{0.0f, 0.0f, 0.0f, duration_to_angular_frequency(description.yaw_settle_time)}
+    , yaw_gain_{description.yaw_gain}
+    , yaw_settle_time_{description.yaw_settle_time}
+    , pitch_spring_{0.0f, 0.0f, 0.0f, duration_to_angular_frequency(description.pitch_settle_time)}
+    , pitch_gain_{description.pitch_gain}
+    , pitch_settle_time_{description.pitch_settle_time}
     , recoil_target_{}
 {
 }
 
 auto Gun::update(Duration delta, Entity &entity, const InputMap &input_map, const Camera &camera) -> UpdateResult
 {
+    if (!rest_transform_set_)
+    {
+        rest_transform_ = entity.local_transform();
+        rest_transform_set_ = true;
+    }
+
     auto result = UpdateResult{};
 
     const auto &[am] = services<AudioManager>();
@@ -64,25 +87,13 @@ auto Gun::update(Duration delta, Entity &entity, const InputMap &input_map, cons
         result.final_mouse_y_delta -= compensation;
     }
 
-    const auto gun_pos = turn_spring_.update(delta);
+    yaw_spring_.add_impulse(input_map.delta_x * yaw_gain_);
+    const auto yaw_offset = yaw_spring_.update(delta);
 
-    static auto gun_roll = float{};
-    const auto roll_delta = gun_pos - gun_roll;
-    gun_roll = gun_pos;
+    pitch_spring_.add_impulse(input_map.delta_y * pitch_gain_);
+    const auto pitch_offset = pitch_spring_.update(delta);
 
-    static auto gun_pitch = float{};
-    const auto pitch_delta = result.final_recoil - gun_pitch;
-    gun_pitch = result.final_recoil;
-
-    const auto bob_amount = bob_spring_.update(delta);
-
-    static auto bob = float{};
-    const auto bob_delta = bob_amount - bob;
-    bob = bob_amount;
-
-    turn_spring_.add_impulse(input_map.delta_x * 0.05f);
-    auto gun_transform = entity.local_transform() * Transform{{}, {1.0f}, Quaternion(0.0f, -pitch_delta, -roll_delta)};
-    gun_transform.position.y += bob_delta;
+    auto gun_transform = rest_transform_ * Transform{{}, {1.0f}, Quaternion(0.0f, -pitch_offset, yaw_offset)};
     entity.set_transform(gun_transform);
 
     return result;
@@ -90,6 +101,12 @@ auto Gun::update(Duration delta, Entity &entity, const InputMap &input_map, cons
 
 auto Gun::description() const -> Description
 {
-    return {.fire_rate = fire_rate_, .shot_recoil = shot_recoil_};
+    return {
+        .fire_rate = fire_rate_,
+        .shot_recoil = shot_recoil_,
+        .yaw_gain = yaw_gain_,
+        .yaw_settle_time = yaw_settle_time_,
+        .pitch_gain = pitch_gain_,
+        .pitch_settle_time = pitch_settle_time_};
 }
 }
