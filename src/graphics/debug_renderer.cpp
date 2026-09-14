@@ -79,20 +79,23 @@ auto screen_ray(const ufps::MouseButtonEvent &evt, const ufps::Window &window, c
 }
 
 template <float Min, float Max>
-auto create_debug_controller(const std::string &label, ufps::BoundedFloat<Min, Max> &value) -> void
+auto create_debug_controller(const std::string &label, ufps::BoundedFloat<Min, Max> &value) -> bool
 {
-    ::ImGui::SliderFloat(label.c_str(), &value, Min, Max);
+    return ::ImGui::SliderFloat(label.c_str(), &value, Min, Max);
 }
 
 template <std::uint32_t Min, std::uint32_t Max>
-auto create_debug_controller(const std::string &label, ufps::BoundedUint32<Min, Max> &value) -> void
+auto create_debug_controller(const std::string &label, ufps::BoundedUint32<Min, Max> &value) -> bool
 {
     auto v = static_cast<int>(*value);
 
     if (::ImGui::SliderInt(label.c_str(), &v, Min, Max))
     {
         value = static_cast<std::uint32_t>(v);
+        return true;
     }
+
+    return false;
 }
 
 auto create_debug_controller(const std::string &label, ufps::Colour &value) -> void
@@ -1415,11 +1418,16 @@ auto DebugRenderer::draw_player_info() -> void
         auto fire_rate = BoundedUint32<0u, 10'000u>{
             static_cast<std::uint32_t>(std::chrono::duration_cast<std::chrono::milliseconds>(desc.fire_rate).count())};
 
-        create_debug_controller("fire_rate", fire_rate);
+        if (create_debug_controller("fire_rate", fire_rate))
+        {
+            desc.fire_rate = std::chrono::milliseconds{fire_rate};
+            player_actor_.set_gun(Gun{desc});
+        }
 
-        desc.fire_rate = std::chrono::milliseconds{fire_rate};
-
-        player_actor_.set_gun(Gun{desc});
+        if (create_debug_controller("shot_recoil", desc.shot_recoil))
+        {
+            player_actor_.set_gun(Gun{desc});
+        }
 
         ::ImGui::PopID();
     }

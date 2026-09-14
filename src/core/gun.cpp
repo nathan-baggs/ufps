@@ -16,6 +16,7 @@ namespace ufps
 Gun::Gun(Description description)
     : shoot_timer_{}
     , fire_rate_{description.fire_rate}
+    , shot_recoil_{description.shot_recoil}
     , recoil_spring_{0.0f, 0.0f, 0.0f, 2.0f * std::numbers::pi_v<float>}
     , turn_spring_{0.0f, 0.0f, 0.0f, 4.0f * std::numbers::pi_v<float>}
     , bob_spring_{0.0f, 0.0f, 0.0f, 4.0f * std::numbers::pi_v<float>, 0.5f}
@@ -36,7 +37,7 @@ auto Gun::update(Duration delta, Entity &entity, const InputMap &input_map, cons
         if (shoot_timer_ >= fire_rate_)
         {
             shoot_timer_ = {};
-            recoil_target_ += 0.02f;
+            recoil_target_ += shot_recoil_;
 
             am.play("Specter Bullet.wav");
 
@@ -89,6 +90,6 @@ auto Gun::update(Duration delta, Entity &entity, const InputMap &input_map, cons
 
 auto Gun::description() const -> Description
 {
-    return {.fire_rate = fire_rate_};
+    return {.fire_rate = fire_rate_, .shot_recoil = shot_recoil_};
 }
 }

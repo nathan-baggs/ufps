@@ -3,3 +3,4 @@ Description:
     DurationValue:
       value: 122000
       units: us
+  shot_recoil: 0.02

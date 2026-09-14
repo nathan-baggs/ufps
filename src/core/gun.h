@@ -19,6 +19,7 @@ class Gun
     struct Description
     {
         Duration fire_rate;
+        BoundedFloat<0.0f, 1.0f> shot_recoil;
     };
 
     struct UpdateResult
@@ -37,6 +38,7 @@ class Gun
   private:
     Duration shoot_timer_;
     Duration fire_rate_;
+    BoundedFloat<0.0f, 1.0f> shot_recoil_;
     Spring recoil_spring_;
     Spring turn_spring_;
     Spring bob_spring_;
