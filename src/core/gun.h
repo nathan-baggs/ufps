@@ -46,21 +46,14 @@ class Gun
   private:
     Transform rest_transform_;
     bool rest_transform_set_;
+    Description description_;
+    float recoil_target_;
     Duration shoot_timer_;
     Duration fire_rate_;
-    BoundedFloat<0.0f, 1.0f> shot_recoil_;
     Spring recoil_spring_;
     Spring yaw_spring_;
-    BoundedFloat<0.0f, 2.0f> yaw_gain_;
-    Duration yaw_settle_time_;
     Spring pitch_spring_;
-    BoundedFloat<0.0f, 2.0f> pitch_gain_;
-    Duration pitch_settle_time_;
-    float recoil_target_;
     Spring kick_spring_;
-    BoundedFloat<0.0f, 0.15f> kick_distance_;
-    BoundedFloat<0.0f, 0.2f> kick_pitch_;
-    Duration kick_settle_time_;
 };
 
 }

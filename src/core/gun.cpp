@@ -27,21 +27,14 @@ namespace ufps
 Gun::Gun(Description description)
     : rest_transform_{}
     , rest_transform_set_{false}
+    , description_{description}
+    , recoil_target_{}
     , shoot_timer_{}
     , fire_rate_{description.fire_rate}
-    , shot_recoil_{description.shot_recoil}
     , recoil_spring_{0.0f, 0.0f, 0.0f, 2.0f * std::numbers::pi_v<float>}
     , yaw_spring_{0.0f, 0.0f, 0.0f, duration_to_angular_frequency(description.yaw_settle_time)}
-    , yaw_gain_{description.yaw_gain}
-    , yaw_settle_time_{description.yaw_settle_time}
     , pitch_spring_{0.0f, 0.0f, 0.0f, duration_to_angular_frequency(description.pitch_settle_time)}
-    , pitch_gain_{description.pitch_gain}
-    , pitch_settle_time_{description.pitch_settle_time}
-    , recoil_target_{}
     , kick_spring_{0.0f, 0.0f, 0.0f, duration_to_angular_frequency(description.kick_settle_time)}
-    , kick_distance_{description.kick_distance}
-    , kick_pitch_{description.kick_pitch}
-    , kick_settle_time_{description.kick_settle_time}
 {
 }
 
@@ -66,7 +59,7 @@ auto Gun::update(Duration delta, Entity &entity, const InputMap &input_map, cons
             kick_spring_.add_impulse(1.0f);
 
             shoot_timer_ = {};
-            recoil_target_ += shot_recoil_;
+            recoil_target_ += description_.shot_recoil;
 
             am.play("Specter Bullet.wav");
 
@@ -93,10 +86,10 @@ auto Gun::update(Duration delta, Entity &entity, const InputMap &input_map, cons
         result.final_mouse_y_delta -= compensation;
     }
 
-    yaw_spring_.add_impulse(input_map.delta_x * yaw_gain_);
+    yaw_spring_.add_impulse(input_map.delta_x * description_.yaw_gain);
     const auto yaw_offset = yaw_spring_.update(delta);
 
-    pitch_spring_.add_impulse(input_map.delta_y * pitch_gain_);
+    pitch_spring_.add_impulse(input_map.delta_y * description_.pitch_gain);
     const auto pitch_offset = pitch_spring_.update(delta);
 
     const auto kick_recoil = kick_spring_.update(delta);
@@ -104,9 +97,9 @@ auto Gun::update(Duration delta, Entity &entity, const InputMap &input_map, cons
     auto gun_transform =
         rest_transform_ *
         Transform{
-            {0.0f, 0.0f, kick_distance_ * kick_recoil},
+            {0.0f, 0.0f, description_.kick_distance * kick_recoil},
             {1.0f},
-            Quaternion(0.0f, -pitch_offset, yaw_offset + static_cast<float>(kick_pitch_) * kick_recoil)};
+            Quaternion(0.0f, -pitch_offset, yaw_offset + static_cast<float>(description_.kick_pitch) * kick_recoil)};
     entity.set_transform(gun_transform);
 
     return result;
@@ -114,16 +107,6 @@ auto Gun::update(Duration delta, Entity &entity, const InputMap &input_map, cons
 
 auto Gun::description() const -> Description
 {
-    return {
-        .fire_rate = fire_rate_,
-        .shot_recoil = shot_recoil_,
-        .yaw_gain = yaw_gain_,
-        .yaw_settle_time = yaw_settle_time_,
-        .pitch_gain = pitch_gain_,
-        .pitch_settle_time = pitch_settle_time_,
-        .kick_distance = kick_distance_,
-        .kick_pitch = kick_pitch_,
-        .kick_settle_time = kick_settle_time_,
-    };
+    return description_;
 }
 }
