@@ -156,6 +156,10 @@ constexpr const std::uint8_t scene_config[] = {
 #embed "../../scene.yaml"
 };
 
+constexpr const std::uint8_t gun_config[] = {
+#embed "../../gun.yaml"
+};
+
 template <class T>
 auto to_container(std::span<const std::uint8_t> data) -> T
 {
@@ -177,6 +181,7 @@ EmbeddedResourceLoader::EmbeddedResourceLoader()
         {"blobs\\vertex_data.bin", std::span{vertex_data_bin, sizeof(vertex_data_bin)}},
         {"configs\\model_manifest.yaml", std::span{model_manifest_yaml, sizeof(model_manifest_yaml)}},
         {"configs\\scene.yaml", std::span{scene_config, sizeof(scene_config)}},
+        {"configs\\gun.yaml", std::span{gun_config, sizeof(gun_config)}},
         {"configs\\texture_manifest.yaml", std::span{texture_manifest_yaml, sizeof(texture_manifest_yaml)}},
         {"shaders\\average_luminance.comp", std::span{average_luminance_comp, sizeof(average_luminance_comp)}},
         {"shaders\\debug_light.frag", std::span{debug_light_frag, sizeof(debug_light_frag)}},
@@ -203,7 +208,8 @@ EmbeddedResourceLoader::EmbeddedResourceLoader()
         {"shaders\\bloom_upsample.vert", std::span{bloom_upsample_vert, sizeof(bloom_upsample_vert)}},
         {"shaders\\chromatic_aberration.frag", std::span{chromatic_aberration_frag, sizeof(chromatic_aberration_frag)}},
         {"shaders\\chromatic_aberration.vert", std::span{chromatic_aberration_vert, sizeof(chromatic_aberration_vert)}},
-        {"sounds\\Ambience_Space Station.wav", std::span{ambience_space_station_wav, sizeof(ambience_space_station_wav)}},
+        {"sounds\\Ambience_Space Station.wav",
+         std::span{ambience_space_station_wav, sizeof(ambience_space_station_wav)}},
         {"sounds\\LowMetal_Mono_01.wav", std::span{low_metal_mono_01_wav, sizeof(low_metal_mono_01_wav)}},
         {"sounds\\RedPlanet.wav", std::span{red_planet_wav, sizeof(red_planet_wav)}},
         {"sounds\\Specter Bullet.wav", std::span{specter_bullet_wav, sizeof(specter_bullet_wav)}},

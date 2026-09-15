@@ -405,7 +405,18 @@ int start()
 
     strm = {};
     auto gun_description_yaml = std::ifstream{"gun.yaml"};
-    strm << gun_description_yaml.rdbuf();
+    if (gun_description_yaml.is_open())
+    {
+        strm << gun_description_yaml.rdbuf();
+    }
+    else
+    {
+        if constexpr (ufps::config::use_embedded_resouce_loader)
+        {
+            auto scene_description_str = resource_loader->load_string("configs\\gun.yaml");
+            strm << scene_description_str;
+        }
+    }
 
     auto gun_description = ufps::yaml::deserialise<ufps::Gun::Description>(strm.str());
     ufps::ensure(gun_description);
