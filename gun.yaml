@@ -1,0 +1,28 @@
+Description:
+  fire_rate:
+    DurationValue:
+      value: 122000
+      units: us
+  shot_recoil: 0.02
+  yaw_gain: 0.049
+  yaw_settle_time:
+    DurationValue:
+      value: 135000
+      units: us
+  pitch_gain: 0.092
+  pitch_settle_time:
+    DurationValue:
+      value: 107000
+      units: us
+  kick_distance: 0.051
+  kick_pitch: 0.034
+  kick_settle_time:
+    DurationValue:
+      value: 593000
+      units: us
+  bob_amplitude: 0.026
+  bob_frequency: 4.856
+  bob_settle_time:
+    DurationValue:
+      value: 474000
+      units: us

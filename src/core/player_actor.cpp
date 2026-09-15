@@ -5,6 +5,7 @@
 #include "core/camera.h"
 #include "core/clock.h"
 #include "core/entity_manager.h"
+#include "core/gun.h"
 #include "core/scene.h"
 #include "core/service_locator.h"
 #include "events/input_map.h"
@@ -12,6 +13,8 @@
 #include "graphics/debug_layer.h"
 #include "maths/quaternion.h"
 #include "maths/ray.h"
+#include "maths/spring.h"
+#include "maths/transform.h"
 #include "maths/vector3.h"
 #include "utils/error.h"
 
@@ -55,23 +58,38 @@ namespace ufps
 
 PlayerActor::PlayerActor(
     EntityHandle entity,
+    EntityHandle gun_handle,
+    Gun gun,
     const InputMap &input_map,
     VirtualCharacterController &character_controller,
     const Scene &scene)
     : Actor{entity}
+    , gun_handle_{gun_handle}
+    , gun_{std::move(gun)}
     , input_map_{input_map}
     , character_controller_{character_controller}
     , scene_{scene}
     , walk_sound_timer_{}
+    , yaw_{std::numbers::pi_v<float>}
+    , pitch_{}
 {
     service<CameraHandle>() = camera_;
+}
+
+auto PlayerActor::gun() const -> const Gun &
+{
+    return gun_;
+}
+
+auto PlayerActor::set_gun(Gun gun) -> void
+{
+    gun_ = std::move(gun);
 }
 
 auto PlayerActor::update(Duration delta) -> void
 {
     const auto &[em, cm, dl, am] = services<EntityManager, CameraManager, DebugLayer, AudioManager>();
 
-    shoot_timer_ += delta;
     walk_sound_timer_ += delta;
 
     if (input_map_.is_any_set<Key::W, Key::A, Key::S, Key::D>())
@@ -79,6 +97,7 @@ auto PlayerActor::update(Duration delta) -> void
         if (walk_sound_timer_ >= 600ms)
         {
             am.play("LowMetal_Mono_01.wav");
+            // bob_spring_.add_impulse(0.01f);
             walk_sound_timer_ = {};
         }
     }
@@ -86,11 +105,13 @@ auto PlayerActor::update(Duration delta) -> void
     const auto camera = cm[camera_];
     contract_assert(camera);
 
-    static auto pitch = 0.0f;
-    static auto yaw = std::numbers::pi_v<float>;
+    auto gun_entity = em[gun_handle_];
+    contract_assert(gun_entity);
 
-    pitch += input_map_.delta_y;
-    yaw -= input_map_.delta_x;
+    const auto &[mouse_delta, final_recoil, bullets_fired] = gun_.update(delta, *gun_entity, input_map_, *camera);
+
+    pitch_ += mouse_delta;
+    yaw_ -= input_map_.delta_x;
 
     character_controller_.set_walk_direction(walk_direction(input_map_, *camera));
 
@@ -99,39 +120,30 @@ auto PlayerActor::update(Duration delta) -> void
 
     const auto &transform = player->transform();
 
-    auto new_transform = Transform{character_controller_.position(), {1.0f}, Quaternion(yaw, pitch, 0.0f)};
+    auto new_transform =
+        Transform{character_controller_.position(), {1.0f}, Quaternion(yaw_, pitch_ - final_recoil, 0.0f)};
     new_transform.position.y = transform.position.y;
 
     player->set_transform(new_transform);
 
-    if (input_map_.mouse_down)
+    for (const auto &bullet_ray : bullets_fired)
     {
-        if (shoot_timer_ >= 100ms)
+        if (const auto intersection = scene_.intersect_ray(bullet_ray); intersection)
         {
-            shoot_timer_ = {};
+            pew_pew_lines_.push_back(
+                std::make_tuple(
+                    intersection->position, intersection->position + (intersection->normal * 0.5f), colours::blue));
 
-            am.play("Specter Bullet.wav");
-
-            const auto bullet_ray = Ray{camera->transform().position, camera->direction() * 100.0f};
-
-            if (const auto intersection = scene_.intersect_ray(bullet_ray); intersection)
-            {
-                pew_pew_lines_.push_back(
-                    std::make_tuple(
-                        intersection->position, intersection->position + (intersection->normal * 0.5f), colours::blue));
-
-                pew_pew_lines_.push_back(
-                    std::make_tuple(
-                        bullet_ray.origin,
-                        bullet_ray.origin + (bullet_ray.direction * intersection->distance),
-                        colours::hot_pink));
-            }
-            else
-            {
-                pew_pew_lines_.push_back(
-                    std::make_tuple(
-                        bullet_ray.origin, bullet_ray.origin + (bullet_ray.direction * 100.0f), colours::red));
-            }
+            pew_pew_lines_.push_back(
+                std::make_tuple(
+                    bullet_ray.origin,
+                    bullet_ray.origin + (bullet_ray.direction * intersection->distance),
+                    colours::hot_pink));
+        }
+        else
+        {
+            pew_pew_lines_.push_back(
+                std::make_tuple(bullet_ray.origin, bullet_ray.origin + (bullet_ray.direction * 100.0f), colours::red));
         }
     }
 

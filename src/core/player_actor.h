@@ -5,9 +5,11 @@
 #include "core/camera_manager.h"
 #include "core/clock.h"
 #include "core/entity_manager.h"
+#include "core/gun.h"
 #include "core/scene.h"
 #include "events/input_map.h"
 #include "events/key.h"
+#include "maths/spring.h"
 #include "physics/virtual_character_controller.h"
 
 namespace ufps
@@ -17,19 +19,27 @@ class PlayerActor : public Actor
   public:
     PlayerActor(
         EntityHandle entity,
+        EntityHandle gun_entity,
+        Gun gun,
         const InputMap &input_map,
         VirtualCharacterController &character_controller,
         const Scene &scene);
     ~PlayerActor() override = default;
 
+    auto gun() const -> const Gun &;
+    auto set_gun(Gun gun) -> void;
+
     auto update(Duration delta) -> void override;
 
   private:
+    EntityHandle gun_handle_;
+    Gun gun_;
     const InputMap &input_map_;
     VirtualCharacterController &character_controller_;
     std::vector<std::tuple<Vector3, Vector3, Colour>> pew_pew_lines_;
     const Scene &scene_;
     Duration walk_sound_timer_;
-    Duration shoot_timer_;
+    float yaw_;
+    float pitch_;
 };
 }

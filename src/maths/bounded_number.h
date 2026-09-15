@@ -5,6 +5,7 @@
 #include <limits>
 #include <type_traits>
 
+#include "core/clock.h"
 #include "utils/error.h"
 
 namespace ufps

@@ -27,6 +27,7 @@
 #include "core/entity.h"
 #include "core/entity_manager.h"
 #include "core/flycam_actor.h"
+#include "core/gun.h"
 #include "core/light_manager.h"
 #include "core/manifest_descriptions.h"
 #include "core/player_actor.h"
@@ -397,13 +398,28 @@ int start()
         ufps::CameraManager,
         ufps::AudioManager>();
 
-    auto renderer = ufps::DebugRenderer{window, *resource_loader};
-    auto debug_mode = false;
-
     auto scene_description = ufps::yaml::deserialise<ufps::Scene::Description>(strm.str());
     ufps::ensure(scene_description);
 
     auto scene = ufps::Scene{std::move(*scene_description)};
+
+    strm = {};
+    auto gun_description_yaml = std::ifstream{"gun.yaml"};
+    if (gun_description_yaml.is_open())
+    {
+        strm << gun_description_yaml.rdbuf();
+    }
+    else
+    {
+        if constexpr (ufps::config::use_embedded_resouce_loader)
+        {
+            auto scene_description_str = resource_loader->load_string("configs\\gun.yaml");
+            strm << scene_description_str;
+        }
+    }
+
+    auto gun_description = ufps::yaml::deserialise<ufps::Gun::Description>(strm.str());
+    ufps::ensure(gun_description);
 
     const auto point_light_handles = lm.handles();
 
@@ -425,11 +441,14 @@ int start()
     pulse_light(alert_light);
     // flicker_light(point_light_handles[2]);
 
+    auto gun = ufps::Gun{std::move(*gun_description)};
+
     const auto entity_handles = em.handles();
     auto player_entity_handle = std::ranges::find_if(entity_handles, [&](auto e) { return em[e]->name() == "player"; });
     ufps::ensure(player_entity_handle != std::ranges::cend(entity_handles), "no player in scene");
 
-    auto player_actor = ufps::PlayerActor{*player_entity_handle, input_map, player_controller, scene};
+    auto player_actor =
+        ufps::PlayerActor{*player_entity_handle, scene.gun(), std::move(gun), input_map, player_controller, scene};
 
     auto flycam_entity_handle = std::ranges::find_if(entity_handles, [&](auto e) { return em[e]->name() == "flycam"; });
     ufps::ensure(flycam_entity_handle != std::ranges::cend(entity_handles), "no flycam in scene");
@@ -442,6 +461,9 @@ int start()
 
     auto delta = ufps::Duration{};
     auto start_time = ufps::Clock::now();
+
+    auto renderer = ufps::DebugRenderer{window, *resource_loader, player_actor};
+    auto debug_mode = false;
 
     while (running)
     {
