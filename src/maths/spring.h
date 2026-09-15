@@ -21,6 +21,8 @@ class Spring
 
     constexpr auto add_impulse(float pos_delta) -> void;
 
+    constexpr auto set_position(float position) -> void;
+
     constexpr auto set_equilibrium_position(float equilibrium) -> void;
 
     constexpr auto update(Duration delta) -> float;
@@ -58,6 +60,11 @@ constexpr Spring::Spring(
 constexpr auto Spring::add_impulse(float pos_delta) -> void
 {
     position_ += pos_delta;
+}
+
+constexpr auto Spring::set_position(float position) -> void
+{
+    position_ = position;
 }
 
 constexpr auto Spring::set_equilibrium_position(float equilibrium) -> void

@@ -7,6 +7,7 @@
 #include "core/entity.h"
 #include "core/scene.h"
 #include "events/input_map.h"
+#include "maths/bounded_number.h"
 #include "maths/ray.h"
 #include "maths/spring.h"
 #include "maths/transform.h"
@@ -28,6 +29,9 @@ class Gun
         BoundedFloat<0.0f, 0.15f> kick_distance;
         BoundedFloat<0.0f, 0.2f> kick_pitch;
         Duration kick_settle_time;
+        BoundedFloat<0.0f, 1.0f> bob_amplitude;
+        BoundedFloat<0.0f, 10.0f> bob_frequency;
+        Duration bob_settle_time;
     };
 
     struct UpdateResult
@@ -54,6 +58,8 @@ class Gun
     Spring yaw_spring_;
     Spring pitch_spring_;
     Spring kick_spring_;
+    Spring bob_reset_;
+    float bob_elapsed_time_;
 };
 
 }

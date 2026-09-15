@@ -9,6 +9,7 @@
 #include "core/service_locator.h"
 #include "events/input_map.h"
 #include "maths/spring.h"
+#include <chrono>
 
 namespace
 {
@@ -35,6 +36,8 @@ Gun::Gun(Description description)
     , yaw_spring_{0.0f, 0.0f, 0.0f, duration_to_angular_frequency(description.yaw_settle_time)}
     , pitch_spring_{0.0f, 0.0f, 0.0f, duration_to_angular_frequency(description.pitch_settle_time)}
     , kick_spring_{0.0f, 0.0f, 0.0f, duration_to_angular_frequency(description.kick_settle_time), 0.5f}
+    , bob_reset_{0.0f, 0.0f, 0.0f, duration_to_angular_frequency(description.bob_settle_time), 0.1f}
+    , bob_elapsed_time_{}
 {
 }
 
@@ -71,6 +74,20 @@ auto Gun::update(Duration delta, Entity &entity, const InputMap &input_map, cons
         recoil_target_ = {};
     }
 
+    auto bob = float{};
+    bob_elapsed_time_ += std::chrono::duration_cast<std::chrono::duration<float>>(delta).count();
+
+    if (input_map.is_any_set<Key::W, Key::A, Key::S, Key::D>())
+    {
+        bob = std::sin(bob_elapsed_time_ * description_.bob_frequency) * description_.bob_amplitude;
+        bob_reset_.set_position(bob);
+    }
+    else
+    {
+        bob_elapsed_time_ = {};
+        bob = bob_reset_.update(delta);
+    }
+
     recoil_spring_.set_equilibrium_position(recoil_target_);
 
     result.final_recoil = recoil_spring_.update(delta);
@@ -96,7 +113,7 @@ auto Gun::update(Duration delta, Entity &entity, const InputMap &input_map, cons
 
     auto gun_transform =
         Transform{
-            {0.0f, 0.0f, description_.kick_distance * kick_recoil},
+            {0.0f, bob, description_.kick_distance * kick_recoil},
             {1.0f},
             Quaternion(yaw_offset, -pitch_offset, 0.0f)} *
         rest_transform_;

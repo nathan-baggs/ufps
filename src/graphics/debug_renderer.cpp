@@ -1473,6 +1473,24 @@ auto DebugRenderer::draw_player_info() -> void
             player_actor_.set_gun(Gun{desc});
         }
 
+        if (create_debug_controller("bob_amplitude", desc.bob_amplitude))
+        {
+            player_actor_.set_gun(Gun{desc});
+        }
+
+        if (create_debug_controller("bob_frequency", desc.bob_frequency))
+        {
+            player_actor_.set_gun(Gun{desc});
+        }
+
+        auto bob_settle_time = BoundedUint32<0u, 1'000u>{static_cast<std::uint32_t>(
+            std::chrono::duration_cast<std::chrono::milliseconds>(desc.bob_settle_time).count())};
+        if (create_debug_controller("bob_settle_time", bob_settle_time))
+        {
+            desc.bob_settle_time = std::chrono::milliseconds{bob_settle_time};
+            player_actor_.set_gun(Gun{desc});
+        }
+
         ::ImGui::PopID();
     }
 
