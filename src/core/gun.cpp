@@ -34,7 +34,7 @@ Gun::Gun(Description description)
     , recoil_spring_{0.0f, 0.0f, 0.0f, 2.0f * std::numbers::pi_v<float>}
     , yaw_spring_{0.0f, 0.0f, 0.0f, duration_to_angular_frequency(description.yaw_settle_time)}
     , pitch_spring_{0.0f, 0.0f, 0.0f, duration_to_angular_frequency(description.pitch_settle_time)}
-    , kick_spring_{0.0f, 0.0f, 0.0f, duration_to_angular_frequency(description.kick_settle_time)}
+    , kick_spring_{0.0f, 0.0f, 0.0f, duration_to_angular_frequency(description.kick_settle_time), 0.5f}
 {
 }
 
@@ -95,11 +95,11 @@ auto Gun::update(Duration delta, Entity &entity, const InputMap &input_map, cons
     const auto kick_recoil = kick_spring_.update(delta);
 
     auto gun_transform =
-        rest_transform_ *
         Transform{
             {0.0f, 0.0f, description_.kick_distance * kick_recoil},
             {1.0f},
-            Quaternion(0.0f, -pitch_offset, yaw_offset + static_cast<float>(description_.kick_pitch) * kick_recoil)};
+            Quaternion(yaw_offset, -pitch_offset, 0.0f)} *
+        rest_transform_;
     entity.set_transform(gun_transform);
 
     return result;
