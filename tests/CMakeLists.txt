@@ -20,6 +20,7 @@ add_executable(unit_tests
   thread_tests.cpp
   vector3_tests.cpp
   yaml_serialiser_tests.cpp
+  quaternion_tests.cpp
 )
 
 target_link_libraries(unit_tests gmock_main ufpslib)
