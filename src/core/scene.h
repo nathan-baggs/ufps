@@ -1,6 +1,8 @@
 #pragma once
 
+#include <algorithm>
 #include <deque>
+#include <ios>
 #include <optional>
 #include <ranges>
 #include <type_traits>
@@ -427,7 +429,26 @@ constexpr auto Scene::add_decal(const Transform &transform, std::string_view dec
 {
     const auto &tm = service<TextureManager>();
 
-    decals_.push_back({transform, tm.bindless_handle(decal_texture)});
+    const auto mat = Matrix4{transform};
+    const auto pos = transform.position;
+    const auto normal = Vector3::normalise({mat[4], mat[5], mat[6]});
+
+    if (std::ranges::none_of(
+            decals_,
+            [pos, normal](const auto &mat)
+            {
+                const auto decal_pos = Vector3{mat[12], mat[13], mat[14]};
+                const auto decal_normal = Vector3::normalise({mat[4], mat[5], mat[6]});
+
+                const auto distance = Vector3::distance(pos, decal_pos);
+                const auto normal_alignment = Vector3::dot(normal, decal_normal);
+
+                return distance < 0.01f && normal_alignment > 0.95f;
+            },
+            &Decal::transform))
+    {
+        decals_.push_back({transform, tm.bindless_handle(decal_texture)});
+    }
 }
 
 }
