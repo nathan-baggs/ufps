@@ -48,6 +48,12 @@ void main()
     vec2 decal_uv = vec2(decal_frag_pos.x, decal_frag_pos.z);
     decal_uv = (decal_uv + vec2(1.0f)) / vec2(2.0f);
 
+    vec4 decal_colour = texture(u_decal_texture, decal_uv);
+    if (decal_colour.a < 0.001f)
+    {
+        discard;
+    }
+
     out_colour = texture(u_decal_texture, decal_uv);
     out_normal = vec4(0.0f);
     out_pos = vec4(0.0f);
