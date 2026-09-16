@@ -23,7 +23,7 @@ class PlayerActor : public Actor
         Gun gun,
         const InputMap &input_map,
         VirtualCharacterController &character_controller,
-        const Scene &scene);
+        Scene &scene);
     ~PlayerActor() override = default;
 
     auto gun() const -> const Gun &;
@@ -37,7 +37,7 @@ class PlayerActor : public Actor
     const InputMap &input_map_;
     VirtualCharacterController &character_controller_;
     std::vector<std::tuple<Vector3, Vector3, Colour>> pew_pew_lines_;
-    const Scene &scene_;
+    Scene &scene_;
     Duration walk_sound_timer_;
     float yaw_;
     float pitch_;

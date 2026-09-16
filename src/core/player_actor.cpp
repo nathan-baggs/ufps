@@ -62,7 +62,7 @@ PlayerActor::PlayerActor(
     Gun gun,
     const InputMap &input_map,
     VirtualCharacterController &character_controller,
-    const Scene &scene)
+    Scene &scene)
     : Actor{entity}
     , gun_handle_{gun_handle}
     , gun_{std::move(gun)}
@@ -97,7 +97,6 @@ auto PlayerActor::update(Duration delta) -> void
         if (walk_sound_timer_ >= 600ms)
         {
             am.play("LowMetal_Mono_01.wav");
-            // bob_spring_.add_impulse(0.01f);
             walk_sound_timer_ = {};
         }
     }
@@ -139,6 +138,9 @@ auto PlayerActor::update(Duration delta) -> void
                     bullet_ray.origin,
                     bullet_ray.origin + (bullet_ray.direction * intersection->distance),
                     colours::hot_pink));
+
+            scene_.add_decal(
+                {intersection->position, {0.05f, 0.01f, 0.05f}, {{0.0f, 1.0f, 0.0f}, intersection->normal}});
         }
         else
         {
