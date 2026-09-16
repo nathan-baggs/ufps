@@ -14,6 +14,7 @@
 #include "core/service_locator.h"
 #include "core/sparse_set.h"
 #include "graphics/colour.h"
+#include "graphics/decal.h"
 #include "graphics/mesh_manager.h"
 #include "graphics/point_light.h"
 #include "maths/bounded_number.h"
@@ -145,6 +146,10 @@ class Scene
 
     constexpr auto remove(EntityHandle handle) -> void;
 
+    constexpr auto decals() const -> std::span<const Decal>;
+
+    constexpr auto add_decal(const Transform &transform) -> void;
+
   private:
     std::vector<EntityHandle> entities_;
     EntityHandle gun_;
@@ -157,6 +162,7 @@ class Scene
     VignetteOptions vignette_options_;
     FilmGrainOptions film_grain_options_;
     BloomOptions bloom_options_;
+    std::vector<Decal> decals_;
 };
 
 constexpr Scene::Scene(const Description &description)
@@ -409,6 +415,16 @@ constexpr auto Scene::remove(EntityHandle handle) -> void
     expect(iter != std::ranges::cend(entities_), "entity not found");
 
     entities_.erase(iter);
+}
+
+constexpr auto Scene::decals() const -> std::span<const Decal>
+{
+    return decals_;
+}
+
+constexpr auto Scene::add_decal(const Transform &transform) -> void
+{
+    decals_.push_back({.transform = transform});
 }
 
 }
