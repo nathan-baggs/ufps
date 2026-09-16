@@ -1,4 +1,5 @@
 #version 460 core
+#extension GL_ARB_bindless_texture : require
 
 struct VertexData
 {
@@ -21,11 +22,32 @@ layout(binding = 1, std430) readonly buffer camera {
 };
 
 layout(location = 0) uniform mat4 model;
+layout(location = 1) uniform mat4 inv_model;
+layout(bindless_sampler, location = 2) uniform sampler2D u_position_texture;
 
 layout(location = 0) out vec4 out_colour;
+layout(location = 1) out vec4 out_normal;
+layout(location = 2) out vec4 out_pos;
+layout(location = 3) out vec4 out_specular;
+layout(location = 4) out vec4 out_emissive;
 
 void main()
 {
+    vec3 world_frag_pos = texelFetch(u_position_texture, ivec2(gl_FragCoord.xy), 0).xyz;
+    vec3 decal_frag_pos = (inv_model * vec4(world_frag_pos, 1.0f)).xyz;
+
+    if (
+        clamp(decal_frag_pos.x, -1.0f, 1.0f) != decal_frag_pos.x ||
+        clamp(decal_frag_pos.y, -1.0f, 1.0f) != decal_frag_pos.y ||
+        clamp(decal_frag_pos.z, -1.0f, 1.0f) != decal_frag_pos.z)
+    {
+        discard;
+    }
+
     out_colour = vec4(1.0, 0.0, 0.0, 1.0);
+    out_normal = vec4(0.0f);
+    out_pos = vec4(0.0f);
+    out_specular = vec4(0.0f);
+    out_emissive = vec4(0.0f);
 }
 

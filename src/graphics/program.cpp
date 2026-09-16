@@ -19,8 +19,9 @@ auto check_state(::GLuint handle, ::GLenum state, std::string_view name, std::st
     if (res != GL_TRUE)
     {
         char log[512]{};
-        ::glGetProgramInfoLog(handle, sizeof(log), nullptr, log);
-        throw ufps::Exception("{}: {} {}", message, name, log);
+        auto length = ::GLsizei{};
+        ::glGetProgramInfoLog(handle, sizeof(log), &length, log);
+        throw ufps::Exception("{}: {} {} ({})", message, name, log, length);
     }
 }
 

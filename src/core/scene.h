@@ -424,7 +424,7 @@ constexpr auto Scene::decals() const -> std::span<const Decal>
 
 constexpr auto Scene::add_decal(const Transform &transform) -> void
 {
-    decals_.push_back({.transform = transform});
+    decals_.push_back({transform});
 }
 
 }

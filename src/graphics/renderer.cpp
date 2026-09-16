@@ -32,6 +32,7 @@
 #include "graphics/texture_data.h"
 #include "graphics/texture_manager.h"
 #include "graphics/utils.h"
+#include "maths/matrix4.h"
 #include "resources/resource_loader.h"
 #include "third_party/opengl/glext.h"
 #include "utils/auto_release.h"
@@ -560,6 +561,9 @@ auto Renderer::execute_gbuffer_pass(Scene &scene) -> void
 
 auto Renderer::execute_decal_pass(Scene &scene) -> void
 {
+    gbuffer_rt_.fb.bind();
+    ::glDepthRange(0.1f, 1.0f);
+
     const auto &[mm] = services<MeshManager>();
 
     decal_program_.bind();
@@ -579,9 +583,10 @@ auto Renderer::execute_decal_pass(Scene &scene) -> void
     const auto cube_indices_offset_bytes = cube_parts.front().index_offset * sizeof(std::uint32_t);
     const auto cube_vertex_offset = cube_parts.front().vertex_offset;
 
-    for (const auto &[transform] : scene.decals())
+    for (const auto &[transform, inv_transform] : scene.decals())
     {
-        decal_program_.set_uniforms(Matrix4{transform});
+        decal_program_.set_uniforms(
+            Matrix4{transform}, Matrix4{inv_transform}, gbuffer_rt_.colour_texture_bindless_handle_2);
 
         ::glDrawElementsBaseVertex(
             GL_TRIANGLES,
