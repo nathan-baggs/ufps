@@ -565,6 +565,7 @@ auto Renderer::execute_decal_pass(Scene &scene) -> void
     ::glDepthRange(0.1f, 1.0f);
     ::glEnable(GL_BLEND);
     ::glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    ::glDepthMask(GL_FALSE);
 
     const auto &[mm] = services<MeshManager>();
 
@@ -599,6 +600,7 @@ auto Renderer::execute_decal_pass(Scene &scene) -> void
     }
 
     ::glDisable(GL_BLEND);
+    ::glDepthMask(GL_TRUE);
     decal_program_.unbind();
 }
 
