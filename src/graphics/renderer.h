@@ -82,6 +82,7 @@ class Renderer
     Program bloom_downsample_program_;
     Program bloom_upsample_program_;
     Program bloom_mix_program_;
+    Program decal_program_;
     Sampler ssao_noise_sampler_;
     std::uint64_t ssao_noise_texture_bindless_handle_;
     Sampler fb_sampler_;
@@ -101,6 +102,7 @@ class Renderer
 
   private:
     auto execute_gbuffer_pass(Scene &scene) -> void;
+    auto execute_decal_pass(Scene &scene) -> void;
     auto execute_gun_gbuffer_pass(Scene &scene) -> void;
     auto execute_lighting_pass(Scene &scene) -> void;
     auto execute_gun_lighting_pass(Scene &scene) -> void;

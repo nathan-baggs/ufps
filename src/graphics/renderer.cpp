@@ -261,6 +261,13 @@ Renderer::Renderer(
           "shaders\\bloom_mix.frag",
           "bloom_mix_fragment_shader",
           "bloom_mix_program")}
+    , decal_program_{create_program(
+          resource_loader,
+          "shaders\\decal.vert",
+          "decal_vertex_shader",
+          "shaders\\decal.frag",
+          "decal_fragment_shader",
+          "decal_program")}
     , ssao_noise_sampler_{FilterType::NEAREST, FilterType::NEAREST, WrapMode::REPEAT, WrapMode::REPEAT, "ssao_noise_sampler"}
     , ssao_noise_texture_bindless_handle_{create_ssao_noise_texture( ssao_noise_sampler_)}
     , fb_sampler_{FilterType::LINEAR, FilterType::LINEAR, WrapMode::CLAMP_TO_EDGE, WrapMode::CLAMP_TO_EDGE, "fb_sampler"}
@@ -379,6 +386,7 @@ auto Renderer::render(Scene &scene) -> void
     camera_buffer_.write(camera->data_view(), 0zu);
 
     execute_gbuffer_pass(scene);
+    execute_decal_pass(scene);
     execute_lighting_pass(scene);
 
     if (enable_post_processing_)
@@ -548,6 +556,42 @@ auto Renderer::execute_gbuffer_pass(Scene &scene) -> void
         reinterpret_cast<const void *>(command_buffer_.offset_bytes()),
         command_count,
         0);
+}
+
+auto Renderer::execute_decal_pass(Scene &scene) -> void
+{
+    const auto &[mm] = services<MeshManager>();
+
+    decal_program_.bind();
+
+    const auto [vertex_buffer_handle, index_buffer_handle] = mm.native_handle();
+    ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, vertex_buffer_handle);
+    ::glBindBufferRange(
+        GL_SHADER_STORAGE_BUFFER,
+        1,
+        camera_buffer_.native_handle(),
+        camera_buffer_.frame_offset_bytes(),
+        sizeof(CameraData));
+    ::glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffer_handle);
+
+    const auto cube_parts = mm.mesh("cube");
+    ensure(cube_parts.size() == 1u, "cube mesh should have exactly 1 part");
+    const auto cube_indices_offset_bytes = cube_parts.front().index_offset * sizeof(std::uint32_t);
+    const auto cube_vertex_offset = cube_parts.front().vertex_offset;
+
+    for (const auto &[transform] : scene.decals())
+    {
+        decal_program_.set_uniforms(Matrix4{transform});
+
+        ::glDrawElementsBaseVertex(
+            GL_TRIANGLES,
+            36,
+            GL_UNSIGNED_INT,
+            reinterpret_cast<const void *>(cube_indices_offset_bytes),
+            cube_vertex_offset);
+    }
+
+    decal_program_.unbind();
 }
 
 auto Renderer::execute_gun_gbuffer_pass(Scene &scene) -> void
