@@ -563,6 +563,8 @@ auto Renderer::execute_decal_pass(Scene &scene) -> void
 {
     gbuffer_rt_.fb.bind();
     ::glDepthRange(0.1f, 1.0f);
+    ::glEnable(GL_BLEND);
+    ::glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     const auto &[mm] = services<MeshManager>();
 
@@ -583,10 +585,10 @@ auto Renderer::execute_decal_pass(Scene &scene) -> void
     const auto cube_indices_offset_bytes = cube_parts.front().index_offset * sizeof(std::uint32_t);
     const auto cube_vertex_offset = cube_parts.front().vertex_offset;
 
-    for (const auto &[transform, inv_transform] : scene.decals())
+    for (const auto &[transform, inv_transform, decal_handle] : scene.decals())
     {
         decal_program_.set_uniforms(
-            Matrix4{transform}, Matrix4{inv_transform}, gbuffer_rt_.colour_texture_bindless_handle_2);
+            Matrix4{transform}, Matrix4{inv_transform}, gbuffer_rt_.colour_texture_bindless_handle_2, decal_handle);
 
         ::glDrawElementsBaseVertex(
             GL_TRIANGLES,
@@ -596,6 +598,7 @@ auto Renderer::execute_decal_pass(Scene &scene) -> void
             cube_vertex_offset);
     }
 
+    ::glDisable(GL_BLEND);
     decal_program_.unbind();
 }
 

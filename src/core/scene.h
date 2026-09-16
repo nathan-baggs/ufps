@@ -17,6 +17,7 @@
 #include "graphics/decal.h"
 #include "graphics/mesh_manager.h"
 #include "graphics/point_light.h"
+#include "graphics/texture_manager.h"
 #include "maths/bounded_number.h"
 #include "maths/matrix4.h"
 #include "maths/ray.h"
@@ -148,7 +149,7 @@ class Scene
 
     constexpr auto decals() const -> std::span<const Decal>;
 
-    constexpr auto add_decal(const Transform &transform) -> void;
+    constexpr auto add_decal(const Transform &transform, std::string_view decal_texture) -> void;
 
   private:
     std::vector<EntityHandle> entities_;
@@ -422,9 +423,11 @@ constexpr auto Scene::decals() const -> std::span<const Decal>
     return decals_;
 }
 
-constexpr auto Scene::add_decal(const Transform &transform) -> void
+constexpr auto Scene::add_decal(const Transform &transform, std::string_view decal_texture) -> void
 {
-    decals_.push_back({transform});
+    const auto &tm = service<TextureManager>();
+
+    decals_.push_back({transform, tm.bindless_handle(decal_texture)});
 }
 
 }

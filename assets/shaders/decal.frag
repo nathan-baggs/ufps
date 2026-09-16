@@ -24,6 +24,7 @@ layout(binding = 1, std430) readonly buffer camera {
 layout(location = 0) uniform mat4 model;
 layout(location = 1) uniform mat4 inv_model;
 layout(bindless_sampler, location = 2) uniform sampler2D u_position_texture;
+layout(bindless_sampler, location = 3) uniform sampler2D u_decal_texture;
 
 layout(location = 0) out vec4 out_colour;
 layout(location = 1) out vec4 out_normal;
@@ -44,7 +45,10 @@ void main()
         discard;
     }
 
-    out_colour = vec4(1.0, 0.0, 0.0, 1.0);
+    vec2 decal_uv = vec2(decal_frag_pos.x, decal_frag_pos.z);
+    decal_uv = (decal_uv + vec2(1.0f)) / vec2(2.0f);
+
+    out_colour = texture(u_decal_texture, decal_uv);
     out_normal = vec4(0.0f);
     out_pos = vec4(0.0f);
     out_specular = vec4(0.0f);

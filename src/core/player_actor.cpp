@@ -140,7 +140,8 @@ auto PlayerActor::update(Duration delta) -> void
                     colours::hot_pink));
 
             scene_.add_decal(
-                {intersection->position, {0.05f, 0.01f, 0.05f}, {{0.0f, 1.0f, 0.0f}, intersection->normal}});
+                {intersection->position, {0.05f, 0.01f, 0.05f}, {{0.0f, 1.0f, 0.0f}, intersection->normal}},
+                "textures\\bullet_hole1.dds");
         }
         else
         {
