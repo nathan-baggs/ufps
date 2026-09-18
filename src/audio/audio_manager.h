@@ -27,7 +27,7 @@ class AudioManager
   public:
     AudioManager(ResourceLoader &resource_loader);
 
-    auto play(std::string_view track_name, PlayMode mode = PlayMode::SINGLE) -> void;
+    auto play(std::string_view track_name, PlayMode mode = PlayMode::SINGLE, float pitch = 1.0f) -> void;
 
   private:
     class VoiceCallback : public ::IXAudio2VoiceCallback
