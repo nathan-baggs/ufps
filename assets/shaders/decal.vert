@@ -20,6 +20,19 @@ layout(binding = 1, std430) readonly buffer camera {
     float pad;
 };
 
+struct Decal
+{
+    mat4 model;
+    mat4 inv_model;
+    uvec2 tex;
+};
+
+layout(binding = 2, std430) readonly buffer decals_buffer {
+    Decal decals[];
+};
+
+layout(location = 0) out flat uint out_instance_id;
+
 vec3 get_position(uint index)
 {
     return vec3(
@@ -28,10 +41,11 @@ vec3 get_position(uint index)
         data[index].position[2]);
 }
 
-layout(location = 0) uniform mat4 model;
-
 void main()
 {
+    out_instance_id = gl_InstanceID;
+
+    mat4 model = decals[gl_InstanceID].model;
     vec4 out_frag_position = model * vec4(get_position(gl_VertexID), 1.0);
     gl_Position = projection * view * out_frag_position;
 }

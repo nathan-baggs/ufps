@@ -20,6 +20,7 @@
 #include "graphics/buffer_writer.h"
 #include "graphics/command_buffer.h"
 #include "graphics/debug_layer.h"
+#include "graphics/decal.h"
 #include "graphics/frame_buffer.h"
 #include "graphics/mesh_manager.h"
 #include "graphics/object_data.h"
@@ -270,6 +271,7 @@ Renderer::Renderer(
           "shaders\\decal.frag",
           "decal_fragment_shader",
           "decal_program")}
+    , decal_buffer_{100zu * sizeof(Decal), "decal_buffer"}
     , ssao_noise_sampler_{FilterType::NEAREST, FilterType::NEAREST, WrapMode::REPEAT, WrapMode::REPEAT, "ssao_noise_sampler"}
     , ssao_noise_texture_bindless_handle_{create_ssao_noise_texture( ssao_noise_sampler_)}
     , fb_sampler_{FilterType::LINEAR, FilterType::LINEAR, WrapMode::CLAMP_TO_EDGE, WrapMode::CLAMP_TO_EDGE, "fb_sampler"}
@@ -568,7 +570,12 @@ auto Renderer::execute_decal_pass(Scene &scene) -> void
 
     const auto &[mm] = services<MeshManager>();
 
-    decal_program_.bind();
+    const auto auto_bind = AutoBind{decal_program_};
+
+    const auto decals = scene.decals();
+
+    auto writer = BufferWriter{decal_buffer_};
+    writer.write(decals);
 
     const auto [vertex_buffer_handle, index_buffer_handle] = mm.native_handle();
     ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, vertex_buffer_handle);
@@ -578,6 +585,12 @@ auto Renderer::execute_decal_pass(Scene &scene) -> void
         camera_buffer_.native_handle(),
         camera_buffer_.frame_offset_bytes(),
         sizeof(CameraData));
+    ::glBindBufferRange(
+        GL_SHADER_STORAGE_BUFFER,
+        2,
+        decal_buffer_.native_handle(),
+        decal_buffer_.frame_offset_bytes(),
+        decal_buffer_.size());
     ::glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffer_handle);
 
     const auto cube_parts = mm.mesh("cube");
@@ -585,21 +598,19 @@ auto Renderer::execute_decal_pass(Scene &scene) -> void
     const auto cube_indices_offset_bytes = cube_parts.front().index_offset * sizeof(std::uint32_t);
     const auto cube_vertex_offset = cube_parts.front().vertex_offset;
 
-    for (const auto &[transform, inv_transform, decal_handle] : scene.decals())
-    {
-        decal_program_.set_uniforms(
-            Matrix4{transform}, Matrix4{inv_transform}, gbuffer_rt_.colour_texture_bindless_handle_2, decal_handle);
+    decal_program_.set_uniforms(gbuffer_rt_.colour_texture_bindless_handle_2);
 
-        ::glDrawElementsBaseVertex(
-            GL_TRIANGLES,
-            36,
-            GL_UNSIGNED_INT,
-            reinterpret_cast<const void *>(cube_indices_offset_bytes),
-            cube_vertex_offset);
-    }
+    ::glDrawElementsInstancedBaseVertex(
+        GL_TRIANGLES,
+        36,
+        GL_UNSIGNED_INT,
+        reinterpret_cast<const void *>(cube_indices_offset_bytes),
+        static_cast<::GLsizei>(std::ranges::size(decals)),
+        cube_vertex_offset);
 
     ::glDepthMask(GL_TRUE);
-    decal_program_.unbind();
+
+    decal_buffer_.advance();
 }
 
 auto Renderer::execute_gun_gbuffer_pass(Scene &scene) -> void

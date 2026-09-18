@@ -21,10 +21,21 @@ layout(binding = 1, std430) readonly buffer camera {
     float pad;
 };
 
-layout(location = 0) uniform mat4 model;
-layout(location = 1) uniform mat4 inv_model;
-layout(bindless_sampler, location = 2) uniform sampler2D u_position_texture;
-layout(bindless_sampler, location = 3) uniform sampler2D u_decal_texture;
+struct Decal
+{
+    mat4 model;
+    mat4 inv_model;
+    uvec2 tex;
+};
+
+layout(binding = 2, std430) readonly buffer decals_buffer {
+    Decal decals[];
+};
+
+
+layout(bindless_sampler, location = 0) uniform sampler2D u_position_texture;
+
+layout(location = 0) in flat uint out_instance_id;
 
 layout(location = 0) out vec4 out_colour;
 layout(location = 1) out vec4 out_normal;
@@ -34,6 +45,8 @@ layout(location = 4) out vec4 out_emissive;
 
 void main()
 {
+    mat4 inv_model = decals[out_instance_id].inv_model;
+
     vec3 world_frag_pos = texelFetch(u_position_texture, ivec2(gl_FragCoord.xy), 0).xyz;
     vec3 decal_frag_pos = (inv_model * vec4(world_frag_pos, 1.0f)).xyz;
 
@@ -48,13 +61,13 @@ void main()
     vec2 decal_uv = vec2(decal_frag_pos.x, decal_frag_pos.z);
     decal_uv = (decal_uv + vec2(1.0f)) / vec2(2.0f);
 
-    vec4 decal_colour = texture(u_decal_texture, decal_uv);
+    vec4 decal_colour = texture(sampler2D(decals[out_instance_id].tex), decal_uv);
     if (decal_colour.a < 0.001f)
     {
         discard;
     }
 
-    out_colour = texture(u_decal_texture, decal_uv);
+    out_colour = decal_colour;
     out_normal = vec4(0.0f);
     out_pos = vec4(0.0f);
     out_specular = vec4(0.0f);

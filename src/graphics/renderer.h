@@ -83,6 +83,7 @@ class Renderer
     Program bloom_upsample_program_;
     Program bloom_mix_program_;
     Program decal_program_;
+    MultiBuffer<PersistentBuffer> decal_buffer_;
     Sampler ssao_noise_sampler_;
     std::uint64_t ssao_noise_texture_bindless_handle_;
     Sampler fb_sampler_;
