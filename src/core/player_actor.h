@@ -36,7 +36,6 @@ class PlayerActor : public Actor
     Gun gun_;
     const InputMap &input_map_;
     VirtualCharacterController &character_controller_;
-    std::vector<std::tuple<Vector3, Vector3, Colour>> pew_pew_lines_;
     Scene &scene_;
     Duration walk_sound_timer_;
     float yaw_;

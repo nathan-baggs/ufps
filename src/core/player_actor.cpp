@@ -10,7 +10,6 @@
 #include "core/service_locator.h"
 #include "events/input_map.h"
 #include "graphics/colour.h"
-#include "graphics/debug_layer.h"
 #include "maths/quaternion.h"
 #include "maths/ray.h"
 #include "maths/spring.h"
@@ -88,7 +87,7 @@ auto PlayerActor::set_gun(Gun gun) -> void
 
 auto PlayerActor::update(Duration delta) -> void
 {
-    const auto &[em, cm, dl, am] = services<EntityManager, CameraManager, DebugLayer, AudioManager>();
+    const auto &[em, cm, am] = services<EntityManager, CameraManager, AudioManager>();
 
     walk_sound_timer_ += delta;
 
@@ -129,30 +128,10 @@ auto PlayerActor::update(Duration delta) -> void
     {
         if (const auto intersection = scene_.intersect_ray(bullet_ray); intersection)
         {
-            pew_pew_lines_.push_back(
-                std::make_tuple(
-                    intersection->position, intersection->position + (intersection->normal * 0.5f), colours::blue));
-
-            pew_pew_lines_.push_back(
-                std::make_tuple(
-                    bullet_ray.origin,
-                    bullet_ray.origin + (bullet_ray.direction * intersection->distance),
-                    colours::hot_pink));
-
             scene_.add_decal(
                 {intersection->position, {0.05f, 0.01f, 0.05f}, {{0.0f, 1.0f, 0.0f}, intersection->normal}},
                 "textures\\bullet_hole1.dds");
         }
-        else
-        {
-            pew_pew_lines_.push_back(
-                std::make_tuple(bullet_ray.origin, bullet_ray.origin + (bullet_ray.direction * 100.0f), colours::red));
-        }
-    }
-
-    for (const auto &[start, end, colour] : pew_pew_lines_)
-    {
-        dl.push_line(start, end, colour, DebugLayerType::DEFAULT);
     }
 }
 }
