@@ -166,6 +166,8 @@ class Scene
     FilmGrainOptions film_grain_options_;
     BloomOptions bloom_options_;
     std::vector<Decal> decals_;
+    std::vector<Decal>::iterator next_decal_;
+    bool decals_full_;
 };
 
 constexpr Scene::Scene(const Description &description)
@@ -180,6 +182,9 @@ constexpr Scene::Scene(const Description &description)
     , vignette_options_{description.vignette_options}
     , film_grain_options_{description.film_grain_options}
     , bloom_options_{description.bloom_options}
+    , decals_{100zu}
+    , next_decal_{std::ranges::begin(decals_)}
+    , decals_full_{false}
 {
     auto &&[em, rem, ps, lm, cm] =
         services<EntityManager, RenderEntityManager, PhysicsSystem, LightManager, CameraManager>();
@@ -422,7 +427,10 @@ constexpr auto Scene::remove(EntityHandle handle) -> void
 
 constexpr auto Scene::decals() const -> std::span<const Decal>
 {
-    return decals_;
+    const auto begin = std::ranges::cbegin(decals_);
+    const auto end = decals_full_ ? std::ranges::cend(decals_) : next_decal_;
+
+    return {begin, end};
 }
 
 constexpr auto Scene::add_decal(const Transform &transform, std::string_view decal_texture) -> void
@@ -447,7 +455,14 @@ constexpr auto Scene::add_decal(const Transform &transform, std::string_view dec
             },
             &Decal::transform))
     {
-        decals_.push_back({transform, tm.bindless_handle(decal_texture)});
+        *next_decal_ = Decal{transform, tm.bindless_handle(decal_texture)};
+        ++next_decal_;
+
+        if (next_decal_ == std::ranges::cend(decals_))
+        {
+            decals_full_ = true;
+            next_decal_ = std::ranges::begin(decals_);
+        }
     }
 }
 
