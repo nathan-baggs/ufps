@@ -17,8 +17,8 @@ Description:
       power: 1.495
   exposure_options:
     ExposureOptions:
-      min_log_luminance: -1.208
-      max_log_luminance: 3.264
+      min_log_luminance: -3
+      max_log_luminance: 1
   fog_options:
     FogOptions:
       colour:
@@ -52,9 +52,9 @@ Description:
       threshold: 0.488
   ambient:
     Colour:
-      r: 0.492163
-      g: 0.47827753
-      b: 0.47827753
+      r: 0.1943574
+      g: 0.1943574
+      b: 0.1943574
   entities:
     - Description:
         name: level
@@ -109,9 +109,9 @@ Description:
           Transform:
             position:
               Vector3:
-                x: -1.9519284
+                x: 0
                 y: 2
-                z: 2.921236
+                z: 0
             scale:
               Vector3:
                 x: 1
@@ -119,10 +119,10 @@ Description:
                 z: 1
             rotation:
               Quaternion:
-                x: 0.002244024
-                y: 0.992037
-                z: -0.0178586
-                w: 0.1246545
+                x: 0
+                y: 1
+                z: 0
+                w: -4.371139e-08
         aabb:
           AABB:
             min:
@@ -171,9 +171,9 @@ Description:
           Transform:
             position:
               Vector3:
-                x: -0.06125992
+                x: -15.891837
                 y: 2
-                z: 2.3654382
+                z: -39.709087
             scale:
               Vector3:
                 x: 1
@@ -181,10 +181,10 @@ Description:
                 z: 1
             rotation:
               Quaternion:
-                x: 0.0014053669
-                y: 0.99859416
-                z: -0.036964897
-                w: 0.037965514
+                x: -0.007366311
+                y: 0.22387527
+                z: -0.0016921344
+                w: -0.9745885
         aabb:
           AABB:
             min:
@@ -1155,7 +1155,7 @@ Description:
         light: ~
     - Description:
         name: north_corridor_0_alert_light
-        emissive_strength: 2.002305
+        emissive_strength: 3.0447443
         transform:
           Transform:
             position:
@@ -1206,7 +1206,7 @@ Description:
               constant_attenuation: 1.027
               linear_attenuation: 1.692
               quadratic_attenuation: 1.319
-              intensity: 2.002305
+              intensity: 3.0447443
     - Description:
         name: level_child_0
         emissive_strength: 1
@@ -1260,7 +1260,7 @@ Description:
               constant_attenuation: 1
               linear_attenuation: 0.313
               quadratic_attenuation: 0.157
-              intensity: 1
+              intensity: 5.215
     - Description:
         name: north_corridor_6_child_1
         emissive_strength: 1
@@ -1314,7 +1314,7 @@ Description:
               constant_attenuation: 1
               linear_attenuation: 0.313
               quadratic_attenuation: 0.157
-              intensity: 0.617
+              intensity: 3.682
     - Description:
         name: player_child_0
         emissive_strength: 1
@@ -1362,19 +1362,19 @@ Description:
             position:
               Vector3:
                 x: -0.3217458
-                y: -0.21345997
+                y: -0.21349321
                 z: 0.7940682
             scale:
               Vector3:
                 x: 0.95807797
-                y: 0.9404042
-                z: 0.94636256
+                y: 0.94040406
+                z: 0.9463623
             rotation:
               Quaternion:
-                x: -0.7140176
+                x: -0.71401757
                 y: 0.037674222
-                z: 0.023861978
-                w: 0.698706
+                z: 0.023861982
+                w: 0.69870603
         aabb:
           AABB:
             min:

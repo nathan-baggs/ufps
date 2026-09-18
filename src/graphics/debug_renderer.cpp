@@ -590,6 +590,7 @@ auto DebugRenderer::draw_scene(Scene &scene, const Camera &camera) -> void
         auto average_luminance = 0.0f;
         ::glGetNamedBufferSubData(
             average_luminance_buffer_.native_handle(), 0, sizeof(average_luminance), &average_luminance);
+        log::debug("avg luminance: {}", average_luminance);
 
         std::uint32_t histogram[256]{};
         ::glGetNamedBufferSubData(luminance_histogram_buffer_.native_handle(), 0, sizeof(histogram), &histogram);
