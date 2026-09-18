@@ -274,7 +274,7 @@ Renderer::Renderer(
     , ssao_noise_texture_bindless_handle_{create_ssao_noise_texture( ssao_noise_sampler_)}
     , fb_sampler_{FilterType::LINEAR, FilterType::LINEAR, WrapMode::CLAMP_TO_EDGE, WrapMode::CLAMP_TO_EDGE, "fb_sampler"}
     , gbuffer_rt_{create_render_target(
-        {TextureFormat::RGBA16F, TextureFormat::RGBA16F, TextureFormat::RGBA32F, TextureFormat::RGB16F, TextureFormat::RGB16F},
+        {TextureFormat::RGBA16F, TextureFormat::RGBA16F, TextureFormat::RGBA32F, TextureFormat::RG16F, TextureFormat::RGB16F},
           window_.render_width(),
           window_.render_height(),
           fb_sampler_,

@@ -24,7 +24,8 @@ auto to_opengl(ufps::TextureFormat format, bool include_size) -> ::GLenum
         case SRGB: return include_size ? GL_SRGB8 : GL_RGB;
         case RGBA: return include_size ? GL_RGBA8 : GL_RGBA;
         case SRGBA: return include_size ? GL_SRGB8_ALPHA8 : GL_RGBA;
-        case R16F: return include_size ? GL_RG16F : GL_RG;
+        case R16F: return include_size ? GL_R16F : GL_R;
+        case RG16F: return include_size ? GL_RG16F : GL_RG;
         case RGB16F: return include_size ? GL_RGB16F : GL_RGB;
         case RGBA16F: return include_size ? GL_RGBA16F : GL_RGBA;
         case RGBA32F: return include_size ? GL_RGBA32F : GL_RGB;
