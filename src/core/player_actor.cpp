@@ -1,5 +1,7 @@
 #include "core/player_actor.h"
 
+#include <numbers>
+
 #include "audio/audio_manager.h"
 #include "core/actor.h"
 #include "core/camera.h"
@@ -11,6 +13,7 @@
 #include "events/input_map.h"
 #include "graphics/colour.h"
 #include "maths/quaternion.h"
+#include "maths/random.h"
 #include "maths/ray.h"
 #include "maths/spring.h"
 #include "maths/transform.h"
@@ -124,13 +127,23 @@ auto PlayerActor::update(Duration delta) -> void
 
     player->set_transform(new_transform);
 
+    static const auto textures = std::array<std::string_view, 4zu>{{
+        "textures\\bullet_hole1.dds",
+        "textures\\bullet_hole2.dds",
+        "textures\\bullet_hole3.dds",
+        "textures\\bullet_hole4.dds",
+    }};
+
     for (const auto &bullet_ray : bullets_fired)
     {
         if (const auto intersection = scene_.intersect_ray(bullet_ray); intersection)
         {
             scene_.add_decal(
-                {intersection->position, {0.05f, 0.01f, 0.05f}, {{0.0f, 1.0f, 0.0f}, intersection->normal}},
-                "textures\\bullet_hole1.dds");
+                {intersection->position,
+                 {0.05f, 0.01f, 0.05f},
+                 Quaternion{{0.0f, 1.0f, 0.0f}, intersection->normal} *
+                     Quaternion{{0.0f, 1.0f, 0.0f}, random::rand_real(0.0f, 2.0f * std::numbers::pi_v<float>)}},
+                random::rand_element(textures));
         }
     }
 }
