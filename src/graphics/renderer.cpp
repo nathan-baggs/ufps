@@ -60,28 +60,29 @@ struct AutoBind
 };
 
 auto create_render_target(
-    std::uint32_t colour_attachment_count,
+    const std::vector<ufps::TextureFormat> colour_formats,
     std::uint32_t width,
     std::uint32_t height,
     ufps::Sampler &sampler,
-    std::string_view name,
-    ufps::TextureFormat format = ufps::TextureFormat::RGBA16F) -> ufps::RenderTarget
+    std::string_view name) -> ufps::RenderTarget
 {
     auto &texture_manager = ufps::service<ufps::TextureManager>();
 
-    const auto colour_attachment_texture_data = ufps::TextureData{
-        .width = width,
-        .height = height,
-        .format = format,
-        .data = std::nullopt,
-        .is_compressed = false,
-    };
+    const auto colour_attachment_count = std::ranges::size(colour_formats);
 
     auto colour_attachements =
         std::views::iota(0u, colour_attachment_count) |
         std::views::transform(
             [&](auto index)
             {
+                const auto colour_attachment_texture_data = ufps::TextureData{
+                    .width = width,
+                    .height = height,
+                    .format = colour_formats[index],
+                    .data = std::nullopt,
+                    .is_compressed = false,
+                };
+
                 return ufps::Texture{
                     colour_attachment_texture_data, std::format("{}_{}_texture", name, index), sampler};
             }) |
@@ -273,46 +274,46 @@ Renderer::Renderer(
     , ssao_noise_texture_bindless_handle_{create_ssao_noise_texture( ssao_noise_sampler_)}
     , fb_sampler_{FilterType::LINEAR, FilterType::LINEAR, WrapMode::CLAMP_TO_EDGE, WrapMode::CLAMP_TO_EDGE, "fb_sampler"}
     , gbuffer_rt_{create_render_target(
-          5u,
+        {TextureFormat::RGBA16F, TextureFormat::RGBA16F, TextureFormat::RGBA32F, TextureFormat::RGB16F, TextureFormat::RGB16F},
           window_.render_width(),
           window_.render_height(),
           fb_sampler_,
           "gbuffer")}
     , light_pass_rt_{create_render_target(
-          1u,
+        {TextureFormat::RGBA16F},
           window_.render_width(),
           window_.render_height(),
           fb_sampler_,
           "light_pass"),}
     , tone_map_rt_{create_render_target(
-          1u,
+        {TextureFormat::RGBA16F},
           window_.render_width(),
           window_.render_height(),
           fb_sampler_,
           "tone_map"),}
     , ssao_rt_{create_render_target(
-          1u,
+        {TextureFormat::R16F},
           window_.render_width() / 2u,
           window_.render_height() / 2u,
           fb_sampler_,
-          "ssao",
-          TextureFormat::R16F),}
+          "ssao"
+          ),}
     , ssao_blur_rt_{create_render_target(
-          1u,
+        {TextureFormat::R16F},
           window_.render_width() / 2u,
           window_.render_height() / 2u,
           fb_sampler_,
-          "ssao_blur",
-          TextureFormat::R16F),}
+          "ssao_blur"
+          ),}
     , chromatic_aberration_rt_{create_render_target(
-          1u,
+        {TextureFormat::RGBA16F},
           window_.render_width(),
           window_.render_height(),
           fb_sampler_,
           "chromatic_aberration"),}
     , bloom_mips_{}
     , bloom_rt_{create_render_target(
-          1u,
+        {TextureFormat::RGBA16F},
           window_.render_width(),
           window_.render_height(),
           fb_sampler_,
@@ -370,7 +371,7 @@ Renderer::Renderer(
     {
         const auto scale = std::pow(0.5, static_cast<float>(i + 1u));
         bloom_mips_.push_back(create_render_target(
-            1u,
+            {TextureFormat::RGB16F},
             window_.render_width() * scale,
             window_.render_height() * scale,
             fb_sampler_,
