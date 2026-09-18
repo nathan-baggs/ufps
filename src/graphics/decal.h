@@ -8,7 +8,7 @@
 namespace ufps
 {
 
-struct Decal
+struct alignas(16) Decal
 {
     constexpr Decal()
         : Decal({}, {})
