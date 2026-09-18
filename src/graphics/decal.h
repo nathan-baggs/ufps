@@ -10,6 +10,11 @@ namespace ufps
 
 struct Decal
 {
+    constexpr Decal()
+        : Decal({}, {})
+    {
+    }
+
     constexpr Decal(const Transform &transform, std::uint64_t decal_handle)
         : transform{transform}
         , inv_transform{Matrix4::invert(transform)}
