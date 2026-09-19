@@ -1,5 +1,7 @@
 #include "core/player_actor.h"
 
+#include <numbers>
+
 #include "audio/audio_manager.h"
 #include "core/actor.h"
 #include "core/camera.h"
@@ -10,8 +12,8 @@
 #include "core/service_locator.h"
 #include "events/input_map.h"
 #include "graphics/colour.h"
-#include "graphics/debug_layer.h"
 #include "maths/quaternion.h"
+#include "maths/random.h"
 #include "maths/ray.h"
 #include "maths/spring.h"
 #include "maths/transform.h"
@@ -62,7 +64,7 @@ PlayerActor::PlayerActor(
     Gun gun,
     const InputMap &input_map,
     VirtualCharacterController &character_controller,
-    const Scene &scene)
+    Scene &scene)
     : Actor{entity}
     , gun_handle_{gun_handle}
     , gun_{std::move(gun)}
@@ -88,7 +90,7 @@ auto PlayerActor::set_gun(Gun gun) -> void
 
 auto PlayerActor::update(Duration delta) -> void
 {
-    const auto &[em, cm, dl, am] = services<EntityManager, CameraManager, DebugLayer, AudioManager>();
+    const auto &[em, cm, am] = services<EntityManager, CameraManager, AudioManager>();
 
     walk_sound_timer_ += delta;
 
@@ -97,7 +99,6 @@ auto PlayerActor::update(Duration delta) -> void
         if (walk_sound_timer_ >= 600ms)
         {
             am.play("LowMetal_Mono_01.wav");
-            // bob_spring_.add_impulse(0.01f);
             walk_sound_timer_ = {};
         }
     }
@@ -126,30 +127,24 @@ auto PlayerActor::update(Duration delta) -> void
 
     player->set_transform(new_transform);
 
+    static const auto textures = std::array<std::string_view, 4zu>{{
+        "textures\\bullet_hole1.dds",
+        "textures\\bullet_hole2.dds",
+        "textures\\bullet_hole3.dds",
+        "textures\\bullet_hole4.dds",
+    }};
+
     for (const auto &bullet_ray : bullets_fired)
     {
         if (const auto intersection = scene_.intersect_ray(bullet_ray); intersection)
         {
-            pew_pew_lines_.push_back(
-                std::make_tuple(
-                    intersection->position, intersection->position + (intersection->normal * 0.5f), colours::blue));
-
-            pew_pew_lines_.push_back(
-                std::make_tuple(
-                    bullet_ray.origin,
-                    bullet_ray.origin + (bullet_ray.direction * intersection->distance),
-                    colours::hot_pink));
+            scene_.add_decal(
+                {intersection->position,
+                 {0.05f, 0.01f, 0.05f},
+                 Quaternion{{0.0f, 1.0f, 0.0f}, intersection->normal} *
+                     Quaternion{{0.0f, 1.0f, 0.0f}, random::rand_real(0.0f, 2.0f * std::numbers::pi_v<float>)}},
+                random::rand_element(textures));
         }
-        else
-        {
-            pew_pew_lines_.push_back(
-                std::make_tuple(bullet_ray.origin, bullet_ray.origin + (bullet_ray.direction * 100.0f), colours::red));
-        }
-    }
-
-    for (const auto &[start, end, colour] : pew_pew_lines_)
-    {
-        dl.push_line(start, end, colour, DebugLayerType::DEFAULT);
     }
 }
 }

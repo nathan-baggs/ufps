@@ -8,6 +8,7 @@
 #include "core/scene.h"
 #include "core/service_locator.h"
 #include "events/input_map.h"
+#include "maths/random.h"
 #include "maths/spring.h"
 #include <chrono>
 
@@ -64,7 +65,7 @@ auto Gun::update(Duration delta, Entity &entity, const InputMap &input_map, cons
             shoot_timer_ = {};
             recoil_target_ += description_.shot_recoil;
 
-            am.play("Specter Bullet.wav");
+            am.play("Specter Bullet.wav", PlayMode::SINGLE, random::rand_real(1.0f, 1.4f));
 
             result.bullets_fired.push_back({camera.transform().position, camera.direction() * 100.0f});
         }

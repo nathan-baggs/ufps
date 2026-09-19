@@ -1,6 +1,8 @@
 #pragma once
 
+#include <algorithm>
 #include <deque>
+#include <ios>
 #include <optional>
 #include <ranges>
 #include <type_traits>
@@ -14,8 +16,10 @@
 #include "core/service_locator.h"
 #include "core/sparse_set.h"
 #include "graphics/colour.h"
+#include "graphics/decal.h"
 #include "graphics/mesh_manager.h"
 #include "graphics/point_light.h"
+#include "graphics/texture_manager.h"
 #include "maths/bounded_number.h"
 #include "maths/matrix4.h"
 #include "maths/ray.h"
@@ -145,6 +149,10 @@ class Scene
 
     constexpr auto remove(EntityHandle handle) -> void;
 
+    constexpr auto decals() const -> std::span<const Decal>;
+
+    constexpr auto add_decal(const Transform &transform, std::string_view decal_texture) -> void;
+
   private:
     std::vector<EntityHandle> entities_;
     EntityHandle gun_;
@@ -157,6 +165,9 @@ class Scene
     VignetteOptions vignette_options_;
     FilmGrainOptions film_grain_options_;
     BloomOptions bloom_options_;
+    std::vector<Decal> decals_;
+    std::vector<Decal>::iterator next_decal_;
+    bool decals_full_;
 };
 
 constexpr Scene::Scene(const Description &description)
@@ -171,6 +182,9 @@ constexpr Scene::Scene(const Description &description)
     , vignette_options_{description.vignette_options}
     , film_grain_options_{description.film_grain_options}
     , bloom_options_{description.bloom_options}
+    , decals_{100zu}
+    , next_decal_{std::ranges::begin(decals_)}
+    , decals_full_{false}
 {
     auto &&[em, rem, ps, lm, cm] =
         services<EntityManager, RenderEntityManager, PhysicsSystem, LightManager, CameraManager>();
@@ -409,6 +423,47 @@ constexpr auto Scene::remove(EntityHandle handle) -> void
     expect(iter != std::ranges::cend(entities_), "entity not found");
 
     entities_.erase(iter);
+}
+
+constexpr auto Scene::decals() const -> std::span<const Decal>
+{
+    const auto begin = std::ranges::cbegin(decals_);
+    const auto end = decals_full_ ? std::ranges::cend(decals_) : next_decal_;
+
+    return {begin, end};
+}
+
+constexpr auto Scene::add_decal(const Transform &transform, std::string_view decal_texture) -> void
+{
+    const auto &tm = service<TextureManager>();
+
+    const auto mat = Matrix4{transform};
+    const auto pos = transform.position;
+    const auto normal = Vector3::normalise({mat[4], mat[5], mat[6]});
+
+    if (std::ranges::none_of(
+            decals_,
+            [pos, normal](const auto &mat)
+            {
+                const auto decal_pos = Vector3{mat[12], mat[13], mat[14]};
+                const auto decal_normal = Vector3::normalise({mat[4], mat[5], mat[6]});
+
+                const auto distance = Vector3::distance(pos, decal_pos);
+                const auto normal_alignment = Vector3::dot(normal, decal_normal);
+
+                return distance < 0.01f && normal_alignment > 0.95f;
+            },
+            &Decal::transform))
+    {
+        *next_decal_ = Decal{transform, tm.bindless_handle(decal_texture)};
+        ++next_decal_;
+
+        if (next_decal_ == std::ranges::cend(decals_))
+        {
+            decals_full_ = true;
+            next_decal_ = std::ranges::begin(decals_);
+        }
+    }
 }
 
 }

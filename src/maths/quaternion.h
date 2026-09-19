@@ -1,5 +1,6 @@
 #pragma once
 
+#include <contracts>
 #include <format>
 #include <string>
 
@@ -8,49 +9,22 @@
 namespace ufps
 {
 
-namespace impl
-{
-
-}
-
 class Quaternion
 {
   public:
-    constexpr Quaternion()
-        : Quaternion(0.0f, 0.0f, 0.0f, 1.0f)
-    {
-    }
+    constexpr Quaternion();
 
-    constexpr Quaternion(float x, float y, float z, float w)
-        : x(x)
-        , y(y)
-        , z(z)
-        , w(w)
-    {
-    }
+    constexpr Quaternion(float x, float y, float z, float w);
 
-    constexpr Quaternion(const Vector3 &axis, float angle)
-    {
-        const auto sin_half = std::sin(angle / 2.0f);
-        const auto cos_half = std::cos(angle / 2.0f);
+    constexpr Quaternion(const Vector3 &axis, float angle);
 
-        x = axis.x * sin_half;
-        y = axis.y * sin_half;
-        z = axis.z * sin_half;
-        w = cos_half;
-
-        *this = normalise(*this);
-    }
+    constexpr Quaternion(const Vector3 &a, const Vector3 &b);
 
     constexpr Quaternion(float yaw, float pitch, float roll);
 
-    static constexpr auto normalise(const Quaternion &q) -> Quaternion
-    {
-        const auto det = std::sqrt(q.x * q.x + q.y * q.y + q.z * q.z + q.w * q.w);
-        contract_assert(det != 0.0f);
+    static constexpr auto normalise(const Quaternion &q) -> Quaternion;
 
-        return {q.x / det, q.y / det, q.z / det, q.w / det};
-    }
+    constexpr auto operator==(const Quaternion &) const -> bool = default;
 
     auto to_string() const -> std::string;
 
@@ -59,6 +33,64 @@ class Quaternion
     float z;
     float w;
 };
+
+constexpr Quaternion::Quaternion()
+    : Quaternion(0.0f, 0.0f, 0.0f, 1.0f)
+{
+}
+
+constexpr Quaternion::Quaternion(float x, float y, float z, float w)
+    : x(x)
+    , y(y)
+    , z(z)
+    , w(w)
+{
+}
+
+constexpr Quaternion::Quaternion(const Vector3 &axis, float angle)
+{
+    const auto sin_half = std::sin(angle / 2.0f);
+    const auto cos_half = std::cos(angle / 2.0f);
+
+    x = axis.x * sin_half;
+    y = axis.y * sin_half;
+    z = axis.z * sin_half;
+    w = cos_half;
+
+    *this = normalise(*this);
+}
+
+constexpr Quaternion::Quaternion(const Vector3 &a, const Vector3 &b)
+{
+    const auto d = Vector3::dot(a, b);
+
+    if (d < -0.999999f)
+    {
+        auto axis = Vector3::cross({1.0f, 0.0f, 0.0f}, a);
+
+        if (axis.length() < 0.001f)
+        {
+            axis = Vector3::cross({0.0f, 1.0f, 0.0f}, a);
+        }
+
+        axis = Vector3::normalise(axis);
+
+        *this = {axis.x, axis.y, axis.z, 0.0f};
+        return;
+    }
+
+    const auto v = Vector3::cross(a, b);
+
+    *this = normalise({v.x, v.y, v.z, 1.0f + d});
+}
+
+constexpr auto Quaternion::normalise(const Quaternion &q) -> Quaternion
+{
+    const auto det = std::sqrt(q.x * q.x + q.y * q.y + q.z * q.z + q.w * q.w);
+    contract_assert(det != 0.0f);
+
+    return {q.x / det, q.y / det, q.z / det, q.w / det};
+}
 
 constexpr auto operator*(const Quaternion &a, const Quaternion &b) -> Quaternion
 {

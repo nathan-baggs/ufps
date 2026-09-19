@@ -78,6 +78,10 @@ auto main(int argc, char **argv) -> int
             "textures\\default_AO.dds",
             "textures\\default_Roughness.dds",
             "textures\\default_Emissive.dds",
+            "textures\\bullet_hole1.dds",
+            "textures\\bullet_hole2.dds",
+            "textures\\bullet_hole3.dds",
+            "textures\\bullet_hole4.dds",
         };
 
         {

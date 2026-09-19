@@ -49,6 +49,7 @@
     DO(::PFNGLNAMEDBUFFERSUBDATAPROC, glNamedBufferSubData)                                                            \
     DO(::PFNGLVERTEXARRAYELEMENTBUFFERPROC, glVertexArrayElementBuffer)                                                \
     DO(::PFNGLDRAWELEMENTSBASEVERTEXPROC, glDrawElementsBaseVertex)                                                    \
+    DO(::PFNGLDRAWELEMENTSINSTANCEDBASEVERTEXPROC, glDrawElementsInstancedBaseVertex)                                  \
     DO(::PFNGLBINDBUFFERBASEPROC, glBindBufferBase)                                                                    \
     DO(::PFNGLBINDBUFFERRANGEPROC, glBindBufferRange)                                                                  \
     DO(::PFNGLCREATETEXTURESPROC, glCreateTextures)                                                                    \

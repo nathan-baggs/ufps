@@ -67,7 +67,7 @@ void main()
 
     float ssao_scale = texture(u_normal_texture, in_uv).w;
 
-    in_colour *= (0.18 / max(average, 0.0001));
+    in_colour *= (0.4 / max(average, 0.0001));
     in_colour *= max(occlusion, (1.0f - ssao_scale));
     in_colour = fog(depth, in_colour);
 

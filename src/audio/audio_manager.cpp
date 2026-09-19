@@ -120,7 +120,7 @@ AudioManager::AudioManager(ResourceLoader &resource_loader)
     }
 }
 
-auto AudioManager::play(std::string_view track_name, PlayMode mode) -> void
+auto AudioManager::play(std::string_view track_name, PlayMode mode, float pitch) -> void
 {
     const auto track = tracks_.find(track_name);
     if (track == std::ranges::cend(tracks_))
@@ -152,6 +152,7 @@ auto AudioManager::play(std::string_view track_name, PlayMode mode) -> void
             .pContext = index_as_void_ptr,
         };
 
+        ensure(voice->SetFrequencyRatio(pitch) == S_OK, "failed to set pitch");
         ensure(voice->SubmitSourceBuffer(&buffer) == S_OK, "failed to set source");
         ensure(voice->Start(0) == S_OK, "failed to start sound");
     }

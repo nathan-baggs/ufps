@@ -20,6 +20,7 @@
 #include "graphics/buffer_writer.h"
 #include "graphics/command_buffer.h"
 #include "graphics/debug_layer.h"
+#include "graphics/decal.h"
 #include "graphics/frame_buffer.h"
 #include "graphics/mesh_manager.h"
 #include "graphics/object_data.h"
@@ -32,6 +33,7 @@
 #include "graphics/texture_data.h"
 #include "graphics/texture_manager.h"
 #include "graphics/utils.h"
+#include "maths/matrix4.h"
 #include "resources/resource_loader.h"
 #include "third_party/opengl/glext.h"
 #include "utils/auto_release.h"
@@ -59,28 +61,29 @@ struct AutoBind
 };
 
 auto create_render_target(
-    std::uint32_t colour_attachment_count,
+    const std::vector<ufps::TextureFormat> colour_formats,
     std::uint32_t width,
     std::uint32_t height,
     ufps::Sampler &sampler,
-    std::string_view name,
-    ufps::TextureFormat format = ufps::TextureFormat::RGBA16F) -> ufps::RenderTarget
+    std::string_view name) -> ufps::RenderTarget
 {
     auto &texture_manager = ufps::service<ufps::TextureManager>();
 
-    const auto colour_attachment_texture_data = ufps::TextureData{
-        .width = width,
-        .height = height,
-        .format = format,
-        .data = std::nullopt,
-        .is_compressed = false,
-    };
+    const auto colour_attachment_count = std::ranges::size(colour_formats);
 
     auto colour_attachements =
         std::views::iota(0u, colour_attachment_count) |
         std::views::transform(
             [&](auto index)
             {
+                const auto colour_attachment_texture_data = ufps::TextureData{
+                    .width = width,
+                    .height = height,
+                    .format = colour_formats[index],
+                    .data = std::nullopt,
+                    .is_compressed = false,
+                };
+
                 return ufps::Texture{
                     colour_attachment_texture_data, std::format("{}_{}_texture", name, index), sampler};
             }) |
@@ -261,50 +264,58 @@ Renderer::Renderer(
           "shaders\\bloom_mix.frag",
           "bloom_mix_fragment_shader",
           "bloom_mix_program")}
+    , decal_program_{create_program(
+          resource_loader,
+          "shaders\\decal.vert",
+          "decal_vertex_shader",
+          "shaders\\decal.frag",
+          "decal_fragment_shader",
+          "decal_program")}
+    , decal_buffer_{100zu * sizeof(Decal), "decal_buffer"}
     , ssao_noise_sampler_{FilterType::NEAREST, FilterType::NEAREST, WrapMode::REPEAT, WrapMode::REPEAT, "ssao_noise_sampler"}
     , ssao_noise_texture_bindless_handle_{create_ssao_noise_texture( ssao_noise_sampler_)}
     , fb_sampler_{FilterType::LINEAR, FilterType::LINEAR, WrapMode::CLAMP_TO_EDGE, WrapMode::CLAMP_TO_EDGE, "fb_sampler"}
     , gbuffer_rt_{create_render_target(
-          5u,
+        {TextureFormat::RGBA16F, TextureFormat::RGBA16F, TextureFormat::RGBA32F, TextureFormat::RG16F, TextureFormat::RGB16F},
           window_.render_width(),
           window_.render_height(),
           fb_sampler_,
           "gbuffer")}
     , light_pass_rt_{create_render_target(
-          1u,
+        {TextureFormat::RGBA16F},
           window_.render_width(),
           window_.render_height(),
           fb_sampler_,
           "light_pass"),}
     , tone_map_rt_{create_render_target(
-          1u,
+        {TextureFormat::RGBA16F},
           window_.render_width(),
           window_.render_height(),
           fb_sampler_,
           "tone_map"),}
     , ssao_rt_{create_render_target(
-          1u,
+        {TextureFormat::R16F},
           window_.render_width() / 2u,
           window_.render_height() / 2u,
           fb_sampler_,
-          "ssao",
-          TextureFormat::R16F),}
+          "ssao"
+          ),}
     , ssao_blur_rt_{create_render_target(
-          1u,
+        {TextureFormat::R16F},
           window_.render_width() / 2u,
           window_.render_height() / 2u,
           fb_sampler_,
-          "ssao_blur",
-          TextureFormat::R16F),}
+          "ssao_blur"
+          ),}
     , chromatic_aberration_rt_{create_render_target(
-          1u,
+        {TextureFormat::RGBA16F},
           window_.render_width(),
           window_.render_height(),
           fb_sampler_,
           "chromatic_aberration"),}
     , bloom_mips_{}
     , bloom_rt_{create_render_target(
-          1u,
+        {TextureFormat::RGBA16F},
           window_.render_width(),
           window_.render_height(),
           fb_sampler_,
@@ -362,7 +373,7 @@ Renderer::Renderer(
     {
         const auto scale = std::pow(0.5, static_cast<float>(i + 1u));
         bloom_mips_.push_back(create_render_target(
-            1u,
+            {TextureFormat::RGB16F},
             window_.render_width() * scale,
             window_.render_height() * scale,
             fb_sampler_,
@@ -379,6 +390,7 @@ auto Renderer::render(Scene &scene) -> void
     camera_buffer_.write(camera->data_view(), 0zu);
 
     execute_gbuffer_pass(scene);
+    execute_decal_pass(scene);
     execute_lighting_pass(scene);
 
     if (enable_post_processing_)
@@ -548,6 +560,57 @@ auto Renderer::execute_gbuffer_pass(Scene &scene) -> void
         reinterpret_cast<const void *>(command_buffer_.offset_bytes()),
         command_count,
         0);
+}
+
+auto Renderer::execute_decal_pass(Scene &scene) -> void
+{
+    gbuffer_rt_.fb.bind();
+    ::glDepthRange(0.1f, 1.0f);
+    ::glDepthMask(GL_FALSE);
+
+    const auto &[mm] = services<MeshManager>();
+
+    const auto auto_bind = AutoBind{decal_program_};
+
+    const auto decals = scene.decals();
+
+    auto writer = BufferWriter{decal_buffer_};
+    writer.write(decals);
+
+    const auto [vertex_buffer_handle, index_buffer_handle] = mm.native_handle();
+    ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, vertex_buffer_handle);
+    ::glBindBufferRange(
+        GL_SHADER_STORAGE_BUFFER,
+        1,
+        camera_buffer_.native_handle(),
+        camera_buffer_.frame_offset_bytes(),
+        sizeof(CameraData));
+    ::glBindBufferRange(
+        GL_SHADER_STORAGE_BUFFER,
+        2,
+        decal_buffer_.native_handle(),
+        decal_buffer_.frame_offset_bytes(),
+        decal_buffer_.size());
+    ::glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffer_handle);
+
+    const auto cube_parts = mm.mesh("cube");
+    ensure(cube_parts.size() == 1u, "cube mesh should have exactly 1 part");
+    const auto cube_indices_offset_bytes = cube_parts.front().index_offset * sizeof(std::uint32_t);
+    const auto cube_vertex_offset = cube_parts.front().vertex_offset;
+
+    decal_program_.set_uniforms(gbuffer_rt_.colour_texture_bindless_handle_2);
+
+    ::glDrawElementsInstancedBaseVertex(
+        GL_TRIANGLES,
+        36,
+        GL_UNSIGNED_INT,
+        reinterpret_cast<const void *>(cube_indices_offset_bytes),
+        static_cast<::GLsizei>(std::ranges::size(decals)),
+        cube_vertex_offset);
+
+    ::glDepthMask(GL_TRUE);
+
+    decal_buffer_.advance();
 }
 
 auto Renderer::execute_gun_gbuffer_pass(Scene &scene) -> void
