@@ -84,6 +84,8 @@ class Renderer
     Program bloom_mix_program_;
     Program decal_program_;
     MultiBuffer<PersistentBuffer> decal_buffer_;
+    Program particle_program_;
+    MultiBuffer<PersistentBuffer> particle_buffer_;
     Sampler ssao_noise_sampler_;
     std::uint64_t ssao_noise_texture_bindless_handle_;
     Sampler fb_sampler_;
@@ -107,6 +109,7 @@ class Renderer
     auto execute_gun_gbuffer_pass(Scene &scene) -> void;
     auto execute_lighting_pass(Scene &scene) -> void;
     auto execute_gun_lighting_pass(Scene &scene) -> void;
+    auto execute_particle_pass() -> void;
     auto execute_bloom_pass(Scene &scene) -> void;
     auto execute_luminance_histogram_pass(Scene &scene) -> void;
     auto execute_average_luminance_pass(Scene &scene) -> void;
