@@ -9,7 +9,7 @@ namespace ufps
 {
 
 ParticleManager::ParticleManager()
-    : particles_(1000zu, {.position = {}, .life = 0.0f})
+    : particles_(100zu, {.position = {}, .life = 0.0f})
     , next_{std::ranges::begin(particles_)}
 {
 }
