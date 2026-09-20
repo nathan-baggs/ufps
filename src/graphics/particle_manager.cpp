@@ -1,0 +1,35 @@
+#include "graphics/particle_manager.h"
+#include "maths/vector3.h"
+
+#include <ranges>
+#include <span>
+#include <vector>
+
+namespace ufps
+{
+
+ParticleManager::ParticleManager()
+    : particles_(1000zu, {.position = {}, .life = 0.0f})
+    , next_{std::ranges::begin(particles_)}
+{
+}
+
+auto ParticleManager::spawn_sparks(const Vector3 &position) -> void
+{
+    *next_ = {
+        .position = position,
+        .life = 3.0f,
+    };
+
+    ++next_;
+    if (next_ == std::ranges::end(particles_))
+    {
+        next_ = std::ranges::begin(particles_);
+    }
+}
+
+auto ParticleManager::particles() const -> std::span<const Particle>
+{
+    return particles_;
+}
+}
