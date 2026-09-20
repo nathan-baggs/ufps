@@ -3,6 +3,7 @@
 #include <cstdint>
 
 #include "core/camera.h"
+#include "core/clock.h"
 #include "core/scene.h"
 #include "graphics/command_buffer.h"
 #include "graphics/debug_layer.h"
@@ -37,7 +38,7 @@ class Renderer
     Renderer(const Window &window, ResourceLoader &resource_loader);
     virtual ~Renderer() = default;
 
-    auto render(Scene &scene) -> void;
+    auto render(Scene &scene, Duration delta) -> void;
 
   protected:
     static auto create_program(
@@ -85,7 +86,8 @@ class Renderer
     Program decal_program_;
     MultiBuffer<PersistentBuffer> decal_buffer_;
     Program particle_program_;
-    MultiBuffer<PersistentBuffer> particle_buffer_;
+    Program particle_update_program_;
+    Buffer particle_buffer_;
     Sampler ssao_noise_sampler_;
     std::uint64_t ssao_noise_texture_bindless_handle_;
     Sampler fb_sampler_;
@@ -109,7 +111,7 @@ class Renderer
     auto execute_gun_gbuffer_pass(Scene &scene) -> void;
     auto execute_lighting_pass(Scene &scene) -> void;
     auto execute_gun_lighting_pass(Scene &scene) -> void;
-    auto execute_particle_pass() -> void;
+    auto execute_particle_pass(Duration delta) -> void;
     auto execute_bloom_pass(Scene &scene) -> void;
     auto execute_luminance_histogram_pass(Scene &scene) -> void;
     auto execute_average_luminance_pass(Scene &scene) -> void;

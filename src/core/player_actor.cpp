@@ -146,7 +146,18 @@ auto PlayerActor::update(Duration delta) -> void
                      Quaternion{{0.0f, 1.0f, 0.0f}, random::rand_real(0.0f, 2.0f * std::numbers::pi_v<float>)}},
                 random::rand_element(textures));
 
-            pm.spawn_sparks(intersection->position, intersection->normal);
+            pm.spawn_sparks(intersection->position, intersection->normal * Vector3{2.0f});
+            for (auto i = 0; i < 10; ++i)
+            {
+                pm.spawn_sparks(
+                    intersection->position,
+                    intersection->normal +
+                        Vector3{
+                            random::rand_real(-0.5f, 0.5f),
+                            random::rand_real(-0.5f, 0.5f),
+                            random::rand_real(-0.5f, 0.5f)} *
+                            Vector3{2.0f});
+            }
         }
     }
 }

@@ -287,6 +287,11 @@ Renderer::Renderer(
           "shaders\\particle.frag",
           "particle_fragment_shader",
           "particle_program")}
+    , particle_update_program_{create_program(
+          resource_loader,
+          "shaders\\particle.comp",
+          "particle_update_shader",
+          "particle_update_program")}
     , particle_buffer_{particle_buffer_size(), "particle_buffer"}
     , ssao_noise_sampler_{FilterType::NEAREST, FilterType::NEAREST, WrapMode::REPEAT, WrapMode::REPEAT, "ssao_noise_sampler"}
     , ssao_noise_texture_bindless_handle_{create_ssao_noise_texture( ssao_noise_sampler_)}
@@ -395,9 +400,12 @@ Renderer::Renderer(
             fb_sampler_,
             std::format("bloom_mip_{}", i)));
     }
+
+    const auto &pm = service<ParticleManager>();
+    particle_buffer_.write(std::as_bytes(pm.particles()), 0zu);
 }
 
-auto Renderer::render(Scene &scene) -> void
+auto Renderer::render(Scene &scene, Duration delta) -> void
 {
     const auto handle = service<CameraHandle>();
     const auto camera = service<CameraManager>()[handle];
@@ -407,7 +415,7 @@ auto Renderer::render(Scene &scene) -> void
 
     execute_gbuffer_pass(scene);
     execute_decal_pass(scene);
-    execute_particle_pass();
+    execute_particle_pass(delta);
     execute_lighting_pass(scene);
 
     if (enable_post_processing_)
@@ -798,52 +806,67 @@ auto Renderer::execute_gun_lighting_pass(Scene &) -> void
     ::glDepthRange(0.1f, 1.0f);
 }
 
-auto Renderer::execute_particle_pass() -> void
+auto Renderer::execute_particle_pass(Duration delta) -> void
 {
     gbuffer_rt_.fb.bind();
     ::glDepthMask(GL_FALSE);
 
     const auto &[mm, pm] = services<MeshManager, ParticleManager>();
 
-    const auto auto_bind = AutoBind{particle_program_};
+    auto particles = pm.particles();
 
-    const auto particles = pm.particles();
+    for (const auto &[index, particle] : std::views::enumerate(particles))
+    {
+        if (particle.life > 0.0f)
+        {
+            particle_buffer_.write(std::as_bytes(std::span<Particle>(&particle, 1zu)), index * sizeof(Particle));
+            particle.life = 0.0f;
+        }
+    }
 
-    auto writer = BufferWriter{particle_buffer_};
-    writer.write(particles);
+    {
+        const auto auto_bind = AutoBind{particle_update_program_};
 
-    const auto [vertex_buffer_handle, index_buffer_handle] = mm.native_handle();
-    ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, vertex_buffer_handle);
-    ::glBindBufferRange(
-        GL_SHADER_STORAGE_BUFFER,
-        1,
-        camera_buffer_.native_handle(),
-        camera_buffer_.frame_offset_bytes(),
-        sizeof(CameraData));
-    ::glBindBufferRange(
-        GL_SHADER_STORAGE_BUFFER,
-        2,
-        particle_buffer_.native_handle(),
-        particle_buffer_.frame_offset_bytes(),
-        particle_buffer_.size());
-    ::glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffer_handle);
+        ::glBindBufferRange(GL_SHADER_STORAGE_BUFFER, 0, particle_buffer_.native_handle(), 0, particle_buffer_.size());
 
-    const auto sprite_parts = mm.mesh("sprite");
-    ensure(sprite_parts.size() == 1u, "sprite mesh should have exactly 1 part");
-    const auto sprite_indices_offset_bytes = sprite_parts.front().index_offset * sizeof(std::uint32_t);
-    const auto sprite_vertex_offset = sprite_parts.front().vertex_offset;
+        const auto delta_s = std::chrono::duration_cast<std::chrono::duration<float>>(delta).count();
 
-    ::glDrawElementsInstancedBaseVertex(
-        GL_TRIANGLES,
-        6,
-        GL_UNSIGNED_INT,
-        reinterpret_cast<const void *>(sprite_indices_offset_bytes),
-        static_cast<::GLsizei>(std::ranges::size(particles)),
-        sprite_vertex_offset);
+        particle_update_program_.set_uniforms(delta_s);
+
+        ::glDispatchCompute(static_cast<std::uint32_t>((std::ranges::size(particles) + 127) / 128), 1, 1);
+
+        ::glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT | GL_BUFFER_UPDATE_BARRIER_BIT);
+    }
+
+    {
+        const auto auto_bind = AutoBind{particle_program_};
+
+        const auto [vertex_buffer_handle, index_buffer_handle] = mm.native_handle();
+        ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, vertex_buffer_handle);
+        ::glBindBufferRange(
+            GL_SHADER_STORAGE_BUFFER,
+            1,
+            camera_buffer_.native_handle(),
+            camera_buffer_.frame_offset_bytes(),
+            sizeof(CameraData));
+        ::glBindBufferRange(GL_SHADER_STORAGE_BUFFER, 2, particle_buffer_.native_handle(), 0, particle_buffer_.size());
+        ::glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffer_handle);
+
+        const auto sprite_parts = mm.mesh("sprite");
+        ensure(sprite_parts.size() == 1u, "sprite mesh should have exactly 1 part");
+        const auto sprite_indices_offset_bytes = sprite_parts.front().index_offset * sizeof(std::uint32_t);
+        const auto sprite_vertex_offset = sprite_parts.front().vertex_offset;
+
+        ::glDrawElementsInstancedBaseVertex(
+            GL_TRIANGLES,
+            6,
+            GL_UNSIGNED_INT,
+            reinterpret_cast<const void *>(sprite_indices_offset_bytes),
+            static_cast<::GLsizei>(std::ranges::size(particles)),
+            sprite_vertex_offset);
+    }
 
     ::glDepthMask(GL_TRUE);
-
-    particle_buffer_.advance();
 }
 
 auto Renderer::execute_bloom_pass([[maybe_unused]] Scene &scene) -> void

@@ -24,6 +24,7 @@ class ParticleManager
     auto spawn_sparks(const Vector3 &position, const Vector3 &velocity) -> void;
 
     auto particles() const -> std::span<const Particle>;
+    auto particles() -> std::span<Particle>;
 
   private:
     std::vector<Particle> particles_;

@@ -532,7 +532,7 @@ int start()
         awaitable.pump();
         pool.drain();
 
-        renderer.render(scene);
+        renderer.render(scene, delta);
 
         window.swap();
 

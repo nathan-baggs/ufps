@@ -1,0 +1,72 @@
+#version 460 core
+#extension GL_ARB_bindless_texture : require
+
+layout(local_size_x = 128, local_size_y = 1, local_size_z = 1) in;
+
+struct Particle
+{
+    float position[3];
+    float life;
+    float velocity[3];
+    float pad;
+};
+
+layout(binding = 0, std430) buffer particle_buffer {
+    Particle particles[];
+};
+
+layout(location = 0) uniform float u_delta;
+
+vec3 get_particle_position(uint index)
+{
+    return vec3(
+        particles[index].position[0],
+        particles[index].position[1],
+        particles[index].position[2]);
+
+}
+
+vec3 get_particle_velocity(uint index)
+{
+    return vec3(
+        particles[index].velocity[0],
+        particles[index].velocity[1],
+        particles[index].velocity[2]);
+
+}
+
+float get_life(uint index)
+{
+    return particles[index].life;
+}
+
+
+void main()
+{
+        vec3 accel = vec3(0.0, -3.8, 0.0);
+
+        if (gl_GlobalInvocationID.x < particles.length())
+        {
+                vec3 pos = get_particle_position(gl_GlobalInvocationID.x);        
+                vec3 vel = get_particle_velocity(gl_GlobalInvocationID.x);
+                float life = get_life(gl_GlobalInvocationID.x);
+
+                if(life > 0.0f)
+                {
+                        pos += vel * vec3(u_delta);
+                        vel += accel * vec3(u_delta);
+                        life -= u_delta;
+
+                        particles[gl_GlobalInvocationID.x].position[0] = pos.x;
+                        particles[gl_GlobalInvocationID.x].position[1] = pos.y;
+                        particles[gl_GlobalInvocationID.x].position[2] = pos.z;
+
+                        particles[gl_GlobalInvocationID.x].velocity[0] = vel.x;
+                        particles[gl_GlobalInvocationID.x].velocity[1] = vel.y;
+                        particles[gl_GlobalInvocationID.x].velocity[2] = vel.z;
+
+                        particles[gl_GlobalInvocationID.x].life = life;
+                }
+        }
+}
+
