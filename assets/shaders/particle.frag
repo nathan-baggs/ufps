@@ -25,6 +25,8 @@ struct Particle
 {
     float position[3];
     float life;
+    float velocity[3];
+    float pad;
 };
 
 layout(binding = 2, std430) readonly buffer particle_buffer {

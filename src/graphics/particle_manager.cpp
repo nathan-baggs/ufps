@@ -9,16 +9,17 @@ namespace ufps
 {
 
 ParticleManager::ParticleManager()
-    : particles_(100zu, {.position = {}, .life = 0.0f})
+    : particles_(100zu, {.position = {}, .life = 0.0f, .velocity = {}})
     , next_{std::ranges::begin(particles_)}
 {
 }
 
-auto ParticleManager::spawn_sparks(const Vector3 &position) -> void
+auto ParticleManager::spawn_sparks(const Vector3 &position, const Vector3 &velocity) -> void
 {
     *next_ = {
         .position = position,
         .life = 3.0f,
+        .velocity = velocity,
     };
 
     ++next_;
