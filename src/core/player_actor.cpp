@@ -12,6 +12,7 @@
 #include "core/service_locator.h"
 #include "events/input_map.h"
 #include "graphics/colour.h"
+#include "graphics/particle_manager.h"
 #include "maths/quaternion.h"
 #include "maths/random.h"
 #include "maths/ray.h"
@@ -90,7 +91,7 @@ auto PlayerActor::set_gun(Gun gun) -> void
 
 auto PlayerActor::update(Duration delta) -> void
 {
-    const auto &[em, cm, am] = services<EntityManager, CameraManager, AudioManager>();
+    const auto &[em, cm, am, pm] = services<EntityManager, CameraManager, AudioManager, ParticleManager>();
 
     walk_sound_timer_ += delta;
 
@@ -144,6 +145,8 @@ auto PlayerActor::update(Duration delta) -> void
                  Quaternion{{0.0f, 1.0f, 0.0f}, intersection->normal} *
                      Quaternion{{0.0f, 1.0f, 0.0f}, random::rand_real(0.0f, 2.0f * std::numbers::pi_v<float>)}},
                 random::rand_element(textures));
+
+            pm.spawn_sparks(intersection->position);
         }
     }
 }

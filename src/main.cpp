@@ -43,6 +43,7 @@
 #include "graphics/debug_renderer.h"
 #include "graphics/mesh_data.h"
 #include "graphics/mesh_manager.h"
+#include "graphics/particle_manager.h"
 #include "graphics/renderer.h"
 #include "graphics/sampler.h"
 #include "graphics/texture.h"
@@ -386,7 +387,8 @@ int start()
         std::make_unique<ufps::CameraManager>(),
         ufps::CameraHandle{},
         std::make_unique<ufps::DebugLayer>(),
-        std::make_unique<ufps::AudioManager>(*resource_loader));
+        std::make_unique<ufps::AudioManager>(*resource_loader),
+        std::make_unique<ufps::ParticleManager>());
     ufps::set_service(services.get());
 
     load_render_entity_manager(*resource_loader);
