@@ -39,7 +39,7 @@ layout(location = 0) out vec4 out_colour;
 
 void main()
 {
-    out_colour = mix(vec4(1.0f), vec4(1.0, 1.0, 0.0, 1.0), 1.0 - abs(particles[out_instance_id].life / 1.0) + 0.01f);
+    out_colour = mix(vec4(5.0f), vec4(2.0, 2.0, 0.0, 0.0), 1.0 - abs(particles[out_instance_id].life / 1.0));
 }
 
 

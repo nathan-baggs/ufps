@@ -47,7 +47,7 @@ void main()
 
         if (gl_GlobalInvocationID.x < particles.length())
         {
-                vec3 pos = get_particle_position(gl_GlobalInvocationID.x);        
+                vec3 pos = get_particle_position(gl_GlobalInvocationID.x);
                 vec3 vel = get_particle_velocity(gl_GlobalInvocationID.x);
                 float life = get_life(gl_GlobalInvocationID.x);
 
