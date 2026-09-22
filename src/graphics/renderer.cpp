@@ -415,7 +415,6 @@ auto Renderer::render(Scene &scene, Duration delta) -> void
 
     execute_gbuffer_pass(scene);
     execute_decal_pass(scene);
-    execute_particle_pass(delta);
     execute_lighting_pass(scene);
 
     if (enable_post_processing_)
@@ -434,6 +433,8 @@ auto Renderer::render(Scene &scene, Duration delta) -> void
     execute_gun_gbuffer_pass(scene);
     execute_gun_lighting_pass(scene);
     ::glEnable(GL_BLEND);
+
+    execute_particle_pass(delta);
 
     if (enable_post_processing_)
     {
@@ -808,8 +809,21 @@ auto Renderer::execute_gun_lighting_pass(Scene &) -> void
 
 auto Renderer::execute_particle_pass(Duration delta) -> void
 {
-    gbuffer_rt_.fb.bind();
-    ::glDepthMask(GL_FALSE);
+    light_pass_rt_.fb.bind();
+
+    ::glBlitNamedFramebuffer(
+        gbuffer_rt_.fb.native_handle(),
+        light_pass_rt_.fb.native_handle(),
+        0u,
+        0u,
+        gbuffer_rt_.fb.width(),
+        gbuffer_rt_.fb.height(),
+        0u,
+        0u,
+        gbuffer_rt_.fb.width(),
+        gbuffer_rt_.fb.height(),
+        GL_DEPTH_BUFFER_BIT,
+        GL_NEAREST);
 
     const auto &[mm, pm] = services<MeshManager, ParticleManager>();
 
@@ -865,8 +879,6 @@ auto Renderer::execute_particle_pass(Duration delta) -> void
             static_cast<::GLsizei>(std::ranges::size(particles)),
             sprite_vertex_offset);
     }
-
-    ::glDepthMask(GL_TRUE);
 }
 
 auto Renderer::execute_bloom_pass([[maybe_unused]] Scene &scene) -> void
