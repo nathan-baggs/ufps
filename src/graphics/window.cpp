@@ -9,6 +9,7 @@
 #include "graphics/opengl.h"
 
 #include <hidusage.h>
+#include <windows.h>
 #include <windowsx.h>
 
 #include "config.h"
@@ -345,6 +346,8 @@ Window::Window(
         reinterpret_cast<const char *>(vendor),
         reinterpret_cast<const char *>(renderer),
         reinterpret_cast<const char *>(version));
+
+    ::ShowCursor(false);
 }
 
 auto Window::pump_event() const -> std::optional<Event>
