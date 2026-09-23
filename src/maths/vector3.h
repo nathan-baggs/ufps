@@ -40,6 +40,18 @@ struct Vector3
         return {v.x / l, v.y / l, v.z / l};
     }
 
+    constexpr auto is_normalised() const -> bool //
+        pre(!is_zero())
+    {
+        static constexpr auto epsilon = 1e-4f;
+        return (std::abs(length()) - 1.0f) < epsilon;
+    }
+
+    constexpr auto is_zero() const -> bool
+    {
+        return length() == 0.0f;
+    }
+
     static constexpr auto cross(const Vector3 &v1, const Vector3 &v2) -> Vector3
     {
         const auto i = (v1.y * v2.z) - (v1.z * v2.y);
