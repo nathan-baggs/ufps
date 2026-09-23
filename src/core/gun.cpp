@@ -1,5 +1,7 @@
 #include "core/gun.h"
 
+#include <chrono>
+
 #include "audio/audio_manager.h"
 #include "core/camera.h"
 #include "core/camera_manager.h"
@@ -10,7 +12,7 @@
 #include "events/input_map.h"
 #include "maths/random.h"
 #include "maths/spring.h"
-#include <chrono>
+#include "maths/vector3.h"
 
 namespace
 {
@@ -56,6 +58,8 @@ auto Gun::update(Duration delta, Entity &entity, const InputMap &input_map, cons
 
     shoot_timer_ += delta;
 
+    static auto half_angle = 0.0001f;
+
     if (input_map.mouse_down)
     {
         if (shoot_timer_ >= fire_rate_)
@@ -67,12 +71,16 @@ auto Gun::update(Duration delta, Entity &entity, const InputMap &input_map, cons
 
             am.play("Specter Bullet.wav", PlayMode::SINGLE, random::rand_real(1.0f, 1.4f));
 
-            result.bullets_fired.push_back({camera.transform().position, camera.direction() * 100.0f});
+            const auto bullet_direction = random::rand_vector3(Vector3::normalise(camera.direction()), half_angle);
+
+            result.bullets_fired.push_back({camera.transform().position, bullet_direction * 100.0f});
+            half_angle += 0.001f;
         }
     }
     else
     {
         recoil_target_ = {};
+        half_angle = 0.0001f;
     }
 
     auto bob = float{};
