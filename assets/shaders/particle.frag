@@ -34,12 +34,13 @@ layout(binding = 2, std430) readonly buffer particle_buffer {
 };
 
 layout(location = 0) in flat uint out_instance_id;
+layout(location = 1) in vec4 in_colour;
 
 layout(location = 0) out vec4 out_colour;
 
 void main()
 {
-    out_colour = mix(vec4(5.0f), vec4(2.0, 2.0, 0.0, 0.0), 1.0 - abs(particles[out_instance_id].life / 1.0));
+    out_colour = in_colour;
 }
 
 
