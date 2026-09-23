@@ -842,10 +842,17 @@ auto Renderer::execute_particle_pass(Duration delta) -> void
         const auto auto_bind = AutoBind{particle_update_program_};
 
         ::glBindBufferRange(GL_SHADER_STORAGE_BUFFER, 0, particle_buffer_.native_handle(), 0, particle_buffer_.size());
+        ::glBindBufferRange(
+            GL_SHADER_STORAGE_BUFFER,
+            1,
+            camera_buffer_.native_handle(),
+            camera_buffer_.frame_offset_bytes(),
+            sizeof(CameraData));
 
         const auto delta_s = std::chrono::duration_cast<std::chrono::duration<float>>(delta).count();
 
-        particle_update_program_.set_uniforms(delta_s);
+        particle_update_program_.set_uniforms(
+            delta_s, gbuffer_rt_.depth_texture_bindless_handle, gbuffer_rt_.colour_texture_bindless_handle_1);
 
         ::glDispatchCompute(static_cast<std::uint32_t>((std::ranges::size(particles) + 127) / 128), 1, 1);
 

@@ -95,7 +95,7 @@ void main()
         vec4 out_frag_position = model * vec4(pos, 1.0);
 
         float alpha = pos.x < 0.0 ? 0.0f : 1.0f;
-        out_colour = vec4(1.0f, 1.0f, 1.0f, alpha);
+        out_colour = vec4(5.0f, 5.0f, 5.0f, alpha);
 
         gl_Position = projection * view * out_frag_position;
     }

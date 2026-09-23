@@ -15,7 +15,13 @@ layout(binding = 0, std430) buffer particle_buffer {
     Particle particles[];
 };
 
-layout(location = 0) uniform float u_delta;
+layout(binding = 1, std430) readonly buffer camera {
+    mat4 view;
+    mat4 projection;
+    float camera_position[3];
+    float pad;
+};
+
 
 vec3 get_particle_position(uint index)
 {
@@ -40,6 +46,11 @@ float get_life(uint index)
     return particles[index].life;
 }
 
+layout(location = 0) uniform float u_delta;
+layout(bindless_sampler, location = 1) uniform sampler2D u_depth_texture;
+layout(bindless_sampler, location = 2) uniform sampler2D u_normal_texture;
+
+float radius = 0.0002f;
 
 void main()
 {
@@ -56,6 +67,25 @@ void main()
                         pos += vel * vec3(u_delta);
                         vel += accel * vec3(u_delta);
                         life -= u_delta;
+
+                        mat4 transform = mat4(1.0f);
+                        transform[3] = vec4(pos, 1.0f);
+
+                        vec4 view_pos = view * transform * vec4(0.0f, 0.0f, 0.0f, 1.0f);
+                        vec4 proj = projection * view_pos;
+
+                        proj.xyz /= proj.w;
+                        proj.xyz = (proj.xyz + 1.0f) * 0.5f;
+
+                        ivec2 texel_coord = ivec2(proj.xy * textureSize(u_depth_texture, 0));
+
+                        float depth = texelFetch(u_depth_texture, texel_coord, 0).r;
+                        if (proj.z < depth + radius && proj.z > depth - radius)
+                        {
+                                vec3 normal = texelFetch(u_normal_texture, texel_coord, 0).xyz;
+                                vel = reflect(normalize(vel), normal) * length(vel);
+                                vel *= 0.5f;
+                        }
 
                         particles[gl_GlobalInvocationID.x].position[0] = pos.x;
                         particles[gl_GlobalInvocationID.x].position[1] = pos.y;
