@@ -1,9 +1,14 @@
 #pragma once
 
+#include <cmath>
 #include <concepts>
+#include <contracts>
+#include <numbers>
 #include <random>
 #include <ranges>
-#include <span>
+
+#include "maths/matrix3.h"
+#include "maths/vector3.h"
 
 namespace ufps
 {
@@ -33,8 +38,28 @@ class Random
     template <std::ranges::range T>
     const auto &rand_element(T &&elements)
     {
+        contract_assert(!std::ranges::empty(elements));
+
         const auto index = rand_int(0zu, std::ranges::size(elements) - 1zu);
         return *(std::ranges::cbegin(elements) + index);
+    }
+
+    auto rand_vector3(const Vector3 &normal, float cone_half_angle) -> Vector3 //
+        pre(normal.is_normalised() && !normal.is_zero())
+    {
+        const auto theta = rand_real(0.0f, std::numbers::pi_v<float> * 2.0f);
+        const auto z = rand_real(std::cos(cone_half_angle), 1.0f);
+
+        const auto local =
+            Vector3{std::sqrt(1.0f - (z * z)) * std::cos(theta), std::sqrt(1.0f - (z * z)) * std::sin(theta), z};
+
+        const auto reference = std::abs(normal.y) < 0.999f ? Vector3{0.0f, 1.0f, 0.0f} : Vector3{1.0f, 0.0f, 0.0f};
+
+        const auto tangent = Vector3::normalise(Vector3::cross(normal, reference));
+        const auto bitangent = Vector3::cross(normal, tangent);
+
+        const auto rotate_mat = Matrix3{tangent, bitangent, normal};
+        return Vector3::normalise(rotate_mat * local);
     }
 
   private:
@@ -66,6 +91,11 @@ template <std::ranges::range T>
 const auto &rand_element(T &&elements)
 {
     return instance().rand_element(elements);
+}
+
+inline auto rand_vector3(const Vector3 &normal, float cone_half_angle) -> Vector3
+{
+    return instance().rand_vector3(normal, cone_half_angle);
 }
 
 }
