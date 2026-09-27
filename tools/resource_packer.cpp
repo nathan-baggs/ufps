@@ -82,6 +82,7 @@ auto main(int argc, char **argv) -> int
             "textures\\bullet_hole2.dds",
             "textures\\bullet_hole3.dds",
             "textures\\bullet_hole4.dds",
+            "textures\\spark.dds",
         };
 
         {

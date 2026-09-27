@@ -43,6 +43,7 @@
 #include "graphics/debug_renderer.h"
 #include "graphics/mesh_data.h"
 #include "graphics/mesh_manager.h"
+#include "graphics/particle_manager.h"
 #include "graphics/renderer.h"
 #include "graphics/sampler.h"
 #include "graphics/texture.h"
@@ -386,7 +387,8 @@ int start()
         std::make_unique<ufps::CameraManager>(),
         ufps::CameraHandle{},
         std::make_unique<ufps::DebugLayer>(),
-        std::make_unique<ufps::AudioManager>(*resource_loader));
+        std::make_unique<ufps::AudioManager>(*resource_loader),
+        std::make_unique<ufps::ParticleManager>());
     ufps::set_service(services.get());
 
     load_render_entity_manager(*resource_loader);
@@ -494,6 +496,7 @@ int start()
                         if (arg == ufps::KeyEvent{ufps::Key::F1, ufps::KeyState::DOWN})
                         {
                             debug_mode = !debug_mode;
+                            ::ShowCursor(debug_mode);
                             renderer.set_enabled(debug_mode);
                             current_actor = debug_mode ? static_cast<ufps::Actor *>(&flycam_actor)
                                                        : static_cast<ufps::Actor *>(&player_actor);
@@ -530,9 +533,15 @@ int start()
         awaitable.pump();
         pool.drain();
 
-        renderer.render(scene);
+        renderer.render(scene, delta);
 
         window.swap();
+
+        if (!debug_mode)
+        {
+            ::SetCursorPos(
+                static_cast<int>(window.window_width() / 2.0f), static_cast<int>(window.window_height() / 2.0f));
+        }
 
         const auto end_frame_allocated_bytes = ufps::g_metrics.total_allocated_bytes.load(std::memory_order_relaxed);
         ufps::g_metrics.frame_allocated_bytes.store(

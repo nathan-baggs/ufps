@@ -5,6 +5,7 @@ target_sources(ufpslib PRIVATE
   debug_renderer.cpp
   frame_buffer.cpp
   mesh_manager.cpp
+  particle_manager.cpp
   persistent_buffer.cpp
   program.cpp
   renderer.cpp

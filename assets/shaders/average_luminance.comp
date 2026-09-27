@@ -36,7 +36,7 @@ void main()
                 barrier();
         }
 
-        if (gl_GlobalInvocationID == 0)
+        if (gl_GlobalInvocationID.x == 0)
         {
                 float weighted_log_average = (shared_histogram[0] / max(u_num_pixels - float(count_for_bin), 1.0)) - 1.0;
                 float weighted_avg_lum = exp2(((weighted_log_average / 254.0) * u_log_lum_range) + u_min_log_lum);

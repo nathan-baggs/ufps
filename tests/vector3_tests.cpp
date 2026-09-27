@@ -13,6 +13,7 @@ TEST(vector3, empty_ctor)
     ASSERT_EQ(v.x, 0.0f);
     ASSERT_EQ(v.y, 0.0f);
     ASSERT_EQ(v.z, 0.0f);
+    ASSERT_TRUE(v.is_zero());
 }
 
 TEST(vector3, single_value_ctor)
@@ -22,6 +23,7 @@ TEST(vector3, single_value_ctor)
     ASSERT_EQ(v.x, 1.1f);
     ASSERT_EQ(v.y, 1.1f);
     ASSERT_EQ(v.z, 1.1f);
+    ASSERT_FALSE(v.is_zero());
 }
 
 TEST(vector3, all_components_ctor)
@@ -40,9 +42,11 @@ TEST(vector3, normalise)
 
     const auto n = ufps::Vector3::normalise(v);
 
-    EXPECT_NEAR(n.x, v.x / length, 0.0001f);
-    EXPECT_NEAR(n.y, v.y / length, 0.0001f);
-    EXPECT_NEAR(n.z, v.z / length, 0.0001f);
+    ASSERT_NEAR(n.x, v.x / length, 0.0001f);
+    ASSERT_NEAR(n.y, v.y / length, 0.0001f);
+    ASSERT_NEAR(n.z, v.z / length, 0.0001f);
+    ASSERT_FALSE(v.is_normalised());
+    ASSERT_TRUE(n.is_normalised());
 }
 
 TEST(vector3, cross)

@@ -746,6 +746,13 @@ auto DebugRenderer::draw_render_targets() -> void
             ::ImVec2(1.0f, 0.0f));
         ::ImGui::SameLine();
 
+        ::ImGui::Image(
+            tm.texture(gbuffer_rt_.depth_texture_bindless_handle)->native_handle(),
+            ::ImVec2(width * aspect_ratio, width),
+            ::ImVec2(0.0f, 1.0f),
+            ::ImVec2(1.0f, 0.0f));
+        ::ImGui::SameLine();
+
         ::ImGui::PopID();
     }
 
