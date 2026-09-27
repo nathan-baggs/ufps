@@ -118,7 +118,7 @@ auto Gun::update(Duration delta, Entity &entity, const InputMap &input_map, cons
     pitch_spring_.add_impulse(input_map.delta_y * description_.pitch_gain);
     const auto pitch_offset = pitch_spring_.update(delta);
 
-    const auto kick_recoil = kick_spring_.update(delta);
+    const auto kick_recoil = -kick_spring_.update(delta);
 
     auto gun_transform =
         Transform{
