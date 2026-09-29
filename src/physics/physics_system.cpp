@@ -22,11 +22,11 @@ using namespace std::literals;
 namespace
 {
 
-auto to_activation(ufps::PhysicsLayer layer) -> ::JPH::EActivation
+auto to_activation(ufps::BroadPhaseLayer layer) -> ::JPH::EActivation
 {
     switch (layer)
     {
-        using enum ufps::PhysicsLayer;
+        using enum ufps::BroadPhaseLayer;
         case STATIC: return ::JPH::EActivation::DontActivate;
         case DYNAMIC: return ::JPH::EActivation::Activate;
     }
@@ -34,11 +34,11 @@ auto to_activation(ufps::PhysicsLayer layer) -> ::JPH::EActivation
     throw ufps::Exception("unknown layer type: {}", layer);
 }
 
-auto to_motion(ufps::PhysicsLayer layer) -> ::JPH::EMotionType
+auto to_motion(ufps::BroadPhaseLayer layer) -> ::JPH::EMotionType
 {
     switch (layer)
     {
-        using enum ufps::PhysicsLayer;
+        using enum ufps::BroadPhaseLayer;
         case STATIC: return ::JPH::EMotionType::Static;
         case DYNAMIC: return ::JPH::EMotionType::Dynamic;
     }
@@ -111,7 +111,11 @@ PhysicsSystem::PhysicsSystem(DebugRenderMode debug_render_mode)
     player_controller_ = std::make_unique<VirtualCharacterController>(physics_system_);
 }
 
-auto PhysicsSystem::create_box(const AABB &aabb, const Vector3 &position, PhysicsLayer layer) -> RigidBodyHandle
+auto PhysicsSystem::create_box(
+    const AABB &aabb,
+    const Vector3 &position,
+    BroadPhaseLayer broad_phase_layer,
+    ObjectLayer object_layer) -> RigidBodyHandle
 {
     const auto half_extents =
         Vector3{(aabb.max.x - aabb.min.x) / 2.0f, (aabb.max.y - aabb.min.y) / 2.0f, (aabb.max.z - aabb.min.z) / 2.0f};
@@ -128,10 +132,14 @@ auto PhysicsSystem::create_box(const AABB &aabb, const Vector3 &position, Physic
     const auto &box = box_result.Get();
 
     const auto body_settings = ::JPH::BodyCreationSettings{
-        box, to_jolt(position), ::JPH::Quat::sIdentity(), to_motion(layer), static_cast<::JPH::ObjectLayer>(layer)};
+        box,
+        to_jolt(position),
+        ::JPH::Quat::sIdentity(),
+        to_motion(broad_phase_layer),
+        static_cast<::JPH::ObjectLayer>(object_layer)};
     auto &interface = physics_system_.GetBodyInterface();
 
-    const auto body_id = interface.CreateAndAddBody(body_settings, to_activation(layer));
+    const auto body_id = interface.CreateAndAddBody(body_settings, to_activation(broad_phase_layer));
 
     return rigid_bodies_.emplace(body_id, std::addressof(interface));
 }
@@ -139,7 +147,9 @@ auto PhysicsSystem::create_box(const AABB &aabb, const Vector3 &position, Physic
 auto PhysicsSystem::create_rigid_body(const RigidBody::Description &description) -> RigidBodyHandle
 {
     const auto transform = Transform{description.local_transform};
-    const auto handle = create_box({{-1.0f}, {1.0f}}, transform.position, PhysicsLayer::STATIC);
+    const auto handle =
+        create_box({{-1.0f}, {1.0f}}, transform.position, description.broad_phase_layer, description.object_layer);
+
     rigid_bodies_[handle]->set_local_transform(transform);
 
     return handle;
@@ -185,5 +195,4 @@ auto PhysicsSystem::player_controller() -> VirtualCharacterController &
 {
     return *player_controller_;
 }
-
 }

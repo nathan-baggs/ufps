@@ -49,6 +49,7 @@
 #include "maths/vector4.h"
 #include "memory/metrics.h"
 #include "physics/physics_debug_renderer.h"
+#include "physics/physics_layers.h"
 #include "physics/physics_system.h"
 #include "serialisation/yaml_serialiser.h"
 #include "utils/log.h"
@@ -1024,7 +1025,11 @@ auto DebugRenderer::draw_inspector(Scene &scene) -> void
 
             if (::ImGui::Button("add rigid body"))
             {
-                const auto body = ps.create_box({{-1.0f}, {1.0f}}, entity->transform().position, PhysicsLayer::STATIC);
+                const auto body = ps.create_box(
+                    {{-1.0f}, {1.0f}},
+                    entity->transform().position,
+                    BroadPhaseLayer::STATIC,
+                    ObjectLayer::WORLD_COLLIDERS);
                 entity->add_rigid_body(body);
                 selected_ = body;
             }

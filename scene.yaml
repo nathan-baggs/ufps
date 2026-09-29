@@ -285,6 +285,8 @@ Description:
                   x: 100.99095
                   y: 1
                   z: 146.28583
+              broad_phase_layer: STATIC
+              object_layer: WORLD_COLLIDERS
           - Description:
               local_transform:
                 - 2.8820875
@@ -308,6 +310,8 @@ Description:
                   x: 2.8820875
                   y: 1.4900789
                   z: 3.1446872
+              broad_phase_layer: STATIC
+              object_layer: WORLD_COLLIDERS
           - Description:
               local_transform:
                 - 3.1013038
@@ -331,6 +335,8 @@ Description:
                   x: 3.1013038
                   y: 1.4900789
                   z: 3.0687852
+              broad_phase_layer: STATIC
+              object_layer: WORLD_COLLIDERS
           - Description:
               local_transform:
                 - 3.1013038
@@ -354,6 +360,8 @@ Description:
                   x: 3.1013038
                   y: 1.4900789
                   z: 3.0687852
+              broad_phase_layer: STATIC
+              object_layer: WORLD_COLLIDERS
           - Description:
               local_transform:
                 - 3.1013038
@@ -377,6 +385,8 @@ Description:
                   x: 3.1013038
                   y: 1.4900789
                   z: 3.0687852
+              broad_phase_layer: STATIC
+              object_layer: WORLD_COLLIDERS
           - Description:
               local_transform:
                 - 1
@@ -400,6 +410,8 @@ Description:
                   x: 1
                   y: 2.543293
                   z: 4.447936
+              broad_phase_layer: STATIC
+              object_layer: WORLD_COLLIDERS
           - Description:
               local_transform:
                 - 1
@@ -423,6 +435,8 @@ Description:
                   x: 1
                   y: 2.543293
                   z: 4.447936
+              broad_phase_layer: STATIC
+              object_layer: WORLD_COLLIDERS
           - Description:
               local_transform:
                 - 1.1055973
@@ -446,6 +460,8 @@ Description:
                   x: 1.1055973
                   y: 1.9848992
                   z: 4.185829
+              broad_phase_layer: STATIC
+              object_layer: WORLD_COLLIDERS
           - Description:
               local_transform:
                 - 1.332971
@@ -469,6 +485,8 @@ Description:
                   x: 1.332971
                   y: 2.0874453
                   z: 1.9823564
+              broad_phase_layer: STATIC
+              object_layer: WORLD_COLLIDERS
           - Description:
               local_transform:
                 - 8.542002
@@ -492,6 +510,8 @@ Description:
                   x: 8.542002
                   y: 2.0942285
                   z: 1
+              broad_phase_layer: STATIC
+              object_layer: WORLD_COLLIDERS
           - Description:
               local_transform:
                 - 3.155569
@@ -515,6 +535,8 @@ Description:
                   x: 3.155569
                   y: 2.1863022
                   z: 1
+              broad_phase_layer: STATIC
+              object_layer: WORLD_COLLIDERS
         render_entities: ~
         children: ~
         camera: ~

@@ -53,6 +53,8 @@ auto RigidBody::description() const -> Description
     return {
         .local_transform = local_transform_,
         .applied_scale = applied_scale_,
+        .broad_phase_layer = broad_phase_layer_,
+        .object_layer = object_layer_,
     };
 }
 

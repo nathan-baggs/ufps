@@ -33,7 +33,11 @@ class PhysicsSystem : public ::JPH::ContactListener
     PhysicsSystem(PhysicsSystem &&) = delete;
     auto operator=(PhysicsSystem &&) -> PhysicsSystem & = delete;
 
-    auto create_box(const AABB &aabb, const Vector3 &position, PhysicsLayer layer) -> RigidBodyHandle;
+    auto create_box(
+        const AABB &aabb,
+        const Vector3 &position,
+        BroadPhaseLayer broad_phase_layer,
+        ObjectLayer object_layer) -> RigidBodyHandle;
 
     auto create_rigid_body(const RigidBody::Description &description) -> RigidBodyHandle;
     auto remove_rigid_body(RigidBodyHandle handle) -> void;

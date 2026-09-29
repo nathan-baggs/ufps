@@ -4,6 +4,7 @@
 #include "maths/transform.h"
 #include "maths/vector3.h"
 #include "physics/jolt.h"
+#include "physics/physics_layers.h"
 
 namespace ufps
 {
@@ -15,6 +16,8 @@ class RigidBody
     {
         Matrix4 local_transform;
         Vector3 applied_scale;
+        BroadPhaseLayer broad_phase_layer;
+        ObjectLayer object_layer;
     };
 
     RigidBody(::JPH::BodyID body_id, ::JPH::BodyInterface *body_interface);
@@ -42,6 +45,8 @@ class RigidBody
     Transform local_transform_;
     Transform parent_transform_;
     Vector3 applied_scale_;
+    BroadPhaseLayer broad_phase_layer_;
+    ObjectLayer object_layer_;
 };
 
 }

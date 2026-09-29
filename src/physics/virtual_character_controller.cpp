@@ -30,7 +30,7 @@ VirtualCharacterController::VirtualCharacterController(::JPH::PhysicsSystem &ps)
     auto settings = ::JPH::Ref{new ::JPH::CharacterVirtualSettings{}};
     settings->mShape = shape_;
     settings->mInnerBodyShape = inner_shape_;
-    settings->mInnerBodyLayer = static_cast<::JPH::ObjectLayer>(PhysicsLayer::DYNAMIC);
+    settings->mInnerBodyLayer = static_cast<::JPH::ObjectLayer>(ObjectLayer::PLAYER);
     character_ =
         new ::JPH::CharacterVirtual(settings, ::JPH::Vec3::sZero(), ::JPH::Quat::sIdentity(), 0, std::addressof(ps));
 
@@ -52,8 +52,8 @@ auto VirtualCharacterController::update(std::chrono::milliseconds delta, const V
     character_->Update(
         jolt_delta,
         -character_->GetUp() * ps_.GetGravity().Length(),
-        ps_.GetDefaultBroadPhaseLayerFilter(static_cast<::JPH::ObjectLayer>(PhysicsLayer::DYNAMIC)),
-        ps_.GetDefaultLayerFilter(static_cast<::JPH::ObjectLayer>(PhysicsLayer::DYNAMIC)),
+        ps_.GetDefaultBroadPhaseLayerFilter(static_cast<::JPH::ObjectLayer>(ObjectLayer::PLAYER)),
+        ps_.GetDefaultLayerFilter(static_cast<::JPH::ObjectLayer>(ObjectLayer::PLAYER)),
         {},
         {},
         temp_allocator);
