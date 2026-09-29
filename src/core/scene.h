@@ -27,19 +27,12 @@
 #include "maths/utils.h"
 #include "maths/vector3.h"
 #include "maths/vector4.h"
+#include "physics/physics_system.h"
 #include "utils/log.h"
 #include "utils/string_map.h"
 
 namespace ufps
 {
-
-struct IntersectionResult
-{
-    EntityHandle entity;
-    Vector3 position;
-    Vector3 normal;
-    float distance;
-};
 
 struct ToneMapOptions
 {
@@ -118,8 +111,6 @@ class Scene
     };
 
     constexpr Scene(const Description &description);
-
-    constexpr auto intersect_ray(const Ray &ray) const -> std::optional<IntersectionResult>;
 
     constexpr auto add(EntityHandle handle) -> void;
 
@@ -253,82 +244,82 @@ constexpr Scene::Scene(const Description &description)
     }
 }
 
-constexpr auto Scene::intersect_ray(const Ray &ray) const -> std::optional<IntersectionResult>
-{
-    auto &&[mesh_manager, rem, em] = services<MeshManager, RenderEntityManager, EntityManager>();
-
-    auto result = std::optional<IntersectionResult>{};
-    auto min_distance = std::numeric_limits<float>::max();
-
-    for (auto handle : entities_)
-    {
-        auto entity = em[handle];
-        if (!entity)
-        {
-            continue;
-        }
-
-        const auto inv_transform = Matrix4::invert(entity->transform());
-        const auto transformed_ray =
-            Ray{inv_transform * Vector4{ray.origin, 1.0f}, inv_transform * Vector4{ray.direction, 0.0f}};
-
-        if (!!intersect(transformed_ray, entity->aabb()))
-        {
-            for (auto render_entity_handle : entity->render_entities())
-            {
-                if (auto render_entity = rem[render_entity_handle]; render_entity)
-                {
-                    if (!intersect(transformed_ray, render_entity->aabb()))
-                    {
-                        continue;
-                    }
-
-                    const auto mesh_view = render_entity->mesh_view();
-                    const auto indices = mesh_manager.index_data(mesh_view);
-                    const auto vertices = mesh_manager.vertex_data(mesh_view);
-
-                    for (const auto &indices : std::views::chunk(indices, 3))
-                    {
-                        const auto v0 = vertices[indices[0]].position;
-                        const auto v1 = vertices[indices[1]].position;
-                        const auto v2 = vertices[indices[2]].position;
-
-                        if (const auto distance = intersect(transformed_ray, v0, v1, v2); distance)
-                        {
-                            const auto intersection_point =
-                                transformed_ray.origin + transformed_ray.direction * (*distance);
-
-                            if (*distance < min_distance)
-                            {
-                                const auto normal = -Vector3::normalise(Vector3::cross(v2 - v0, v1 - v0));
-                                const auto transform = Matrix4{entity->transform()};
-                                const auto transformed_normal = transform * Vector4{normal, 0.0f};
-
-                                const auto distance_vec = Vector4{*distance, 0.0f};
-                                const auto transformed_distance = transform * distance_vec;
-
-                                const auto transformed_intersection = transform * Vector4{intersection_point, 1.0f};
-
-                                result = IntersectionResult{
-                                    .entity = handle,
-                                    .position =
-                                        {transformed_intersection.x,
-                                         transformed_intersection.y,
-                                         transformed_intersection.z},
-                                    .normal = {transformed_normal.x, transformed_normal.y, transformed_normal.z},
-                                    .distance = transformed_distance.x,
-                                };
-                                min_distance = *distance;
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    return result;
-}
+// constexpr auto Scene::intersect_ray(const Ray &ray) const -> std::optional<IntersectionResult>
+// {
+//     auto &&[mesh_manager, rem, em] = services<MeshManager, RenderEntityManager, EntityManager>();
+//
+//     auto result = std::optional<IntersectionResult>{};
+//     auto min_distance = std::numeric_limits<float>::max();
+//
+//     for (auto handle : entities_)
+//     {
+//         auto entity = em[handle];
+//         if (!entity)
+//         {
+//             continue;
+//         }
+//
+//         const auto inv_transform = Matrix4::invert(entity->transform());
+//         const auto transformed_ray =
+//             Ray{inv_transform * Vector4{ray.origin, 1.0f}, inv_transform * Vector4{ray.direction, 0.0f}};
+//
+//         if (!!intersect(transformed_ray, entity->aabb()))
+//         {
+//             for (auto render_entity_handle : entity->render_entities())
+//             {
+//                 if (auto render_entity = rem[render_entity_handle]; render_entity)
+//                 {
+//                     if (!intersect(transformed_ray, render_entity->aabb()))
+//                     {
+//                         continue;
+//                     }
+//
+//                     const auto mesh_view = render_entity->mesh_view();
+//                     const auto indices = mesh_manager.index_data(mesh_view);
+//                     const auto vertices = mesh_manager.vertex_data(mesh_view);
+//
+//                     for (const auto &indices : std::views::chunk(indices, 3))
+//                     {
+//                         const auto v0 = vertices[indices[0]].position;
+//                         const auto v1 = vertices[indices[1]].position;
+//                         const auto v2 = vertices[indices[2]].position;
+//
+//                         if (const auto distance = intersect(transformed_ray, v0, v1, v2); distance)
+//                         {
+//                             const auto intersection_point =
+//                                 transformed_ray.origin + transformed_ray.direction * (*distance);
+//
+//                             if (*distance < min_distance)
+//                             {
+//                                 const auto normal = -Vector3::normalise(Vector3::cross(v2 - v0, v1 - v0));
+//                                 const auto transform = Matrix4{entity->transform()};
+//                                 const auto transformed_normal = transform * Vector4{normal, 0.0f};
+//
+//                                 const auto distance_vec = Vector4{*distance, 0.0f};
+//                                 const auto transformed_distance = transform * distance_vec;
+//
+//                                 const auto transformed_intersection = transform * Vector4{intersection_point, 1.0f};
+//
+//                                 result = IntersectionResult{
+//                                     .entity = handle,
+//                                     .position =
+//                                         {transformed_intersection.x,
+//                                          transformed_intersection.y,
+//                                          transformed_intersection.z},
+//                                     .normal = {transformed_normal.x, transformed_normal.y, transformed_normal.z},
+//                                     .distance = transformed_distance.x,
+//                                 };
+//                                 min_distance = *distance;
+//                             }
+//                         }
+//                     }
+//                 }
+//             }
+//         }
+//     }
+//
+//     return result;
+// }
 
 constexpr auto Scene::add(EntityHandle handle) -> void
 {

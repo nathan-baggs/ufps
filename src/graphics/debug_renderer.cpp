@@ -61,7 +61,10 @@ namespace
 
 static constexpr auto debug_light_scale = 0.25f;
 
-auto screen_ray(const ufps::MouseButtonEvent &evt, const ufps::Window &window, const ufps::Camera &camera) -> ufps::Ray
+[[maybe_unused]] auto screen_ray(
+    const ufps::MouseButtonEvent &evt,
+    const ufps::Window &window,
+    const ufps::Camera &camera) -> ufps::Ray
 {
     const auto x = 2.0f * evt.x() / window.render_width() - 1.0f;
     const auto y = 1.0f - 2.0f * evt.y() / window.render_height();
@@ -286,91 +289,94 @@ auto DebugRenderer::post_render(Scene &scene, const Camera &camera) -> void
 
     if (click_)
     {
-        const auto pick_ray = screen_ray(*click_, window_, camera);
-        auto intersection = scene.intersect_ray(pick_ray);
-        if (intersection)
-        {
-            selected_ = intersection->entity;
-        }
-        else
-        {
-            selected_ = std::monostate{};
-        }
-
-        for (const auto &light_handle : lm.handles())
-        {
-            const auto light = lm[light_handle];
-
-            if (!light)
-            {
-                continue;
-            }
-
-            const auto light_transform = Transform{light->position, {debug_light_scale}, {}};
-            const auto light_model = Matrix4{light_transform};
-
-            const auto debug_light_aabb = ufps::AABB{
-                .min = light_model * Vector4{-1.0f, -1.0f, -1.0f, 1.0f},
-                .max = light_model * Vector4{1.0f},
-            };
-
-            if (const auto light_intersection = intersect(pick_ray, debug_light_aabb); light_intersection)
-            {
-                if (!intersection || light_intersection < intersection->distance)
-                {
-                    selected_ = light_handle;
-                }
-            }
-        }
-
-        for (const auto entity_handle : scene.entities())
-        {
-            const auto entity = em[entity_handle];
-            if (!entity)
-            {
-                continue;
-            }
-
-            if (entity->name() == "flycam")
-            {
-                continue;
-            }
-
-            const auto entity_transform = Transform{entity->transform().position, {debug_light_scale / 4.0f}, {}};
-            const auto entity_model = Matrix4{entity_transform};
-
-            const auto debug_entity_aabb = ufps::AABB{
-                .min = entity_model * Vector4{-1.0f, -1.0f, -1.0f, 1.0f},
-                .max = entity_model * Vector4{1.0f},
-            };
-
-            if (const auto entity_intersection = intersect(pick_ray, debug_entity_aabb); entity_intersection)
-            {
-                if (!intersection || entity_intersection < intersection->distance)
-                {
-                    selected_ = entity_handle;
-                }
-            }
-
-            const auto camera = cm[entity->camera()];
-            if (camera)
-            {
-                const auto camera_transform = Transform{camera->transform().position, {debug_light_scale / 4.0f}, {}};
-                const auto camera_model = Matrix4{camera_transform};
-                const auto debug_entity_aabb = ufps::AABB{
-                    .min = camera_model * Vector4{-1.0f, -1.0f, -1.0f, 1.0f},
-                    .max = camera_model * Vector4{1.0f},
-                };
-
-                if (const auto camera_intersection = intersect(pick_ray, debug_entity_aabb); camera_intersection)
-                {
-                    if (!intersection || camera_intersection < intersection->distance)
-                    {
-                        selected_ = entity->camera();
-                    }
-                }
-            }
-        }
+        // const auto pick_ray = screen_ray(*click_, window_, camera);
+        // auto intersection = scene.intersect_ray(pick_ray);
+        // if (intersection)
+        // {
+        //     selected_ = intersection->entity;
+        // }
+        // else
+        // {
+        //     selected_ = std::monostate{};
+        // }
+        //
+        // for (const auto &light_handle : lm.handles())
+        // {
+        //     const auto light = lm[light_handle];
+        //
+        //     if (!light)
+        //     {
+        //         continue;
+        //     }
+        //
+        //     const auto light_transform = Transform{light->position, {debug_light_scale}, {}};
+        //     const auto light_model = Matrix4{light_transform};
+        //
+        //     const auto debug_light_aabb = ufps::AABB{
+        //         .min = light_model * Vector4{-1.0f, -1.0f, -1.0f, 1.0f},
+        //         .max = light_model * Vector4{1.0f},
+        //     };
+        //
+        //     //     if (const auto light_intersection = intersect(pick_ray, debug_light_aabb); light_intersection)
+        //     //     {
+        //     //         if (!intersection || light_intersection < intersection->distance)
+        //     //         {
+        //     //             selected_ = light_handle;
+        //     //         }
+        //     //     }
+        //     // }
+        //
+        //     // for (const auto entity_handle : scene.entities())
+        //     // {
+        //     //     const auto entity = em[entity_handle];
+        //     //     if (!entity)
+        //     //     {
+        //     //         continue;
+        //     //     }
+        //     //
+        //     //     if (entity->name() == "flycam")
+        //     //     {
+        //     //         continue;
+        //     //     }
+        //     //
+        //     //     const auto entity_transform = Transform{entity->transform().position, {debug_light_scale / 4.0f},
+        //     //     {}}; const auto entity_model = Matrix4{entity_transform};
+        //     //
+        //     //     // const auto debug_entity_aabb = ufps::AABB{
+        //     //     //     .min = entity_model * Vector4{-1.0f, -1.0f, -1.0f, 1.0f},
+        //     //     //     .max = entity_model * Vector4{1.0f},
+        //     //     // };
+        //     //
+        //     //     // if (const auto entity_intersection = intersect(pick_ray, debug_entity_aabb);
+        //     entity_intersection)
+        //     //     // {
+        //     //     //     if (!intersection || entity_intersection < intersection->distance)
+        //     //     //     {
+        //     //     //         selected_ = entity_handle;
+        //     //     //     }
+        //     //     // }
+        //     //     //
+        //     //     // const auto camera = cm[entity->camera()];
+        //     //     // if (camera)
+        //     //     // {
+        //     //     //     const auto camera_transform = Transform{camera->transform().position, {debug_light_scale
+        //     //     / 4.0f},
+        //     //     //     {}}; const auto camera_model = Matrix4{camera_transform}; const auto debug_entity_aabb =
+        //     //     //     ufps::AABB{
+        //     //     //         .min = camera_model * Vector4{-1.0f, -1.0f, -1.0f, 1.0f},
+        //     //     //         .max = camera_model * Vector4{1.0f},
+        //     //     //     };
+        //     //     //
+        //     //     //     if (const auto camera_intersection = intersect(pick_ray, debug_entity_aabb);
+        //     //     camera_intersection)
+        //     //     //     {
+        //     //     //         if (!intersection || camera_intersection < intersection->distance)
+        //     //     //         {
+        //     //     //             selected_ = entity->camera();
+        //     //     //         }
+        //     //     //     }
+        //     // }
+        // }
 
         click_.reset();
     }
@@ -1509,5 +1515,4 @@ auto DebugRenderer::draw_player_info() -> void
 
     ::ImGui::End();
 }
-
 }

@@ -2,8 +2,10 @@
 
 #include <optional>
 
+#include "core/entity.h"
 #include "core/sparse_set.h"
 #include "maths/aabb.h"
+#include "maths/ray.h"
 #include "maths/vector3.h"
 #include "physics/jolt.h"
 #include "physics/physics_debug_renderer.h"
@@ -15,6 +17,13 @@
 namespace ufps
 {
 
+struct IntersectionResult
+{
+    EntityHandle entity;
+    Vector3 position;
+    Vector3 normal;
+    float distance;
+};
 
 enum class DebugRenderMode
 {
