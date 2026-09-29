@@ -14,15 +14,16 @@
 #include "core/utils.h"
 #include "maths/aabb.h"
 #include "maths/transform.h"
-#include "physics/physics_system.h"
+#include "physics/rigid_body.h"
 
 namespace ufps
 {
 
+class Entity;
+using EntityHandle = SparseSet<Entity>::handle_type;
+
 class Entity
 {
-    using EntityHandle = SparseSet<Entity>::handle_type;
-
   public:
     struct Description
     {

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "core/sparse_set.h"
 #include "maths/matrix4.h"
 #include "maths/transform.h"
 #include "maths/vector3.h"
@@ -48,5 +49,7 @@ class RigidBody
     BroadPhaseLayer broad_phase_layer_;
     ObjectLayer object_layer_;
 };
+
+using RigidBodyHandle = SparseSet<RigidBody>::handle_type;
 
 }

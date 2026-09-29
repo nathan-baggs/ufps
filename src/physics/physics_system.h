@@ -15,7 +15,6 @@
 namespace ufps
 {
 
-using RigidBodyHandle = SparseSet<RigidBody>::handle_type;
 
 enum class DebugRenderMode
 {
