@@ -1,5 +1,7 @@
 #pragma once
 
+#include <limits>
+
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 
@@ -27,8 +29,10 @@
 #include <Jolt/Physics/Character/CharacterVirtual.h>
 #include <Jolt/Physics/Collision/BroadPhase/BroadPhaseLayer.h>
 #include <Jolt/Physics/Collision/BroadPhase/ObjectVsBroadPhaseLayerFilterMask.h>
+#include <Jolt/Physics/Collision/CastResult.h>
 #include <Jolt/Physics/Collision/ObjectLayer.h>
 #include <Jolt/Physics/Collision/ObjectLayerPairFilterMask.h>
+#include <Jolt/Physics/Collision/RayCast.h>
 #include <Jolt/Physics/Collision/Shape/BoxShape.h>
 #include <Jolt/Physics/Collision/Shape/CapsuleShape.h>
 #include <Jolt/Physics/Collision/Shape/RotatedTranslatedShape.h>
@@ -46,6 +50,7 @@
 #include "graphics/colour.h"
 #include "maths/matrix4.h"
 #include "maths/quaternion.h"
+#include "maths/ray.h"
 #include "maths/vector3.h"
 
 namespace ufps
@@ -71,14 +76,19 @@ constexpr auto to_native(const ::JPH::Quat &q) -> Quaternion
     return std::bit_cast<Quaternion>(q);
 }
 
-constexpr auto to_jolt(ufps::Vector3 vec) -> ::JPH::Vec3
+constexpr auto to_jolt(Vector3 vec) -> ::JPH::Vec3
 {
     return {vec.x, vec.y, vec.z};
 }
 
-constexpr auto to_jolt(ufps::Quaternion q) -> ::JPH::Quat
+constexpr auto to_jolt(Quaternion q) -> ::JPH::Quat
 {
     return std::bit_cast<::JPH::Quat>(q);
+}
+
+constexpr auto to_jolt(const Ray &ray, float distance = 300.0f) -> ::JPH::RRayCast
+{
+    return {to_jolt(ray.origin), to_jolt(ray.direction * distance)};
 }
 
 }
