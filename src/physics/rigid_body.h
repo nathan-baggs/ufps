@@ -36,6 +36,7 @@ class RigidBody
     auto set_parent_transform(const Transform &transform) -> void;
     auto description() const -> Description;
     auto native_handle() const -> ::JPH::BodyID;
+    auto user_data() const -> std::uint64_t;
 
   private:
     auto update_transforms(const Transform &local, const Transform &parent) -> void;

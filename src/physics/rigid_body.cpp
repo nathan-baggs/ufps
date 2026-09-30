@@ -63,6 +63,11 @@ auto RigidBody::native_handle() const -> ::JPH::BodyID
     return body_id_;
 }
 
+auto RigidBody::user_data() const -> std::uint64_t
+{
+    return body_interface_->GetUserData(body_id_);
+}
+
 auto RigidBody::update_transforms(const Transform &local, const Transform &parent) -> void
 {
     const auto world_transform = parent * local;
