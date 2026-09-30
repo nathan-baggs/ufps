@@ -510,7 +510,7 @@ int start()
                     {
                         if (!debug_mode || input_map[ufps::Key::SHIFT])
                         {
-                            static constexpr auto sensitivity = float{0.002f};
+                            static constexpr auto sensitivity = 0.002f;
                             input_map.delta_x += arg.delta_x() * sensitivity;
                             input_map.delta_y += arg.delta_y() * sensitivity;
                         }

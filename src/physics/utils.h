@@ -19,7 +19,7 @@ class SimpleBroadPhaseLayer : public ::JPH::BroadPhaseLayerInterface
   public:
     auto GetNumBroadPhaseLayers() const -> ::JPH::uint override
     {
-        return std::ranges::size(std::meta::enumerators_of(^^BroadPhaseLayer));
+        return std::ranges::size(std::define_static_array(std::meta::enumerators_of(^^BroadPhaseLayer)));
     }
 
     auto GetBroadPhaseLayer(::JPH::ObjectLayer layer) const -> ::JPH::BroadPhaseLayer override
