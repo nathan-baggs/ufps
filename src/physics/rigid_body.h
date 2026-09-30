@@ -21,7 +21,11 @@ class RigidBody
         ObjectLayer object_layer;
     };
 
-    RigidBody(::JPH::BodyID body_id, ::JPH::BodyInterface *body_interface);
+    RigidBody(
+        ::JPH::BodyID body_id,
+        ::JPH::BodyInterface *body_interface,
+        BroadPhaseLayer broad_phase_layer,
+        ObjectLayer object_layer);
 
     RigidBody(const RigidBody &) = delete;
     auto operator=(const RigidBody &) -> RigidBody & = delete;

@@ -86,7 +86,7 @@ constexpr auto to_jolt(Quaternion q) -> ::JPH::Quat
     return std::bit_cast<::JPH::Quat>(q);
 }
 
-constexpr auto to_jolt(const Ray &ray, float distance = 300.0f) -> ::JPH::RRayCast
+constexpr auto to_jolt(const Ray &ray, float distance = 600.0f) -> ::JPH::RRayCast
 {
     return {to_jolt(ray.origin), to_jolt(ray.direction * distance)};
 }

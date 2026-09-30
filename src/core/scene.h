@@ -27,6 +27,7 @@
 #include "maths/utils.h"
 #include "maths/vector3.h"
 #include "maths/vector4.h"
+#include "physics/physics_layers.h"
 #include "physics/physics_system.h"
 #include "utils/log.h"
 #include "utils/string_map.h"
@@ -196,7 +197,14 @@ constexpr Scene::Scene(const Description &description)
 
         for (const auto &rb_description : entity_description.rigid_bodies)
         {
+            log::debug("rb");
             const auto rb = ps.create_rigid_body(rb_description, new_entity_handle);
+            new_entity->add_rigid_body(rb);
+        }
+
+        for (const auto rb : ps.create_meshes(BroadPhaseLayer::STATIC, ObjectLayer::LEVEL_GEOMETRY, new_entity_handle))
+        {
+            log::debug("adding mesh");
             new_entity->add_rigid_body(rb);
         }
 

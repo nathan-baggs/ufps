@@ -196,6 +196,14 @@ auto Entity::update_transforms(const Transform &local, const Transform &parent) 
         const auto child = em[handle];
         child->set_parent_transform(transform_);
     }
+
+    for (auto rb_handle : rigid_bodies_)
+    {
+        if (const auto &rb = ps.rigid_body(rb_handle); rb)
+        {
+            rb->set_parent_transform(transform_);
+        }
+    }
 }
 
 auto Entity::add_child(EntityHandle child) -> void

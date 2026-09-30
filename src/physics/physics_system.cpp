@@ -4,10 +4,16 @@
 #include <cstdarg>
 #include <cstdio>
 #include <optional>
+#include <ranges>
 #include <string_view>
 
+#include "Jolt/Math/Float3.h"
 #include "Jolt/Physics/Body/BodyLock.h"
+#include "Jolt/Physics/Collision/Shape/MeshShape.h"
 #include "core/entity.h"
+#include "core/entity_manager.h"
+#include "core/service_locator.h"
+#include "graphics/mesh_manager.h"
 #include "maths/transform.h"
 #include "maths/vector3.h"
 #include "physics/jolt.h"
@@ -92,6 +98,7 @@ PhysicsSystem::PhysicsSystem(DebugRenderMode debug_render_mode)
     : broad_phase_layer_{}
     , object_vs_broad_phase_layer_filter_{}
     , object_layer_pair_filter_{}
+    , cast_ray_layer_filter_{}
     , temp_allocator_{10u * 1024u * 1024u}
     , job_system_{::JPH::cMaxPhysicsJobs, ::JPH::cMaxPhysicsBarriers, static_cast<int>(std::thread::hardware_concurrency() - 1zu)}
     , physics_system_{}
@@ -150,7 +157,7 @@ auto PhysicsSystem::create_box(
 
     const auto body_id = interface.CreateAndAddBody(body_settings, to_activation(broad_phase_layer));
 
-    auto rb = rigid_bodies_.emplace(body_id, std::addressof(interface));
+    auto rb = rigid_bodies_.emplace(body_id, std::addressof(interface), broad_phase_layer, object_layer);
 
     static_assert(sizeof(HandlePair) == sizeof(std::uint64_t));
 
@@ -160,6 +167,71 @@ auto PhysicsSystem::create_box(
     interface.SetUserData(body_id, user_data);
 
     return rb;
+}
+
+auto PhysicsSystem::create_meshes(
+    BroadPhaseLayer broad_phase_layer,
+    ObjectLayer object_layer,
+    EntityHandle entity_handle) -> std::vector<RigidBodyHandle>
+{
+    auto handles = std::vector<RigidBodyHandle>();
+
+    const auto &[em, rem, mm] = services<EntityManager, RenderEntityManager, MeshManager>();
+
+    const auto &entity = em[entity_handle];
+    contract_assert(entity);
+
+    for (const auto render_entity_handle : entity->render_entities())
+    {
+        const auto &render_entity = rem[render_entity_handle];
+        contract_assert(render_entity);
+
+        const auto mesh_view = render_entity->mesh_view();
+
+        const auto jolt_vertex_list =
+            mm.vertex_data(mesh_view) |
+            std::views::transform([](const auto &e) { return std::bit_cast<::JPH::Float3>(e.position); }) |
+            std::ranges::to<::JPH::Array<::JPH::Float3>>();
+
+        const auto jolt_index_list =
+            mm.index_data(mesh_view) | std::views::chunk(3u) |
+            std::views::transform([](const auto &e) { return ::JPH::IndexedTriangle{e[0], e[1], e[2]}; }) |
+            std::ranges::to<::JPH::Array<::JPH::IndexedTriangle>>();
+
+        auto mesh_shape_settings = ::JPH::MeshShapeSettings{jolt_vertex_list, jolt_index_list};
+        mesh_shape_settings.SetEmbedded();
+
+        auto mesh_result = mesh_shape_settings.Create();
+        if (mesh_result.HasError())
+        {
+            throw Exception("mesh error: {}", mesh_result.GetError());
+        }
+
+        const auto &mesh_shape = mesh_result.Get();
+
+        const auto body_settings = ::JPH::BodyCreationSettings{
+            mesh_shape,
+            to_jolt(entity->transform().position),
+            ::JPH::Quat::sIdentity(),
+            to_motion(broad_phase_layer),
+            static_cast<::JPH::ObjectLayer>(object_layer)};
+        auto &interface = physics_system_.GetBodyInterface();
+
+        const auto body_id = interface.CreateAndAddBody(body_settings, to_activation(broad_phase_layer));
+
+        auto rb = rigid_bodies_.emplace(body_id, std::addressof(interface), broad_phase_layer, object_layer);
+
+        static_assert(sizeof(HandlePair) == sizeof(std::uint64_t));
+
+        const auto handle_pair = HandlePair{.entity = entity_handle, .body = rb};
+        const auto user_data = std::bit_cast<std::uint64_t>(handle_pair);
+
+        interface.SetUserData(body_id, user_data);
+
+        handles.push_back(rb);
+    }
+
+    return handles;
 }
 
 auto PhysicsSystem::create_rigid_body(const RigidBody::Description &description, EntityHandle entity) -> RigidBodyHandle
@@ -201,9 +273,9 @@ auto PhysicsSystem::update() -> void
 
     if (debug_renderer_)
     {
-        static const auto settings = ::JPH::BodyManager::DrawSettings{};
-        physics_system_.DrawBodies(settings, std::addressof(*debug_renderer_));
-        player_controller_->debug_draw(*debug_renderer_);
+        // static const auto settings = ::JPH::BodyManager::DrawSettings{};
+        // physics_system_.DrawBodies(settings, std::addressof(*debug_renderer_));
+        // player_controller_->debug_draw(*debug_renderer_);
     }
 }
 
@@ -212,7 +284,7 @@ auto PhysicsSystem::cast_ray(const Ray &ray) const -> std::optional<Intersection
     const auto jolt_ray = to_jolt(ray);
     auto hit_result = ::JPH::RayCastResult{};
 
-    const auto hit = physics_system_.GetNarrowPhaseQuery().CastRay(jolt_ray, hit_result);
+    const auto hit = physics_system_.GetNarrowPhaseQuery().CastRay(jolt_ray, hit_result, {}, cast_ray_layer_filter_);
 
     if (hit)
     {

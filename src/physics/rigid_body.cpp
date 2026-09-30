@@ -8,13 +8,19 @@
 
 namespace ufps
 {
-RigidBody::RigidBody(::JPH::BodyID body_id, ::JPH::BodyInterface *body_interface)
+RigidBody::RigidBody(
+    ::JPH::BodyID body_id,
+    ::JPH::BodyInterface *body_interface,
+    BroadPhaseLayer broad_phase_layer,
+    ObjectLayer object_layer)
     : body_id_{body_id}
     , body_interface_{body_interface}
     , original_shape_{body_interface_->GetShape(body_id_)}
     , local_transform_{{}, {1.0f}, {}}
     , parent_transform_{{}, {1.0f}, {}}
     , applied_scale_{1.0f}
+    , broad_phase_layer_{broad_phase_layer}
+    , object_layer_{object_layer}
 {
 }
 

@@ -49,6 +49,9 @@ class PhysicsSystem : public ::JPH::ContactListener
         ObjectLayer object_layer,
         EntityHandle entity) -> RigidBodyHandle;
 
+    auto create_meshes(BroadPhaseLayer broad_phase_layer, ObjectLayer object_layer, EntityHandle entity_handle)
+        -> std::vector<RigidBodyHandle>;
+
     auto create_rigid_body(const RigidBody::Description &description, EntityHandle entity) -> RigidBodyHandle;
 
     auto remove_rigid_body(RigidBodyHandle handle) -> void;
@@ -69,6 +72,7 @@ class PhysicsSystem : public ::JPH::ContactListener
     SimpleBroadPhaseLayer broad_phase_layer_;
     SimpleObjectVsBroadPhaseLayerFilter object_vs_broad_phase_layer_filter_;
     SimpleObjectLayerPairFilter object_layer_pair_filter_;
+    CastRayObjectLayerFilter cast_ray_layer_filter_;
     ::JPH::TempAllocatorImpl temp_allocator_;
     ::JPH::JobSystemThreadPool job_system_;
     ::JPH::PhysicsSystem physics_system_;
