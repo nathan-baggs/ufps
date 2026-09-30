@@ -597,7 +597,6 @@ auto DebugRenderer::draw_scene(Scene &scene, const Camera &camera) -> void
         auto average_luminance = 0.0f;
         ::glGetNamedBufferSubData(
             average_luminance_buffer_.native_handle(), 0, sizeof(average_luminance), &average_luminance);
-        log::debug("avg luminance: {}", average_luminance);
 
         std::uint32_t histogram[256]{};
         ::glGetNamedBufferSubData(luminance_histogram_buffer_.native_handle(), 0, sizeof(histogram), &histogram);
@@ -1035,7 +1034,8 @@ auto DebugRenderer::draw_inspector(Scene &scene) -> void
                     {{-1.0f}, {1.0f}},
                     entity->transform().position,
                     BroadPhaseLayer::STATIC,
-                    ObjectLayer::WORLD_COLLIDERS);
+                    ObjectLayer::WORLD_COLLIDERS,
+                    *selected_entity);
                 entity->add_rigid_body(body);
                 selected_ = body;
             }

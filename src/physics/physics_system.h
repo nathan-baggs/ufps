@@ -20,6 +20,7 @@ namespace ufps
 struct IntersectionResult
 {
     EntityHandle entity;
+    RigidBodyHandle body;
     Vector3 position;
     Vector3 normal;
     float distance;
@@ -45,15 +46,20 @@ class PhysicsSystem : public ::JPH::ContactListener
         const AABB &aabb,
         const Vector3 &position,
         BroadPhaseLayer broad_phase_layer,
-        ObjectLayer object_layer) -> RigidBodyHandle;
+        ObjectLayer object_layer,
+        EntityHandle entity) -> RigidBodyHandle;
 
-    auto create_rigid_body(const RigidBody::Description &description) -> RigidBodyHandle;
+    auto create_rigid_body(const RigidBody::Description &description, EntityHandle entity) -> RigidBodyHandle;
+
     auto remove_rigid_body(RigidBodyHandle handle) -> void;
+
     auto duplicate_rigid_body(RigidBodyHandle handle) -> RigidBodyHandle;
 
     constexpr auto rigid_body(this auto &&self, RigidBodyHandle handle);
 
     auto update() -> void;
+
+    auto cast_ray(const Ray &ray) const -> std::optional<IntersectionResult>;
 
     auto debug_renderer() -> std::optional<PhysicsDebugRenderer &>;
 

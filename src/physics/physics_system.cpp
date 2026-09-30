@@ -6,6 +6,8 @@
 #include <optional>
 #include <string_view>
 
+#include "Jolt/Physics/Body/BodyLock.h"
+#include "core/entity.h"
 #include "maths/transform.h"
 #include "maths/vector3.h"
 #include "physics/jolt.h"
@@ -21,6 +23,12 @@ using namespace std::literals;
 
 namespace
 {
+
+struct HandlePair
+{
+    ufps::EntityHandle entity;
+    ufps::RigidBodyHandle body;
+};
 
 auto to_activation(ufps::BroadPhaseLayer layer) -> ::JPH::EActivation
 {
@@ -115,7 +123,8 @@ auto PhysicsSystem::create_box(
     const AABB &aabb,
     const Vector3 &position,
     BroadPhaseLayer broad_phase_layer,
-    ObjectLayer object_layer) -> RigidBodyHandle
+    ObjectLayer object_layer,
+    EntityHandle entity) -> RigidBodyHandle
 {
     const auto half_extents =
         Vector3{(aabb.max.x - aabb.min.x) / 2.0f, (aabb.max.y - aabb.min.y) / 2.0f, (aabb.max.z - aabb.min.z) / 2.0f};
@@ -141,14 +150,23 @@ auto PhysicsSystem::create_box(
 
     const auto body_id = interface.CreateAndAddBody(body_settings, to_activation(broad_phase_layer));
 
-    return rigid_bodies_.emplace(body_id, std::addressof(interface));
+    auto rb = rigid_bodies_.emplace(body_id, std::addressof(interface));
+
+    static_assert(sizeof(HandlePair) == sizeof(std::uint64_t));
+
+    const auto handle_pair = HandlePair{.entity = entity, .body = rb};
+    const auto user_data = std::bit_cast<std::uint64_t>(handle_pair);
+
+    interface.SetUserData(body_id, user_data);
+
+    return rb;
 }
 
-auto PhysicsSystem::create_rigid_body(const RigidBody::Description &description) -> RigidBodyHandle
+auto PhysicsSystem::create_rigid_body(const RigidBody::Description &description, EntityHandle entity) -> RigidBodyHandle
 {
     const auto transform = Transform{description.local_transform};
-    const auto handle =
-        create_box({{-1.0f}, {1.0f}}, transform.position, description.broad_phase_layer, description.object_layer);
+    const auto handle = create_box(
+        {{-1.0f}, {1.0f}}, transform.position, description.broad_phase_layer, description.object_layer, entity);
 
     rigid_bodies_[handle]->set_local_transform(transform);
 
@@ -170,7 +188,10 @@ auto PhysicsSystem::duplicate_rigid_body(RigidBodyHandle handle) -> RigidBodyHan
     const auto &rb = rigid_body(handle);
     contract_assert(rb);
 
-    return create_rigid_body(rb->description());
+    const auto handle_pair = std::bit_cast<HandlePair>(rb->user_data());
+    contract_assert(handle_pair.body == handle);
+
+    return create_rigid_body(rb->description(), handle_pair.entity);
 }
 
 auto PhysicsSystem::update() -> void
@@ -184,6 +205,39 @@ auto PhysicsSystem::update() -> void
         physics_system_.DrawBodies(settings, std::addressof(*debug_renderer_));
         player_controller_->debug_draw(*debug_renderer_);
     }
+}
+
+auto PhysicsSystem::cast_ray(const Ray &ray) const -> std::optional<IntersectionResult>
+{
+    const auto jolt_ray = to_jolt(ray);
+    auto hit_result = ::JPH::RayCastResult{};
+
+    const auto hit = physics_system_.GetNarrowPhaseQuery().CastRay(jolt_ray, hit_result);
+
+    if (hit)
+    {
+        auto &interface = physics_system_.GetBodyInterface();
+        const auto body_id = hit_result.mBodyID;
+        const auto handle_pair = std::bit_cast<HandlePair>(interface.GetUserData(body_id));
+
+        if (const auto lock = ::JPH::BodyLockRead{physics_system_.GetBodyLockInterface(), body_id}; lock.Succeeded())
+        {
+            const auto hit_pos = jolt_ray.GetPointOnRay(hit_result.mFraction);
+
+            const auto &body = lock.GetBody();
+            const auto normal = body.GetWorldSpaceSurfaceNormal(hit_result.mSubShapeID2, hit_pos);
+
+            return IntersectionResult{
+                .entity = handle_pair.entity,
+                .body = handle_pair.body,
+                .position = to_native(hit_pos),
+                .normal = to_native(normal),
+                .distance = (hit_pos - jolt_ray.mOrigin).Length(),
+            };
+        }
+    }
+
+    return {};
 }
 
 auto PhysicsSystem::debug_renderer() -> std::optional<PhysicsDebugRenderer &>
