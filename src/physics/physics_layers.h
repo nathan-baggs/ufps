@@ -12,6 +12,7 @@ enum class BroadPhaseLayer
 enum class ObjectLayer
 {
     WORLD_COLLIDERS,
+    LEVEL_GEOMETRY,
     PLAYER,
 };
 

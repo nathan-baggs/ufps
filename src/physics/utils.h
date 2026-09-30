@@ -32,6 +32,8 @@ class SimpleBroadPhaseLayer : public ::JPH::BroadPhaseLayerInterface
 
             case WORLD_COLLIDERS:
                 return ::JPH::BroadPhaseLayer{static_cast<::JPH::BroadPhaseLayer::Type>(BroadPhaseLayer::STATIC)};
+            case LEVEL_GEOMETRY:
+                return ::JPH::BroadPhaseLayer{static_cast<::JPH::BroadPhaseLayer::Type>(BroadPhaseLayer::STATIC)};
             case PLAYER:
                 return ::JPH::BroadPhaseLayer{static_cast<::JPH::BroadPhaseLayer::Type>(BroadPhaseLayer::DYNAMIC)};
         }
@@ -53,7 +55,8 @@ class SimpleObjectVsBroadPhaseLayerFilter : public ::JPH::ObjectVsBroadPhaseLaye
         {
             using enum ObjectLayer;
 
-            case WORLD_COLLIDERS: return false;
+            case WORLD_COLLIDERS: return true;
+            case LEVEL_GEOMETRY: return false;
             case PLAYER: return true;
         }
 
@@ -69,7 +72,23 @@ class SimpleObjectLayerPairFilter : public ::JPH::ObjectLayerPairFilter
         const auto object_layer1 = ObjectLayer{layer1};
         const auto object_layer2 = ObjectLayer{layer2};
 
+        if (object_layer1 == ObjectLayer::LEVEL_GEOMETRY || object_layer2 == ObjectLayer::LEVEL_GEOMETRY)
+        {
+            return false;
+        }
+
         return object_layer1 != object_layer2;
+    }
+};
+
+class CastRayObjectLayerFilter : public ::JPH::ObjectLayerFilter
+{
+  public:
+    auto ShouldCollide(::JPH::ObjectLayer layer) const -> bool override
+    {
+        const auto object_layer = ObjectLayer{layer};
+
+        return object_layer == ObjectLayer::LEVEL_GEOMETRY;
     }
 };
 
