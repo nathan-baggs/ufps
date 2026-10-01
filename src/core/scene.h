@@ -202,10 +202,10 @@ constexpr Scene::Scene(const Description &description)
             new_entity->add_rigid_body(rb);
         }
 
-        for (const auto rb : ps.create_meshes(BroadPhaseLayer::STATIC, ObjectLayer::LEVEL_GEOMETRY, new_entity_handle))
+        if (entity_description.can_intersect_ray)
         {
-            log::debug("adding mesh");
-            new_entity->add_rigid_body(rb);
+            new_entity->set_ray_intersect_rigid_bodies(
+                ps.create_meshes(BroadPhaseLayer::STATIC, ObjectLayer::LEVEL_GEOMETRY, new_entity_handle));
         }
 
         if (entity_description.camera)

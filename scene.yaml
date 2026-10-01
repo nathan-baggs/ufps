@@ -102,6 +102,7 @@ Description:
           - level_child_0
         camera: ~
         light: ~
+        can_intersect_ray: true
     - Description:
         name: flycam
         emissive_strength: 1
@@ -164,6 +165,7 @@ Description:
               near_plane: 0.1
               far_plane: 1000
         light: ~
+        can_intersect_ray: false
     - Description:
         name: player
         emissive_strength: 1
@@ -228,6 +230,7 @@ Description:
               near_plane: 0.1
               far_plane: 1000
         light: ~
+        can_intersect_ray: false
     - Description:
         name: world_colliders
         emissive_strength: 1
@@ -541,6 +544,7 @@ Description:
         children: ~
         camera: ~
         light: ~
+        can_intersect_ray: true
     - Description:
         name: north_corridor_0
         emissive_strength: 1
@@ -581,6 +585,7 @@ Description:
           - north_corridor_0_alert_light
         camera: ~
         light: ~
+        can_intersect_ray: true
     - Description:
         name: north_corridor_1
         emissive_strength: 1
@@ -619,6 +624,7 @@ Description:
           - SM_Corridor053_08_08_A
         children: ~
         camera: ~
+        can_intersect_ray: true
         light: ~
     - Description:
         name: north_corridor_3
@@ -658,6 +664,7 @@ Description:
           - SM_Corridor051_02_04_A
         children: ~
         camera: ~
+        can_intersect_ray: true
         light: ~
     - Description:
         name: north_corridor_6
@@ -699,6 +706,7 @@ Description:
           - north_corridor_6_child_1
         camera: ~
         light: ~
+        can_intersect_ray: true
     - Description:
         name: big_room_0
         emissive_strength: 1
@@ -745,6 +753,7 @@ Description:
           - big_room_0_child_11
           - big_room_0_child_0
         camera: ~
+        can_intersect_ray: true
         light: ~
     - Description:
         name: big_room_0_child_1
@@ -785,6 +794,7 @@ Description:
         children: ~
         camera: ~
         light: ~
+        can_intersect_ray: true
     - Description:
         name: north_corridor_7
         emissive_strength: 1
@@ -824,6 +834,7 @@ Description:
         children: ~
         camera: ~
         light: ~
+        can_intersect_ray: true
     - Description:
         name: big_room_0_child_2
         emissive_strength: 1
@@ -863,6 +874,7 @@ Description:
         children: ~
         camera: ~
         light: ~
+        can_intersect_ray: true
     - Description:
         name: big_room_0_child_4
         emissive_strength: 1
@@ -902,6 +914,7 @@ Description:
         children: ~
         camera: ~
         light: ~
+        can_intersect_ray: true
     - Description:
         name: big_room_0_child_5
         emissive_strength: 1
@@ -941,6 +954,7 @@ Description:
         children: ~
         camera: ~
         light: ~
+        can_intersect_ray: true
     - Description:
         name: big_room_0_child_6
         emissive_strength: 1
@@ -980,6 +994,7 @@ Description:
         children: ~
         camera: ~
         light: ~
+        can_intersect_ray: true
     - Description:
         name: big_room_0_child_8
         emissive_strength: 1
@@ -1019,6 +1034,7 @@ Description:
         children: ~
         camera: ~
         light: ~
+        can_intersect_ray: true
     - Description:
         name: big_room_0_child_9
         emissive_strength: 1
@@ -1058,6 +1074,7 @@ Description:
         children: ~
         camera: ~
         light: ~
+        can_intersect_ray: true
     - Description:
         name: big_room_0_child_10
         emissive_strength: 1
@@ -1097,6 +1114,7 @@ Description:
         children: ~
         camera: ~
         light: ~
+        can_intersect_ray: true
     - Description:
         name: big_room_0_child_11
         emissive_strength: 1
@@ -1136,6 +1154,7 @@ Description:
         children: ~
         camera: ~
         light: ~
+        can_intersect_ray: true
     - Description:
         name: big_room_0_child_0
         emissive_strength: 1
@@ -1175,6 +1194,7 @@ Description:
         children: ~
         camera: ~
         light: ~
+        can_intersect_ray: true
     - Description:
         name: north_corridor_0_alert_light
         emissive_strength: 3.0447443
@@ -1229,6 +1249,7 @@ Description:
               linear_attenuation: 1.692
               quadratic_attenuation: 1.319
               intensity: 3.0447443
+        can_intersect_ray: false
     - Description:
         name: level_child_0
         emissive_strength: 1
@@ -1283,6 +1304,7 @@ Description:
               linear_attenuation: 0.313
               quadratic_attenuation: 0.157
               intensity: 5.215
+        can_intersect_ray: false
     - Description:
         name: north_corridor_6_child_1
         emissive_strength: 1
@@ -1337,6 +1359,7 @@ Description:
               linear_attenuation: 0.313
               quadratic_attenuation: 0.157
               intensity: 3.682
+        can_intersect_ray: false
     - Description:
         name: player_child_0
         emissive_strength: 1
@@ -1376,6 +1399,7 @@ Description:
         children: ~
         camera: ~
         light: ~
+        can_intersect_ray: false
     - Description:
         name: gun
         emissive_strength: 1
@@ -1415,3 +1439,4 @@ Description:
         children: ~
         camera: ~
         light: ~
+        can_intersect_ray: false

@@ -16,6 +16,7 @@ Entity::Entity(std::string name, std::span<const RenderEntityHandle> render_enti
     : name_{std::move(name)}
     , render_entities_{std::ranges::cbegin(render_entities), std::ranges::cend(render_entities)}
     , rigid_bodies_{}
+    , ray_intersect_rigid_bodies_{}
     , light_{}
     , local_transform_{std::move(transform)}
     , parent_transform_{{}, {1.0f}, {}}
@@ -87,6 +88,11 @@ auto Entity::add_rigid_body(RigidBodyHandle handle) -> void
     service<PhysicsSystem>().rigid_body(handle)->set_parent_transform(transform_);
 }
 
+auto Entity::set_ray_intersect_rigid_bodies(std::vector<RigidBodyHandle> handles) -> void
+{
+    ray_intersect_rigid_bodies_ = std::move(handles);
+}
+
 auto Entity::rigid_bodies() const -> std::span<const RigidBodyHandle>
 {
     return rigid_bodies_;
@@ -143,6 +149,7 @@ auto Entity::description() const -> Entity::Description
                     std::ranges::to<std::vector>(),
         .camera = camera.transform([](const auto &e) { return e.description(); }),
         .light = light.transform([](const auto &e) { return e; }),
+        .can_intersect_ray = !std::ranges::empty(ray_intersect_rigid_bodies_),
     };
 }
 
@@ -197,7 +204,7 @@ auto Entity::update_transforms(const Transform &local, const Transform &parent) 
         child->set_parent_transform(transform_);
     }
 
-    for (auto rb_handle : rigid_bodies_)
+    for (auto rb_handle : std::views::concat(rigid_bodies_, ray_intersect_rigid_bodies_))
     {
         if (const auto &rb = ps.rigid_body(rb_handle); rb)
         {
