@@ -1249,7 +1249,7 @@ Description:
               linear_attenuation: 1.692
               quadratic_attenuation: 1.319
               intensity: 3.0447443
-        can_intersect_ray: false
+        can_intersect_ray: true
     - Description:
         name: level_child_0
         emissive_strength: 1
