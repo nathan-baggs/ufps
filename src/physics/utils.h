@@ -92,4 +92,21 @@ class CastRayObjectLayerFilter : public ::JPH::ObjectLayerFilter
     }
 };
 
+class IgnoreLayerDrawFilter : public ::JPH::BodyDrawFilter
+{
+  public:
+    IgnoreLayerDrawFilter(ObjectLayer object_layer)
+        : object_layer_{static_cast<::JPH::ObjectLayer>(object_layer)}
+    {
+    }
+
+    auto ShouldDraw(const ::JPH::Body &body) const -> bool override
+    {
+        return body.GetObjectLayer() != object_layer_;
+    }
+
+  private:
+    ::JPH::ObjectLayer object_layer_;
+};
+
 }

@@ -73,6 +73,7 @@ class PhysicsSystem : public ::JPH::ContactListener
     SimpleObjectVsBroadPhaseLayerFilter object_vs_broad_phase_layer_filter_;
     SimpleObjectLayerPairFilter object_layer_pair_filter_;
     CastRayObjectLayerFilter cast_ray_layer_filter_;
+    IgnoreLayerDrawFilter ignore_layer_draw_filter_;
     ::JPH::TempAllocatorImpl temp_allocator_;
     ::JPH::JobSystemThreadPool job_system_;
     ::JPH::PhysicsSystem physics_system_;

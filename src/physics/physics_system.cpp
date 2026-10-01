@@ -99,6 +99,7 @@ PhysicsSystem::PhysicsSystem(DebugRenderMode debug_render_mode)
     , object_vs_broad_phase_layer_filter_{}
     , object_layer_pair_filter_{}
     , cast_ray_layer_filter_{}
+    , ignore_layer_draw_filter_{ObjectLayer::LEVEL_GEOMETRY}
     , temp_allocator_{10u * 1024u * 1024u}
     , job_system_{::JPH::cMaxPhysicsJobs, ::JPH::cMaxPhysicsBarriers, static_cast<int>(std::thread::hardware_concurrency() - 1zu)}
     , physics_system_{}
@@ -273,9 +274,10 @@ auto PhysicsSystem::update() -> void
 
     if (debug_renderer_)
     {
-        // static const auto settings = ::JPH::BodyManager::DrawSettings{};
-        // physics_system_.DrawBodies(settings, std::addressof(*debug_renderer_));
-        // player_controller_->debug_draw(*debug_renderer_);
+        static const auto settings = ::JPH::BodyManager::DrawSettings{};
+        physics_system_.DrawBodies(
+            settings, std::addressof(*debug_renderer_), std::addressof(ignore_layer_draw_filter_));
+        player_controller_->debug_draw(*debug_renderer_);
     }
 }
 
