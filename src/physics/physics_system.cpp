@@ -107,7 +107,7 @@ PhysicsSystem::PhysicsSystem(DebugRenderMode debug_render_mode)
     , player_controller_{}
 {
 
-    constexpr auto max_bodies = 1024u;
+    constexpr auto max_bodies = 2048u;
     constexpr auto num_body_mutexes = 0u;
     constexpr auto max_body_pairs = 1024u;
     constexpr auto max_contact_constraints = 1024u;
