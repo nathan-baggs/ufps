@@ -135,8 +135,8 @@ auto create_debug_controller(const std::string &, const ufps::Matrix4 &value) ->
 
 namespace ufps
 {
-DebugRenderer::DebugRenderer(const Window &window, ResourceLoader &resource_loader, PlayerActor &player_actor)
-    : Renderer{window, resource_loader}
+DebugRenderer::DebugRenderer(const Window &window, PlayerActor &player_actor)
+    : Renderer{window}
     , enabled_{false}
     , snap_enabled_{false}
     , click_{}

@@ -25,7 +25,7 @@ namespace ufps
 class DebugRenderer : public Renderer
 {
   public:
-    DebugRenderer(const Window &window, ResourceLoader &resource_loader, PlayerActor &player_actor);
+    DebugRenderer(const Window &window, PlayerActor &player_actor);
     ~DebugRenderer();
 
     auto add_mouse_event(const MouseButtonEvent &evt) -> void;

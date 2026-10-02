@@ -15,7 +15,6 @@
 #include "graphics/program.h"
 #include "graphics/sampler.h"
 #include "graphics/window.h"
-#include "resources/resource_loader.h"
 #include "utils/auto_release.h"
 
 namespace ufps
@@ -35,14 +34,13 @@ struct RenderTarget
 class Renderer
 {
   public:
-    Renderer(const Window &window, ResourceLoader &resource_loader);
+    Renderer(const Window &window);
     virtual ~Renderer() = default;
 
     auto render(Scene &scene, Duration delta) -> void;
 
   protected:
     static auto create_program(
-        ufps::ResourceLoader &resource_loader,
         std::string_view vertex_path,
         std::string_view vertex_name,
         std::string_view fragment_path,
@@ -50,7 +48,6 @@ class Renderer
         std::string_view program_name) -> ufps::Program;
 
     static auto create_program(
-        ufps::ResourceLoader &resource_loader,
         std::string_view compute_path,
         std::string_view compute_name,
         std::string_view program_name) -> ufps::Program;
