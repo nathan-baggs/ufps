@@ -10,6 +10,7 @@
 #include "Jolt/Math/Float3.h"
 #include "Jolt/Physics/Body/BodyLock.h"
 #include "Jolt/Physics/Collision/Shape/MeshShape.h"
+#include "Jolt/Physics/Collision/Shape/Shape.h"
 #include "core/entity.h"
 #include "core/entity_manager.h"
 #include "core/service_locator.h"
@@ -105,8 +106,8 @@ PhysicsSystem::PhysicsSystem(DebugRenderMode debug_render_mode)
     , physics_system_{}
     , debug_renderer_{debug_render_mode == DebugRenderMode::ON ? std::make_optional<PhysicsDebugRenderer>() : std::nullopt}
     , player_controller_{}
+    , mesh_shape_cache_{}
 {
-
     constexpr auto max_bodies = 2048u;
     constexpr auto num_body_mutexes = 0u;
     constexpr auto max_body_pairs = 1024u;
@@ -189,29 +190,41 @@ auto PhysicsSystem::create_meshes(
 
         const auto mesh_view = render_entity->mesh_view();
 
-        const auto jolt_vertex_list =
-            mm.vertex_data(mesh_view) |
-            std::views::transform([](const auto &e) { return std::bit_cast<::JPH::Float3>(e.position); }) |
-            std::ranges::to<::JPH::Array<::JPH::Float3>>();
+        auto shape = ::JPH::Ref<::JPH::Shape>{};
 
-        const auto jolt_index_list =
-            mm.index_data(mesh_view) | std::views::chunk(3u) |
-            std::views::transform([](const auto &e) { return ::JPH::IndexedTriangle{e[0], e[1], e[2]}; }) |
-            std::ranges::to<::JPH::Array<::JPH::IndexedTriangle>>();
-
-        auto mesh_shape_settings = ::JPH::MeshShapeSettings{jolt_vertex_list, jolt_index_list};
-        mesh_shape_settings.SetEmbedded();
-
-        auto mesh_result = mesh_shape_settings.Create();
-        if (mesh_result.HasError())
+        const auto find_shape = mesh_shape_cache_.find(mesh_view);
+        if (find_shape == std::ranges::cend(mesh_shape_cache_))
         {
-            throw Exception("mesh error: {}", mesh_result.GetError());
+            const auto jolt_vertex_list =
+                mm.vertex_data(mesh_view) |
+                std::views::transform([](const auto &e) { return std::bit_cast<::JPH::Float3>(e.position); }) |
+                std::ranges::to<::JPH::Array<::JPH::Float3>>();
+
+            const auto jolt_index_list =
+                mm.index_data(mesh_view) | std::views::chunk(3u) |
+                std::views::transform([](const auto &e) { return ::JPH::IndexedTriangle{e[0], e[1], e[2]}; }) |
+                std::ranges::to<::JPH::Array<::JPH::IndexedTriangle>>();
+
+            auto mesh_shape_settings = ::JPH::MeshShapeSettings{jolt_vertex_list, jolt_index_list};
+            mesh_shape_settings.SetEmbedded();
+
+            auto mesh_result = mesh_shape_settings.Create();
+            if (mesh_result.HasError())
+            {
+                throw Exception("mesh error: {}", mesh_result.GetError());
+            }
+
+            const auto &mesh_shape = mesh_result.Get();
+            mesh_shape_cache_.insert({mesh_view, mesh_shape});
+            shape = mesh_shape;
+        }
+        else
+        {
+            shape = find_shape->second;
         }
 
-        const auto &mesh_shape = mesh_result.Get();
-
         const auto body_settings = ::JPH::BodyCreationSettings{
-            mesh_shape,
+            shape,
             to_jolt(entity->transform().position),
             ::JPH::Quat::sIdentity(),
             to_motion(broad_phase_layer),

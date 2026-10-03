@@ -1,6 +1,7 @@
 #pragma once
 
 #include <optional>
+#include <unordered_map>
 
 #include "core/entity.h"
 #include "core/sparse_set.h"
@@ -80,6 +81,7 @@ class PhysicsSystem : public ::JPH::ContactListener
     SparseSet<RigidBody> rigid_bodies_;
     std::optional<PhysicsDebugRenderer> debug_renderer_;
     std::unique_ptr<VirtualCharacterController> player_controller_;
+    std::unordered_map<MeshView, ::JPH::Ref<::JPH::Shape>> mesh_shape_cache_;
 };
 
 constexpr auto PhysicsSystem::rigid_body(this auto &&self, RigidBodyHandle handle)
