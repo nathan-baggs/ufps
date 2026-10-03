@@ -636,7 +636,6 @@ Description:
         render_entities: ~
         children:
           - gun
-          - player_child_0
         camera:
           - Description:
               transform:
@@ -724,46 +723,6 @@ Description:
               broad_phase_layer: STATIC
               object_layer: WORLD_COLLIDERS
         render_entities: ~
-        children: ~
-        camera: ~
-        light: ~
-        can_intersect_ray: false
-    - Description:
-        name: player_child_0
-        emissive_strength: 1
-        transform:
-          Transform:
-            position:
-              Vector3:
-                x: -3.1387012e-07
-                y: 0
-                z: 3.5902557
-            scale:
-              Vector3:
-                x: 0.01
-                y: 0.01
-                z: 0.01
-            rotation:
-              Quaternion:
-                x: 0
-                y: 0
-                z: 0
-                w: 1
-        aabb:
-          AABB:
-            min:
-              Vector3:
-                x: -1
-                y: -1
-                z: 0
-            max:
-              Vector3:
-                x: 1
-                y: 1
-                z: 0
-        rigid_bodies: ~
-        render_entities:
-          - sprite
         children: ~
         camera: ~
         light: ~
