@@ -515,9 +515,12 @@ auto Game::update() -> bool
     }
 
     const auto fire_cone = player_actor_->gun().fire_cone();
+    const auto max_fire_cone = player_actor_->gun().max_fire_cone();
 
     dl.push_cone(fire_cone, colours::white, true, DebugLayerType::DEFAULT);
     dl.push_cone(fire_cone, colours::white, false, DebugLayerType::DEBUG);
+    dl.push_cone(max_fire_cone, colours::magenta, true, DebugLayerType::DEFAULT);
+    dl.push_cone(max_fire_cone, colours::magenta, false, DebugLayerType::DEBUG);
 
     return true;
 }
