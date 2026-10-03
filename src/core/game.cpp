@@ -490,35 +490,50 @@ auto Game::update() -> bool
     {
         am.play(player_actor_->gun().fire_sound_name(), PlayMode::SINGLE, random::rand_real(1.0f, 1.4f));
 
+        auto fire_cone = player_actor_->gun().fire_cone();
+        auto fire_cone_colour = colours::white;
+        auto max_fire_cone = player_actor_->gun().max_fire_cone();
+        const auto max_distance = fire_cone.extent.length();
+
         if (const auto intersection = ps.cast_ray(bullet_ray); intersection)
         {
-            scene_->add_decal(
-                {intersection->position,
-                 {0.05f, 0.01f, 0.05f},
-                 Quaternion{{0.0f, 1.0f, 0.0f}, intersection->normal} *
-                     Quaternion{{0.0f, 1.0f, 0.0f}, random::rand_real(0.0f, 2.0f * std::numbers::pi_v<float>)}},
-                random::rand_element(textures));
-
-            pm.spawn_sparks(intersection->position, intersection->normal * Vector3{2.0f});
-            for (auto i = 0; i < 10; ++i)
+            if (intersection->distance < max_distance)
             {
-                pm.spawn_sparks(
-                    intersection->position,
-                    intersection->normal +
-                        Vector3{
-                            random::rand_real(-0.5f, 0.5f),
-                            random::rand_real(-0.5f, 0.5f),
-                            random::rand_real(-0.5f, 0.5f)} *
-                            Vector3{2.0f});
+                scene_->add_decal(
+                    {intersection->position,
+                     {0.05f, 0.01f, 0.05f},
+                     Quaternion{{0.0f, 1.0f, 0.0f}, intersection->normal} *
+                         Quaternion{{0.0f, 1.0f, 0.0f}, random::rand_real(0.0f, 2.0f * std::numbers::pi_v<float>)}},
+                    random::rand_element(textures));
+
+                pm.spawn_sparks(intersection->position, intersection->normal * Vector3{2.0f});
+                for (auto i = 0; i < 10; ++i)
+                {
+                    pm.spawn_sparks(
+                        intersection->position,
+                        intersection->normal +
+                            Vector3{
+                                random::rand_real(-0.5f, 0.5f),
+                                random::rand_real(-0.5f, 0.5f),
+                                random::rand_real(-0.5f, 0.5f)} *
+                                Vector3{2.0f});
+                }
             }
         }
     }
 
-    const auto fire_cone = player_actor_->gun().fire_cone();
-    const auto max_fire_cone = player_actor_->gun().max_fire_cone();
+    if (const auto gun_ray_intersection = ps.cast_ray({fire_cone.origin, fire_cone.extent}); gun_ray_intersection)
+    {
+        if (gun_ray_intersection->distance <= max_distance)
+        {
+            fire_cone_colour = colours::yellow;
+            fire_cone.extent = Vector3::normalise(fire_cone.extent) * Vector3{gun_ray_intersection->distance * 0.99f};
+            max_fire_cone.extent = fire_cone.extent;
+        }
+    }
 
-    dl.push_cone(fire_cone, colours::white, true, DebugLayerType::DEFAULT);
-    dl.push_cone(fire_cone, colours::white, false, DebugLayerType::DEBUG);
+    dl.push_cone(fire_cone, fire_cone_colour, true, DebugLayerType::DEFAULT);
+    dl.push_cone(fire_cone, fire_cone_colour, false, DebugLayerType::DEBUG);
     dl.push_cone(max_fire_cone, colours::magenta, true, DebugLayerType::DEFAULT);
     dl.push_cone(max_fire_cone, colours::magenta, false, DebugLayerType::DEBUG);
 
