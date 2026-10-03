@@ -69,6 +69,7 @@ class Gun
     Spring bob_reset_;
     float bob_elapsed_time_;
     float min_cone_theta_;
+    float max_bullet_distance_;
     Cone fire_cone_;
     Cone max_fire_cone_;
 };

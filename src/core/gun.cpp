@@ -43,6 +43,7 @@ Gun::Gun(Description description)
     , bob_reset_{0.0f, 0.0f, 0.0f, duration_to_angular_frequency(description.bob_settle_time), 0.1f}
     , bob_elapsed_time_{}
     , min_cone_theta_{0.001f}
+    , max_bullet_distance_{30.0f}
     , fire_cone_{.origin = {}, .extent = {}, .theta = min_cone_theta_}
     , max_fire_cone_{.origin = {}, .extent = {}, .theta = min_cone_theta_ * 15.0f}
 {
@@ -135,7 +136,7 @@ auto Gun::update_bullets(Duration delta, const InputMap &input_map, const Camera
     }
 
     fire_cone_.origin = camera.position();
-    fire_cone_.extent = Vector3::normalise(camera.direction()) * Vector3{5.0f};
+    fire_cone_.extent = Vector3::normalise(camera.direction()) * Vector3{max_bullet_distance_};
 
     max_fire_cone_.origin = fire_cone_.origin;
     max_fire_cone_.extent = fire_cone_.extent;
