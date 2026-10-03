@@ -8,6 +8,7 @@
 #include "core/scene.h"
 #include "events/input_map.h"
 #include "maths/bounded_number.h"
+#include "maths/cone.h"
 #include "maths/ray.h"
 #include "maths/spring.h"
 #include "maths/transform.h"
@@ -49,6 +50,8 @@ class Gun
 
     auto fire_sound_name() const -> std::string_view;
 
+    auto fire_cone() const -> Cone;
+
   private:
     Transform rest_transform_;
     bool rest_transform_set_;
@@ -62,6 +65,7 @@ class Gun
     Spring kick_spring_;
     Spring bob_reset_;
     float bob_elapsed_time_;
+    Cone fire_cone_;
 };
 
 }

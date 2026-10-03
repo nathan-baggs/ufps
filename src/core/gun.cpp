@@ -42,6 +42,7 @@ Gun::Gun(Description description)
     , kick_spring_{0.0f, 0.0f, 0.0f, duration_to_angular_frequency(description.kick_settle_time), 0.5f}
     , bob_reset_{0.0f, 0.0f, 0.0f, duration_to_angular_frequency(description.bob_settle_time), 0.1f}
     , bob_elapsed_time_{}
+    , fire_cone_{}
 {
 }
 
@@ -125,6 +126,12 @@ auto Gun::update(Duration delta, Entity &entity, const InputMap &input_map, cons
         rest_transform_;
     entity.set_transform(gun_transform);
 
+    fire_cone_ = {
+        .origin = camera.position(),
+        .extent = Vector3::normalise(camera.direction()) * Vector3{5.0f},
+        .theta = half_angle,
+    };
+
     return result;
 }
 
@@ -136,6 +143,11 @@ auto Gun::description() const -> Description
 auto Gun::fire_sound_name() const -> std::string_view
 {
     return "Specter Bullet.wav"sv;
+}
+
+auto Gun::fire_cone() const -> Cone
+{
+    return fire_cone_;
 }
 
 }
