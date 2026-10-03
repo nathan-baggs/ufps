@@ -26,6 +26,7 @@
 #include "events/key_event.h"
 #include "events/mouse_button_event.h"
 #include "events/mouse_event.h"
+#include "graphics/colour.h"
 #include "graphics/debug_layer.h"
 #include "graphics/debug_renderer.h"
 #include "graphics/mesh_manager.h"
@@ -37,6 +38,7 @@
 #include "graphics/texture_manager.h"
 #include "graphics/utils.h"
 #include "graphics/window.h"
+#include "maths/cone.h"
 #include "maths/random.h"
 #include "maths/ray.h"
 #include "maths/vector3.h"
@@ -470,7 +472,7 @@ auto Game::pump_events() -> bool
 
 auto Game::update() -> bool
 {
-    const auto &[ps, pm, am] = services<PhysicsSystem, ParticleManager, AudioManager>();
+    const auto &[ps, pm, am, dl] = services<PhysicsSystem, ParticleManager, AudioManager, DebugLayer>();
 
     current_actor_->update(delta_);
     ps.update();
@@ -511,6 +513,11 @@ auto Game::update() -> bool
             }
         }
     }
+
+    const auto fire_cone = player_actor_->gun().fire_cone();
+
+    dl.push_cone(fire_cone, colours::white, true, DebugLayerType::DEFAULT);
+    dl.push_cone(fire_cone, colours::white, false, DebugLayerType::DEBUG);
 
     return true;
 }
