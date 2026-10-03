@@ -111,7 +111,7 @@ auto PlayerActor::update(Duration delta) -> void
     auto gun_entity = em[gun_handle_];
     contract_assert(gun_entity);
 
-    const auto &[mouse_delta, final_recoil, bullets_fired] = gun_.update(delta, *gun_entity, input_map_, *camera);
+    const auto &[mouse_delta, final_recoil] = gun_.update_movement(delta, *gun_entity, input_map_);
 
     pitch_ += mouse_delta;
     yaw_ -= input_map_.delta_x;
@@ -129,7 +129,7 @@ auto PlayerActor::update(Duration delta) -> void
 
     player->set_transform(new_transform);
 
-    bullets_fired_ = std::move(bullets_fired);
+    bullets_fired_ = gun_.update_bullets(delta, input_map_, *camera);
 }
 
 auto PlayerActor::yield_bullets_fired() -> std::vector<Ray>

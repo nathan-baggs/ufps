@@ -39,12 +39,12 @@ class Gun
     {
         float final_mouse_y_delta;
         float final_recoil;
-        std::vector<Ray> bullets_fired;
     };
 
     Gun(Description description);
 
-    auto update(Duration delta, Entity &entity, const InputMap &input_map, const Camera &camera) -> UpdateResult;
+    auto update_movement(Duration delta, Entity &entity, const InputMap &input_map) -> UpdateResult;
+    auto update_bullets(Duration delta, const InputMap &input_map, const Camera &camera) -> std::vector<Ray>;
 
     auto description() const -> Description;
 

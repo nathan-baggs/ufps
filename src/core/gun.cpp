@@ -46,7 +46,7 @@ Gun::Gun(Description description)
 {
 }
 
-auto Gun::update(Duration delta, Entity &entity, const InputMap &input_map, const Camera &camera) -> UpdateResult
+auto Gun::update_movement(Duration delta, Entity &entity, const InputMap &input_map) -> UpdateResult
 {
     if (!rest_transform_set_)
     {
@@ -55,31 +55,6 @@ auto Gun::update(Duration delta, Entity &entity, const InputMap &input_map, cons
     }
 
     auto result = UpdateResult{};
-
-    shoot_timer_ += delta;
-
-    static auto half_angle = 0.0001f;
-
-    if (input_map.mouse_down)
-    {
-        if (shoot_timer_ >= fire_rate_)
-        {
-            kick_spring_.add_impulse(1.0f);
-
-            shoot_timer_ = {};
-            recoil_target_ += description_.shot_recoil;
-
-            const auto bullet_direction = random::rand_vector3(Vector3::normalise(camera.direction()), half_angle);
-
-            result.bullets_fired.push_back({camera.transform().position, bullet_direction * 100.0f});
-            half_angle += 0.001f;
-        }
-    }
-    else
-    {
-        recoil_target_ = {};
-        half_angle = 0.0001f;
-    }
 
     auto bob = float{};
     bob_elapsed_time_ += std::chrono::duration_cast<std::chrono::duration<float>>(delta).count();
@@ -126,13 +101,45 @@ auto Gun::update(Duration delta, Entity &entity, const InputMap &input_map, cons
         rest_transform_;
     entity.set_transform(gun_transform);
 
+    return result;
+}
+
+auto Gun::update_bullets(Duration delta, const InputMap &input_map, const Camera &camera) -> std::vector<Ray>
+{
+    static auto half_angle = 0.0001f;
+
+    auto bullets_fired = std::vector<Ray>{};
+
+    shoot_timer_ += delta;
+
+    if (input_map.mouse_down)
+    {
+        if (shoot_timer_ >= fire_rate_)
+        {
+            kick_spring_.add_impulse(1.0f);
+
+            shoot_timer_ = {};
+            recoil_target_ += description_.shot_recoil;
+
+            const auto bullet_direction = random::rand_vector3(Vector3::normalise(camera.direction()), half_angle);
+
+            bullets_fired.push_back({camera.transform().position, bullet_direction * 100.0f});
+            half_angle += 0.001f;
+        }
+    }
+    else
+    {
+        recoil_target_ = {};
+        half_angle = 0.0001f;
+    }
+
     fire_cone_ = {
         .origin = camera.position(),
         .extent = Vector3::normalise(camera.direction()) * Vector3{5.0f},
         .theta = half_angle,
     };
 
-    return result;
+    return bullets_fired;
 }
 
 auto Gun::description() const -> Description
