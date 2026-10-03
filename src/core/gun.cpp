@@ -42,7 +42,9 @@ Gun::Gun(Description description)
     , kick_spring_{0.0f, 0.0f, 0.0f, duration_to_angular_frequency(description.kick_settle_time), 0.5f}
     , bob_reset_{0.0f, 0.0f, 0.0f, duration_to_angular_frequency(description.bob_settle_time), 0.1f}
     , bob_elapsed_time_{}
-    , fire_cone_{}
+    , min_cone_theta_{0.001f}
+    , fire_cone_{.origin = {}, .extent = {}, .theta = min_cone_theta_}
+    , max_fire_cone_{.origin = {}, .extent = {}, .theta = min_cone_theta_ * 15.0f}
 {
 }
 
@@ -106,8 +108,6 @@ auto Gun::update_movement(Duration delta, Entity &entity, const InputMap &input_
 
 auto Gun::update_bullets(Duration delta, const InputMap &input_map, const Camera &camera) -> std::vector<Ray>
 {
-    static auto half_angle = 0.0001f;
-
     auto bullets_fired = std::vector<Ray>{};
 
     shoot_timer_ += delta;
@@ -121,23 +121,24 @@ auto Gun::update_bullets(Duration delta, const InputMap &input_map, const Camera
             shoot_timer_ = {};
             recoil_target_ += description_.shot_recoil;
 
-            const auto bullet_direction = random::rand_vector3(Vector3::normalise(camera.direction()), half_angle);
+            const auto bullet_direction =
+                random::rand_vector3(Vector3::normalise(camera.direction()), fire_cone_.theta);
 
             bullets_fired.push_back({camera.transform().position, bullet_direction * 100.0f});
-            half_angle += 0.001f;
+            fire_cone_.theta = std::min(max_fire_cone_.theta, fire_cone_.theta + 0.001f);
         }
     }
     else
     {
         recoil_target_ = {};
-        half_angle = 0.0001f;
+        fire_cone_.theta = std::max(min_cone_theta_, fire_cone_.theta - 0.001f);
     }
 
-    fire_cone_ = {
-        .origin = camera.position(),
-        .extent = Vector3::normalise(camera.direction()) * Vector3{5.0f},
-        .theta = half_angle,
-    };
+    fire_cone_.origin = camera.position();
+    fire_cone_.extent = Vector3::normalise(camera.direction()) * Vector3{5.0f};
+
+    max_fire_cone_.origin = fire_cone_.origin;
+    max_fire_cone_.extent = fire_cone_.extent;
 
     return bullets_fired;
 }
@@ -155,6 +156,11 @@ auto Gun::fire_sound_name() const -> std::string_view
 auto Gun::fire_cone() const -> Cone
 {
     return fire_cone_;
+}
+
+auto Gun::max_fire_cone() const -> Cone
+{
+    return max_fire_cone_;
 }
 
 }

@@ -44,6 +44,7 @@ class Gun
     Gun(Description description);
 
     auto update_movement(Duration delta, Entity &entity, const InputMap &input_map) -> UpdateResult;
+
     auto update_bullets(Duration delta, const InputMap &input_map, const Camera &camera) -> std::vector<Ray>;
 
     auto description() const -> Description;
@@ -51,6 +52,8 @@ class Gun
     auto fire_sound_name() const -> std::string_view;
 
     auto fire_cone() const -> Cone;
+
+    auto max_fire_cone() const -> Cone;
 
   private:
     Transform rest_transform_;
@@ -65,7 +68,9 @@ class Gun
     Spring kick_spring_;
     Spring bob_reset_;
     float bob_elapsed_time_;
+    float min_cone_theta_;
     Cone fire_cone_;
+    Cone max_fire_cone_;
 };
 
 }
