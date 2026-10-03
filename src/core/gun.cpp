@@ -2,7 +2,6 @@
 
 #include <chrono>
 
-#include "audio/audio_manager.h"
 #include "core/camera.h"
 #include "core/camera_manager.h"
 #include "core/clock.h"
@@ -13,6 +12,8 @@
 #include "maths/random.h"
 #include "maths/spring.h"
 #include "maths/vector3.h"
+
+using namespace std::literals;
 
 namespace
 {
@@ -54,8 +55,6 @@ auto Gun::update(Duration delta, Entity &entity, const InputMap &input_map, cons
 
     auto result = UpdateResult{};
 
-    const auto &[am] = services<AudioManager>();
-
     shoot_timer_ += delta;
 
     static auto half_angle = 0.0001f;
@@ -68,8 +67,6 @@ auto Gun::update(Duration delta, Entity &entity, const InputMap &input_map, cons
 
             shoot_timer_ = {};
             recoil_target_ += description_.shot_recoil;
-
-            am.play("Specter Bullet.wav", PlayMode::SINGLE, random::rand_real(1.0f, 1.4f));
 
             const auto bullet_direction = random::rand_vector3(Vector3::normalise(camera.direction()), half_angle);
 
@@ -135,4 +132,10 @@ auto Gun::description() const -> Description
 {
     return description_;
 }
+
+auto Gun::fire_sound_name() const -> std::string_view
+{
+    return "Specter Bullet.wav"sv;
+}
+
 }

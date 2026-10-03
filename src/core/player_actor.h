@@ -31,6 +31,8 @@ class PlayerActor : public Actor
 
     auto update(Duration delta) -> void override;
 
+    auto yield_bullets_fired() -> std::vector<Ray>;
+
   private:
     EntityHandle gun_handle_;
     Gun gun_;
@@ -40,5 +42,6 @@ class PlayerActor : public Actor
     Duration walk_sound_timer_;
     float yaw_;
     float pitch_;
+    std::vector<Ray> bullets_fired_;
 };
 }

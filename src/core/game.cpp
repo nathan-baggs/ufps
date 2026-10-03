@@ -37,6 +37,9 @@
 #include "graphics/texture_manager.h"
 #include "graphics/utils.h"
 #include "graphics/window.h"
+#include "maths/random.h"
+#include "maths/ray.h"
+#include "maths/vector3.h"
 #include "memory/metrics.h"
 #include "physics/physics_system.h"
 #include "resources/embedded_resource_loader.h"
@@ -467,10 +470,47 @@ auto Game::pump_events() -> bool
 
 auto Game::update() -> bool
 {
-    const auto &[ps] = services<PhysicsSystem>();
+    const auto &[ps, pm, am] = services<PhysicsSystem, ParticleManager, AudioManager>();
 
     current_actor_->update(delta_);
     ps.update();
+
+    const auto bullets_fired = player_actor_->yield_bullets_fired();
+
+    static const auto textures = std::array<std::string_view, 4zu>{{
+        "textures\\bullet_hole1.dds",
+        "textures\\bullet_hole2.dds",
+        "textures\\bullet_hole3.dds",
+        "textures\\bullet_hole4.dds",
+    }};
+
+    for (const auto &bullet_ray : bullets_fired)
+    {
+        am.play(player_actor_->gun().fire_sound_name(), PlayMode::SINGLE, random::rand_real(1.0f, 1.4f));
+
+        if (const auto intersection = ps.cast_ray(bullet_ray); intersection)
+        {
+            scene_->add_decal(
+                {intersection->position,
+                 {0.05f, 0.01f, 0.05f},
+                 Quaternion{{0.0f, 1.0f, 0.0f}, intersection->normal} *
+                     Quaternion{{0.0f, 1.0f, 0.0f}, random::rand_real(0.0f, 2.0f * std::numbers::pi_v<float>)}},
+                random::rand_element(textures));
+
+            pm.spawn_sparks(intersection->position, intersection->normal * Vector3{2.0f});
+            for (auto i = 0; i < 10; ++i)
+            {
+                pm.spawn_sparks(
+                    intersection->position,
+                    intersection->normal +
+                        Vector3{
+                            random::rand_real(-0.5f, 0.5f),
+                            random::rand_real(-0.5f, 0.5f),
+                            random::rand_real(-0.5f, 0.5f)} *
+                            Vector3{2.0f});
+            }
+        }
+    }
 
     return true;
 }

@@ -47,6 +47,8 @@ class Gun
 
     auto description() const -> Description;
 
+    auto fire_sound_name() const -> std::string_view;
+
   private:
     Transform rest_transform_;
     bool rest_transform_set_;
