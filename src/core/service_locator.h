@@ -5,7 +5,6 @@
 
 #include "core/camera.h"
 #include "core/sparse_set.h"
-#include "graphics/particle_manager.h"
 #include "utils/error.h"
 
 namespace ufps
@@ -24,6 +23,7 @@ class DebugLayer;
 class AudioManager;
 class ParticleManager;
 class ResourceLoader;
+class EnemyManager;
 
 using CameraHandle = SparseSet<Camera>::handle_type;
 
@@ -41,7 +41,8 @@ using Services = std::tuple<
     std::unique_ptr<DebugLayer>,
     std::unique_ptr<AudioManager>,
     std::unique_ptr<ParticleManager>,
-    std::unique_ptr<ResourceLoader>>;
+    std::unique_ptr<ResourceLoader>,
+    std::unique_ptr<EnemyManager>>;
 
 namespace impl
 {

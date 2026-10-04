@@ -26,6 +26,7 @@
 #include "graphics/mesh_manager.h"
 #include "graphics/object_data.h"
 #include "graphics/opengl.h"
+#include "graphics/particle_manager.h"
 #include "graphics/point_light.h"
 #include "graphics/program.h"
 #include "graphics/sampler.h"
