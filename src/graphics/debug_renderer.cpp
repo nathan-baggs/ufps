@@ -49,6 +49,7 @@
 #include "maths/vector4.h"
 #include "memory/metrics.h"
 #include "physics/physics_debug_renderer.h"
+#include "physics/physics_layers.h"
 #include "physics/physics_system.h"
 #include "serialisation/yaml_serialiser.h"
 #include "utils/log.h"
@@ -60,7 +61,10 @@ namespace
 
 static constexpr auto debug_light_scale = 0.25f;
 
-auto screen_ray(const ufps::MouseButtonEvent &evt, const ufps::Window &window, const ufps::Camera &camera) -> ufps::Ray
+[[maybe_unused]] auto screen_ray(
+    const ufps::MouseButtonEvent &evt,
+    const ufps::Window &window,
+    const ufps::Camera &camera) -> ufps::Ray
 {
     const auto x = 2.0f * evt.x() / window.render_width() - 1.0f;
     const auto y = 1.0f - 2.0f * evt.y() / window.render_height();
@@ -131,8 +135,8 @@ auto create_debug_controller(const std::string &, const ufps::Matrix4 &value) ->
 
 namespace ufps
 {
-DebugRenderer::DebugRenderer(const Window &window, ResourceLoader &resource_loader, PlayerActor &player_actor)
-    : Renderer{window, resource_loader}
+DebugRenderer::DebugRenderer(const Window &window, PlayerActor &player_actor)
+    : Renderer{window}
     , enabled_{false}
     , snap_enabled_{false}
     , click_{}
@@ -286,15 +290,8 @@ auto DebugRenderer::post_render(Scene &scene, const Camera &camera) -> void
     if (click_)
     {
         const auto pick_ray = screen_ray(*click_, window_, camera);
-        auto intersection = scene.intersect_ray(pick_ray);
-        if (intersection)
-        {
-            selected_ = intersection->entity;
-        }
-        else
-        {
-            selected_ = std::monostate{};
-        }
+        auto intersection = ps.cast_ray(pick_ray);
+        selected_ = intersection ? SelectedType{intersection->entity} : SelectedType{std::monostate{}};
 
         for (const auto &light_handle : lm.handles())
         {
@@ -590,7 +587,6 @@ auto DebugRenderer::draw_scene(Scene &scene, const Camera &camera) -> void
         auto average_luminance = 0.0f;
         ::glGetNamedBufferSubData(
             average_luminance_buffer_.native_handle(), 0, sizeof(average_luminance), &average_luminance);
-        log::debug("avg luminance: {}", average_luminance);
 
         std::uint32_t histogram[256]{};
         ::glGetNamedBufferSubData(luminance_histogram_buffer_.native_handle(), 0, sizeof(histogram), &histogram);
@@ -1024,7 +1020,12 @@ auto DebugRenderer::draw_inspector(Scene &scene) -> void
 
             if (::ImGui::Button("add rigid body"))
             {
-                const auto body = ps.create_box({{-1.0f}, {1.0f}}, entity->transform().position, PhysicsLayer::STATIC);
+                const auto body = ps.create_box(
+                    {{-1.0f}, {1.0f}},
+                    entity->transform().position,
+                    BroadPhaseLayer::STATIC,
+                    ObjectLayer::WORLD_COLLIDERS,
+                    *selected_entity);
                 entity->add_rigid_body(body);
                 selected_ = body;
             }
@@ -1504,5 +1505,4 @@ auto DebugRenderer::draw_player_info() -> void
 
     ::ImGui::End();
 }
-
 }

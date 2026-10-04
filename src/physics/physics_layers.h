@@ -3,10 +3,17 @@
 namespace ufps
 {
 
-enum class PhysicsLayer
+enum class BroadPhaseLayer
 {
     STATIC,
     DYNAMIC,
+};
+
+enum class ObjectLayer
+{
+    WORLD_COLLIDERS,
+    LEVEL_GEOMETRY,
+    PLAYER,
 };
 
 }

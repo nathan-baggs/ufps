@@ -1,8 +1,13 @@
 #include "graphics/debug_layer.h"
 
+#include <cmath>
+#include <inplace_vector>
+#include <ranges>
+
 #include "concurrency/concurrent_queue.h"
 #include "graphics/colour.h"
 #include "graphics/line_data.h"
+#include "maths/matrix3.h"
 #include "maths/vector3.h"
 #include "utils/exception.h"
 #include "utils/formatter.h"
@@ -143,6 +148,45 @@ auto DebugLayer::push_frustrum(const Camera &camera, const Colour &colour, Debug
     for (auto i = 0zu; i < 4zu; ++i)
     {
         push_line(far_corners[i], far_corners[(i + 1) % 4], colour, type);
+    }
+}
+
+auto DebugLayer::push_cone(const Cone &cone, const Colour &colour, bool cap_only, DebugLayerType type) -> void
+{
+    static constexpr auto segments = 20zu;
+
+    const auto distance = cone.extent.length();
+    const auto radius = distance * std::tan(cone.theta);
+    const auto step = 2.0f * std::numbers::pi_v<float> / segments;
+    const auto normal = Vector3::normalise(cone.extent);
+
+    const auto reference = std::abs(normal.y) < 0.999f ? Vector3{0.0f, 1.0f, 0.0f} : Vector3{1.0f, 0.0f, 0.0f};
+
+    const auto tangent = Vector3::normalise(Vector3::cross(normal, reference));
+    const auto bitangent = Vector3::cross(normal, tangent);
+
+    const auto rotate_mat = Matrix3{tangent, normal, bitangent};
+
+    const auto circle_point = [&](std::size_t index)
+    {
+        const auto angle = index * step;
+        return cone.origin + rotate_mat * Vector3{radius * std::cos(angle), distance, radius * std::sin(angle)};
+    };
+
+    const auto points = std::views::iota(0zu, segments) | std::views::transform(circle_point) |
+                        std::ranges::to<std::inplace_vector<Vector3, segments>>();
+
+    for (auto i = 0zu; i < segments; ++i)
+    {
+        const auto start = points[i];
+        const auto end = points[(i + 1zu) % segments];
+
+        push_line(start, end, colour, type);
+
+        if (!cap_only)
+        {
+            push_line(start, cone.origin, colour, type);
+        }
     }
 }
 

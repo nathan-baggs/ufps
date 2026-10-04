@@ -46,6 +46,9 @@ set(ZSTD_BUILD_PROGRAMS OFF CACHE BOOL "" FORCE)
 set(ZSTD_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set(ZSTD_BUILD_CONTRIB OFF CACHE BOOL "" FORCE)
 add_subdirectory(zstd/build/cmake EXCLUDE_FROM_ALL)
+target_compile_options(libzstd_static PRIVATE
+    "$<$<CONFIG:Debug>:-O3>"
+)
 
 set(BACKTRACE_PREFIX "${CMAKE_CURRENT_BINARY_DIR}/libbacktrace")
 set(BACKTRACE_INSTALL_DIR "${BACKTRACE_PREFIX}/install")

@@ -44,6 +44,14 @@ constexpr const std::uint8_t debug_light_vert[] = {
 #embed "../../assets/shaders/debug_light.vert"
 };
 
+constexpr const std::uint8_t decal_frag[] = {
+#embed "../../assets/shaders/decal.frag"
+};
+
+constexpr const std::uint8_t decal_vert[] = {
+#embed "../../assets/shaders/decal.vert"
+};
+
 constexpr const std::uint8_t gbuffer_frag[] = {
 #embed "../../assets/shaders/gbuffer.frag"
 };
@@ -70,6 +78,18 @@ constexpr const std::uint8_t line_vert[] = {
 
 constexpr const std::uint8_t luminance_histogram_comp[] = {
 #embed "../../assets/shaders/luminance_histogram.comp"
+};
+
+constexpr const std::uint8_t particle_comp[] = {
+#embed "../../assets/shaders/particle.comp"
+};
+
+constexpr const std::uint8_t particle_frag[] = {
+#embed "../../assets/shaders/particle.frag"
+};
+
+constexpr const std::uint8_t particle_vert[] = {
+#embed "../../assets/shaders/particle.vert"
 };
 
 constexpr const std::uint8_t simple_frag[] = {
@@ -186,6 +206,8 @@ EmbeddedResourceLoader::EmbeddedResourceLoader()
         {"shaders\\average_luminance.comp", std::span{average_luminance_comp, sizeof(average_luminance_comp)}},
         {"shaders\\debug_light.frag", std::span{debug_light_frag, sizeof(debug_light_frag)}},
         {"shaders\\debug_light.vert", std::span{debug_light_vert, sizeof(debug_light_vert)}},
+        {"shaders\\decal.frag", std::span{decal_frag, sizeof(decal_frag)}},
+        {"shaders\\decal.vert", std::span{decal_vert, sizeof(decal_vert)}},
         {"shaders\\gbuffer.frag", std::span{gbuffer_frag, sizeof(gbuffer_frag)}},
         {"shaders\\gbuffer.vert", std::span{gbuffer_vert, sizeof(gbuffer_vert)}},
         {"shaders\\light_pass.frag", std::span{light_pass_frag, sizeof(light_pass_frag)}},
@@ -193,6 +215,9 @@ EmbeddedResourceLoader::EmbeddedResourceLoader()
         {"shaders\\line.frag", std::span{line_frag, sizeof(line_frag)}},
         {"shaders\\line.vert", std::span{line_vert, sizeof(line_vert)}},
         {"shaders\\luminance_histogram.comp", std::span{luminance_histogram_comp, sizeof(luminance_histogram_comp)}},
+        {"shaders\\particle.comp", std::span{particle_comp, sizeof(particle_comp)}},
+        {"shaders\\particle.frag", std::span{particle_frag, sizeof(particle_frag)}},
+        {"shaders\\particle.vert", std::span{particle_vert, sizeof(particle_vert)}},
         {"shaders\\simple.frag", std::span{simple_frag, sizeof(simple_frag)}},
         {"shaders\\simple.vert", std::span{simple_vert, sizeof(simple_vert)}},
         {"shaders\\ssao.frag", std::span{ssao_frag, sizeof(ssao_frag)}},

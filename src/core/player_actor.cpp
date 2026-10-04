@@ -91,7 +91,8 @@ auto PlayerActor::set_gun(Gun gun) -> void
 
 auto PlayerActor::update(Duration delta) -> void
 {
-    const auto &[em, cm, am, pm] = services<EntityManager, CameraManager, AudioManager, ParticleManager>();
+    const auto &[em, cm, am, pm, ps] =
+        services<EntityManager, CameraManager, AudioManager, ParticleManager, PhysicsSystem>();
 
     walk_sound_timer_ += delta;
 
@@ -110,7 +111,7 @@ auto PlayerActor::update(Duration delta) -> void
     auto gun_entity = em[gun_handle_];
     contract_assert(gun_entity);
 
-    const auto &[mouse_delta, final_recoil, bullets_fired] = gun_.update(delta, *gun_entity, input_map_, *camera);
+    const auto &[mouse_delta, final_recoil] = gun_.update_movement(delta, *gun_entity, input_map_);
 
     pitch_ += mouse_delta;
     yaw_ -= input_map_.delta_x;
@@ -128,37 +129,14 @@ auto PlayerActor::update(Duration delta) -> void
 
     player->set_transform(new_transform);
 
-    static const auto textures = std::array<std::string_view, 4zu>{{
-        "textures\\bullet_hole1.dds",
-        "textures\\bullet_hole2.dds",
-        "textures\\bullet_hole3.dds",
-        "textures\\bullet_hole4.dds",
-    }};
-
-    for (const auto &bullet_ray : bullets_fired)
-    {
-        if (const auto intersection = scene_.intersect_ray(bullet_ray); intersection)
-        {
-            scene_.add_decal(
-                {intersection->position,
-                 {0.05f, 0.01f, 0.05f},
-                 Quaternion{{0.0f, 1.0f, 0.0f}, intersection->normal} *
-                     Quaternion{{0.0f, 1.0f, 0.0f}, random::rand_real(0.0f, 2.0f * std::numbers::pi_v<float>)}},
-                random::rand_element(textures));
-
-            pm.spawn_sparks(intersection->position, intersection->normal * Vector3{2.0f});
-            for (auto i = 0; i < 10; ++i)
-            {
-                pm.spawn_sparks(
-                    intersection->position,
-                    intersection->normal +
-                        Vector3{
-                            random::rand_real(-0.5f, 0.5f),
-                            random::rand_real(-0.5f, 0.5f),
-                            random::rand_real(-0.5f, 0.5f)} *
-                            Vector3{2.0f});
-            }
-        }
-    }
+    bullets_fired_ = gun_.update_bullets(delta, input_map_, *camera);
 }
+
+auto PlayerActor::yield_bullets_fired() -> std::vector<Ray>
+{
+    auto tmp = std::vector<Ray>{};
+    std::ranges::swap(tmp, bullets_fired_);
+    return tmp;
+}
+
 }

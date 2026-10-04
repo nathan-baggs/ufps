@@ -7,6 +7,7 @@
 #include "core/camera_manager.h"
 #include "core/entity.h"
 #include "core/entity_manager.h"
+#include "core/light_manager.h"
 #include "core/player_actor.h"
 #include "core/scene.h"
 #include "events/key_event.h"
@@ -24,7 +25,7 @@ namespace ufps
 class DebugRenderer : public Renderer
 {
   public:
-    DebugRenderer(const Window &window, ResourceLoader &resource_loader, PlayerActor &player_actor);
+    DebugRenderer(const Window &window, PlayerActor &player_actor);
     ~DebugRenderer();
 
     auto add_mouse_event(const MouseButtonEvent &evt) -> void;
@@ -46,10 +47,12 @@ class DebugRenderer : public Renderer
     auto draw_gizmo(const Camera &camera) -> void;
     auto draw_player_info() -> void;
 
+    using SelectedType = std::variant<std::monostate, EntityHandle, LightHandle, RigidBodyHandle, CameraHandle>;
+
     bool enabled_;
     bool snap_enabled_;
     std::optional<MouseButtonEvent> click_;
-    std::variant<std::monostate, EntityHandle, LightHandle, RigidBodyHandle, CameraHandle> selected_;
+    SelectedType selected_;
     RenderEntityHandle highlight_render_entity_;
     EntityHandle highlight_entity_;
     RigidBodyHandle highlight_rigid_body_;

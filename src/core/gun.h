@@ -8,6 +8,7 @@
 #include "core/scene.h"
 #include "events/input_map.h"
 #include "maths/bounded_number.h"
+#include "maths/cone.h"
 #include "maths/ray.h"
 #include "maths/spring.h"
 #include "maths/transform.h"
@@ -38,14 +39,21 @@ class Gun
     {
         float final_mouse_y_delta;
         float final_recoil;
-        std::vector<Ray> bullets_fired;
     };
 
     Gun(Description description);
 
-    auto update(Duration delta, Entity &entity, const InputMap &input_map, const Camera &camera) -> UpdateResult;
+    auto update_movement(Duration delta, Entity &entity, const InputMap &input_map) -> UpdateResult;
+
+    auto update_bullets(Duration delta, const InputMap &input_map, const Camera &camera) -> std::vector<Ray>;
 
     auto description() const -> Description;
+
+    auto fire_sound_name() const -> std::string_view;
+
+    auto fire_cone() const -> Cone;
+
+    auto max_fire_cone() const -> Cone;
 
   private:
     Transform rest_transform_;
@@ -60,6 +68,10 @@ class Gun
     Spring kick_spring_;
     Spring bob_reset_;
     float bob_elapsed_time_;
+    float min_cone_theta_;
+    float max_bullet_distance_;
+    Cone fire_cone_;
+    Cone max_fire_cone_;
 };
 
 }

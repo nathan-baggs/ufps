@@ -2,7 +2,6 @@
 
 #include <chrono>
 
-#include "audio/audio_manager.h"
 #include "core/camera.h"
 #include "core/camera_manager.h"
 #include "core/clock.h"
@@ -13,6 +12,8 @@
 #include "maths/random.h"
 #include "maths/spring.h"
 #include "maths/vector3.h"
+
+using namespace std::literals;
 
 namespace
 {
@@ -41,10 +42,14 @@ Gun::Gun(Description description)
     , kick_spring_{0.0f, 0.0f, 0.0f, duration_to_angular_frequency(description.kick_settle_time), 0.5f}
     , bob_reset_{0.0f, 0.0f, 0.0f, duration_to_angular_frequency(description.bob_settle_time), 0.1f}
     , bob_elapsed_time_{}
+    , min_cone_theta_{0.001f}
+    , max_bullet_distance_{30.0f}
+    , fire_cone_{.origin = {}, .extent = {}, .theta = min_cone_theta_}
+    , max_fire_cone_{.origin = {}, .extent = {}, .theta = min_cone_theta_ * 15.0f}
 {
 }
 
-auto Gun::update(Duration delta, Entity &entity, const InputMap &input_map, const Camera &camera) -> UpdateResult
+auto Gun::update_movement(Duration delta, Entity &entity, const InputMap &input_map) -> UpdateResult
 {
     if (!rest_transform_set_)
     {
@@ -53,35 +58,6 @@ auto Gun::update(Duration delta, Entity &entity, const InputMap &input_map, cons
     }
 
     auto result = UpdateResult{};
-
-    const auto &[am] = services<AudioManager>();
-
-    shoot_timer_ += delta;
-
-    static auto half_angle = 0.0001f;
-
-    if (input_map.mouse_down)
-    {
-        if (shoot_timer_ >= fire_rate_)
-        {
-            kick_spring_.add_impulse(1.0f);
-
-            shoot_timer_ = {};
-            recoil_target_ += description_.shot_recoil;
-
-            am.play("Specter Bullet.wav", PlayMode::SINGLE, random::rand_real(1.0f, 1.4f));
-
-            const auto bullet_direction = random::rand_vector3(Vector3::normalise(camera.direction()), half_angle);
-
-            result.bullets_fired.push_back({camera.transform().position, bullet_direction * 100.0f});
-            half_angle += 0.001f;
-        }
-    }
-    else
-    {
-        recoil_target_ = {};
-        half_angle = 0.0001f;
-    }
 
     auto bob = float{};
     bob_elapsed_time_ += std::chrono::duration_cast<std::chrono::duration<float>>(delta).count();
@@ -131,8 +107,61 @@ auto Gun::update(Duration delta, Entity &entity, const InputMap &input_map, cons
     return result;
 }
 
+auto Gun::update_bullets(Duration delta, const InputMap &input_map, const Camera &camera) -> std::vector<Ray>
+{
+    auto bullets_fired = std::vector<Ray>{};
+
+    shoot_timer_ += delta;
+
+    if (input_map.mouse_down)
+    {
+        if (shoot_timer_ >= fire_rate_)
+        {
+            kick_spring_.add_impulse(1.0f);
+
+            shoot_timer_ = {};
+            recoil_target_ += description_.shot_recoil;
+
+            const auto bullet_direction =
+                random::rand_vector3(Vector3::normalise(camera.direction()), fire_cone_.theta);
+
+            bullets_fired.push_back({camera.transform().position, bullet_direction * 100.0f});
+            fire_cone_.theta = std::min(max_fire_cone_.theta, fire_cone_.theta + 0.001f);
+        }
+    }
+    else
+    {
+        recoil_target_ = {};
+        fire_cone_.theta = std::max(min_cone_theta_, fire_cone_.theta - 0.001f);
+    }
+
+    fire_cone_.origin = camera.position();
+    fire_cone_.extent = Vector3::normalise(camera.direction()) * Vector3{max_bullet_distance_};
+
+    max_fire_cone_.origin = fire_cone_.origin;
+    max_fire_cone_.extent = fire_cone_.extent;
+
+    return bullets_fired;
+}
+
 auto Gun::description() const -> Description
 {
     return description_;
 }
+
+auto Gun::fire_sound_name() const -> std::string_view
+{
+    return "Specter Bullet.wav"sv;
+}
+
+auto Gun::fire_cone() const -> Cone
+{
+    return fire_cone_;
+}
+
+auto Gun::max_fire_cone() const -> Cone
+{
+    return max_fire_cone_;
+}
+
 }

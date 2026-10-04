@@ -1,9 +1,12 @@
 #pragma once
 
 #include <optional>
+#include <unordered_map>
 
+#include "core/entity.h"
 #include "core/sparse_set.h"
 #include "maths/aabb.h"
+#include "maths/ray.h"
 #include "maths/vector3.h"
 #include "physics/jolt.h"
 #include "physics/physics_debug_renderer.h"
@@ -15,7 +18,14 @@
 namespace ufps
 {
 
-using RigidBodyHandle = SparseSet<RigidBody>::handle_type;
+struct IntersectionResult
+{
+    EntityHandle entity;
+    RigidBodyHandle body;
+    Vector3 position;
+    Vector3 normal;
+    float distance;
+};
 
 enum class DebugRenderMode
 {
@@ -33,15 +43,27 @@ class PhysicsSystem : public ::JPH::ContactListener
     PhysicsSystem(PhysicsSystem &&) = delete;
     auto operator=(PhysicsSystem &&) -> PhysicsSystem & = delete;
 
-    auto create_box(const AABB &aabb, const Vector3 &position, PhysicsLayer layer) -> RigidBodyHandle;
+    auto create_box(
+        const AABB &aabb,
+        const Vector3 &position,
+        BroadPhaseLayer broad_phase_layer,
+        ObjectLayer object_layer,
+        EntityHandle entity) -> RigidBodyHandle;
 
-    auto create_rigid_body(const RigidBody::Description &description) -> RigidBodyHandle;
+    auto create_meshes(BroadPhaseLayer broad_phase_layer, ObjectLayer object_layer, EntityHandle entity_handle)
+        -> std::vector<RigidBodyHandle>;
+
+    auto create_rigid_body(const RigidBody::Description &description, EntityHandle entity) -> RigidBodyHandle;
+
     auto remove_rigid_body(RigidBodyHandle handle) -> void;
+
     auto duplicate_rigid_body(RigidBodyHandle handle) -> RigidBodyHandle;
 
     constexpr auto rigid_body(this auto &&self, RigidBodyHandle handle);
 
     auto update() -> void;
+
+    auto cast_ray(const Ray &ray) const -> std::optional<IntersectionResult>;
 
     auto debug_renderer() -> std::optional<PhysicsDebugRenderer &>;
 
@@ -51,12 +73,15 @@ class PhysicsSystem : public ::JPH::ContactListener
     SimpleBroadPhaseLayer broad_phase_layer_;
     SimpleObjectVsBroadPhaseLayerFilter object_vs_broad_phase_layer_filter_;
     SimpleObjectLayerPairFilter object_layer_pair_filter_;
+    CastRayObjectLayerFilter cast_ray_layer_filter_;
+    IgnoreLayerDrawFilter ignore_layer_draw_filter_;
     ::JPH::TempAllocatorImpl temp_allocator_;
     ::JPH::JobSystemThreadPool job_system_;
     ::JPH::PhysicsSystem physics_system_;
     SparseSet<RigidBody> rigid_bodies_;
     std::optional<PhysicsDebugRenderer> debug_renderer_;
     std::unique_ptr<VirtualCharacterController> player_controller_;
+    std::unordered_map<MeshView, ::JPH::Ref<::JPH::Shape>> mesh_shape_cache_;
 };
 
 constexpr auto PhysicsSystem::rigid_body(this auto &&self, RigidBodyHandle handle)

@@ -5,6 +5,7 @@
 #include "graphics/colour.h"
 #include "graphics/line_data.h"
 #include "maths/aabb.h"
+#include "maths/cone.h"
 #include "maths/matrix4.h"
 #include "maths/transform.h"
 #include "maths/vector3.h"
@@ -43,6 +44,12 @@ class DebugLayer
         DebugLayerType type = DebugLayerType::DEBUG) -> void;
 
     auto push_frustrum(const Camera &camera, const Colour &colour, DebugLayerType type = DebugLayerType::DEBUG) -> void;
+
+    auto push_cone(
+        const Cone &cone,
+        const Colour &colour,
+        bool cap_only = false,
+        DebugLayerType type = DebugLayerType::DEBUG) -> void;
 
     auto yield_lines(DebugLayerType type) -> std::queue<LineData>;
 

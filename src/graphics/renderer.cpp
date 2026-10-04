@@ -183,9 +183,7 @@ auto particle_buffer_size() -> std::size_t
 namespace ufps
 {
 
-Renderer::Renderer(
-    const Window &window,
-    ResourceLoader &resource_loader)
+Renderer::Renderer(const Window &window)
     : window_{window}
     , dummy_vao_{0u, [](auto e) { ::glDeleteVertexArrays(1u, &e); }}
     , command_buffer_{"gbuffer_command_buffer"}
@@ -200,80 +198,68 @@ Renderer::Renderer(
     , average_luminance_buffer_{sizeof(float), "average_luminance_buffer"}
     , ssao_samples_buffer_{sizeof(Vector4) * 64, "ssao_samples_buffer"}
     , gbuffer_program_{create_program(
-          resource_loader,
           "shaders\\gbuffer.vert",
           "gbuffer_vertex_shader",
           "shaders\\gbuffer.frag",
           "gbuffer_fragment_shader",
           "gbuffer_program")}
     , light_pass_program_{create_program(
-          resource_loader,
           "shaders\\light_pass.vert",
           "light_pass_vertex_shader",
           "shaders\\light_pass.frag",
           "light_pass_fragment_shader",
           "light_pass_program")}
     , tone_map_program_{create_program(
-          resource_loader,
           "shaders\\tone_map.vert",
           "tone_map_vertex_shader",
           "shaders\\tone_map.frag",
           "tone_map_fragment_shader",
           "tone_map_program")}
     , luminance_histogram_program_{create_program(
-          resource_loader,
           "shaders\\luminance_histogram.comp",
           "luminance_histogram_shader",
           "luminance_histogram_program")}
     , average_luminance_program_{create_program(
-          resource_loader,
           "shaders\\average_luminance.comp",
           "average_luminance_shader",
           "average_luminance_program")}
     , ssao_program_{create_program(
-          resource_loader,
           "shaders\\ssao.vert",
           "ssao_vertex_shader",
           "shaders\\ssao.frag",
           "ssao_fragment_shader",
           "ssao_program")}
     , ssao_blur_program_{create_program(
-          resource_loader,
           "shaders\\ssao.vert",
           "ssao_blur_vertex_shader",
           "shaders\\ssao_blur.frag",
           "ssao_blur_fragment_shader",
           "ssao_blur_program")}
     , chromatic_aberration_program_{create_program(
-          resource_loader,
           "shaders\\chromatic_aberration.vert",
           "chromatic_aberration_vertex_shader",
           "shaders\\chromatic_aberration.frag",
           "chromatic_aberration_fragment_shader",
           "chromatic_aberration_program")}
     , bloom_downsample_program_{create_program(
-          resource_loader,
           "shaders\\bloom_downsample.vert",
           "bloom_downsample_vertex_shader",
           "shaders\\bloom_downsample.frag",
           "bloom_downsample_fragment_shader",
           "bloom_downsample_program")}
     , bloom_upsample_program_{create_program(
-          resource_loader,
           "shaders\\bloom_upsample.vert",
           "bloom_upsample_vertex_shader",
           "shaders\\bloom_upsample.frag",
           "bloom_upsample_fragment_shader",
           "bloom_upsample_program")}
     , bloom_mix_program_{create_program(
-          resource_loader,
           "shaders\\bloom_mix.vert",
           "bloom_mix_vertex_shader",
           "shaders\\bloom_mix.frag",
           "bloom_mix_fragment_shader",
           "bloom_mix_program")}
     , decal_program_{create_program(
-          resource_loader,
           "shaders\\decal.vert",
           "decal_vertex_shader",
           "shaders\\decal.frag",
@@ -281,14 +267,12 @@ Renderer::Renderer(
           "decal_program")}
     , decal_buffer_{100zu * sizeof(Decal), "decal_buffer"}
     , particle_program_{create_program(
-          resource_loader,
           "shaders\\particle.vert",
           "particle_vertex_shader",
           "shaders\\particle.frag",
           "particle_fragment_shader",
           "particle_program")}
     , particle_update_program_{create_program(
-          resource_loader,
           "shaders\\particle.comp",
           "particle_update_shader",
           "particle_update_program")}
@@ -345,14 +329,12 @@ Renderer::Renderer(
     , enable_post_processing_{true}
     , debug_line_buffer_{sizeof(LineData) * 2u, "line_data_buffer"}
     , debug_line_program_{create_program(
-          resource_loader,
           "shaders\\line.vert",
           "line_vertex_shader",
           "shaders\\line.frag",
           "line_fragment_shader",
           "line_program")}
     , debug_light_program_{create_program(
-          resource_loader,
           "shaders\\debug_light.vert",
           "debug_light_vertex_shader",
           "shaders\\debug_light.frag",
@@ -489,28 +471,27 @@ auto Renderer::post_render(Scene &, const Camera &) -> void
 }
 
 auto Renderer::create_program(
-    ufps::ResourceLoader &resource_loader,
     std::string_view vertex_path,
     std::string_view vertex_name,
     std::string_view fragment_path,
     std::string_view fragment_name,
     std::string_view program_name) -> ufps::Program
 {
-    const auto sample_vert =
-        ufps::Shader{resource_loader.load_string(vertex_path), ufps::ShaderType::VERTEX, vertex_name};
-    const auto sample_frag =
-        ufps::Shader{resource_loader.load_string(fragment_path), ufps::ShaderType::FRAGMENT, fragment_name};
+    auto &rl = ufps::service<ufps::ResourceLoader>();
+
+    const auto sample_vert = ufps::Shader{rl.load_string(vertex_path), ufps::ShaderType::VERTEX, vertex_name};
+    const auto sample_frag = ufps::Shader{rl.load_string(fragment_path), ufps::ShaderType::FRAGMENT, fragment_name};
     return ufps::Program{sample_vert, sample_frag, program_name};
 }
 
 auto Renderer::create_program(
-    ufps::ResourceLoader &resource_loader,
     std::string_view compute_path,
     std::string_view compute_name,
     std::string_view program_name) -> ufps::Program
 {
-    const auto compute_shader =
-        ufps::Shader{resource_loader.load_string(compute_path), ufps::ShaderType::COMPUTE, compute_name};
+    auto &rl = ufps::service<ufps::ResourceLoader>();
+
+    const auto compute_shader = ufps::Shader{rl.load_string(compute_path), ufps::ShaderType::COMPUTE, compute_name};
     return ufps::Program{compute_shader, program_name};
 }
 

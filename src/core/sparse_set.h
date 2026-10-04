@@ -19,7 +19,7 @@ class SparseSet
 {
     class Handle
     {
-        inline static constexpr auto Invalid = std::numeric_limits<std::uint32_t>::max();
+        inline static constexpr auto Invalid = std::numeric_limits<std::uint16_t>::max();
 
       public:
         constexpr Handle()
@@ -35,14 +35,14 @@ class SparseSet
         constexpr auto operator<=>(const Handle &) const = default;
 
       private:
-        explicit constexpr Handle(std::uint32_t index, std::uint32_t version)
+        explicit constexpr Handle(std::uint16_t index, std::uint16_t version)
             : index_{index}
             , version_{version}
         {
         }
 
-        std::uint32_t index_;
-        std::uint32_t version_;
+        std::uint16_t index_;
+        std::uint16_t version_;
 
         friend SparseSet;
     };
@@ -56,11 +56,11 @@ class SparseSet
     template <class... Args>
     constexpr auto emplace(Args &&...args) -> handle_type
     {
-        const auto dense_index = static_cast<std::uint32_t>(std::ranges::size(data_));
+        const auto dense_index = static_cast<std::uint16_t>(std::ranges::size(data_));
         data_.emplace_back(std::forward<Args>(args)...);
 
-        auto sparse_index = static_cast<std::uint32_t>(std::ranges::size(sparse_));
-        auto version = 0u;
+        auto sparse_index = static_cast<std::uint16_t>(std::ranges::size(sparse_));
+        auto version = std::uint16_t{};
 
         if (!std::ranges::empty(free_))
         {
@@ -125,7 +125,7 @@ class SparseSet
     template <class U>
     using VectorRebind = std::vector<U, typename std::allocator_traits<Allocator>::template rebind_alloc<U>>;
     VectorRebind<handle_type> sparse_;
-    VectorRebind<std::uint32_t> dense_;
+    VectorRebind<std::uint16_t> dense_;
     std::vector<T, Allocator> data_;
     VectorRebind<std::size_t> free_;
 };
@@ -198,7 +198,7 @@ constexpr auto SparseSet<T, Allocator>::handles() const -> std::vector<handle_ty
                {
                    const auto &[index, handle] = e;
                    const auto correct_index = handle.index_ == handle_type::Invalid ? handle.index_ : index;
-                   return handle_type{static_cast<std::uint32_t>(correct_index), handle.version_};
+                   return handle_type{static_cast<std::uint16_t>(correct_index), handle.version_};
                }) |
            std::views::filter([](const auto &e) { return e.index_ != handle_type::Invalid; }) |
            std::ranges::to<std::vector>();

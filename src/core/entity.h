@@ -14,15 +14,16 @@
 #include "core/utils.h"
 #include "maths/aabb.h"
 #include "maths/transform.h"
-#include "physics/physics_system.h"
+#include "physics/rigid_body.h"
 
 namespace ufps
 {
 
+class Entity;
+using EntityHandle = SparseSet<Entity>::handle_type;
+
 class Entity
 {
-    using EntityHandle = SparseSet<Entity>::handle_type;
-
   public:
     struct Description
     {
@@ -35,6 +36,7 @@ class Entity
         std::vector<std::string> children;
         std::optional<Camera::Description> camera;
         std::optional<PointLight> light;
+        bool can_intersect_ray;
     };
 
     Entity(std::string name, std::span<const RenderEntityHandle> render_entities, Transform transform);
@@ -68,6 +70,8 @@ class Entity
 
     auto add_rigid_body(RigidBodyHandle handle) -> void;
 
+    auto set_ray_intersect_rigid_bodies(std::vector<RigidBodyHandle> handles) -> void;
+
     auto rigid_bodies() const -> std::span<const RigidBodyHandle>;
 
     auto light() const -> LightHandle;
@@ -90,6 +94,7 @@ class Entity
     std::string name_;
     std::vector<RenderEntityHandle> render_entities_;
     std::vector<RigidBodyHandle> rigid_bodies_;
+    std::vector<RigidBodyHandle> ray_intersect_rigid_bodies_;
     LightHandle light_;
     Transform local_transform_;
     Transform parent_transform_;
