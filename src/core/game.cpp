@@ -53,12 +53,15 @@
 #include "utils/resolve_symbols.h"
 #include "utils/stack_trace_buffer.h"
 #include "utils/string_map.h"
+#include "utils/time_logger.h"
 
 namespace
 {
 
 auto build_mesh_lookup(ufps::ResourceLoader &resource_loader) -> ufps::StringMap<std::vector<ufps::MeshView>>
 {
+    const auto time_logger = ufps::TimeLogger{};
+
     auto mesh_lookup = ufps::StringMap<std::vector<ufps::MeshView>>{};
 
     const auto manifest_str = resource_loader.load_string("configs\\model_manifest.yaml");
@@ -80,6 +83,8 @@ auto build_mesh_lookup(ufps::ResourceLoader &resource_loader) -> ufps::StringMap
 
 auto create_services() -> std::unique_ptr<ufps::Services>
 {
+    const auto time_logger = ufps::TimeLogger{};
+
     auto resource_loader = std::unique_ptr<ufps::ResourceLoader>();
     if constexpr (ufps::config::use_embedded_resouce_loader)
     {
@@ -126,6 +131,8 @@ auto create_services() -> std::unique_ptr<ufps::Services>
 
 auto load_all_textures(const ufps::Sampler &sampler) -> void
 {
+    const auto time_logger = ufps::TimeLogger{};
+
     ufps::log::debug("services: {}", static_cast<void *>(ufps::impl::g_services));
     const auto &[rl, tm] = ufps::services<ufps::ResourceLoader, ufps::TextureManager>();
 
@@ -133,18 +140,30 @@ auto load_all_textures(const ufps::Sampler &sampler) -> void
     const auto texture_manifest = ufps::yaml::deserialise<ufps::TextureManifestDescription>(texture_manifest_str);
     ensure(texture_manifest);
 
-    const auto texture_blob = ufps::decompress(rl.load_data_buffer("blobs\\texture_data.bin"));
+    auto texture_blob = ufps::DataBuffer{};
+
+    {
+        const auto decompress_time_logger = ufps::TimeLogger{};
+        texture_blob = ufps::decompress(rl.load_data_buffer("blobs\\texture_data.bin"));
+    }
+
+    auto textures = std::vector<ufps::Texture>{};
+    textures.reserve(std::ranges::size(texture_manifest->textures));
 
     for (const auto &[name, manifest] : texture_manifest->textures)
     {
         const auto raw_texture_data = std::span{texture_blob.data() + manifest.offset, manifest.size};
         const auto texture_data = ufps::load_texture(raw_texture_data, manifest.is_srgb);
-        tm.add({texture_data, name, sampler});
+        textures.push_back({texture_data, name, sampler});
     }
+
+    tm.add(std::move(textures));
 }
 
 auto load_render_entity_manager()
 {
+    const auto time_logger = ufps::TimeLogger{};
+
     auto &&[rem, mm, tm, rl] =
         ufps::services<ufps::RenderEntityManager, ufps::MeshManager, ufps::TextureManager, ufps::ResourceLoader>();
 
@@ -222,6 +241,8 @@ auto load_scene_description() -> ufps::Scene::Description
 
 auto load_gun_description() -> ufps::Gun::Description
 {
+    const auto time_logger = ufps::TimeLogger{};
+
     const auto &[rl] = ufps::services<ufps::ResourceLoader>();
 
     auto strm = std::stringstream{};
@@ -486,14 +507,14 @@ auto Game::update() -> bool
         "textures\\bullet_hole4.dds",
     }};
 
+    auto fire_cone = player_actor_->gun().fire_cone();
+    auto fire_cone_colour = colours::white;
+    auto max_fire_cone = player_actor_->gun().max_fire_cone();
+    const auto max_distance = fire_cone.extent.length();
+
     for (const auto &bullet_ray : bullets_fired)
     {
         am.play(player_actor_->gun().fire_sound_name(), PlayMode::SINGLE, random::rand_real(1.0f, 1.4f));
-
-        auto fire_cone = player_actor_->gun().fire_cone();
-        auto fire_cone_colour = colours::white;
-        auto max_fire_cone = player_actor_->gun().max_fire_cone();
-        const auto max_distance = fire_cone.extent.length();
 
         if (const auto intersection = ps.cast_ray(bullet_ray); intersection)
         {
