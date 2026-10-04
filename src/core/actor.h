@@ -43,9 +43,6 @@ constexpr Actor::Actor(EntityHandle entity)
     ensure(cam, "camera missing");
 
     camera_ = camera_handle;
-
-    // always reset entity to origin, ignore anything saved in the scene file
-    e->set_transform({{0.0f, 2.0f, 0.0f}, {1.0f}, {}});
 }
 
 constexpr auto &Actor::camera(this auto &&self)
