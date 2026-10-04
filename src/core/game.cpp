@@ -1,6 +1,7 @@
 #include "core/game.h"
 
 #include <memory>
+#include <numbers>
 #include <ranges>
 #include <sstream>
 #include <variant>
@@ -14,6 +15,7 @@
 #include "core/camera.h"
 #include "core/camera_manager.h"
 #include "core/clock.h"
+#include "core/entity_manager.h"
 #include "core/flycam_actor.h"
 #include "core/light_manager.h"
 #include "core/manifest_descriptions.h"
@@ -26,6 +28,8 @@
 #include "events/key_event.h"
 #include "events/mouse_button_event.h"
 #include "events/mouse_event.h"
+#include "game/enemy.h"
+#include "game/enemy_manager.h"
 #include "graphics/colour.h"
 #include "graphics/debug_layer.h"
 #include "graphics/debug_renderer.h"
@@ -41,6 +45,7 @@
 #include "maths/cone.h"
 #include "maths/random.h"
 #include "maths/ray.h"
+#include "maths/transform.h"
 #include "maths/vector3.h"
 #include "memory/metrics.h"
 #include "physics/physics_system.h"
@@ -123,7 +128,8 @@ auto create_services() -> std::unique_ptr<ufps::Services>
         std::make_unique<ufps::DebugLayer>(),
         std::make_unique<ufps::AudioManager>(*resource_loader),
         std::make_unique<ufps::ParticleManager>(),
-        std::move(resource_loader));
+        std::move(resource_loader),
+        std::make_unique<ufps::EnemyManager>());
     ufps::set_service(services.release());
 
     return services;
@@ -198,7 +204,18 @@ auto load_render_entity_manager()
         rem.register_group(name, std::move(render_entities));
     }
 
-    mm.load("cube", std::vector{ufps::shapes::cube()});
+    const auto cube_mesh_views = mm.load("cube", std::vector{ufps::shapes::cube()});
+    rem.register_group(
+        "cube",
+        {{"cube",
+          cube_mesh_views.front(),
+          tm.texture_index("textures\\default_BaseColor.dds"),
+          tm.texture_index("textures\\default_Normal.dds"),
+          tm.texture_index("textures\\default_Metallic.dds"),
+          tm.texture_index("textures\\default_AO.dds"),
+          tm.texture_index("textures\\default_Roughness.dds"),
+          tm.texture_index("textures\\default_Emissive.dds")}});
+
     const auto mesh_views = mm.load("sprite", std::vector{ufps::shapes::sprite()});
 
     rem.register_group(
@@ -377,10 +394,31 @@ auto Game::run() -> void
 
 auto Game::load_scene() -> void
 {
-    const auto &[rl, am, lm, em, ps] =
-        services<ResourceLoader, AudioManager, LightManager, EntityManager, PhysicsSystem>();
+    const auto &[rl, am, lm, em, ps, enm, rem, cm] = services<
+        ResourceLoader,
+        AudioManager,
+        LightManager,
+        EntityManager,
+        PhysicsSystem,
+        EnemyManager,
+        RenderEntityManager,
+        CameraManager>();
 
     scene_ = std::make_unique<Scene>(load_scene_description());
+
+    const auto enemy_transform = Transform{{0.0f, 2.0f, -10.0f}, {1.0f}, {}};
+    const auto enemy_camera_handle = cm.insert(
+        {enemy_transform,
+         std::numbers::pi_v<float> / 4.0f,
+         static_cast<float>(window_.window_width()),
+         static_cast<float>(window_.window_height()),
+         0.1f,
+         100.0f});
+    const auto enemy_entity = em.insert({"enemy", rem["cube"], enemy_transform});
+    em[enemy_entity]->set_camera(enemy_camera_handle);
+    scene_->add(enemy_entity);
+
+    enm.spawn(enemy_entity, 100.0f);
 
     const auto point_light_handles = lm.handles();
 
