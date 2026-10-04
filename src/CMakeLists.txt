@@ -4,6 +4,7 @@ add_library(ufpslib STATIC
 add_subdirectory(audio)
 add_subdirectory(core)
 add_subdirectory(concurrency)
+add_subdirectory(game)
 add_subdirectory(graphics)
 add_subdirectory(memory)
 add_subdirectory(physics)
