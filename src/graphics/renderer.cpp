@@ -716,7 +716,10 @@ auto Renderer::execute_lighting_pass(Scene &scene) -> void
         auto writer = BufferWriter{light_buffer_};
         writer.write(ambient);
         writer.write(static_cast<std::uint32_t>(std::ranges::size(lights)));
-        writer.write(lights);
+        if (!std::ranges::empty(lights))
+        {
+            writer.write(lights);
+        }
     }
 
     light_pass_program_.set_uniforms(
