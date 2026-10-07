@@ -74,6 +74,11 @@ auto RigidBody::user_data() const -> std::uint64_t
     return body_interface_->GetUserData(body_id_);
 }
 
+auto RigidBody::object_layer() const -> ObjectLayer
+{
+    return object_layer_;
+}
+
 auto RigidBody::update_transforms(const Transform &local, const Transform &parent) -> void
 {
     const auto world_transform = parent * local;
