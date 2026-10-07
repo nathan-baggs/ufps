@@ -1,4 +1,5 @@
 target_sources(ufpslib PRIVATE
+  actor.cpp
   contract_violation_handler.cpp
   entity.cpp
   flycam_actor.cpp
