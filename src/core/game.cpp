@@ -209,12 +209,12 @@ auto load_render_entity_manager()
         "cube",
         {{"cube",
           cube_mesh_views.front(),
-          tm.texture_index("textures\\default_BaseColor.dds"),
-          tm.texture_index("textures\\default_Normal.dds"),
-          tm.texture_index("textures\\default_Metallic.dds"),
-          tm.texture_index("textures\\default_AO.dds"),
-          tm.texture_index("textures\\default_Roughness.dds"),
-          tm.texture_index("textures\\default_Emissive.dds")}});
+          tm.bindless_handle("textures\\default_Normal.dds"),
+          tm.bindless_handle("textures\\default_Normal.dds"),
+          tm.bindless_handle("textures\\default_Metallic.dds"),
+          tm.bindless_handle("textures\\default_AO.dds"),
+          tm.bindless_handle("textures\\default_Roughness.dds"),
+          tm.bindless_handle("textures\\default_Emissive.dds")}});
 
     const auto mesh_views = mm.load("sprite", std::vector{ufps::shapes::sprite()});
 
@@ -222,12 +222,12 @@ auto load_render_entity_manager()
         "sprite",
         {{"sprite",
           mesh_views.front(),
-          tm.texture_index("textures\\default_BaseColor.dds"),
-          tm.texture_index("textures\\default_Normal.dds"),
-          tm.texture_index("textures\\default_Metallic.dds"),
-          tm.texture_index("textures\\default_AO.dds"),
-          tm.texture_index("textures\\default_Roughness.dds"),
-          tm.texture_index("textures\\default_Emissive.dds")}});
+          tm.bindless_handle("textures\\default_BaseColor.dds"),
+          tm.bindless_handle("textures\\default_Normal.dds"),
+          tm.bindless_handle("textures\\default_Metallic.dds"),
+          tm.bindless_handle("textures\\default_AO.dds"),
+          tm.bindless_handle("textures\\default_Roughness.dds"),
+          tm.bindless_handle("textures\\default_Emissive.dds")}});
 }
 
 auto load_scene_description() -> ufps::Scene::Description
