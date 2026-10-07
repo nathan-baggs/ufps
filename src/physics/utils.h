@@ -30,11 +30,11 @@ class SimpleBroadPhaseLayer : public ::JPH::BroadPhaseLayerInterface
         {
             using enum ObjectLayer;
 
-            case WORLD_COLLIDERS:
-                return ::JPH::BroadPhaseLayer{static_cast<::JPH::BroadPhaseLayer::Type>(BroadPhaseLayer::STATIC)};
+            case WORLD_COLLIDERS: [[fallthrough]];
             case LEVEL_GEOMETRY:
                 return ::JPH::BroadPhaseLayer{static_cast<::JPH::BroadPhaseLayer::Type>(BroadPhaseLayer::STATIC)};
-            case PLAYER:
+            case PLAYER: [[fallthrough]];
+            case ENEMIES:
                 return ::JPH::BroadPhaseLayer{static_cast<::JPH::BroadPhaseLayer::Type>(BroadPhaseLayer::DYNAMIC)};
         }
 
@@ -58,6 +58,7 @@ class SimpleObjectVsBroadPhaseLayerFilter : public ::JPH::ObjectVsBroadPhaseLaye
             case WORLD_COLLIDERS: return true;
             case LEVEL_GEOMETRY: return false;
             case PLAYER: return true;
+            case ENEMIES: return false;
         }
 
         throw Exception("unknown object layer: {}", layer1);
@@ -88,7 +89,7 @@ class CastRayObjectLayerFilter : public ::JPH::ObjectLayerFilter
     {
         const auto object_layer = ObjectLayer{layer};
 
-        return object_layer == ObjectLayer::LEVEL_GEOMETRY;
+        return object_layer == ObjectLayer::LEVEL_GEOMETRY || object_layer == ObjectLayer::ENEMIES;
     }
 };
 
