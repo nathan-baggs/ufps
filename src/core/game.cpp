@@ -533,7 +533,8 @@ auto Game::pump_events() -> bool
 
 auto Game::update() -> bool
 {
-    const auto &[ps, pm, am, dl] = services<PhysicsSystem, ParticleManager, AudioManager, DebugLayer>();
+    const auto &[ps, pm, am, dl, enm] =
+        services<PhysicsSystem, ParticleManager, AudioManager, DebugLayer, EnemyManager>();
 
     current_actor_->update(delta_);
     ps.update();
@@ -571,6 +572,13 @@ auto Game::update() -> bool
                          Quaternion{{0.0f, 1.0f, 0.0f}, intersection->normal} *
                              Quaternion{{0.0f, 1.0f, 0.0f}, random::rand_real(0.0f, 2.0f * std::numbers::pi_v<float>)}},
                         random::rand_element(textures));
+                }
+                else
+                {
+                    if (const auto enemy = enm[intersection->entity]; enemy)
+                    {
+                        enemy->translate(bullet_ray.direction);
+                    }
                 }
 
                 pm.spawn_sparks(intersection->position, intersection->normal * Vector3{2.0f});
