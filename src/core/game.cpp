@@ -560,12 +560,18 @@ auto Game::update() -> bool
         {
             if (intersection->distance < max_distance)
             {
-                scene_->add_decal(
-                    {intersection->position,
-                     {0.05f, 0.01f, 0.05f},
-                     Quaternion{{0.0f, 1.0f, 0.0f}, intersection->normal} *
-                         Quaternion{{0.0f, 1.0f, 0.0f}, random::rand_real(0.0f, 2.0f * std::numbers::pi_v<float>)}},
-                    random::rand_element(textures));
+                const auto rb = ps.rigid_body(intersection->body);
+                const auto hit_enemy = rb && rb->object_layer() == ObjectLayer::ENEMIES;
+
+                if (!hit_enemy)
+                {
+                    scene_->add_decal(
+                        {intersection->position,
+                         {0.05f, 0.01f, 0.05f},
+                         Quaternion{{0.0f, 1.0f, 0.0f}, intersection->normal} *
+                             Quaternion{{0.0f, 1.0f, 0.0f}, random::rand_real(0.0f, 2.0f * std::numbers::pi_v<float>)}},
+                        random::rand_element(textures));
+                }
 
                 pm.spawn_sparks(intersection->position, intersection->normal * Vector3{2.0f});
                 for (auto i = 0; i < 10; ++i)
@@ -588,6 +594,13 @@ auto Game::update() -> bool
         if (gun_ray_intersection->distance <= max_distance)
         {
             fire_cone_colour = colours::yellow;
+
+            const auto rb = ps.rigid_body(gun_ray_intersection->body);
+            if (rb && rb->object_layer() == ObjectLayer::ENEMIES)
+            {
+                fire_cone_colour = colours::red;
+            }
+
             fire_cone.extent = Vector3::normalise(fire_cone.extent) * Vector3{gun_ray_intersection->distance * 0.99f};
             max_fire_cone.extent = fire_cone.extent;
         }
