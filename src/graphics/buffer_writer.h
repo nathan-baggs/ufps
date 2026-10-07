@@ -33,7 +33,13 @@ class BufferWriter
         offset_ += data.size_bytes();
     }
 
-  private:
+    template <class T>
+    auto write(std::span<T> data) -> void
+    {
+        write(std::span<const T>{data});
+    }
+
+    // private:
     Buffer &buffer_;
 
     std::size_t offset_;
