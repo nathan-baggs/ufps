@@ -119,7 +119,8 @@ class SparseSet
 
     constexpr auto handles() const -> std::vector<handle_type>;
 
-    constexpr auto data() const -> std::span<const T>;
+    template <class Self>
+    constexpr auto data(this Self &&self);
 
   private:
     template <class U>
@@ -205,9 +206,12 @@ constexpr auto SparseSet<T, Allocator>::handles() const -> std::vector<handle_ty
 }
 
 template <class T, class Allocator>
-constexpr auto SparseSet<T, Allocator>::data() const -> std::span<const T>
+template <class Self>
+constexpr auto SparseSet<T, Allocator>::data(this Self &&self)
 {
-    return data_;
+    using SpanType =
+        std::conditional_t<std::is_const_v<std::remove_reference_t<Self>>, std::span<const T>, std::span<T>>;
+    return SpanType(std::ranges::data(self.data_), std::ranges::size(self.data_));
 }
 
 }
