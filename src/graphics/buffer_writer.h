@@ -39,9 +39,8 @@ class BufferWriter
         write(std::span<const T>{data});
     }
 
-    // private:
+  private:
     Buffer &buffer_;
-
     std::size_t offset_;
 };
 
