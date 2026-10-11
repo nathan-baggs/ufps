@@ -577,7 +577,7 @@ auto Game::update() -> bool
                 {
                     if (const auto enemy = enm[intersection->entity]; enemy)
                     {
-                        enemy->translate(bullet_ray.direction);
+                        enemy->hit(bullet_ray, *intersection);
                     }
                 }
 
