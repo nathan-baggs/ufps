@@ -417,7 +417,7 @@ auto Game::load_scene() -> void
     const auto enemy_entity = em.insert({"enemy", rem["cube"], enemy_transform});
     em[enemy_entity]->set_camera(enemy_camera_handle);
     em[enemy_entity]->set_ray_intersect_rigid_bodies(
-        ps.create_meshes(BroadPhaseLayer::STATIC, ObjectLayer::ENEMIES, enemy_entity));
+        ps.create_meshes(BroadPhaseLayer::STATIC, ObjectLayer::LEVEL_GEOMETRY, enemy_entity));
     scene_->add(enemy_entity);
 
     enm.spawn(enemy_entity, 100.0f);
