@@ -543,9 +543,9 @@ Description:
           Transform:
             position:
               Vector3:
-                x: -24.04764
-                y: 5.1819797
-                z: -15.779248
+                x: 21.383657
+                y: 14.806626
+                z: 41.18452
             scale:
               Vector3:
                 x: 1
@@ -553,10 +553,10 @@ Description:
                 z: 1
             rotation:
               Quaternion:
-                x: -0.022624264
-                y: 0.9773677
-                z: -0.1467152
-                w: -0.15071529
+                x: -0.0014908431
+                y: 0.968647
+                z: -0.24836864
+                w: -0.005814344
         aabb:
           AABB:
             min:
@@ -606,9 +606,9 @@ Description:
           Transform:
             position:
               Vector3:
-                x: 11.078138
+                x: 15.91728
                 y: 2
-                z: 5.8332124
+                z: 16.34123
             scale:
               Vector3:
                 x: 1
@@ -616,10 +616,10 @@ Description:
                 z: 1
             rotation:
               Quaternion:
-                x: -0.025644938
-                y: -0.4141647
-                z: 0.011674684
-                w: -0.9097658
+                x: 0.0005482999
+                y: 0.9903472
+                z: 0.003919143
+                w: -0.13855255
         aabb:
           AABB:
             min:
@@ -720,6 +720,106 @@ Description:
                   x: 100.99095
                   y: 1
                   z: 146.28583
+              broad_phase_layer: STATIC
+              object_layer: WORLD_COLLIDERS
+          - Description:
+              local_transform:
+                - 30.682669
+                - 0
+                - 0
+                - 0
+                - 0
+                - 7.3588133
+                - 0
+                - 0
+                - 0
+                - 0
+                - 1
+                - 0
+                - 0
+                - 0
+                - -31.026232
+                - 1
+              applied_scale:
+                Vector3:
+                  x: 30.682669
+                  y: 7.3588133
+                  z: 1
+              broad_phase_layer: STATIC
+              object_layer: WORLD_COLLIDERS
+          - Description:
+              local_transform:
+                - 30.682669
+                - 0
+                - 0
+                - 0
+                - 0
+                - 7.3588133
+                - 0
+                - 0
+                - 0
+                - 0
+                - 1
+                - 0
+                - 0
+                - 0
+                - 30.902306
+                - 1
+              applied_scale:
+                Vector3:
+                  x: 30.682669
+                  y: 7.3588133
+                  z: 1
+              broad_phase_layer: STATIC
+              object_layer: WORLD_COLLIDERS
+          - Description:
+              local_transform:
+                - -0.17058197
+                - 0
+                - 30.676224
+                - 0
+                - 0
+                - 7.3588133
+                - 0
+                - 0
+                - -0.99983746
+                - 0
+                - -0.0055598184
+                - 0
+                - -30.984552
+                - 0
+                - -0.5072648
+                - 1
+              applied_scale:
+                Vector3:
+                  x: 30.676695
+                  y: 7.3588133
+                  z: 0.99985284
+              broad_phase_layer: STATIC
+              object_layer: WORLD_COLLIDERS
+          - Description:
+              local_transform:
+                - -0.17053725
+                - 0
+                - 30.668182
+                - 0
+                - 0
+                - 7.3588133
+                - 0
+                - 0
+                - -0.99958616
+                - 0
+                - -0.0055584214
+                - 0
+                - 30.942013
+                - 0
+                - -0.16290802
+                - 1
+              applied_scale:
+                Vector3:
+                  x: 30.668653
+                  y: 7.3588133
+                  z: 0.99960154
               broad_phase_layer: STATIC
               object_layer: WORLD_COLLIDERS
         render_entities: ~
@@ -18224,9 +18324,9 @@ Description:
             rotation:
               Quaternion:
                 x: 0
-                y: 0.7071067811865476
+                y: 0.70710677
                 z: 0
-                w: 0.7071067811865476
+                w: 0.70710677
         aabb:
           AABB:
             min:
@@ -18264,9 +18364,9 @@ Description:
             rotation:
               Quaternion:
                 x: 0
-                y: 0.7071067811865476
+                y: 0.70710677
                 z: 0
-                w: 0.7071067811865476
+                w: 0.70710677
         aabb:
           AABB:
             min:
@@ -18304,9 +18404,9 @@ Description:
             rotation:
               Quaternion:
                 x: 0
-                y: 0.7071067811865476
+                y: 0.70710677
                 z: 0
-                w: 0.7071067811865476
+                w: 0.70710677
         aabb:
           AABB:
             min:
@@ -18344,9 +18444,9 @@ Description:
             rotation:
               Quaternion:
                 x: 0
-                y: 0.7071067811865476
+                y: 0.70710677
                 z: 0
-                w: 0.7071067811865476
+                w: 0.70710677
         aabb:
           AABB:
             min:
@@ -18384,9 +18484,9 @@ Description:
             rotation:
               Quaternion:
                 x: 0
-                y: 0.7071067811865476
+                y: 0.70710677
                 z: 0
-                w: 0.7071067811865476
+                w: 0.70710677
         aabb:
           AABB:
             min:
@@ -18424,9 +18524,9 @@ Description:
             rotation:
               Quaternion:
                 x: 0
-                y: 0.7071067811865476
+                y: 0.70710677
                 z: 0
-                w: 0.7071067811865476
+                w: 0.70710677
         aabb:
           AABB:
             min:
@@ -18464,9 +18564,9 @@ Description:
             rotation:
               Quaternion:
                 x: 0
-                y: 0.7071067811865476
+                y: 0.70710677
                 z: 0
-                w: 0.7071067811865476
+                w: 0.70710677
         aabb:
           AABB:
             min:
@@ -18504,9 +18604,9 @@ Description:
             rotation:
               Quaternion:
                 x: 0
-                y: 0.7071067811865476
+                y: 0.70710677
                 z: 0
-                w: 0.7071067811865476
+                w: 0.70710677
         aabb:
           AABB:
             min:
@@ -18544,9 +18644,9 @@ Description:
             rotation:
               Quaternion:
                 x: 0
-                y: 0.7071067811865476
+                y: 0.70710677
                 z: 0
-                w: 0.7071067811865476
+                w: 0.70710677
         aabb:
           AABB:
             min:
@@ -18584,9 +18684,9 @@ Description:
             rotation:
               Quaternion:
                 x: 0
-                y: 0.7071067811865476
+                y: 0.70710677
                 z: 0
-                w: 0.7071067811865476
+                w: 0.70710677
         aabb:
           AABB:
             min:
@@ -18624,9 +18724,9 @@ Description:
             rotation:
               Quaternion:
                 x: 0
-                y: 0.7071067811865476
+                y: 0.70710677
                 z: 0
-                w: 0.7071067811865476
+                w: 0.70710677
         aabb:
           AABB:
             min:
@@ -18664,9 +18764,9 @@ Description:
             rotation:
               Quaternion:
                 x: 0
-                y: 0.7071067811865476
+                y: 0.70710677
                 z: 0
-                w: 0.7071067811865476
+                w: 0.70710677
         aabb:
           AABB:
             min:
@@ -18704,9 +18804,9 @@ Description:
             rotation:
               Quaternion:
                 x: 0
-                y: 0.7071067811865476
+                y: 0.70710677
                 z: 0
-                w: 0.7071067811865476
+                w: 0.70710677
         aabb:
           AABB:
             min:
@@ -18744,9 +18844,9 @@ Description:
             rotation:
               Quaternion:
                 x: 0
-                y: 0.7071067811865476
+                y: 0.70710677
                 z: 0
-                w: 0.7071067811865476
+                w: 0.70710677
         aabb:
           AABB:
             min:
@@ -18784,9 +18884,9 @@ Description:
             rotation:
               Quaternion:
                 x: 0
-                y: 0.7071067811865476
+                y: 0.70710677
                 z: 0
-                w: 0.7071067811865476
+                w: 0.70710677
         aabb:
           AABB:
             min:
@@ -18824,9 +18924,9 @@ Description:
             rotation:
               Quaternion:
                 x: 0
-                y: 0.7071067811865476
+                y: 0.70710677
                 z: 0
-                w: 0.7071067811865476
+                w: 0.70710677
         aabb:
           AABB:
             min:
@@ -18864,9 +18964,9 @@ Description:
             rotation:
               Quaternion:
                 x: 0
-                y: 0.7071067811865476
+                y: 0.70710677
                 z: 0
-                w: 0.7071067811865476
+                w: 0.70710677
         aabb:
           AABB:
             min:
@@ -18904,9 +19004,9 @@ Description:
             rotation:
               Quaternion:
                 x: 0
-                y: 0.7071067811865476
+                y: 0.70710677
                 z: 0
-                w: 0.7071067811865476
+                w: 0.70710677
         aabb:
           AABB:
             min:
@@ -18944,9 +19044,9 @@ Description:
             rotation:
               Quaternion:
                 x: 0
-                y: 0.7071067811865476
+                y: 0.70710677
                 z: 0
-                w: 0.7071067811865476
+                w: 0.70710677
         aabb:
           AABB:
             min:
@@ -18984,9 +19084,9 @@ Description:
             rotation:
               Quaternion:
                 x: 0
-                y: 0.7071067811865476
+                y: 0.70710677
                 z: 0
-                w: 0.7071067811865476
+                w: 0.70710677
         aabb:
           AABB:
             min:
@@ -19024,9 +19124,9 @@ Description:
             rotation:
               Quaternion:
                 x: 0
-                y: 0.7071067811865476
+                y: 0.70710677
                 z: 0
-                w: 0.7071067811865476
+                w: 0.70710677
         aabb:
           AABB:
             min:
@@ -19064,9 +19164,9 @@ Description:
             rotation:
               Quaternion:
                 x: 0
-                y: 0.7071067811865476
+                y: 0.70710677
                 z: 0
-                w: 0.7071067811865476
+                w: 0.70710677
         aabb:
           AABB:
             min:
@@ -19104,9 +19204,9 @@ Description:
             rotation:
               Quaternion:
                 x: 0
-                y: 0.7071067811865476
+                y: 0.70710677
                 z: 0
-                w: 0.7071067811865476
+                w: 0.70710677
         aabb:
           AABB:
             min:
@@ -19144,9 +19244,9 @@ Description:
             rotation:
               Quaternion:
                 x: 0
-                y: 0.7071067811865476
+                y: 0.70710677
                 z: 0
-                w: 0.7071067811865476
+                w: 0.70710677
         aabb:
           AABB:
             min:
@@ -19184,9 +19284,9 @@ Description:
             rotation:
               Quaternion:
                 x: 0
-                y: 0.7071067811865476
+                y: 0.70710677
                 z: 0
-                w: 0.7071067811865476
+                w: 0.70710677
         aabb:
           AABB:
             min:
@@ -19224,9 +19324,9 @@ Description:
             rotation:
               Quaternion:
                 x: 0
-                y: 0.7071067811865476
+                y: 0.70710677
                 z: 0
-                w: 0.7071067811865476
+                w: 0.70710677
         aabb:
           AABB:
             min:
@@ -19264,9 +19364,9 @@ Description:
             rotation:
               Quaternion:
                 x: 0
-                y: 0.7071067811865476
+                y: 0.70710677
                 z: 0
-                w: 0.7071067811865476
+                w: 0.70710677
         aabb:
           AABB:
             min:
@@ -19304,9 +19404,9 @@ Description:
             rotation:
               Quaternion:
                 x: 0
-                y: 0.7071067811865476
+                y: 0.70710677
                 z: 0
-                w: 0.7071067811865476
+                w: 0.70710677
         aabb:
           AABB:
             min:
@@ -19344,9 +19444,9 @@ Description:
             rotation:
               Quaternion:
                 x: 0
-                y: 0.7071067811865476
+                y: 0.70710677
                 z: 0
-                w: 0.7071067811865476
+                w: 0.70710677
         aabb:
           AABB:
             min:
@@ -19384,9 +19484,9 @@ Description:
             rotation:
               Quaternion:
                 x: 0
-                y: 0.7071067811865476
+                y: 0.70710677
                 z: 0
-                w: 0.7071067811865476
+                w: 0.70710677
         aabb:
           AABB:
             min:
@@ -20624,9 +20724,9 @@ Description:
             rotation:
               Quaternion:
                 x: 0
-                y: -0.7071067811865476
+                y: -0.70710677
                 z: 0
-                w: 0.7071067811865476
+                w: 0.70710677
         aabb:
           AABB:
             min:
@@ -20664,9 +20764,9 @@ Description:
             rotation:
               Quaternion:
                 x: 0
-                y: -0.7071067811865476
+                y: -0.70710677
                 z: 0
-                w: 0.7071067811865476
+                w: 0.70710677
         aabb:
           AABB:
             min:
@@ -20704,9 +20804,9 @@ Description:
             rotation:
               Quaternion:
                 x: 0
-                y: -0.7071067811865476
+                y: -0.70710677
                 z: 0
-                w: 0.7071067811865476
+                w: 0.70710677
         aabb:
           AABB:
             min:
@@ -20744,9 +20844,9 @@ Description:
             rotation:
               Quaternion:
                 x: 0
-                y: -0.7071067811865476
+                y: -0.70710677
                 z: 0
-                w: 0.7071067811865476
+                w: 0.70710677
         aabb:
           AABB:
             min:
@@ -20784,9 +20884,9 @@ Description:
             rotation:
               Quaternion:
                 x: 0
-                y: -0.7071067811865476
+                y: -0.70710677
                 z: 0
-                w: 0.7071067811865476
+                w: 0.70710677
         aabb:
           AABB:
             min:
@@ -20824,9 +20924,9 @@ Description:
             rotation:
               Quaternion:
                 x: 0
-                y: -0.7071067811865476
+                y: -0.70710677
                 z: 0
-                w: 0.7071067811865476
+                w: 0.70710677
         aabb:
           AABB:
             min:
@@ -20864,9 +20964,9 @@ Description:
             rotation:
               Quaternion:
                 x: 0
-                y: -0.7071067811865476
+                y: -0.70710677
                 z: 0
-                w: 0.7071067811865476
+                w: 0.70710677
         aabb:
           AABB:
             min:
@@ -20904,9 +21004,9 @@ Description:
             rotation:
               Quaternion:
                 x: 0
-                y: -0.7071067811865476
+                y: -0.70710677
                 z: 0
-                w: 0.7071067811865476
+                w: 0.70710677
         aabb:
           AABB:
             min:
@@ -20944,9 +21044,9 @@ Description:
             rotation:
               Quaternion:
                 x: 0
-                y: -0.7071067811865476
+                y: -0.70710677
                 z: 0
-                w: 0.7071067811865476
+                w: 0.70710677
         aabb:
           AABB:
             min:
@@ -20984,9 +21084,9 @@ Description:
             rotation:
               Quaternion:
                 x: 0
-                y: -0.7071067811865476
+                y: -0.70710677
                 z: 0
-                w: 0.7071067811865476
+                w: 0.70710677
         aabb:
           AABB:
             min:
@@ -21024,9 +21124,9 @@ Description:
             rotation:
               Quaternion:
                 x: 0
-                y: -0.7071067811865476
+                y: -0.70710677
                 z: 0
-                w: 0.7071067811865476
+                w: 0.70710677
         aabb:
           AABB:
             min:
@@ -21064,9 +21164,9 @@ Description:
             rotation:
               Quaternion:
                 x: 0
-                y: -0.7071067811865476
+                y: -0.70710677
                 z: 0
-                w: 0.7071067811865476
+                w: 0.70710677
         aabb:
           AABB:
             min:
@@ -21104,9 +21204,9 @@ Description:
             rotation:
               Quaternion:
                 x: 0
-                y: -0.7071067811865476
+                y: -0.70710677
                 z: 0
-                w: 0.7071067811865476
+                w: 0.70710677
         aabb:
           AABB:
             min:
@@ -21144,9 +21244,9 @@ Description:
             rotation:
               Quaternion:
                 x: 0
-                y: -0.7071067811865476
+                y: -0.70710677
                 z: 0
-                w: 0.7071067811865476
+                w: 0.70710677
         aabb:
           AABB:
             min:
@@ -21184,9 +21284,9 @@ Description:
             rotation:
               Quaternion:
                 x: 0
-                y: -0.7071067811865476
+                y: -0.70710677
                 z: 0
-                w: 0.7071067811865476
+                w: 0.70710677
         aabb:
           AABB:
             min:
@@ -21224,9 +21324,9 @@ Description:
             rotation:
               Quaternion:
                 x: 0
-                y: -0.7071067811865476
+                y: -0.70710677
                 z: 0
-                w: 0.7071067811865476
+                w: 0.70710677
         aabb:
           AABB:
             min:
@@ -21264,9 +21364,9 @@ Description:
             rotation:
               Quaternion:
                 x: 0
-                y: -0.7071067811865476
+                y: -0.70710677
                 z: 0
-                w: 0.7071067811865476
+                w: 0.70710677
         aabb:
           AABB:
             min:
@@ -21304,9 +21404,9 @@ Description:
             rotation:
               Quaternion:
                 x: 0
-                y: -0.7071067811865476
+                y: -0.70710677
                 z: 0
-                w: 0.7071067811865476
+                w: 0.70710677
         aabb:
           AABB:
             min:
@@ -21344,9 +21444,9 @@ Description:
             rotation:
               Quaternion:
                 x: 0
-                y: -0.7071067811865476
+                y: -0.70710677
                 z: 0
-                w: 0.7071067811865476
+                w: 0.70710677
         aabb:
           AABB:
             min:
@@ -21384,9 +21484,9 @@ Description:
             rotation:
               Quaternion:
                 x: 0
-                y: -0.7071067811865476
+                y: -0.70710677
                 z: 0
-                w: 0.7071067811865476
+                w: 0.70710677
         aabb:
           AABB:
             min:
@@ -21424,9 +21524,9 @@ Description:
             rotation:
               Quaternion:
                 x: 0
-                y: -0.7071067811865476
+                y: -0.70710677
                 z: 0
-                w: 0.7071067811865476
+                w: 0.70710677
         aabb:
           AABB:
             min:
@@ -21464,9 +21564,9 @@ Description:
             rotation:
               Quaternion:
                 x: 0
-                y: -0.7071067811865476
+                y: -0.70710677
                 z: 0
-                w: 0.7071067811865476
+                w: 0.70710677
         aabb:
           AABB:
             min:
@@ -21504,9 +21604,9 @@ Description:
             rotation:
               Quaternion:
                 x: 0
-                y: -0.7071067811865476
+                y: -0.70710677
                 z: 0
-                w: 0.7071067811865476
+                w: 0.70710677
         aabb:
           AABB:
             min:
@@ -21544,9 +21644,9 @@ Description:
             rotation:
               Quaternion:
                 x: 0
-                y: -0.7071067811865476
+                y: -0.70710677
                 z: 0
-                w: 0.7071067811865476
+                w: 0.70710677
         aabb:
           AABB:
             min:
@@ -21584,9 +21684,9 @@ Description:
             rotation:
               Quaternion:
                 x: 0
-                y: -0.7071067811865476
+                y: -0.70710677
                 z: 0
-                w: 0.7071067811865476
+                w: 0.70710677
         aabb:
           AABB:
             min:
@@ -21624,9 +21724,9 @@ Description:
             rotation:
               Quaternion:
                 x: 0
-                y: -0.7071067811865476
+                y: -0.70710677
                 z: 0
-                w: 0.7071067811865476
+                w: 0.70710677
         aabb:
           AABB:
             min:
@@ -21664,9 +21764,9 @@ Description:
             rotation:
               Quaternion:
                 x: 0
-                y: -0.7071067811865476
+                y: -0.70710677
                 z: 0
-                w: 0.7071067811865476
+                w: 0.70710677
         aabb:
           AABB:
             min:
@@ -21704,9 +21804,9 @@ Description:
             rotation:
               Quaternion:
                 x: 0
-                y: -0.7071067811865476
+                y: -0.70710677
                 z: 0
-                w: 0.7071067811865476
+                w: 0.70710677
         aabb:
           AABB:
             min:
@@ -21744,9 +21844,9 @@ Description:
             rotation:
               Quaternion:
                 x: 0
-                y: -0.7071067811865476
+                y: -0.70710677
                 z: 0
-                w: 0.7071067811865476
+                w: 0.70710677
         aabb:
           AABB:
             min:
@@ -21784,9 +21884,9 @@ Description:
             rotation:
               Quaternion:
                 x: 0
-                y: -0.7071067811865476
+                y: -0.70710677
                 z: 0
-                w: 0.7071067811865476
+                w: 0.70710677
         aabb:
           AABB:
             min:
@@ -23024,9 +23124,9 @@ Description:
             rotation:
               Quaternion:
                 x: 0
-                y: 0.7071067811865476
+                y: 0.70710677
                 z: 0
-                w: 0.7071067811865476
+                w: 0.70710677
         aabb:
           AABB:
             min:
@@ -23064,9 +23164,9 @@ Description:
             rotation:
               Quaternion:
                 x: 0
-                y: 0.7071067811865476
+                y: 0.70710677
                 z: 0
-                w: 0.7071067811865476
+                w: 0.70710677
         aabb:
           AABB:
             min:
@@ -23104,9 +23204,9 @@ Description:
             rotation:
               Quaternion:
                 x: 0
-                y: 0.7071067811865476
+                y: 0.70710677
                 z: 0
-                w: 0.7071067811865476
+                w: 0.70710677
         aabb:
           AABB:
             min:
@@ -23144,9 +23244,9 @@ Description:
             rotation:
               Quaternion:
                 x: 0
-                y: 0.7071067811865476
+                y: 0.70710677
                 z: 0
-                w: 0.7071067811865476
+                w: 0.70710677
         aabb:
           AABB:
             min:
@@ -23184,9 +23284,9 @@ Description:
             rotation:
               Quaternion:
                 x: 0
-                y: 0.7071067811865476
+                y: 0.70710677
                 z: 0
-                w: 0.7071067811865476
+                w: 0.70710677
         aabb:
           AABB:
             min:
@@ -23224,9 +23324,9 @@ Description:
             rotation:
               Quaternion:
                 x: 0
-                y: 0.7071067811865476
+                y: 0.70710677
                 z: 0
-                w: 0.7071067811865476
+                w: 0.70710677
         aabb:
           AABB:
             min:
@@ -23264,9 +23364,9 @@ Description:
             rotation:
               Quaternion:
                 x: 0
-                y: 0.7071067811865476
+                y: 0.70710677
                 z: 0
-                w: 0.7071067811865476
+                w: 0.70710677
         aabb:
           AABB:
             min:
@@ -23304,9 +23404,9 @@ Description:
             rotation:
               Quaternion:
                 x: 0
-                y: 0.7071067811865476
+                y: 0.70710677
                 z: 0
-                w: 0.7071067811865476
+                w: 0.70710677
         aabb:
           AABB:
             min:
@@ -23344,9 +23444,9 @@ Description:
             rotation:
               Quaternion:
                 x: 0
-                y: 0.7071067811865476
+                y: 0.70710677
                 z: 0
-                w: 0.7071067811865476
+                w: 0.70710677
         aabb:
           AABB:
             min:
@@ -23384,9 +23484,9 @@ Description:
             rotation:
               Quaternion:
                 x: 0
-                y: 0.7071067811865476
+                y: 0.70710677
                 z: 0
-                w: 0.7071067811865476
+                w: 0.70710677
         aabb:
           AABB:
             min:
@@ -23424,9 +23524,9 @@ Description:
             rotation:
               Quaternion:
                 x: 0
-                y: 0.7071067811865476
+                y: 0.70710677
                 z: 0
-                w: 0.7071067811865476
+                w: 0.70710677
         aabb:
           AABB:
             min:
@@ -23464,9 +23564,9 @@ Description:
             rotation:
               Quaternion:
                 x: 0
-                y: 0.7071067811865476
+                y: 0.70710677
                 z: 0
-                w: 0.7071067811865476
+                w: 0.70710677
         aabb:
           AABB:
             min:
@@ -23504,9 +23604,9 @@ Description:
             rotation:
               Quaternion:
                 x: 0
-                y: 0.7071067811865476
+                y: 0.70710677
                 z: 0
-                w: 0.7071067811865476
+                w: 0.70710677
         aabb:
           AABB:
             min:
@@ -23544,9 +23644,9 @@ Description:
             rotation:
               Quaternion:
                 x: 0
-                y: 0.7071067811865476
+                y: 0.70710677
                 z: 0
-                w: 0.7071067811865476
+                w: 0.70710677
         aabb:
           AABB:
             min:
@@ -23584,9 +23684,9 @@ Description:
             rotation:
               Quaternion:
                 x: 0
-                y: 0.7071067811865476
+                y: 0.70710677
                 z: 0
-                w: 0.7071067811865476
+                w: 0.70710677
         aabb:
           AABB:
             min:
@@ -23624,9 +23724,9 @@ Description:
             rotation:
               Quaternion:
                 x: 0
-                y: 0.7071067811865476
+                y: 0.70710677
                 z: 0
-                w: 0.7071067811865476
+                w: 0.70710677
         aabb:
           AABB:
             min:
@@ -23664,9 +23764,9 @@ Description:
             rotation:
               Quaternion:
                 x: 0
-                y: 0.7071067811865476
+                y: 0.70710677
                 z: 0
-                w: 0.7071067811865476
+                w: 0.70710677
         aabb:
           AABB:
             min:
@@ -23704,9 +23804,9 @@ Description:
             rotation:
               Quaternion:
                 x: 0
-                y: 0.7071067811865476
+                y: 0.70710677
                 z: 0
-                w: 0.7071067811865476
+                w: 0.70710677
         aabb:
           AABB:
             min:
@@ -23744,9 +23844,9 @@ Description:
             rotation:
               Quaternion:
                 x: 0
-                y: 0.7071067811865476
+                y: 0.70710677
                 z: 0
-                w: 0.7071067811865476
+                w: 0.70710677
         aabb:
           AABB:
             min:
@@ -23784,9 +23884,9 @@ Description:
             rotation:
               Quaternion:
                 x: 0
-                y: 0.7071067811865476
+                y: 0.70710677
                 z: 0
-                w: 0.7071067811865476
+                w: 0.70710677
         aabb:
           AABB:
             min:
@@ -23824,9 +23924,9 @@ Description:
             rotation:
               Quaternion:
                 x: 0
-                y: 0.7071067811865476
+                y: 0.70710677
                 z: 0
-                w: 0.7071067811865476
+                w: 0.70710677
         aabb:
           AABB:
             min:
@@ -23864,9 +23964,9 @@ Description:
             rotation:
               Quaternion:
                 x: 0
-                y: 0.7071067811865476
+                y: 0.70710677
                 z: 0
-                w: 0.7071067811865476
+                w: 0.70710677
         aabb:
           AABB:
             min:
@@ -23904,9 +24004,9 @@ Description:
             rotation:
               Quaternion:
                 x: 0
-                y: 0.7071067811865476
+                y: 0.70710677
                 z: 0
-                w: 0.7071067811865476
+                w: 0.70710677
         aabb:
           AABB:
             min:
@@ -23944,9 +24044,9 @@ Description:
             rotation:
               Quaternion:
                 x: 0
-                y: 0.7071067811865476
+                y: 0.70710677
                 z: 0
-                w: 0.7071067811865476
+                w: 0.70710677
         aabb:
           AABB:
             min:
@@ -23984,9 +24084,9 @@ Description:
             rotation:
               Quaternion:
                 x: 0
-                y: 0.7071067811865476
+                y: 0.70710677
                 z: 0
-                w: 0.7071067811865476
+                w: 0.70710677
         aabb:
           AABB:
             min:
@@ -24024,9 +24124,9 @@ Description:
             rotation:
               Quaternion:
                 x: 0
-                y: 0.7071067811865476
+                y: 0.70710677
                 z: 0
-                w: 0.7071067811865476
+                w: 0.70710677
         aabb:
           AABB:
             min:
@@ -24064,9 +24164,9 @@ Description:
             rotation:
               Quaternion:
                 x: 0
-                y: 0.7071067811865476
+                y: 0.70710677
                 z: 0
-                w: 0.7071067811865476
+                w: 0.70710677
         aabb:
           AABB:
             min:
@@ -24104,9 +24204,9 @@ Description:
             rotation:
               Quaternion:
                 x: 0
-                y: 0.7071067811865476
+                y: 0.70710677
                 z: 0
-                w: 0.7071067811865476
+                w: 0.70710677
         aabb:
           AABB:
             min:
@@ -24144,9 +24244,9 @@ Description:
             rotation:
               Quaternion:
                 x: 0
-                y: 0.7071067811865476
+                y: 0.70710677
                 z: 0
-                w: 0.7071067811865476
+                w: 0.70710677
         aabb:
           AABB:
             min:
@@ -24184,9 +24284,9 @@ Description:
             rotation:
               Quaternion:
                 x: 0
-                y: 0.7071067811865476
+                y: 0.70710677
                 z: 0
-                w: 0.7071067811865476
+                w: 0.70710677
         aabb:
           AABB:
             min:
@@ -25424,9 +25524,9 @@ Description:
             rotation:
               Quaternion:
                 x: 0
-                y: -0.7071067811865476
+                y: -0.70710677
                 z: 0
-                w: 0.7071067811865476
+                w: 0.70710677
         aabb:
           AABB:
             min:
@@ -25464,9 +25564,9 @@ Description:
             rotation:
               Quaternion:
                 x: 0
-                y: -0.7071067811865476
+                y: -0.70710677
                 z: 0
-                w: 0.7071067811865476
+                w: 0.70710677
         aabb:
           AABB:
             min:
@@ -25504,9 +25604,9 @@ Description:
             rotation:
               Quaternion:
                 x: 0
-                y: -0.7071067811865476
+                y: -0.70710677
                 z: 0
-                w: 0.7071067811865476
+                w: 0.70710677
         aabb:
           AABB:
             min:
@@ -25544,9 +25644,9 @@ Description:
             rotation:
               Quaternion:
                 x: 0
-                y: -0.7071067811865476
+                y: -0.70710677
                 z: 0
-                w: 0.7071067811865476
+                w: 0.70710677
         aabb:
           AABB:
             min:
@@ -25584,9 +25684,9 @@ Description:
             rotation:
               Quaternion:
                 x: 0
-                y: -0.7071067811865476
+                y: -0.70710677
                 z: 0
-                w: 0.7071067811865476
+                w: 0.70710677
         aabb:
           AABB:
             min:
@@ -25624,9 +25724,9 @@ Description:
             rotation:
               Quaternion:
                 x: 0
-                y: -0.7071067811865476
+                y: -0.70710677
                 z: 0
-                w: 0.7071067811865476
+                w: 0.70710677
         aabb:
           AABB:
             min:
@@ -25664,9 +25764,9 @@ Description:
             rotation:
               Quaternion:
                 x: 0
-                y: -0.7071067811865476
+                y: -0.70710677
                 z: 0
-                w: 0.7071067811865476
+                w: 0.70710677
         aabb:
           AABB:
             min:
@@ -25704,9 +25804,9 @@ Description:
             rotation:
               Quaternion:
                 x: 0
-                y: -0.7071067811865476
+                y: -0.70710677
                 z: 0
-                w: 0.7071067811865476
+                w: 0.70710677
         aabb:
           AABB:
             min:
@@ -25744,9 +25844,9 @@ Description:
             rotation:
               Quaternion:
                 x: 0
-                y: -0.7071067811865476
+                y: -0.70710677
                 z: 0
-                w: 0.7071067811865476
+                w: 0.70710677
         aabb:
           AABB:
             min:
@@ -25784,9 +25884,9 @@ Description:
             rotation:
               Quaternion:
                 x: 0
-                y: -0.7071067811865476
+                y: -0.70710677
                 z: 0
-                w: 0.7071067811865476
+                w: 0.70710677
         aabb:
           AABB:
             min:
@@ -25824,9 +25924,9 @@ Description:
             rotation:
               Quaternion:
                 x: 0
-                y: -0.7071067811865476
+                y: -0.70710677
                 z: 0
-                w: 0.7071067811865476
+                w: 0.70710677
         aabb:
           AABB:
             min:
@@ -25864,9 +25964,9 @@ Description:
             rotation:
               Quaternion:
                 x: 0
-                y: -0.7071067811865476
+                y: -0.70710677
                 z: 0
-                w: 0.7071067811865476
+                w: 0.70710677
         aabb:
           AABB:
             min:
@@ -25904,9 +26004,9 @@ Description:
             rotation:
               Quaternion:
                 x: 0
-                y: -0.7071067811865476
+                y: -0.70710677
                 z: 0
-                w: 0.7071067811865476
+                w: 0.70710677
         aabb:
           AABB:
             min:
@@ -25944,9 +26044,9 @@ Description:
             rotation:
               Quaternion:
                 x: 0
-                y: -0.7071067811865476
+                y: -0.70710677
                 z: 0
-                w: 0.7071067811865476
+                w: 0.70710677
         aabb:
           AABB:
             min:
@@ -25984,9 +26084,9 @@ Description:
             rotation:
               Quaternion:
                 x: 0
-                y: -0.7071067811865476
+                y: -0.70710677
                 z: 0
-                w: 0.7071067811865476
+                w: 0.70710677
         aabb:
           AABB:
             min:
@@ -26024,9 +26124,9 @@ Description:
             rotation:
               Quaternion:
                 x: 0
-                y: -0.7071067811865476
+                y: -0.70710677
                 z: 0
-                w: 0.7071067811865476
+                w: 0.70710677
         aabb:
           AABB:
             min:
@@ -26064,9 +26164,9 @@ Description:
             rotation:
               Quaternion:
                 x: 0
-                y: -0.7071067811865476
+                y: -0.70710677
                 z: 0
-                w: 0.7071067811865476
+                w: 0.70710677
         aabb:
           AABB:
             min:
@@ -26104,9 +26204,9 @@ Description:
             rotation:
               Quaternion:
                 x: 0
-                y: -0.7071067811865476
+                y: -0.70710677
                 z: 0
-                w: 0.7071067811865476
+                w: 0.70710677
         aabb:
           AABB:
             min:
@@ -26144,9 +26244,9 @@ Description:
             rotation:
               Quaternion:
                 x: 0
-                y: -0.7071067811865476
+                y: -0.70710677
                 z: 0
-                w: 0.7071067811865476
+                w: 0.70710677
         aabb:
           AABB:
             min:
@@ -26184,9 +26284,9 @@ Description:
             rotation:
               Quaternion:
                 x: 0
-                y: -0.7071067811865476
+                y: -0.70710677
                 z: 0
-                w: 0.7071067811865476
+                w: 0.70710677
         aabb:
           AABB:
             min:
@@ -26224,9 +26324,9 @@ Description:
             rotation:
               Quaternion:
                 x: 0
-                y: -0.7071067811865476
+                y: -0.70710677
                 z: 0
-                w: 0.7071067811865476
+                w: 0.70710677
         aabb:
           AABB:
             min:
@@ -26264,9 +26364,9 @@ Description:
             rotation:
               Quaternion:
                 x: 0
-                y: -0.7071067811865476
+                y: -0.70710677
                 z: 0
-                w: 0.7071067811865476
+                w: 0.70710677
         aabb:
           AABB:
             min:
@@ -26304,9 +26404,9 @@ Description:
             rotation:
               Quaternion:
                 x: 0
-                y: -0.7071067811865476
+                y: -0.70710677
                 z: 0
-                w: 0.7071067811865476
+                w: 0.70710677
         aabb:
           AABB:
             min:
@@ -26344,9 +26444,9 @@ Description:
             rotation:
               Quaternion:
                 x: 0
-                y: -0.7071067811865476
+                y: -0.70710677
                 z: 0
-                w: 0.7071067811865476
+                w: 0.70710677
         aabb:
           AABB:
             min:
@@ -26384,9 +26484,9 @@ Description:
             rotation:
               Quaternion:
                 x: 0
-                y: -0.7071067811865476
+                y: -0.70710677
                 z: 0
-                w: 0.7071067811865476
+                w: 0.70710677
         aabb:
           AABB:
             min:
@@ -26424,9 +26524,9 @@ Description:
             rotation:
               Quaternion:
                 x: 0
-                y: -0.7071067811865476
+                y: -0.70710677
                 z: 0
-                w: 0.7071067811865476
+                w: 0.70710677
         aabb:
           AABB:
             min:
@@ -26464,9 +26564,9 @@ Description:
             rotation:
               Quaternion:
                 x: 0
-                y: -0.7071067811865476
+                y: -0.70710677
                 z: 0
-                w: 0.7071067811865476
+                w: 0.70710677
         aabb:
           AABB:
             min:
@@ -26504,9 +26604,9 @@ Description:
             rotation:
               Quaternion:
                 x: 0
-                y: -0.7071067811865476
+                y: -0.70710677
                 z: 0
-                w: 0.7071067811865476
+                w: 0.70710677
         aabb:
           AABB:
             min:
@@ -26544,9 +26644,9 @@ Description:
             rotation:
               Quaternion:
                 x: 0
-                y: -0.7071067811865476
+                y: -0.70710677
                 z: 0
-                w: 0.7071067811865476
+                w: 0.70710677
         aabb:
           AABB:
             min:
@@ -26584,9 +26684,9 @@ Description:
             rotation:
               Quaternion:
                 x: 0
-                y: -0.7071067811865476
+                y: -0.70710677
                 z: 0
-                w: 0.7071067811865476
+                w: 0.70710677
         aabb:
           AABB:
             min:
@@ -26614,18 +26714,18 @@ Description:
             position:
               Vector3:
                 x: -0.3217458
-                y: -0.21348253
+                y: -0.21348315
                 z: 0.7940682
             scale:
               Vector3:
                 x: 0.95807797
-                y: 0.9404041
+                y: 0.9404042
                 z: 0.9463622
             rotation:
               Quaternion:
-                x: -0.7140177
+                x: -0.7140176
                 y: 0.03767423
-                z: 0.023861984
+                z: 0.023861978
                 w: 0.698706
         aabb:
           AABB:
