@@ -619,6 +619,8 @@ auto Game::update() -> bool
     dl.push_cone(max_fire_cone, colours::magenta, true, DebugLayerType::DEFAULT);
     dl.push_cone(max_fire_cone, colours::magenta, false, DebugLayerType::DEBUG);
 
+    enm.update(delta_);
+
     return true;
 }
 

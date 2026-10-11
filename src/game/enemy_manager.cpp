@@ -12,8 +12,12 @@ auto EnemyManager::despawn(EnemyHandle handle) -> void
     enemies_.remove(handle);
 }
 
-auto EnemyManager::update(Duration) -> void
+auto EnemyManager::update(Duration delta) -> void
 {
+    for (auto &enemy : enemies_.data())
+    {
+        enemy.update(delta);
+    }
 }
 
 auto EnemyManager::operator[](EnemyHandle handle) -> std::optional<Enemy &>
