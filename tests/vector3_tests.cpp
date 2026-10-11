@@ -125,3 +125,33 @@ TEST(vector3, format)
     const auto str = std::format("{}", v);
     ASSERT_EQ(str, "x=1 y=2 z=3");
 }
+
+TEST(vector3, lerp)
+{
+    const auto v = ufps::Vector3{};
+    const auto target = ufps::Vector3{2.0f};
+
+    auto v1 = v;
+    v1.lerp(0.0f, target);
+    ASSERT_EQ(v1, ufps::Vector3(0.0f));
+
+    auto v2 = v;
+    v2.lerp(0.25f, target);
+    ASSERT_EQ(v2, ufps::Vector3(0.5f));
+
+    auto v3 = v;
+    v3.lerp(0.5f, target);
+    ASSERT_EQ(v3, ufps::Vector3(1.0f));
+
+    auto v4 = v;
+    v4.lerp(0.75f, target);
+    ASSERT_EQ(v4, ufps::Vector3(1.5f));
+
+    auto v5 = v;
+    v5.lerp(1.0f, target);
+    ASSERT_EQ(v5, target);
+
+    auto v6 = v;
+    v6.lerp(10.0f, target);
+    ASSERT_EQ(v6, target);
+}

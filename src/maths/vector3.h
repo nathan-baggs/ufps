@@ -68,6 +68,14 @@ struct Vector3
 
     static constexpr auto distance(const Vector3 &v1, const Vector3 &v2) -> float;
 
+    constexpr auto lerp(float t, const Vector3 &target) -> void
+    {
+        t = std::clamp(t, 0.0f, 1.0f);
+        x = std::lerp(x, target.x, t);
+        y = std::lerp(y, target.y, t);
+        z = std::lerp(z, target.z, t);
+    }
+
     constexpr auto operator==(const Vector3 &) const -> bool = default;
 
     constexpr auto to_string() const -> std::string;
