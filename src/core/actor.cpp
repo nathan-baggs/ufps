@@ -28,6 +28,24 @@ Actor::Actor(EntityHandle entity)
     camera_ = camera_handle;
 }
 
+auto Actor::transform() const -> Transform
+{
+    const auto &[em] = services<EntityManager>();
+    const auto e = em[entity_];
+    ensure(e, "entity missing");
+
+    return e->transform();
+}
+
+auto Actor::set_transform(const Transform &transform) -> void
+{
+    const auto &[em] = services<EntityManager>();
+    const auto e = em[entity_];
+    ensure(e, "entity missing");
+
+    e->set_transform(transform);
+}
+
 auto Actor::translate(const Vector3 &delta) -> void
 {
     const auto &[em] = services<EntityManager>();

@@ -5,6 +5,7 @@
 #include "core/clock.h"
 #include "core/entity_manager.h"
 #include "core/service_locator.h"
+#include "maths/transform.h"
 #include "maths/vector3.h"
 
 namespace ufps
@@ -24,6 +25,8 @@ class Actor
 
     auto &camera(this auto &&self);
 
+    auto transform() const -> Transform;
+    auto set_transform(const Transform &transform) -> void;
     auto translate(const Vector3 &delta) -> void;
 
     auto entity() const -> EntityHandle;
