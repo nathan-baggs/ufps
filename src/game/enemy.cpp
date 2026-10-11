@@ -5,6 +5,7 @@
 #include "core/clock.h"
 #include "core/entity.h"
 #include "core/entity_manager.h"
+#include "maths/vector3.h"
 #include "utils/log.h"
 
 using namespace std::literals;
@@ -14,7 +15,8 @@ namespace ufps
 
 Enemy::Enemy(EntityHandle entity, float initial_health)
     : Actor{entity}
-    , health_{initial_health}
+    , max_health_{initial_health}
+    , health_{max_health_}
 {
 }
 
@@ -38,9 +40,8 @@ auto Enemy::update(Duration) -> void
         const auto time_elapsed_s = std::chrono::duration_cast<std::chrono::duration<float>>(time_elapsed).count();
         const auto target_duration_s =
             std::chrono::duration_cast<std::chrono::duration<float>>(target_position_->duration).count();
-        const auto lerp_amount = time_elapsed_s / target_duration_s;
-
-        log::debug("lerp amount: {}", lerp_amount);
+        auto lerp_amount = time_elapsed_s / target_duration_s;
+        lerp_amount = 1.0f - (1.0f - lerp_amount) * (1.0f - lerp_amount);
 
         auto transform = this->transform();
 
@@ -52,6 +53,30 @@ auto Enemy::update(Duration) -> void
         {
             transform.position = target_position_->position;
             target_position_.reset();
+        }
+
+        set_transform(transform);
+    }
+
+    if (target_size_)
+    {
+        const auto time_elapsed = Clock::now() - target_size_->start;
+
+        const auto time_elapsed_s = std::chrono::duration_cast<std::chrono::duration<float>>(time_elapsed).count();
+        const auto target_duration_s =
+            std::chrono::duration_cast<std::chrono::duration<float>>(target_size_->duration).count();
+        const auto lerp_amount = time_elapsed_s / target_duration_s;
+
+        auto transform = this->transform();
+
+        if (lerp_amount >= 0.0f)
+        {
+            transform.scale.lerp(lerp_amount, target_size_->position);
+        }
+        else
+        {
+            transform.scale = std::min(target_size_->position.x, 0.1f);
+            target_size_.reset();
         }
 
         set_transform(transform);
@@ -70,6 +95,19 @@ auto Enemy::hit(const Ray &bullet, const IntersectionResult &) -> void
         .duration = 500ms,
         .position = new_pos,
     };
+
+    health_ -= 10.0f;
+
+    target_size_ = {
+        .start = Clock::now(),
+        .duration = 500ms,
+        .position = transform.scale * (health_ / max_health_),
+    };
+
+    if (target_size_->position.x < 0.2f)
+    {
+        target_size_->position = {0.2f};
+    }
 }
 
 Enemy::operator bool() const

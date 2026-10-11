@@ -32,8 +32,10 @@ class Enemy : public Actor
         Vector3 position;
     };
 
+    float max_health_;
     float health_;
     std::optional<LerpPosition> target_position_;
+    std::optional<LerpPosition> target_size_;
 };
 
 using EnemyHandle = SparseSet<Enemy>::handle_type;
