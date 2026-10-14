@@ -2,6 +2,7 @@
 
 #include <chrono>
 
+#include "core/sparse_set.h"
 #include "maths/quaternion.h"
 #include "maths/vector3.h"
 #include "physics/jolt.h"
@@ -16,7 +17,7 @@ class VirtualCharacterController : public ::JPH::CharacterContactListener
 
     VirtualCharacterController(const VirtualCharacterController &) = delete;
     auto operator=(const VirtualCharacterController &) -> VirtualCharacterController & = delete;
-    VirtualCharacterController(VirtualCharacterController &&) = delete;
+    VirtualCharacterController(VirtualCharacterController &&) noexcept = default;
     auto operator=(VirtualCharacterController &&) -> VirtualCharacterController & = delete;
 
     auto update(std::chrono::milliseconds delta, const Vector3 &gravity) -> void;
@@ -45,5 +46,7 @@ class VirtualCharacterController : public ::JPH::CharacterContactListener
     ::JPH::Ref<::JPH::CharacterVirtual> character_;
     Vector3 walk_direction_;
 };
+
+using VirtualCharacterControllerHandle = SparseSet<VirtualCharacterController>::handle_type;
 
 }
