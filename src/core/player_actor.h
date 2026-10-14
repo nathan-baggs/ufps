@@ -22,7 +22,7 @@ class PlayerActor : public Actor
         EntityHandle gun_entity,
         Gun gun,
         const InputMap &input_map,
-        VirtualCharacterController &character_controller,
+        VirtualCharacterControllerHandle character_controller_handle,
         Scene &scene);
     ~PlayerActor() override = default;
 
@@ -37,7 +37,7 @@ class PlayerActor : public Actor
     EntityHandle gun_handle_;
     Gun gun_;
     const InputMap &input_map_;
-    VirtualCharacterController &character_controller_;
+    VirtualCharacterControllerHandle character_controller_handle_;
     Scene &scene_;
     Duration walk_sound_timer_;
     float yaw_;

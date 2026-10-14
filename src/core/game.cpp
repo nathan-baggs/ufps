@@ -447,7 +447,12 @@ auto Game::load_scene() -> void
     auto player_entity_handle = std::ranges::find_if(entity_handles, [&](auto e) { return em[e]->name() == "player"; });
     ensure(player_entity_handle != std::ranges::cend(entity_handles), "no player in scene");
     player_actor_ = std::make_unique<PlayerActor>(
-        *player_entity_handle, scene_->gun(), std::move(gun), input_map_, ps.player_controller(), *scene_);
+        *player_entity_handle,
+        scene_->gun(),
+        std::move(gun),
+        input_map_,
+        ps.create_virtual_character_controller(),
+        *scene_);
 
     auto flycam_entity_handle = std::ranges::find_if(entity_handles, [&](auto e) { return em[e]->name() == "flycam"; });
     ensure(flycam_entity_handle != std::ranges::cend(entity_handles), "no flycam in scene");
