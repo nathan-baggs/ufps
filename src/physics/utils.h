@@ -110,4 +110,15 @@ class IgnoreLayerDrawFilter : public ::JPH::BodyDrawFilter
     ::JPH::ObjectLayer object_layer_;
 };
 
+class CharacterControllerCollisionObjectLayer : public ::JPH::ObjectLayerFilter
+{
+  public:
+    auto ShouldCollide(::JPH::ObjectLayer layer) const -> bool override
+    {
+        const auto object_layer = ObjectLayer{layer};
+
+        return object_layer != ObjectLayer::LEVEL_GEOMETRY && object_layer != ObjectLayer::ENEMIES;
+    }
+};
+
 }

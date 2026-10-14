@@ -10,7 +10,9 @@ namespace ufps
 VirtualCharacterController::VirtualCharacterController(::JPH::PhysicsSystem &ps)
     : ps_{ps}
     , shape_{}
+    , inner_shape_{}
     , character_{}
+    , object_layer_{}
     , walk_direction_{}
 {
     shape_ = ::JPH::RotatedTranslatedShapeSettings(
@@ -37,9 +39,20 @@ VirtualCharacterController::VirtualCharacterController(::JPH::PhysicsSystem &ps)
     character_->SetListener(this);
 }
 
+VirtualCharacterController::VirtualCharacterController(VirtualCharacterController &&other) noexcept
+    : ps_{other.ps_}
+    , shape_{std::move(other.shape_)}
+    , inner_shape_{std::move(other.inner_shape_)}
+    , character_{std::move(other.character_)}
+    , object_layer_{}
+    , walk_direction_{other.walk_direction_}
+{
+    character_->SetListener(this);
+}
+
 auto VirtualCharacterController::update(std::chrono::milliseconds delta, const Vector3 &gravity) -> void
 {
-    static auto temp_allocator = ::JPH::TempAllocatorImpl{10zu * 1024zu * 1024zu};
+    thread_local auto temp_allocator = ::JPH::TempAllocatorImpl{10zu * 1024zu * 1024zu};
 
     const auto jolt_delta = 1.0f / delta.count();
 
@@ -53,7 +66,7 @@ auto VirtualCharacterController::update(std::chrono::milliseconds delta, const V
         jolt_delta,
         -character_->GetUp() * ps_.GetGravity().Length(),
         ps_.GetDefaultBroadPhaseLayerFilter(static_cast<::JPH::ObjectLayer>(ObjectLayer::PLAYER)),
-        ps_.GetDefaultLayerFilter(static_cast<::JPH::ObjectLayer>(ObjectLayer::PLAYER)),
+        object_layer_,
         {},
         {},
         temp_allocator);
@@ -78,6 +91,11 @@ auto VirtualCharacterController::debug_draw(PhysicsDebugRenderer &renderer) -> v
 auto VirtualCharacterController::position() const -> Vector3
 {
     return to_native(character_->GetPosition());
+}
+
+auto VirtualCharacterController::set_position(const Vector3 &position) -> void
+{
+    character_->SetPosition(to_jolt(position));
 }
 
 auto VirtualCharacterController::rotation() const -> Quaternion
