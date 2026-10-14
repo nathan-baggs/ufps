@@ -8,6 +8,7 @@
 #include "core/sparse_set.h"
 #include "maths/vector3.h"
 #include "physics/physics_system.h"
+#include "physics/virtual_character_controller.h"
 
 namespace ufps
 {
@@ -15,7 +16,7 @@ namespace ufps
 class Enemy : public Actor
 {
   public:
-    Enemy(EntityHandle entity, float initial_health) //
+    Enemy(EntityHandle entity, float initial_health, VirtualCharacterControllerHandle character_controller_handle) //
         pre(initial_health > 0.0f);
 
     auto health() const -> float;
@@ -35,7 +36,7 @@ class Enemy : public Actor
     float max_health_;
     float health_;
     std::optional<LerpPosition> target_position_;
-    std::optional<LerpPosition> target_size_;
+    VirtualCharacterControllerHandle character_controller_handle_;
 };
 
 using EnemyHandle = SparseSet<Enemy>::handle_type;
