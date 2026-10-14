@@ -20,6 +20,11 @@ Enemy::Enemy(EntityHandle entity, float initial_health, VirtualCharacterControll
     , health_{max_health_}
     , character_controller_handle_{character_controller_handle}
 {
+    const auto &[ps] = services<PhysicsSystem>();
+    const auto controller = ps.virtual_character_controller(character_controller_handle_);
+    ensure(controller, "missing character controller");
+
+    controller->set_position(transform().position);
 }
 
 auto Enemy::health() const -> float
@@ -35,6 +40,12 @@ auto Enemy::change_health(float delta) -> float
 
 auto Enemy::update(Duration) -> void
 {
+    const auto &[ps] = services<PhysicsSystem>();
+    const auto controller = ps.virtual_character_controller(character_controller_handle_);
+    contract_assert(controller);
+
+    auto transform = this->transform();
+
     if (target_position_)
     {
         const auto time_elapsed = Clock::now() - target_position_->start;
@@ -45,20 +56,19 @@ auto Enemy::update(Duration) -> void
         auto lerp_amount = time_elapsed_s / target_duration_s;
         lerp_amount = 1.0f - (1.0f - lerp_amount) * (1.0f - lerp_amount);
 
-        auto transform = this->transform();
-
         if (lerp_amount >= 0.0f)
         {
-            transform.position.lerp(lerp_amount, target_position_->position);
+            controller->set_walk_direction(Vector3::normalise(target_position_->position - transform.position));
         }
         else
         {
-            transform.position = target_position_->position;
             target_position_.reset();
+            controller->set_walk_direction({});
         }
-
-        set_transform(transform);
     }
+
+    transform.position = controller->position();
+    set_transform(transform);
 }
 
 auto Enemy::hit(const Ray &bullet, const IntersectionResult &) -> void

@@ -420,7 +420,7 @@ auto Game::load_scene() -> void
         ps.create_meshes(BroadPhaseLayer::STATIC, ObjectLayer::ENEMIES, enemy_entity));
     scene_->add(enemy_entity);
 
-    enm.spawn(enemy_entity, 100.0f);
+    enm.spawn(enemy_entity, 100.0f, ps.create_virtual_character_controller());
 
     const auto point_light_handles = lm.handles();
 
