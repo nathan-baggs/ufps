@@ -57,17 +57,19 @@ class PhysicsSystem : public ::JPH::ContactListener
 
     auto remove_rigid_body(RigidBodyHandle handle) -> void;
 
+    auto create_virtual_character_controller() -> VirtualCharacterControllerHandle;
+
     auto duplicate_rigid_body(RigidBodyHandle handle) -> RigidBodyHandle;
 
     constexpr auto rigid_body(this auto &&self, RigidBodyHandle handle);
+
+    constexpr auto virtual_character_controller(this auto &&self, VirtualCharacterControllerHandle handle);
 
     auto update() -> void;
 
     auto cast_ray(const Ray &ray) const -> std::optional<IntersectionResult>;
 
     auto debug_renderer() -> std::optional<PhysicsDebugRenderer &>;
-
-    auto player_controller() -> VirtualCharacterController &;
 
   private:
     SimpleBroadPhaseLayer broad_phase_layer_;
@@ -79,14 +81,19 @@ class PhysicsSystem : public ::JPH::ContactListener
     ::JPH::JobSystemThreadPool job_system_;
     ::JPH::PhysicsSystem physics_system_;
     SparseSet<RigidBody> rigid_bodies_;
+    SparseSet<VirtualCharacterController> character_controllers_;
     std::optional<PhysicsDebugRenderer> debug_renderer_;
-    std::unique_ptr<VirtualCharacterController> player_controller_;
     std::unordered_map<MeshView, ::JPH::Ref<::JPH::Shape>> mesh_shape_cache_;
 };
 
 constexpr auto PhysicsSystem::rigid_body(this auto &&self, RigidBodyHandle handle)
 {
     return self.rigid_bodies_[handle];
+}
+
+constexpr auto PhysicsSystem::virtual_character_controller(this auto &&self, VirtualCharacterControllerHandle handle)
+{
+    return self.character_controllers_[handle];
 }
 
 }

@@ -105,7 +105,6 @@ PhysicsSystem::PhysicsSystem(DebugRenderMode debug_render_mode)
     , job_system_{::JPH::cMaxPhysicsJobs, ::JPH::cMaxPhysicsBarriers, static_cast<int>(std::thread::hardware_concurrency() - 1zu)}
     , physics_system_{}
     , debug_renderer_{debug_render_mode == DebugRenderMode::ON ? std::make_optional<PhysicsDebugRenderer>() : std::nullopt}
-    , player_controller_{}
     , mesh_shape_cache_{}
 {
     constexpr auto max_bodies = 2048u;
@@ -124,8 +123,6 @@ PhysicsSystem::PhysicsSystem(DebugRenderMode debug_render_mode)
 
     physics_system_.SetGravity({0.0f, -9.8f, 0.0f});
     physics_system_.SetContactListener(this);
-
-    player_controller_ = std::make_unique<VirtualCharacterController>(physics_system_);
 }
 
 auto PhysicsSystem::create_box(
@@ -269,6 +266,11 @@ auto PhysicsSystem::remove_rigid_body(RigidBodyHandle handle) -> void
     rigid_bodies_.remove(handle);
 }
 
+auto PhysicsSystem::create_virtual_character_controller() -> VirtualCharacterControllerHandle
+{
+    return character_controllers_.emplace(physics_system_);
+}
+
 auto PhysicsSystem::duplicate_rigid_body(RigidBodyHandle handle) -> RigidBodyHandle
 {
     const auto &rb = rigid_body(handle);
@@ -282,7 +284,11 @@ auto PhysicsSystem::duplicate_rigid_body(RigidBodyHandle handle) -> RigidBodyHan
 
 auto PhysicsSystem::update() -> void
 {
-    player_controller_->update(16ms, to_native(physics_system_.GetGravity()));
+    for (auto &controller : character_controllers_.data())
+    {
+        controller.update(16ms, to_native(physics_system_.GetGravity()));
+    }
+
     physics_system_.Update(1.0f / 60.f, 1, &temp_allocator_, &job_system_);
 
     if (debug_renderer_)
@@ -290,7 +296,11 @@ auto PhysicsSystem::update() -> void
         static const auto settings = ::JPH::BodyManager::DrawSettings{};
         physics_system_.DrawBodies(
             settings, std::addressof(*debug_renderer_), std::addressof(ignore_layer_draw_filter_));
-        player_controller_->debug_draw(*debug_renderer_);
+
+        for (auto &controller : character_controllers_.data())
+        {
+            controller.debug_draw(*debug_renderer_);
+        }
     }
 }
 
@@ -332,8 +342,4 @@ auto PhysicsSystem::debug_renderer() -> std::optional<PhysicsDebugRenderer &>
     return debug_renderer_.transform([](auto &e) -> decltype(auto) { return e; });
 }
 
-auto PhysicsSystem::player_controller() -> VirtualCharacterController &
-{
-    return *player_controller_;
-}
 }
