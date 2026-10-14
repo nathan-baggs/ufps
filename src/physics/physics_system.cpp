@@ -165,6 +165,8 @@ auto PhysicsSystem::create_box(
 
     interface.SetUserData(body_id, user_data);
 
+    physics_system_.OptimizeBroadPhase();
+
     return rb;
 }
 
