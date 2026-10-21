@@ -18,6 +18,7 @@
 #include <Jolt/Core/Memory.h>
 #include <Jolt/Core/Reference.h>
 #include <Jolt/Core/TempAllocator.h>
+#include <Jolt/Math/Float3.h>
 #include <Jolt/Math/Quat.h>
 #include <Jolt/Math/Real.h>
 #include <Jolt/Physics/Body/Body.h>
@@ -25,6 +26,7 @@
 #include <Jolt/Physics/Body/BodyFilter.h>
 #include <Jolt/Physics/Body/BodyID.h>
 #include <Jolt/Physics/Body/BodyInterface.h>
+#include <Jolt/Physics/Body/BodyLock.h>
 #include <Jolt/Physics/Body/MotionType.h>
 #include <Jolt/Physics/Character/Character.h>
 #include <Jolt/Physics/Character/CharacterVirtual.h>
@@ -36,6 +38,7 @@
 #include <Jolt/Physics/Collision/RayCast.h>
 #include <Jolt/Physics/Collision/Shape/BoxShape.h>
 #include <Jolt/Physics/Collision/Shape/CapsuleShape.h>
+#include <Jolt/Physics/Collision/Shape/MeshShape.h>
 #include <Jolt/Physics/Collision/Shape/RotatedTranslatedShape.h>
 #include <Jolt/Physics/Collision/Shape/ScaledShape.h>
 #include <Jolt/Physics/Collision/Shape/Shape.h>
