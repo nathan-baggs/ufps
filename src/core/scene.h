@@ -342,7 +342,20 @@ constexpr auto Scene::description(this auto &&self) -> Description
 constexpr auto Scene::remove(EntityHandle handle) -> void
 {
     const auto iter = std::ranges::find(entities_, handle);
-    expect(iter != std::ranges::cend(entities_), "entity not found");
+    contract_assert(iter != std::ranges::cend(entities_));
+
+    const auto &[ps, cm, em] = services<PhysicsSystem, CameraManager, EntityManager>();
+
+    const auto entity = em[handle];
+    contract_assert(entity);
+
+    ps.remove_rigid_bodies(entity->rigid_bodies());
+    ps.remove_rigid_bodies(entity->ray_intersect_rigid_bodies());
+
+    if (entity->camera())
+    {
+        cm.remove(entity->camera());
+    }
 
     entities_.erase(iter);
 }
