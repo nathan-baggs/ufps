@@ -13,10 +13,16 @@
 namespace ufps
 {
 
+class PlayerActor;
+
 class Enemy : public Actor
 {
   public:
-    Enemy(EntityHandle entity, float initial_health, VirtualCharacterControllerHandle character_controller_handle) //
+    Enemy(
+        EntityHandle entity,
+        float initial_health,
+        VirtualCharacterControllerHandle character_controller_handle,
+        PlayerActor *player) //
         pre(initial_health > 0.0f);
 
     auto health() const -> float;
@@ -26,17 +32,11 @@ class Enemy : public Actor
     explicit operator bool() const;
 
   private:
-    struct LerpPosition
-    {
-        TimePoint start;
-        Duration duration;
-        Vector3 position;
-    };
-
     float max_health_;
     float health_;
-    std::optional<LerpPosition> target_position_;
     VirtualCharacterControllerHandle character_controller_handle_;
+    PlayerActor *player_;
+    Duration hit_cooldown_;
 };
 
 using EnemyHandle = SparseSet<Enemy>::handle_type;

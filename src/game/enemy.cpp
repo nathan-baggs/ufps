@@ -5,6 +5,7 @@
 #include "core/clock.h"
 #include "core/entity.h"
 #include "core/entity_manager.h"
+#include "core/player_actor.h"
 #include "maths/vector3.h"
 #include "physics/virtual_character_controller.h"
 #include "utils/log.h"
@@ -14,11 +15,17 @@ using namespace std::literals;
 namespace ufps
 {
 
-Enemy::Enemy(EntityHandle entity, float initial_health, VirtualCharacterControllerHandle character_controller_handle)
+Enemy::Enemy(
+    EntityHandle entity,
+    float initial_health,
+    VirtualCharacterControllerHandle character_controller_handle,
+    PlayerActor *player)
     : Actor{entity}
     , max_health_{initial_health}
     , health_{max_health_}
     , character_controller_handle_{character_controller_handle}
+    , player_{player}
+    , hit_cooldown_{}
 {
     const auto &[ps] = services<PhysicsSystem>();
     const auto controller = ps.virtual_character_controller(character_controller_handle_);
@@ -38,52 +45,34 @@ auto Enemy::change_health(float delta) -> float
     return health_;
 }
 
-auto Enemy::update(Duration) -> void
+auto Enemy::update(Duration delta) -> void
 {
     const auto &[ps] = services<PhysicsSystem>();
-    const auto controller = ps.virtual_character_controller(character_controller_handle_);
+    auto controller = ps.virtual_character_controller(character_controller_handle_);
     contract_assert(controller);
 
     auto transform = this->transform();
 
-    if (target_position_)
-    {
-        const auto time_elapsed = Clock::now() - target_position_->start;
-
-        const auto time_elapsed_s = std::chrono::duration_cast<std::chrono::duration<float>>(time_elapsed).count();
-        const auto target_duration_s =
-            std::chrono::duration_cast<std::chrono::duration<float>>(target_position_->duration).count();
-        auto lerp_amount = time_elapsed_s / target_duration_s;
-        lerp_amount = 1.0f - (1.0f - lerp_amount) * (1.0f - lerp_amount);
-
-        if (lerp_amount >= 0.0f)
-        {
-            controller->set_walk_direction(Vector3::normalise(target_position_->position - transform.position));
-        }
-        else
-        {
-            target_position_.reset();
-            controller->set_walk_direction({});
-        }
-    }
+    auto walk_direction = Vector3{};
 
     transform.position = controller->position();
     set_transform(transform);
+
+    if (hit_cooldown_ <= 0ms)
+    {
+        walk_direction += Vector3::normalise(player_->transform().position - transform.position);
+    }
+    else
+    {
+        hit_cooldown_ -= delta;
+    }
+
+    controller->set_walk_direction(walk_direction);
 }
 
-auto Enemy::hit(const Ray &bullet, const IntersectionResult &) -> void
+auto Enemy::hit(const Ray &, const IntersectionResult &) -> void
 {
-    const auto transform = this->transform();
-
-    auto new_pos = transform.position + bullet.direction * 2.0f;
-    new_pos.y = transform.position.y;
-
-    target_position_ = {
-        .start = Clock::now(),
-        .duration = 500ms,
-        .position = new_pos,
-    };
-
+    hit_cooldown_ = 500ms;
     health_ -= 10.0f;
 }
 
