@@ -7,10 +7,6 @@
 #include <ranges>
 #include <string_view>
 
-#include "Jolt/Math/Float3.h"
-#include "Jolt/Physics/Body/BodyLock.h"
-#include "Jolt/Physics/Collision/Shape/MeshShape.h"
-#include "Jolt/Physics/Collision/Shape/Shape.h"
 #include "core/entity.h"
 #include "core/entity_manager.h"
 #include "core/service_locator.h"
@@ -268,12 +264,25 @@ auto PhysicsSystem::remove_rigid_body(RigidBodyHandle handle) -> void
     rigid_bodies_.remove(handle);
 }
 
+auto PhysicsSystem::remove_rigid_bodies(std::span<RigidBodyHandle> handles) -> void
+{
+    for (const auto handle : handles)
+    {
+        remove_rigid_body(handle);
+    }
+}
+
 auto PhysicsSystem::create_virtual_character_controller() -> VirtualCharacterControllerHandle
 {
-    auto controller = character_controllers_.emplace(physics_system_);
+    auto controller = character_controllers_.emplace(std::addressof(physics_system_));
     physics_system_.OptimizeBroadPhase();
 
     return controller;
+}
+
+auto PhysicsSystem::remove_virtual_character_controller(VirtualCharacterControllerHandle handle) -> void
+{
+    character_controllers_.remove(handle);
 }
 
 auto PhysicsSystem::duplicate_rigid_body(RigidBodyHandle handle) -> RigidBodyHandle
@@ -295,7 +304,10 @@ auto PhysicsSystem::update() -> void
     }
 
     physics_system_.Update(1.0f / 60.f, 1, &temp_allocator_, &job_system_);
+}
 
+auto PhysicsSystem::draw_debug() -> void
+{
     if (debug_renderer_)
     {
         static const auto settings = ::JPH::BodyManager::DrawSettings{};

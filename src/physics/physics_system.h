@@ -57,7 +57,11 @@ class PhysicsSystem : public ::JPH::ContactListener
 
     auto remove_rigid_body(RigidBodyHandle handle) -> void;
 
+    auto remove_rigid_bodies(std::span<RigidBodyHandle> handles) -> void;
+
     auto create_virtual_character_controller() -> VirtualCharacterControllerHandle;
+
+    auto remove_virtual_character_controller(VirtualCharacterControllerHandle handle) -> void;
 
     auto duplicate_rigid_body(RigidBodyHandle handle) -> RigidBodyHandle;
 
@@ -66,6 +70,8 @@ class PhysicsSystem : public ::JPH::ContactListener
     constexpr auto virtual_character_controller(this auto &&self, VirtualCharacterControllerHandle handle);
 
     auto update() -> void;
+
+    auto draw_debug() -> void;
 
     auto cast_ray(const Ray &ray) const -> std::optional<IntersectionResult>;
 
