@@ -1,5 +1,7 @@
 #include "physics/virtual_character_controller.h"
 
+#include <ranges>
+
 #include "maths/vector3.h"
 #include "physics/jolt.h"
 #include "physics/physics_layers.h"
@@ -7,7 +9,7 @@
 namespace ufps
 {
 
-VirtualCharacterController::VirtualCharacterController(::JPH::PhysicsSystem &ps)
+VirtualCharacterController::VirtualCharacterController(::JPH::PhysicsSystem *ps)
     : ps_{ps}
     , shape_{}
     , inner_shape_{}
@@ -33,8 +35,7 @@ VirtualCharacterController::VirtualCharacterController(::JPH::PhysicsSystem &ps)
     settings->mShape = shape_;
     settings->mInnerBodyShape = inner_shape_;
     settings->mInnerBodyLayer = static_cast<::JPH::ObjectLayer>(ObjectLayer::PLAYER);
-    character_ =
-        new ::JPH::CharacterVirtual(settings, ::JPH::Vec3::sZero(), ::JPH::Quat::sIdentity(), 0, std::addressof(ps));
+    character_ = new ::JPH::CharacterVirtual(settings, ::JPH::Vec3::sZero(), ::JPH::Quat::sIdentity(), 0, ps_);
 
     character_->SetListener(this);
 }
@@ -64,8 +65,8 @@ auto VirtualCharacterController::update(std::chrono::milliseconds delta, const V
 
     character_->Update(
         jolt_delta,
-        -character_->GetUp() * ps_.GetGravity().Length(),
-        ps_.GetDefaultBroadPhaseLayerFilter(static_cast<::JPH::ObjectLayer>(ObjectLayer::PLAYER)),
+        -character_->GetUp() * ps_->GetGravity().Length(),
+        ps_->GetDefaultBroadPhaseLayerFilter(static_cast<::JPH::ObjectLayer>(ObjectLayer::PLAYER)),
         object_layer_,
         {},
         {},
@@ -101,6 +102,15 @@ auto VirtualCharacterController::set_position(const Vector3 &position) -> void
 auto VirtualCharacterController::rotation() const -> Quaternion
 {
     return to_native(character_->GetRotation());
+}
+
+auto VirtualCharacterController::swap(VirtualCharacterController &other) noexcept -> void
+{
+    std::ranges::swap(ps_, other.ps_);
+    std::ranges::swap(shape_, other.shape_);
+    std::ranges::swap(inner_shape_, other.inner_shape_);
+    std::ranges::swap(character_, other.character_);
+    std::ranges::swap(walk_direction_, other.walk_direction_);
 }
 
 auto VirtualCharacterController::OnContactAdded(

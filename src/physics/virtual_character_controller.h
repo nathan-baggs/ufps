@@ -14,7 +14,7 @@ namespace ufps
 class VirtualCharacterController : public ::JPH::CharacterContactListener
 {
   public:
-    VirtualCharacterController(::JPH::PhysicsSystem &ps);
+    VirtualCharacterController(::JPH::PhysicsSystem *ps);
 
     VirtualCharacterController(const VirtualCharacterController &) = delete;
     auto operator=(const VirtualCharacterController &) -> VirtualCharacterController & = delete;
@@ -33,6 +33,8 @@ class VirtualCharacterController : public ::JPH::CharacterContactListener
 
     auto rotation() const -> Quaternion;
 
+    auto swap(VirtualCharacterController &other) noexcept -> void;
+
   protected:
     auto OnContactAdded(
         const ::JPH::CharacterVirtual *inCharacter,
@@ -43,13 +45,18 @@ class VirtualCharacterController : public ::JPH::CharacterContactListener
         ::JPH::CharacterContactSettings &ioSettings) -> void override;
 
   private:
-    ::JPH::PhysicsSystem &ps_;
+    ::JPH::PhysicsSystem *ps_;
     ::JPH::RefConst<::JPH::Shape> shape_;
     ::JPH::RefConst<::JPH::Shape> inner_shape_;
     ::JPH::Ref<::JPH::CharacterVirtual> character_;
     CharacterControllerCollisionObjectLayer object_layer_;
     Vector3 walk_direction_;
 };
+
+inline auto swap(VirtualCharacterController &a, VirtualCharacterController &b) noexcept -> void
+{
+    a.swap(b);
+}
 
 using VirtualCharacterControllerHandle = SparseSet<VirtualCharacterController>::handle_type;
 
