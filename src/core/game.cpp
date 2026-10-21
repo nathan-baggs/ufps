@@ -406,22 +406,6 @@ auto Game::load_scene() -> void
 
     scene_ = std::make_unique<Scene>(load_scene_description());
 
-    const auto enemy_transform = Transform{{0.0f, 2.0f, -10.0f}, {1.0f}, {}};
-    const auto enemy_camera_handle = cm.insert(
-        {enemy_transform,
-         std::numbers::pi_v<float> / 4.0f,
-         static_cast<float>(window_.window_width()),
-         static_cast<float>(window_.window_height()),
-         0.1f,
-         100.0f});
-    const auto enemy_entity = em.insert({"enemy", rem["cube"], enemy_transform});
-    em[enemy_entity]->set_camera(enemy_camera_handle);
-    em[enemy_entity]->set_ray_intersect_rigid_bodies(
-        ps.create_meshes(BroadPhaseLayer::STATIC, ObjectLayer::ENEMIES, enemy_entity));
-    scene_->add(enemy_entity);
-
-    enm.spawn(enemy_entity, 100.0f, ps.create_virtual_character_controller());
-
     const auto point_light_handles = lm.handles();
 
     auto alert_light = EntityHandle{};
@@ -459,6 +443,22 @@ auto Game::load_scene() -> void
     flycam_actor_ = std::make_unique<FlyCamActor>(*flycam_entity_handle, input_map_);
 
     current_actor_ = player_actor_.get();
+
+    const auto enemy_transform = Transform{{0.0f, 2.0f, -10.0f}, {1.0f}, {}};
+    const auto enemy_camera_handle = cm.insert(
+        {enemy_transform,
+         std::numbers::pi_v<float> / 4.0f,
+         static_cast<float>(window_.window_width()),
+         static_cast<float>(window_.window_height()),
+         0.1f,
+         100.0f});
+    const auto enemy_entity = em.insert({"enemy", rem["cube"], enemy_transform});
+    em[enemy_entity]->set_camera(enemy_camera_handle);
+    em[enemy_entity]->set_ray_intersect_rigid_bodies(
+        ps.create_meshes(BroadPhaseLayer::STATIC, ObjectLayer::ENEMIES, enemy_entity));
+    scene_->add(enemy_entity);
+
+    enm.spawn(enemy_entity, 100.0f, ps.create_virtual_character_controller(), player_actor_.get());
 
     renderer_ = std::make_unique<DebugRenderer>(window_, *player_actor_);
 
@@ -624,7 +624,10 @@ auto Game::update() -> bool
     dl.push_cone(max_fire_cone, colours::magenta, true, DebugLayerType::DEFAULT);
     dl.push_cone(max_fire_cone, colours::magenta, false, DebugLayerType::DEBUG);
 
-    enm.update(delta_);
+    if (!debug_mode_)
+    {
+        enm.update(delta_);
+    }
 
     return true;
 }
