@@ -355,7 +355,7 @@ Game::~Game()
             std::views::transform([](const auto &p) { return std::make_pair(std::get<1>(p), std::get<0>(p)); }) |
             std::ranges::to<std::map<std::size_t, StackTraceBuffer, std::greater<std::size_t>>>();
 
-        for (auto &data : sorted_data | std::views::take(2))
+        for (auto &data : sorted_data)
         {
             auto &stack = const_cast<StackTraceBuffer &>(std::get<1>(data));
             auto &counter = std::get<0>(data);
@@ -538,11 +538,24 @@ auto Game::pump_events() -> bool
 
 auto Game::update() -> bool
 {
-    const auto &[ps, pm, am, dl, enm] =
-        services<PhysicsSystem, ParticleManager, AudioManager, DebugLayer, EnemyManager>();
+    const auto &[ps, pm, am, dl, enm, cm, em, rem] = services<
+        PhysicsSystem,
+        ParticleManager,
+        AudioManager,
+        DebugLayer,
+        EnemyManager,
+        CameraManager,
+        EntityManager,
+        RenderEntityManager>();
 
     current_actor_->update(delta_);
-    ps.update();
+
+    if (!debug_mode_)
+    {
+        ps.update();
+    }
+
+    ps.draw_debug();
 
     const auto bullets_fired = player_actor_->yield_bullets_fired();
 
@@ -627,6 +640,38 @@ auto Game::update() -> bool
     if (!debug_mode_)
     {
         enm.update(delta_);
+
+        const auto dead_enemies = enm.yield_dead_enemies();
+        for (const auto enemy_handle : dead_enemies)
+        {
+            const auto enemy = enm[enemy_handle];
+            contract_assert(enemy);
+
+            enm.despawn(enemy_handle);
+
+            const auto entity_handle = enemy->entity();
+            scene_->remove(entity_handle);
+
+            for (auto i = 0; i < 1; i++)
+            {
+                const auto enemy_transform =
+                    Transform{{random::rand_real(-30.0f, 30.0f), 2.0f, random::rand_real(-30.0f, 30.0f)}, {1.0f}, {}};
+                const auto enemy_camera_handle = cm.insert(
+                    {enemy_transform,
+                     std::numbers::pi_v<float> / 4.0f,
+                     static_cast<float>(window_.window_width()),
+                     static_cast<float>(window_.window_height()),
+                     0.1f,
+                     100.0f});
+                const auto enemy_entity = em.insert({"enemy", rem["cube"], enemy_transform});
+                em[enemy_entity]->set_camera(enemy_camera_handle);
+                em[enemy_entity]->set_ray_intersect_rigid_bodies(
+                    ps.create_meshes(BroadPhaseLayer::STATIC, ObjectLayer::ENEMIES, enemy_entity));
+                scene_->add(enemy_entity);
+
+                enm.spawn(enemy_entity, 100.0f, ps.create_virtual_character_controller(), player_actor_.get());
+            }
+        }
     }
 
     return true;
