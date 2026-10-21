@@ -30,6 +30,7 @@ class Enemy : public Actor
     auto update(Duration delta) -> void;
     auto hit(const Ray &bullet, const IntersectionResult &intersection) -> void;
     explicit operator bool() const;
+    auto character_controller() const -> VirtualCharacterControllerHandle;
 
   private:
     float max_health_;

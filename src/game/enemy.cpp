@@ -81,4 +81,9 @@ Enemy::operator bool() const
     return health_ != 0.0f;
 }
 
+auto Enemy::character_controller() const -> VirtualCharacterControllerHandle
+{
+    return character_controller_handle_;
+}
+
 }
