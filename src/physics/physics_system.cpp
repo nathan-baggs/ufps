@@ -270,7 +270,10 @@ auto PhysicsSystem::remove_rigid_body(RigidBodyHandle handle) -> void
 
 auto PhysicsSystem::create_virtual_character_controller() -> VirtualCharacterControllerHandle
 {
-    return character_controllers_.emplace(physics_system_);
+    auto controller = character_controllers_.emplace(physics_system_);
+    physics_system_.OptimizeBroadPhase();
+
+    return controller;
 }
 
 auto PhysicsSystem::duplicate_rigid_body(RigidBodyHandle handle) -> RigidBodyHandle
