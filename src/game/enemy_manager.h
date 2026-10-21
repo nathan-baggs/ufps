@@ -21,6 +21,8 @@ class EnemyManager
 
     auto despawn(EnemyHandle handle) -> void;
 
+    auto yield_dead_enemies() -> std::vector<EnemyHandle>;
+
     auto update(Duration delta) -> void;
 
     auto operator[](EnemyHandle handle) -> std::optional<Enemy &>;
@@ -29,6 +31,7 @@ class EnemyManager
 
   private:
     SparseSet<Enemy> enemies_;
+    std::vector<EnemyHandle> dead_enemies_;
 };
 
 }
