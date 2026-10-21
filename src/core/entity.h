@@ -72,7 +72,9 @@ class Entity
 
     auto set_ray_intersect_rigid_bodies(std::vector<RigidBodyHandle> handles) -> void;
 
-    auto rigid_bodies() const -> std::span<const RigidBodyHandle>;
+    auto rigid_bodies() -> std::span<RigidBodyHandle>;
+
+    auto ray_intersect_rigid_bodies() -> std::span<RigidBodyHandle>;
 
     auto light() const -> LightHandle;
 
