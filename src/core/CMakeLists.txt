@@ -6,6 +6,7 @@ target_sources(ufpslib PRIVATE
   game.cpp
   gun.cpp
   player_actor.cpp
+  scene.cpp
 )
 
 
