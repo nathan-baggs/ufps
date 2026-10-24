@@ -1,9 +1,12 @@
 #include "graphics/particle_manager.h"
-#include "maths/vector3.h"
 
 #include <ranges>
 #include <span>
 #include <vector>
+
+#include "maths/cone.h"
+#include "maths/random.h"
+#include "maths/vector3.h"
 
 namespace ufps
 {
@@ -14,23 +17,23 @@ ParticleManager::ParticleManager()
 {
 }
 
-auto ParticleManager::spawn_sparks(const Vector3 &position, const Vector3 &velocity) -> void
+auto ParticleManager::spawn_sparks(const Cone &cone, std::uint32_t count) -> void
 {
-    *next_ = {
-        .position = position,
-        .life = 3.0f,
-        .velocity = velocity,
-        .pad = 1.0f,
-    };
+    const auto position = cone.origin;
 
-    ++next_;
-    if (next_ == std::ranges::end(particles_))
+    for (auto i = 0u; i < count; ++i)
     {
-        next_ = std::ranges::begin(particles_);
-    }
-}
+        *next_ = {
+            .position = position,
+            .life = 3.0f,
+            .velocity = random::rand_vector3(cone),
+            .pad = 1.0f,
+        };
 
-
+        ++next_;
+        if (next_ == std::ranges::end(particles_))
+        {
+            next_ = std::ranges::begin(particles_);
         }
     }
 }

@@ -1,9 +1,10 @@
 #pragma once
 
-#include "maths/vector3.h"
-
+#include <cstdint>
 #include <span>
 #include <vector>
+
+#include "maths/cone.h"
 
 namespace ufps
 {
@@ -21,7 +22,7 @@ class ParticleManager
   public:
     ParticleManager();
 
-    auto spawn_sparks(const Vector3 &position, const Vector3 &velocity) -> void;
+    auto spawn_sparks(const Cone &cone, std::uint32_t count) -> void;
 
     template <class Self>
     auto particles(this Self &&self)
