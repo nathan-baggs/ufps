@@ -60,6 +60,7 @@ Description:
   entities:
     - Description:
         name: level
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -101,6 +102,7 @@ Description:
         can_intersect_ray: false
     - Description:
         name: floor
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -540,6 +542,7 @@ Description:
         can_intersect_ray: false
     - Description:
         name: flycam
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -603,6 +606,7 @@ Description:
         can_intersect_ray: false
     - Description:
         name: player
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -667,6 +671,7 @@ Description:
         can_intersect_ray: false
     - Description:
         name: world_colliders
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -831,6 +836,7 @@ Description:
         can_intersect_ray: false
     - Description:
         name: floor0
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -871,6 +877,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor1
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -911,6 +918,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor2
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -951,6 +959,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor3
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -991,6 +1000,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor4
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -1031,6 +1041,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor5
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -1071,6 +1082,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor6
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -1111,6 +1123,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor7
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -1151,6 +1164,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor8
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -1191,6 +1205,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor9
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -1231,6 +1246,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor10
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -1271,6 +1287,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor11
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -1311,6 +1328,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor12
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -1351,6 +1369,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor13
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -1391,6 +1410,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor14
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -1431,6 +1451,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor15
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -1471,6 +1492,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor16
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -1511,6 +1533,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor17
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -1551,6 +1574,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor18
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -1591,6 +1615,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor19
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -1631,6 +1656,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor20
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -1671,6 +1697,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor21
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -1711,6 +1738,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor22
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -1751,6 +1779,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor23
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -1791,6 +1820,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor24
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -1831,6 +1861,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor25
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -1871,6 +1902,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor26
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -1911,6 +1943,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor27
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -1951,6 +1984,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor28
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -1991,6 +2025,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor29
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -2031,6 +2066,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor30
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -2071,6 +2107,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor31
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -2111,6 +2148,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor32
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -2151,6 +2189,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor33
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -2191,6 +2230,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor34
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -2231,6 +2271,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor35
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -2271,6 +2312,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor36
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -2311,6 +2353,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor37
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -2351,6 +2394,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor38
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -2391,6 +2435,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor39
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -2431,6 +2476,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor40
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -2471,6 +2517,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor41
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -2511,6 +2558,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor42
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -2551,6 +2599,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor43
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -2591,6 +2640,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor44
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -2631,6 +2681,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor45
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -2671,6 +2722,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor46
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -2711,6 +2763,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor47
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -2751,6 +2804,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor48
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -2791,6 +2845,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor49
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -2831,6 +2886,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor50
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -2871,6 +2927,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor51
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -2911,6 +2968,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor52
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -2951,6 +3009,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor53
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -2991,6 +3050,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor54
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -3031,6 +3091,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor55
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -3071,6 +3132,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor56
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -3111,6 +3173,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor57
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -3151,6 +3214,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor58
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -3191,6 +3255,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor59
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -3231,6 +3296,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor60
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -3271,6 +3337,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor61
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -3311,6 +3378,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor62
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -3351,6 +3419,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor63
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -3391,6 +3460,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor64
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -3431,6 +3501,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor65
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -3471,6 +3542,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor66
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -3511,6 +3583,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor67
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -3551,6 +3624,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor68
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -3591,6 +3665,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor69
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -3631,6 +3706,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor70
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -3671,6 +3747,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor71
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -3711,6 +3788,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor72
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -3751,6 +3829,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor73
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -3791,6 +3870,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor74
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -3831,6 +3911,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor75
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -3871,6 +3952,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor76
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -3911,6 +3993,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor77
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -3951,6 +4034,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor78
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -3991,6 +4075,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor79
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -4031,6 +4116,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor80
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -4071,6 +4157,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor81
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -4111,6 +4198,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor82
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -4151,6 +4239,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor83
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -4191,6 +4280,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor84
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -4231,6 +4321,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor85
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -4271,6 +4362,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor86
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -4311,6 +4403,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor87
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -4351,6 +4444,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor88
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -4391,6 +4485,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor89
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -4431,6 +4526,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor90
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -4471,6 +4567,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor91
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -4511,6 +4608,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor92
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -4551,6 +4649,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor93
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -4591,6 +4690,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor94
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -4631,6 +4731,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor95
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -4671,6 +4772,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor96
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -4711,6 +4813,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor97
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -4751,6 +4854,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor98
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -4791,6 +4895,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor99
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -4831,6 +4936,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor100
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -4871,6 +4977,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor101
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -4911,6 +5018,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor102
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -4951,6 +5059,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor103
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -4991,6 +5100,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor104
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -5031,6 +5141,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor105
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -5071,6 +5182,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor106
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -5111,6 +5223,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor107
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -5151,6 +5264,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor108
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -5191,6 +5305,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor109
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -5231,6 +5346,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor110
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -5271,6 +5387,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor111
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -5311,6 +5428,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor112
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -5351,6 +5469,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor113
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -5391,6 +5510,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor114
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -5431,6 +5551,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor115
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -5471,6 +5592,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor116
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -5511,6 +5633,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor117
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -5551,6 +5674,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor118
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -5591,6 +5715,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor119
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -5631,6 +5756,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor120
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -5671,6 +5797,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor121
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -5711,6 +5838,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor122
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -5751,6 +5879,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor123
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -5791,6 +5920,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor124
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -5831,6 +5961,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor125
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -5871,6 +6002,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor126
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -5911,6 +6043,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor127
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -5951,6 +6084,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor128
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -5991,6 +6125,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor129
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -6031,6 +6166,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor130
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -6071,6 +6207,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor131
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -6111,6 +6248,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor132
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -6151,6 +6289,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor133
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -6191,6 +6330,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor134
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -6231,6 +6371,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor135
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -6271,6 +6412,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor136
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -6311,6 +6453,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor137
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -6351,6 +6494,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor138
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -6391,6 +6535,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor139
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -6431,6 +6576,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor140
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -6471,6 +6617,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor141
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -6511,6 +6658,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor142
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -6551,6 +6699,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor143
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -6591,6 +6740,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor144
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -6631,6 +6781,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor145
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -6671,6 +6822,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor146
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -6711,6 +6863,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor147
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -6751,6 +6904,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor148
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -6791,6 +6945,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor149
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -6831,6 +6986,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor150
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -6871,6 +7027,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor151
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -6911,6 +7068,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor152
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -6951,6 +7109,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor153
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -6991,6 +7150,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor154
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -7031,6 +7191,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor155
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -7071,6 +7232,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor156
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -7111,6 +7273,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor157
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -7151,6 +7314,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor158
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -7191,6 +7355,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor159
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -7231,6 +7396,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor160
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -7271,6 +7437,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor161
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -7311,6 +7478,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor162
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -7351,6 +7519,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor163
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -7391,6 +7560,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor164
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -7431,6 +7601,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor165
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -7471,6 +7642,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor166
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -7511,6 +7683,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor167
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -7551,6 +7724,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor168
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -7591,6 +7765,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor169
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -7631,6 +7806,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor170
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -7671,6 +7847,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor171
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -7711,6 +7888,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor172
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -7751,6 +7929,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor173
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -7791,6 +7970,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor174
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -7831,6 +8011,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor175
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -7871,6 +8052,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor176
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -7911,6 +8093,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor177
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -7951,6 +8134,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor178
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -7991,6 +8175,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor179
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -8031,6 +8216,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor180
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -8071,6 +8257,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor181
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -8111,6 +8298,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor182
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -8151,6 +8339,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor183
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -8191,6 +8380,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor184
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -8231,6 +8421,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor185
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -8271,6 +8462,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor186
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -8311,6 +8503,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor187
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -8351,6 +8544,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor188
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -8391,6 +8585,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor189
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -8431,6 +8626,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor190
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -8471,6 +8667,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor191
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -8511,6 +8708,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor192
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -8551,6 +8749,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor193
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -8591,6 +8790,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor194
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -8631,6 +8831,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor195
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -8671,6 +8872,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor196
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -8711,6 +8913,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor197
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -8751,6 +8954,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor198
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -8791,6 +8995,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor199
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -8831,6 +9036,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor200
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -8871,6 +9077,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor201
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -8911,6 +9118,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor202
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -8951,6 +9159,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor203
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -8991,6 +9200,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor204
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -9031,6 +9241,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor205
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -9071,6 +9282,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor206
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -9111,6 +9323,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor207
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -9151,6 +9364,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor208
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -9191,6 +9405,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor209
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -9231,6 +9446,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor210
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -9271,6 +9487,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor211
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -9311,6 +9528,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor212
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -9351,6 +9569,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor213
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -9391,6 +9610,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor214
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -9431,6 +9651,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor215
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -9471,6 +9692,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor216
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -9511,6 +9733,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor217
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -9551,6 +9774,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor218
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -9591,6 +9815,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor219
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -9631,6 +9856,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor220
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -9671,6 +9897,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor221
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -9711,6 +9938,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor222
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -9751,6 +9979,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor223
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -9791,6 +10020,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor224
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -9831,6 +10061,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor225
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -9871,6 +10102,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor226
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -9911,6 +10143,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor227
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -9951,6 +10184,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor228
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -9991,6 +10225,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor229
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -10031,6 +10266,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor230
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -10071,6 +10307,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor231
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -10111,6 +10348,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor232
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -10151,6 +10389,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor233
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -10191,6 +10430,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor234
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -10231,6 +10471,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor235
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -10271,6 +10512,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor236
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -10311,6 +10553,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor237
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -10351,6 +10594,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor238
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -10391,6 +10635,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor239
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -10431,6 +10676,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor240
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -10471,6 +10717,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor241
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -10511,6 +10758,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor242
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -10551,6 +10799,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor243
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -10591,6 +10840,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor244
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -10631,6 +10881,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor245
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -10671,6 +10922,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor246
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -10711,6 +10963,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor247
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -10751,6 +11004,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor248
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -10791,6 +11045,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor249
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -10831,6 +11086,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor250
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -10871,6 +11127,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor251
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -10911,6 +11168,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor252
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -10951,6 +11209,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor253
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -10991,6 +11250,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor254
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -11031,6 +11291,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor255
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -11071,6 +11332,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor256
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -11111,6 +11373,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor257
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -11151,6 +11414,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor258
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -11191,6 +11455,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor259
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -11231,6 +11496,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor260
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -11271,6 +11537,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor261
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -11311,6 +11578,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor262
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -11351,6 +11619,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor263
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -11391,6 +11660,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor264
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -11431,6 +11701,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor265
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -11471,6 +11742,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor266
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -11511,6 +11783,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor267
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -11551,6 +11824,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor268
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -11591,6 +11865,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor269
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -11631,6 +11906,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor270
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -11671,6 +11947,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor271
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -11711,6 +11988,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor272
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -11751,6 +12029,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor273
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -11791,6 +12070,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor274
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -11831,6 +12111,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor275
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -11871,6 +12152,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor276
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -11911,6 +12193,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor277
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -11951,6 +12234,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor278
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -11991,6 +12275,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor279
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -12031,6 +12316,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor280
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -12071,6 +12357,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor281
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -12111,6 +12398,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor282
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -12151,6 +12439,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor283
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -12191,6 +12480,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor284
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -12231,6 +12521,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor285
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -12271,6 +12562,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor286
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -12311,6 +12603,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor287
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -12351,6 +12644,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor288
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -12391,6 +12685,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor289
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -12431,6 +12726,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor290
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -12471,6 +12767,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor291
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -12511,6 +12808,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor292
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -12551,6 +12849,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor293
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -12591,6 +12890,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor294
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -12631,6 +12931,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor295
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -12671,6 +12972,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor296
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -12711,6 +13013,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor297
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -12751,6 +13054,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor298
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -12791,6 +13095,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor299
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -12831,6 +13136,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor300
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -12871,6 +13177,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor301
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -12911,6 +13218,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor302
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -12951,6 +13259,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor303
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -12991,6 +13300,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor304
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -13031,6 +13341,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor305
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -13071,6 +13382,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor306
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -13111,6 +13423,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor307
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -13151,6 +13464,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor308
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -13191,6 +13505,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor309
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -13231,6 +13546,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor310
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -13271,6 +13587,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor311
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -13311,6 +13628,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor312
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -13351,6 +13669,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor313
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -13391,6 +13710,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor314
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -13431,6 +13751,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor315
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -13471,6 +13792,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor316
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -13511,6 +13833,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor317
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -13551,6 +13874,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor318
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -13591,6 +13915,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor319
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -13631,6 +13956,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor320
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -13671,6 +13997,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor321
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -13711,6 +14038,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor322
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -13751,6 +14079,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor323
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -13791,6 +14120,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor324
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -13831,6 +14161,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor325
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -13871,6 +14202,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor326
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -13911,6 +14243,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor327
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -13951,6 +14284,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor328
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -13991,6 +14325,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor329
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -14031,6 +14366,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor330
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -14071,6 +14407,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor331
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -14111,6 +14448,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor332
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -14151,6 +14489,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor333
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -14191,6 +14530,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor334
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -14231,6 +14571,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor335
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -14271,6 +14612,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor336
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -14311,6 +14653,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor337
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -14351,6 +14694,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor338
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -14391,6 +14735,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor339
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -14431,6 +14776,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor340
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -14471,6 +14817,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor341
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -14511,6 +14858,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor342
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -14551,6 +14899,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor343
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -14591,6 +14940,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor344
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -14631,6 +14981,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor345
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -14671,6 +15022,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor346
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -14711,6 +15063,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor347
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -14751,6 +15104,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor348
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -14791,6 +15145,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor349
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -14831,6 +15186,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor350
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -14871,6 +15227,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor351
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -14911,6 +15268,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor352
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -14951,6 +15309,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor353
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -14991,6 +15350,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor354
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -15031,6 +15391,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor355
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -15071,6 +15432,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor356
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -15111,6 +15473,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor357
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -15151,6 +15514,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor358
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -15191,6 +15555,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor359
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -15231,6 +15596,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor360
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -15271,6 +15637,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor361
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -15311,6 +15678,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor362
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -15351,6 +15719,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor363
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -15391,6 +15760,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor364
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -15431,6 +15801,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor365
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -15471,6 +15842,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor366
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -15511,6 +15883,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor367
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -15551,6 +15924,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor368
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -15591,6 +15965,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor369
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -15631,6 +16006,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor370
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -15671,6 +16047,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor371
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -15711,6 +16088,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor372
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -15751,6 +16129,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor373
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -15791,6 +16170,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor374
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -15831,6 +16211,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor375
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -15871,6 +16252,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor376
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -15911,6 +16293,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor377
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -15951,6 +16334,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor378
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -15991,6 +16375,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor379
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -16031,6 +16416,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor380
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -16071,6 +16457,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor381
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -16111,6 +16498,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor382
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -16151,6 +16539,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor383
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -16191,6 +16580,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor384
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -16231,6 +16621,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor385
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -16271,6 +16662,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor386
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -16311,6 +16703,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor387
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -16351,6 +16744,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor388
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -16391,6 +16785,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor389
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -16431,6 +16826,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor390
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -16471,6 +16867,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor391
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -16511,6 +16908,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor392
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -16551,6 +16949,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor393
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -16591,6 +16990,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor394
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -16631,6 +17031,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor395
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -16671,6 +17072,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor396
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -16711,6 +17113,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor397
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -16751,6 +17154,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor398
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -16791,6 +17195,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: floor399
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -16831,6 +17236,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: walls
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -17110,6 +17516,7 @@ Description:
         can_intersect_ray: false
     - Description:
         name: wall0
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -17150,6 +17557,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall1
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -17190,6 +17598,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall2
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -17230,6 +17639,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall3
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -17270,6 +17680,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall4
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -17310,6 +17721,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall5
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -17350,6 +17762,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall6
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -17390,6 +17803,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall7
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -17430,6 +17844,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall8
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -17470,6 +17885,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall9
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -17510,6 +17926,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall10
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -17550,6 +17967,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall11
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -17590,6 +18008,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall12
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -17630,6 +18049,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall13
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -17670,6 +18090,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall14
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -17710,6 +18131,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall15
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -17750,6 +18172,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall16
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -17790,6 +18213,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall17
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -17830,6 +18254,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall18
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -17870,6 +18295,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall19
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -17910,6 +18336,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall20
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -17950,6 +18377,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall21
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -17990,6 +18418,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall22
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -18030,6 +18459,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall23
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -18070,6 +18500,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall24
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -18110,6 +18541,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall25
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -18150,6 +18582,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall26
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -18190,6 +18623,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall27
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -18230,6 +18664,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall28
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -18270,6 +18705,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall29
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -18310,6 +18746,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall30
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -18350,6 +18787,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall31
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -18390,6 +18828,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall32
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -18430,6 +18869,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall33
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -18470,6 +18910,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall34
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -18510,6 +18951,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall35
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -18550,6 +18992,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall36
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -18590,6 +19033,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall37
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -18630,6 +19074,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall38
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -18670,6 +19115,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall39
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -18710,6 +19156,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall40
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -18750,6 +19197,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall41
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -18790,6 +19238,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall42
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -18830,6 +19279,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall43
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -18870,6 +19320,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall44
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -18910,6 +19361,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall45
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -18950,6 +19402,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall46
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -18990,6 +19443,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall47
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -19030,6 +19484,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall48
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -19070,6 +19525,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall49
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -19110,6 +19566,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall50
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -19150,6 +19607,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall51
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -19190,6 +19648,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall52
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -19230,6 +19689,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall53
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -19270,6 +19730,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall54
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -19310,6 +19771,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall55
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -19350,6 +19812,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall56
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -19390,6 +19853,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall57
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -19430,6 +19894,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall58
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -19470,6 +19935,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall59
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -19510,6 +19976,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall60
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -19550,6 +20017,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall61
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -19590,6 +20058,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall62
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -19630,6 +20099,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall63
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -19670,6 +20140,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall64
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -19710,6 +20181,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall65
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -19750,6 +20222,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall66
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -19790,6 +20263,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall67
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -19830,6 +20304,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall68
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -19870,6 +20345,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall69
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -19910,6 +20386,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall70
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -19950,6 +20427,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall71
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -19990,6 +20468,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall72
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -20030,6 +20509,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall73
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -20070,6 +20550,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall74
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -20110,6 +20591,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall75
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -20150,6 +20632,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall76
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -20190,6 +20673,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall77
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -20230,6 +20714,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall78
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -20270,6 +20755,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall79
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -20310,6 +20796,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall80
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -20350,6 +20837,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall81
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -20390,6 +20878,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall82
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -20430,6 +20919,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall83
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -20470,6 +20960,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall84
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -20510,6 +21001,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall85
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -20550,6 +21042,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall86
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -20590,6 +21083,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall87
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -20630,6 +21124,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall88
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -20670,6 +21165,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall89
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -20710,6 +21206,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall90
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -20750,6 +21247,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall91
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -20790,6 +21288,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall92
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -20830,6 +21329,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall93
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -20870,6 +21370,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall94
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -20910,6 +21411,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall95
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -20950,6 +21452,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall96
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -20990,6 +21493,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall97
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -21030,6 +21534,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall98
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -21070,6 +21575,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall99
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -21110,6 +21616,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall100
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -21150,6 +21657,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall101
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -21190,6 +21698,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall102
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -21230,6 +21739,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall103
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -21270,6 +21780,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall104
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -21310,6 +21821,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall105
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -21350,6 +21862,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall106
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -21390,6 +21903,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall107
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -21430,6 +21944,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall108
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -21470,6 +21985,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall109
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -21510,6 +22026,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall110
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -21550,6 +22067,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall111
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -21590,6 +22108,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall112
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -21630,6 +22149,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall113
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -21670,6 +22190,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall114
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -21710,6 +22231,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall115
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -21750,6 +22272,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall116
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -21790,6 +22313,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall117
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -21830,6 +22354,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall118
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -21870,6 +22395,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall119
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -21910,6 +22436,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall120
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -21950,6 +22477,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall121
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -21990,6 +22518,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall122
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -22030,6 +22559,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall123
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -22070,6 +22600,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall124
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -22110,6 +22641,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall125
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -22150,6 +22682,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall126
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -22190,6 +22723,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall127
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -22230,6 +22764,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall128
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -22270,6 +22805,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall129
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -22310,6 +22846,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall130
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -22350,6 +22887,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall131
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -22390,6 +22928,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall132
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -22430,6 +22969,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall133
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -22470,6 +23010,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall134
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -22510,6 +23051,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall135
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -22550,6 +23092,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall136
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -22590,6 +23133,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall137
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -22630,6 +23174,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall138
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -22670,6 +23215,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall139
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -22710,6 +23256,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall140
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -22750,6 +23297,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall141
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -22790,6 +23338,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall142
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -22830,6 +23379,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall143
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -22870,6 +23420,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall144
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -22910,6 +23461,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall145
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -22950,6 +23502,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall146
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -22990,6 +23543,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall147
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -23030,6 +23584,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall148
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -23070,6 +23625,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall149
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -23110,6 +23666,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall150
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -23150,6 +23707,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall151
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -23190,6 +23748,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall152
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -23230,6 +23789,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall153
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -23270,6 +23830,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall154
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -23310,6 +23871,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall155
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -23350,6 +23912,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall156
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -23390,6 +23953,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall157
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -23430,6 +23994,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall158
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -23470,6 +24035,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall159
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -23510,6 +24076,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall160
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -23550,6 +24117,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall161
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -23590,6 +24158,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall162
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -23630,6 +24199,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall163
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -23670,6 +24240,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall164
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -23710,6 +24281,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall165
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -23750,6 +24322,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall166
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -23790,6 +24363,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall167
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -23830,6 +24404,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall168
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -23870,6 +24445,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall169
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -23910,6 +24486,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall170
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -23950,6 +24527,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall171
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -23990,6 +24568,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall172
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -24030,6 +24609,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall173
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -24070,6 +24650,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall174
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -24110,6 +24691,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall175
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -24150,6 +24732,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall176
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -24190,6 +24773,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall177
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -24230,6 +24814,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall178
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -24270,6 +24855,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall179
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -24310,6 +24896,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall180
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -24350,6 +24937,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall181
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -24390,6 +24978,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall182
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -24430,6 +25019,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall183
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -24470,6 +25060,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall184
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -24510,6 +25101,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall185
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -24550,6 +25142,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall186
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -24590,6 +25183,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall187
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -24630,6 +25224,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall188
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -24670,6 +25265,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall189
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -24710,6 +25306,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall190
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -24750,6 +25347,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall191
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -24790,6 +25388,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall192
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -24830,6 +25429,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall193
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -24870,6 +25470,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall194
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -24910,6 +25511,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall195
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -24950,6 +25552,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall196
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -24990,6 +25593,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall197
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -25030,6 +25634,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall198
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -25070,6 +25675,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall199
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -25110,6 +25716,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall200
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -25150,6 +25757,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall201
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -25190,6 +25798,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall202
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -25230,6 +25839,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall203
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -25270,6 +25880,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall204
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -25310,6 +25921,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall205
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -25350,6 +25962,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall206
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -25390,6 +26003,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall207
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -25430,6 +26044,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall208
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -25470,6 +26085,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall209
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -25510,6 +26126,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall210
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -25550,6 +26167,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall211
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -25590,6 +26208,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall212
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -25630,6 +26249,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall213
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -25670,6 +26290,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall214
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -25710,6 +26331,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall215
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -25750,6 +26372,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall216
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -25790,6 +26413,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall217
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -25830,6 +26454,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall218
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -25870,6 +26495,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall219
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -25910,6 +26536,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall220
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -25950,6 +26577,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall221
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -25990,6 +26618,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall222
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -26030,6 +26659,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall223
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -26070,6 +26700,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall224
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -26110,6 +26741,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall225
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -26150,6 +26782,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall226
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -26190,6 +26823,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall227
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -26230,6 +26864,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall228
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -26270,6 +26905,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall229
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -26310,6 +26946,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall230
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -26350,6 +26987,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall231
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -26390,6 +27028,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall232
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -26430,6 +27069,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall233
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -26470,6 +27110,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall234
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -26510,6 +27151,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall235
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -26550,6 +27192,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall236
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -26590,6 +27233,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall237
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -26630,6 +27274,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall238
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -26670,6 +27315,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: wall239
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:
@@ -26710,6 +27356,7 @@ Description:
         can_intersect_ray: true
     - Description:
         name: gun
+        type: STATIC
         emissive_strength: 1
         transform:
           Transform:

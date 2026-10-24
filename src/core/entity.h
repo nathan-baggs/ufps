@@ -22,12 +22,19 @@ namespace ufps
 class Entity;
 using EntityHandle = SparseSet<Entity>::handle_type;
 
+enum class EntityType
+{
+    STATIC,
+    DYNAMIC,
+};
+
 class Entity
 {
   public:
     struct Description
     {
         std::string name;
+        EntityType type;
         float emissive_strength;
         Transform transform;
         AABB aabb;
@@ -39,9 +46,11 @@ class Entity
         bool can_intersect_ray;
     };
 
-    Entity(std::string name, std::span<const RenderEntityHandle> render_entities, Transform transform);
+    Entity(std::string name, EntityType type, std::span<const RenderEntityHandle> render_entities, Transform transform);
 
     auto name() const -> std::string_view;
+
+    auto type() const -> EntityType;
 
     auto set_name(std::string name) -> void;
 
@@ -94,6 +103,7 @@ class Entity
     auto set_parent_transform(const Transform &transform) -> void;
 
     std::string name_;
+    EntityType type_;
     std::vector<RenderEntityHandle> render_entities_;
     std::vector<RigidBodyHandle> rigid_bodies_;
     std::vector<RigidBodyHandle> ray_intersect_rigid_bodies_;

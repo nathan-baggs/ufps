@@ -12,8 +12,13 @@
 namespace ufps
 {
 
-Entity::Entity(std::string name, std::span<const RenderEntityHandle> render_entities, Transform transform)
+Entity::Entity(
+    std::string name,
+    EntityType type,
+    std::span<const RenderEntityHandle> render_entities,
+    Transform transform)
     : name_{std::move(name)}
+    , type_{type}
     , render_entities_{std::ranges::cbegin(render_entities), std::ranges::cend(render_entities)}
     , rigid_bodies_{}
     , ray_intersect_rigid_bodies_{}
@@ -29,6 +34,11 @@ Entity::Entity(std::string name, std::span<const RenderEntityHandle> render_enti
 auto Entity::name() const -> std::string_view
 {
     return name_;
+}
+
+auto Entity::type() const -> EntityType
+{
+    return type_;
 }
 
 auto Entity::set_name(std::string name) -> void
@@ -140,6 +150,7 @@ auto Entity::description() const -> Entity::Description
 
     return {
         .name = name_,
+        .type = type_,
         .emissive_strength = emissive_strength_,
         .transform = local_transform_,
         .aabb = aabb_,
