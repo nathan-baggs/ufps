@@ -128,8 +128,7 @@ auto create_services() -> std::unique_ptr<ufps::Services>
         std::make_unique<ufps::DebugLayer>(),
         std::make_unique<ufps::AudioManager>(*resource_loader),
         std::make_unique<ufps::ParticleManager>(),
-        std::move(resource_loader),
-        std::make_unique<ufps::EnemyManager>());
+        std::move(resource_loader));
     ufps::set_service(services.release());
 
     return services;
@@ -332,6 +331,7 @@ Game::Game()
     , debug_mode_{false}
     , allocation_tracker_{}
     , services_{create_services()}
+    , enemy_manager_{}
 {
     load_all_textures(default_sampler_);
     load_render_entity_manager();
@@ -394,13 +394,12 @@ auto Game::run() -> void
 
 auto Game::load_scene() -> void
 {
-    const auto &[rl, am, lm, em, ps, enm, rem, cm] = services<
+    const auto &[rl, am, lm, em, ps, rem, cm] = services<
         ResourceLoader,
         AudioManager,
         LightManager,
         EntityManager,
         PhysicsSystem,
-        EnemyManager,
         RenderEntityManager,
         CameraManager>();
 
@@ -458,7 +457,7 @@ auto Game::load_scene() -> void
         ps.create_meshes(BroadPhaseLayer::STATIC, ObjectLayer::ENEMIES, enemy_entity));
     scene_->add(enemy_entity);
 
-    enm.spawn(enemy_entity, 100.0f, ps.create_virtual_character_controller(), player_actor_.get());
+    enemy_manager_.spawn(enemy_entity, 100.0f, ps.create_virtual_character_controller(), player_actor_.get());
 
     renderer_ = std::make_unique<DebugRenderer>(window_, *player_actor_);
 
@@ -538,12 +537,11 @@ auto Game::pump_events() -> bool
 
 auto Game::update() -> bool
 {
-    const auto &[ps, pm, am, dl, enm, cm, em, rem] = services<
+    const auto &[ps, pm, am, dl, cm, em, rem] = services<
         PhysicsSystem,
         ParticleManager,
         AudioManager,
         DebugLayer,
-        EnemyManager,
         CameraManager,
         EntityManager,
         RenderEntityManager>();
@@ -593,7 +591,7 @@ auto Game::update() -> bool
                 }
                 else
                 {
-                    if (const auto enemy = enm[intersection->entity]; enemy)
+                    if (const auto enemy = enemy_manager_[intersection->entity]; enemy)
                     {
                         enemy->hit(bullet_ray, *intersection);
                     }
@@ -630,15 +628,15 @@ auto Game::update() -> bool
 
     if (!debug_mode_)
     {
-        enm.update(delta_);
+        enemy_manager_.update(delta_);
 
-        const auto dead_enemies = enm.yield_dead_enemies();
+        const auto dead_enemies = enemy_manager_.yield_dead_enemies();
         for (const auto enemy_handle : dead_enemies)
         {
-            const auto enemy = enm[enemy_handle];
+            const auto enemy = enemy_manager_[enemy_handle];
             contract_assert(enemy);
 
-            enm.despawn(enemy_handle);
+            enemy_manager_.despawn(enemy_handle);
 
             const auto entity_handle = enemy->entity();
             scene_->remove(entity_handle);
@@ -660,7 +658,8 @@ auto Game::update() -> bool
                     ps.create_meshes(BroadPhaseLayer::STATIC, ObjectLayer::ENEMIES, enemy_entity));
                 scene_->add(enemy_entity);
 
-                enm.spawn(enemy_entity, 100.0f, ps.create_virtual_character_controller(), player_actor_.get());
+                enemy_manager_.spawn(
+                    enemy_entity, 100.0f, ps.create_virtual_character_controller(), player_actor_.get());
             }
         }
     }
