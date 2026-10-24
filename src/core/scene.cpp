@@ -63,7 +63,6 @@ Scene::Scene(const Description &description)
 
         for (const auto &rb_description : entity_description.rigid_bodies)
         {
-            log::debug("rb");
             const auto rb = ps.create_rigid_body(rb_description, new_entity_handle);
             new_entity->add_rigid_body(rb);
         }
