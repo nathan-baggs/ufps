@@ -134,6 +134,7 @@ auto Scene::add(EntityHandle handle) -> void
     else
     {
         static_entities_.push_back(handle);
+        set_is_static_dirty();
     }
 }
 
@@ -194,6 +195,7 @@ auto Scene::remove(EntityHandle handle) -> void
     else
     {
         std::erase(static_entities_, handle);
+        set_is_static_dirty();
     };
 }
 

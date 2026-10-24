@@ -273,7 +273,7 @@ auto DebugRenderer::post_render(Scene &scene, const Camera &camera) -> void
     draw_render_targets();
     draw_metrics();
     draw_inspector(scene);
-    draw_gizmo(camera);
+    draw_gizmo(scene, camera);
     draw_player_info();
 
     static auto first = false;
@@ -929,6 +929,7 @@ auto DebugRenderer::draw_inspector(Scene &scene) -> void
                     if (::ImGui::Selectable(name.c_str(), false))
                     {
                         entity->add_render_entities(rem[name]);
+                        scene.set_is_static_dirty();
                     }
                 }
 
@@ -1292,7 +1293,7 @@ auto DebugRenderer::draw_inspector(Scene &scene) -> void
     }
 }
 
-auto DebugRenderer::draw_gizmo(const Camera &camera) -> void
+auto DebugRenderer::draw_gizmo(Scene &scene, const Camera &camera) -> void
 {
     const auto &[em, ps, lm, cm] = services<EntityManager, PhysicsSystem, LightManager, CameraManager>();
 
@@ -1326,6 +1327,7 @@ auto DebugRenderer::draw_gizmo(const Camera &camera) -> void
                 const auto local = inverse_parent * world_matrix;
 
                 entity->set_transform(local);
+                scene.set_is_static_dirty();
             }
         }
         else if (auto *selected_light = std::get_if<LightHandle>(&selected_))
