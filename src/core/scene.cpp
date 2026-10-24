@@ -37,12 +37,14 @@ namespace ufps
 
 Scene::Scene(const Description &description)
     : post_processing_options_{description.post_processing_options}
-    , entities_{}
+    , static_entities_{}
+    , dynamic_entities_{}
     , gun_{}
     , ambient_{description.ambient}
     , decals_{100zu}
     , next_decal_{std::ranges::begin(decals_)}
     , decals_full_{false}
+    , is_static_dirty_{false}
 {
     auto &&[em, rem, ps, lm, cm] =
         services<EntityManager, RenderEntityManager, PhysicsSystem, LightManager, CameraManager>();
@@ -51,7 +53,8 @@ Scene::Scene(const Description &description)
 
     for (const auto &entity_description : description.entities)
     {
-        const auto new_entity_handle = em.insert({entity_description.name, {}, entity_description.transform});
+        const auto new_entity_handle =
+            em.insert({entity_description.name, entity_description.type, {}, entity_description.transform});
 
         auto new_entity = em[new_entity_handle];
         new_entity->set_emissive_strength(entity_description.emissive_strength);
@@ -115,16 +118,33 @@ Scene::Scene(const Description &description)
             em[entity]->add_child(child_handle->second);
         }
     }
+
+    set_is_static_dirty();
 }
 
 auto Scene::add(EntityHandle handle) -> void
 {
-    entities_.push_back(handle);
+    const auto entity = service<EntityManager>()[handle];
+    contract_assert(entity);
+
+    if (entity->type() == EntityType::DYNAMIC)
+    {
+        dynamic_entities_.push_back(handle);
+    }
+    else
+    {
+        static_entities_.push_back(handle);
+    }
 }
 
-auto Scene::entities() const -> std::span<const EntityHandle>
+auto Scene::static_entities() const -> std::span<const EntityHandle>
 {
-    return entities_;
+    return static_entities_;
+}
+
+auto Scene::dynamic_entities() const -> std::span<const EntityHandle>
+{
+    return dynamic_entities_;
 }
 
 auto Scene::gun() const -> EntityHandle
@@ -136,9 +156,9 @@ auto Scene::description() -> Description
 {
     const auto &[em, cm] = services<EntityManager, CameraManager>();
 
-    auto entities = entities_ | std::views::filter([&](auto &e) { return !!em[e]; }) |
-                    std::views::transform([&](auto e) { return em[e]->description(); }) |
-                    std::ranges::to<std::vector>();
+    auto entities =
+        std::views::concat(static_entities_, dynamic_entities_) | std::views::filter([&](auto &e) { return !!em[e]; }) |
+        std::views::transform([&](auto e) { return em[e]->description(); }) | std::ranges::to<std::vector>();
 
     if (const auto gun = em[gun_]; gun)
     {
@@ -154,9 +174,6 @@ auto Scene::description() -> Description
 
 auto Scene::remove(EntityHandle handle) -> void
 {
-    const auto iter = std::ranges::find(entities_, handle);
-    contract_assert(iter != std::ranges::cend(entities_));
-
     const auto &[ps, cm, em] = services<PhysicsSystem, CameraManager, EntityManager>();
 
     const auto entity = em[handle];
@@ -170,7 +187,14 @@ auto Scene::remove(EntityHandle handle) -> void
         cm.remove(entity->camera());
     }
 
-    entities_.erase(iter);
+    if (entity->type() == EntityType::DYNAMIC)
+    {
+        std::erase(dynamic_entities_, handle);
+    }
+    else
+    {
+        std::erase(static_entities_, handle);
+    };
 }
 
 auto Scene::decals() const -> std::span<const Decal>
@@ -212,6 +236,16 @@ auto Scene::add_decal(const Transform &transform, std::string_view decal_texture
             next_decal_ = std::ranges::begin(decals_);
         }
     }
+}
+
+auto Scene::check_and_reset_static_dirty() -> bool
+{
+    return std::exchange(is_static_dirty_, false);
+}
+
+auto Scene::set_is_static_dirty() -> void
+{
+    is_static_dirty_ = true;
 }
 
 }

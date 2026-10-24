@@ -49,7 +49,11 @@ class Scene
 
     auto add(EntityHandle handle) -> void;
 
-    auto entities() const -> std::span<const EntityHandle>;
+    auto static_entities() const -> std::span<const EntityHandle>;
+
+    auto dynamic_entities() const -> std::span<const EntityHandle>;
+
+    auto all_entities() const;
 
     auto gun() const -> EntityHandle;
 
@@ -65,14 +69,20 @@ class Scene
 
     auto add_decal(const Transform &transform, std::string_view decal_texture) -> void;
 
+    auto check_and_reset_static_dirty() -> bool;
+
+    auto set_is_static_dirty() -> void;
+
   private:
     PostProcessingOptions post_processing_options_;
-    std::vector<EntityHandle> entities_;
+    std::vector<EntityHandle> static_entities_;
+    std::vector<EntityHandle> dynamic_entities_;
     EntityHandle gun_;
     Colour ambient_;
     std::vector<Decal> decals_;
     std::vector<Decal>::iterator next_decal_;
     bool decals_full_;
+    bool is_static_dirty_;
 };
 
 auto &Scene::ambient_light(this auto &&self)
@@ -83,6 +93,11 @@ auto &Scene::ambient_light(this auto &&self)
 auto &Scene::post_processing_options(this auto &&self)
 {
     return self.post_processing_options_;
+}
+
+inline auto Scene::all_entities() const
+{
+    return std::views::concat(static_entities(), dynamic_entities());
 }
 
 }
