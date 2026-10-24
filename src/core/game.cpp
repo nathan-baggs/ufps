@@ -599,18 +599,9 @@ auto Game::update() -> bool
                     }
                 }
 
-                pm.spawn_sparks(intersection->position, intersection->normal * Vector3{2.0f});
-                for (auto i = 0; i < 10; ++i)
-                {
-                    pm.spawn_sparks(
-                        intersection->position,
-                        intersection->normal +
-                            Vector3{
-                                random::rand_real(-0.5f, 0.5f),
-                                random::rand_real(-0.5f, 0.5f),
-                                random::rand_real(-0.5f, 0.5f)} *
-                                Vector3{2.0f});
-                }
+                pm.spawn_sparks(
+                    {.origin = intersection->position, .extent = intersection->normal * Vector3{2.0f}, .theta = 0.5f},
+                    10u);
             }
         }
     }
