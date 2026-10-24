@@ -1,55 +1,57 @@
 Description:
-  tone_map_options:
-    ToneMapOptions:
-      max_brightness: 56.611
-      contrast: 1.425
-      linear_section_start: 0.297
-      linear_section_length: 0.45
-      black_tightness: 1.344
-      pedestal: 0
-      gamma: 2.216
-  ssao_options:
-    SSAOOptions:
-      enabled: true
-      sample_count: 64
-      radius: 2
-      bias: 0.1
-      power: 1.495
-  exposure_options:
-    ExposureOptions:
-      min_log_luminance: -3
-      max_log_luminance: 1
-  fog_options:
-    FogOptions:
-      colour:
-        Colour:
-          r: 0
-          g: 0
-          b: 0
-      density: 0.054
-  chromatic_aberration_options:
-    ChromaticAberrationOptions:
-      red_offset: 0.009
-      green_offset: 0.006
-      blue_offset: -0.006
-      strength: 0.352
-  vignette_options:
-    VignetteOptions:
-      colour:
-        Colour:
-          r: 0
-          g: 0
-          b: 0
-      strength: 0.509
-      feather: 0.223
-  film_grain_options:
-    FilmGrainOptions:
-      strength: 0.004
-  bloom_options:
-    BloomOptions:
-      filter_radius: 0.014
-      mix_amount: 0.206
-      threshold: 0.488
+  post_processing_options:
+    PostProcessingOptions:
+      tone_map_options:
+        ToneMapOptions:
+          max_brightness: 56.611
+          contrast: 1.425
+          linear_section_start: 0.297
+          linear_section_length: 0.45
+          black_tightness: 1.344
+          pedestal: 0
+          gamma: 2.216
+      ssao_options:
+        SSAOOptions:
+          enabled: true
+          sample_count: 64
+          radius: 2
+          bias: 0.1
+          power: 1.495
+      exposure_options:
+        ExposureOptions:
+          min_log_luminance: -3
+          max_log_luminance: 1
+      fog_options:
+        FogOptions:
+          colour:
+            Colour:
+              r: 0
+              g: 0
+              b: 0
+          density: 0.054
+      chromatic_aberration_options:
+        ChromaticAberrationOptions:
+          red_offset: 0.009
+          green_offset: 0.006
+          blue_offset: -0.006
+          strength: 0.352
+      vignette_options:
+        VignetteOptions:
+          colour:
+            Colour:
+              r: 0
+              g: 0
+              b: 0
+          strength: 0.509
+          feather: 0.223
+      film_grain_options:
+        FilmGrainOptions:
+          strength: 0.004
+      bloom_options:
+        BloomOptions:
+          filter_radius: 0.014
+          mix_amount: 0.206
+          threshold: 0.488
   ambient:
     Colour:
       r: 0.1943574

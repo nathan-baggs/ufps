@@ -872,6 +872,8 @@ auto Renderer::execute_particle_pass(Duration delta) -> void
 
 auto Renderer::execute_bloom_pass([[maybe_unused]] Scene &scene) -> void
 {
+    const auto &options = scene.post_processing_options();
+
     auto src_width = light_pass_rt_.fb.width();
     auto src_height = light_pass_rt_.fb.height();
     auto src_handle = light_pass_rt_.colour_texture_bindless_handle_0;
@@ -887,7 +889,7 @@ auto Renderer::execute_bloom_pass([[maybe_unused]] Scene &scene) -> void
             ::glViewport(0, 0, mip.fb.width(), mip.fb.height());
 
             bloom_downsample_program_.set_uniforms(
-                src_handle, std::make_tuple(src_width, src_height), scene.bloom_options().threshold);
+                src_handle, std::make_tuple(src_width, src_height), options.bloom_options.threshold);
 
             const auto [vertex_buffer_handle, index_buffer_handle] = service<MeshManager>().native_handle();
             ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, vertex_buffer_handle);
@@ -915,7 +917,7 @@ auto Renderer::execute_bloom_pass([[maybe_unused]] Scene &scene) -> void
 
             ::glViewport(0, 0, mip.fb.width(), mip.fb.height());
 
-            bloom_upsample_program_.set_uniforms(src_handle, scene.bloom_options().filter_radius);
+            bloom_upsample_program_.set_uniforms(src_handle, options.bloom_options.filter_radius);
 
             const auto [vertex_buffer_handle, index_buffer_handle] = service<MeshManager>().native_handle();
             ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, vertex_buffer_handle);
@@ -946,8 +948,8 @@ auto Renderer::execute_bloom_pass([[maybe_unused]] Scene &scene) -> void
         bloom_mix_program_.set_uniforms(
             mip.colour_texture_bindless_handle_0,
             light_pass_rt_.colour_texture_bindless_handle_0,
-            scene.bloom_options().mix_amount,
-            scene.bloom_options().filter_radius);
+            options.bloom_options.mix_amount,
+            options.bloom_options.filter_radius);
 
         const auto [vertex_buffer_handle, index_buffer_handle] = service<MeshManager>().native_handle();
         ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, vertex_buffer_handle);
@@ -963,6 +965,8 @@ auto Renderer::execute_bloom_pass([[maybe_unused]] Scene &scene) -> void
 
 auto Renderer::execute_luminance_histogram_pass(Scene &scene) -> void
 {
+    const auto &options = scene.post_processing_options();
+
     const auto auto_bind = AutoBind{luminance_histogram_program_};
 
     const auto zero = ::GLuint{0};
@@ -973,8 +977,8 @@ auto Renderer::execute_luminance_histogram_pass(Scene &scene) -> void
 
     luminance_histogram_program_.set_uniforms(
         light_pass_rt_.colour_texture_bindless_handle_0,
-        scene.exposure_options().min_log_luminance,
-        1.0f / (scene.exposure_options().max_log_luminance - scene.exposure_options().min_log_luminance));
+        options.exposure_options.min_log_luminance,
+        1.0f / (options.exposure_options.max_log_luminance - options.exposure_options.min_log_luminance));
 
     ::glDispatchCompute(
         static_cast<std::uint32_t>(light_pass_rt_.fb.width() + 15) / 16,
@@ -986,6 +990,8 @@ auto Renderer::execute_luminance_histogram_pass(Scene &scene) -> void
 
 auto Renderer::execute_average_luminance_pass(Scene &scene) -> void
 {
+    const auto &options = scene.post_processing_options();
+
     static auto delta_time = 1.0f / 60.0f;
 
     const auto auto_bind = AutoBind{average_luminance_program_};
@@ -994,8 +1000,8 @@ auto Renderer::execute_average_luminance_pass(Scene &scene) -> void
     ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, average_luminance_buffer_.native_handle());
 
     average_luminance_program_.set_uniforms(
-        scene.exposure_options().min_log_luminance,
-        scene.exposure_options().max_log_luminance - scene.exposure_options().min_log_luminance,
+        options.exposure_options.min_log_luminance,
+        options.exposure_options.max_log_luminance - options.exposure_options.min_log_luminance,
         std::clamp(1.0f - std::exp(-delta_time * 3.0f), 0.0f, 1.0f),
         static_cast<float>(light_pass_rt_.fb.width() * light_pass_rt_.fb.height()));
 
@@ -1006,7 +1012,9 @@ auto Renderer::execute_average_luminance_pass(Scene &scene) -> void
 
 auto Renderer::execute_ssao_pass(Scene &scene) -> void
 {
-    if (!scene.ssao_options().enabled)
+    const auto &options = scene.post_processing_options();
+
+    if (!options.ssao_options.enabled)
     {
         ::glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
         ssao_blur_rt_.fb.bind();
@@ -1031,10 +1039,10 @@ auto Renderer::execute_ssao_pass(Scene &scene) -> void
             gbuffer_rt_.colour_texture_bindless_handle_2,
             static_cast<float>(ssao_rt_.fb.width()),
             static_cast<float>(ssao_rt_.fb.height()),
-            scene.ssao_options().sample_count,
-            scene.ssao_options().radius,
-            scene.ssao_options().bias,
-            scene.ssao_options().power,
+            options.ssao_options.sample_count,
+            options.ssao_options.radius,
+            options.ssao_options.bias,
+            options.ssao_options.power,
             ssao_noise_texture_bindless_handle_);
         ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, vertex_buffer_handle);
         ::glBindBufferRange(
@@ -1079,6 +1087,8 @@ auto Renderer::execute_ssao_pass(Scene &scene) -> void
 
 auto Renderer::execute_tone_mapping_pass(Scene &scene) -> void
 {
+    const auto &options = scene.post_processing_options();
+
     const auto [vertex_buffer_handle, index_buffer_handle] = service<MeshManager>().native_handle();
 
     tone_map_rt_.fb.bind();
@@ -1088,17 +1098,17 @@ auto Renderer::execute_tone_mapping_pass(Scene &scene) -> void
 
     tone_map_program_.set_uniforms(
         bloom_rt_.colour_texture_bindless_handle_0,
-        scene.tone_map_options().max_brightness,
-        scene.tone_map_options().contrast,
-        scene.tone_map_options().linear_section_start,
-        scene.tone_map_options().linear_section_length,
-        scene.tone_map_options().black_tightness,
-        scene.tone_map_options().pedestal,
-        scene.tone_map_options().gamma,
+        options.tone_map_options.max_brightness,
+        options.tone_map_options.contrast,
+        options.tone_map_options.linear_section_start,
+        options.tone_map_options.linear_section_length,
+        options.tone_map_options.black_tightness,
+        options.tone_map_options.pedestal,
+        options.tone_map_options.gamma,
         ssao_blur_rt_.colour_texture_bindless_handle_0,
         gbuffer_rt_.colour_texture_bindless_handle_2,
-        scene.fog_options().colour,
-        scene.fog_options().density,
+        options.fog_options.colour,
+        options.fog_options.density,
         gbuffer_rt_.colour_texture_bindless_handle_1);
     ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, vertex_buffer_handle);
     ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, average_luminance_buffer_.native_handle());
@@ -1119,6 +1129,8 @@ auto Renderer::execute_tone_mapping_pass(Scene &scene) -> void
 
 auto Renderer::execute_chromatic_aberration_pass(Scene &scene) -> void
 {
+    const auto &options = scene.post_processing_options();
+
     static const auto start = std::chrono::steady_clock::now();
     const auto elapsed =
         std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start);
@@ -1132,14 +1144,14 @@ auto Renderer::execute_chromatic_aberration_pass(Scene &scene) -> void
 
     chromatic_aberration_program_.set_uniforms(
         tone_map_rt_.colour_texture_bindless_handle_0,
-        scene.chromatic_aberration_options().red_offset,
-        scene.chromatic_aberration_options().green_offset,
-        scene.chromatic_aberration_options().blue_offset,
-        scene.chromatic_aberration_options().strength,
-        scene.vignette_options().colour,
-        scene.vignette_options().strength,
-        scene.vignette_options().feather,
-        scene.film_grain_options().strength,
+        options.chromatic_aberration_options.red_offset,
+        options.chromatic_aberration_options.green_offset,
+        options.chromatic_aberration_options.blue_offset,
+        options.chromatic_aberration_options.strength,
+        options.vignette_options.colour,
+        options.vignette_options.strength,
+        options.vignette_options.feather,
+        options.film_grain_options.strength,
         static_cast<float>(elapsed.count()));
     ::glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, vertex_buffer_handle);
     ::glBindBuffer(GL_DRAW_INDIRECT_BUFFER, post_processing_command_buffer_.native_handle());

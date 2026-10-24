@@ -417,6 +417,8 @@ auto DebugRenderer::set_enabled(bool enabled) -> void
 
 auto DebugRenderer::draw_post_processing_window(Scene &scene) -> void
 {
+    auto &options = scene.post_processing_options();
+
     if (::ImGui::Begin("Post Processing"))
     {
         ::ImGui::PushID("post_processing");
@@ -427,13 +429,13 @@ auto DebugRenderer::draw_post_processing_window(Scene &scene) -> void
         {
             ::ImGui::PushID("tone_map_options");
 
-            create_debug_controller("max_brightness", scene.tone_map_options().max_brightness);
-            create_debug_controller("contrast", scene.tone_map_options().contrast);
-            create_debug_controller("linear_section_start", scene.tone_map_options().linear_section_start);
-            create_debug_controller("linear_section_length", scene.tone_map_options().linear_section_length);
-            create_debug_controller("black_tightness", scene.tone_map_options().black_tightness);
-            create_debug_controller("pedestal", scene.tone_map_options().pedestal);
-            create_debug_controller("gamma", scene.tone_map_options().gamma);
+            create_debug_controller("max_brightness", options.tone_map_options.max_brightness);
+            create_debug_controller("contrast", options.tone_map_options.contrast);
+            create_debug_controller("linear_section_start", options.tone_map_options.linear_section_start);
+            create_debug_controller("linear_section_length", options.tone_map_options.linear_section_length);
+            create_debug_controller("black_tightness", options.tone_map_options.black_tightness);
+            create_debug_controller("pedestal", options.tone_map_options.pedestal);
+            create_debug_controller("gamma", options.tone_map_options.gamma);
 
             ::ImGui::PopID();
         }
@@ -442,11 +444,11 @@ auto DebugRenderer::draw_post_processing_window(Scene &scene) -> void
         {
             ::ImGui::PushID("ssao_options");
 
-            ::ImGui::Checkbox("enabled", std::addressof(scene.ssao_options().enabled));
-            create_debug_controller("sample_count", scene.ssao_options().sample_count);
-            create_debug_controller("radius", scene.ssao_options().radius);
-            create_debug_controller("bias", scene.ssao_options().bias);
-            create_debug_controller("power", scene.ssao_options().power);
+            ::ImGui::Checkbox("enabled", std::addressof(options.ssao_options.enabled));
+            create_debug_controller("sample_count", options.ssao_options.sample_count);
+            create_debug_controller("radius", options.ssao_options.radius);
+            create_debug_controller("bias", options.ssao_options.bias);
+            create_debug_controller("power", options.ssao_options.power);
 
             ::ImGui::PopID();
         }
@@ -455,9 +457,9 @@ auto DebugRenderer::draw_post_processing_window(Scene &scene) -> void
         {
             ::ImGui::PushID("bloom_options");
 
-            create_debug_controller("filter_radius", scene.bloom_options().filter_radius);
-            create_debug_controller("mix_amount", scene.bloom_options().mix_amount);
-            create_debug_controller("threshold", scene.bloom_options().threshold);
+            create_debug_controller("filter_radius", options.bloom_options.filter_radius);
+            create_debug_controller("mix_amount", options.bloom_options.mix_amount);
+            create_debug_controller("threshold", options.bloom_options.threshold);
 
             ::ImGui::PopID();
         }
@@ -466,8 +468,8 @@ auto DebugRenderer::draw_post_processing_window(Scene &scene) -> void
         {
             ::ImGui::PushID("fog_options");
 
-            create_debug_controller("colour", scene.fog_options().colour);
-            create_debug_controller("density", scene.fog_options().density);
+            create_debug_controller("colour", options.fog_options.colour);
+            create_debug_controller("density", options.fog_options.density);
 
             ::ImGui::PopID();
         }
@@ -476,10 +478,10 @@ auto DebugRenderer::draw_post_processing_window(Scene &scene) -> void
         {
             ::ImGui::PushID("chromatic_aberration_options");
 
-            create_debug_controller("red", scene.chromatic_aberration_options().red_offset);
-            create_debug_controller("green", scene.chromatic_aberration_options().green_offset);
-            create_debug_controller("blue", scene.chromatic_aberration_options().blue_offset);
-            create_debug_controller("strength", scene.chromatic_aberration_options().strength);
+            create_debug_controller("red", options.chromatic_aberration_options.red_offset);
+            create_debug_controller("green", options.chromatic_aberration_options.green_offset);
+            create_debug_controller("blue", options.chromatic_aberration_options.blue_offset);
+            create_debug_controller("strength", options.chromatic_aberration_options.strength);
 
             ::ImGui::PopID();
         }
@@ -488,9 +490,9 @@ auto DebugRenderer::draw_post_processing_window(Scene &scene) -> void
         {
             ::ImGui::PushID("vignette_options");
 
-            create_debug_controller("colour", scene.vignette_options().colour);
-            create_debug_controller("strength", scene.vignette_options().strength);
-            create_debug_controller("feather", scene.vignette_options().feather);
+            create_debug_controller("colour", options.vignette_options.colour);
+            create_debug_controller("strength", options.vignette_options.strength);
+            create_debug_controller("feather", options.vignette_options.feather);
 
             ::ImGui::PopID();
         }
@@ -499,7 +501,7 @@ auto DebugRenderer::draw_post_processing_window(Scene &scene) -> void
         {
             ::ImGui::PushID("film_grain_options");
 
-            create_debug_controller("strength", scene.film_grain_options().strength);
+            create_debug_controller("strength", options.film_grain_options.strength);
 
             ::ImGui::PopID();
         }
