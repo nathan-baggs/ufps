@@ -495,7 +495,7 @@ auto Game::pump_events() -> bool
                         ufps::log::info("stopping");
                         quit_key_pressed = true;
                     }
-                    if (arg == ufps::KeyEvent{ufps::Key::F1, ufps::KeyState::DOWN})
+                    if (arg == ufps::KeyEvent{ufps::Key::TAB, ufps::KeyState::DOWN})
                     {
                         debug_mode_ = !debug_mode_;
                         ::ShowCursor(debug_mode_);
