@@ -15,7 +15,7 @@ auto EnemyManager::despawn(EnemyHandle handle) -> void
     contract_assert(enemy);
 
     auto &ps = service<PhysicsSystem>();
-    ps.remove_virtual_character_controller(enemy->character_controller());
+    ps.remove(enemy->character_controller());
 
     enemies_.remove(handle);
 }

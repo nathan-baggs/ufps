@@ -47,7 +47,7 @@ auto Entity::add_render_entities(std::span<const RenderEntityHandle> render_enti
     aabb_ = create_aabb(render_entities_);
 }
 
-auto Entity::remove_render_entity(RenderEntityHandle handle) -> void
+auto Entity::remove(RenderEntityHandle handle) -> void
 {
     std::erase(render_entities_, handle);
 }
@@ -85,7 +85,7 @@ auto Entity::set_emissive_strength(float strength) -> void
 auto Entity::add_rigid_body(RigidBodyHandle handle) -> void
 {
     rigid_bodies_.push_back(handle);
-    service<PhysicsSystem>().rigid_body(handle)->set_parent_transform(transform_);
+    service<PhysicsSystem>()[handle]->set_parent_transform(transform_);
 }
 
 auto Entity::set_ray_intersect_rigid_bodies(std::vector<RigidBodyHandle> handles) -> void
@@ -143,7 +143,7 @@ auto Entity::description() const -> Entity::Description
         .emissive_strength = emissive_strength_,
         .transform = local_transform_,
         .aabb = aabb_,
-        .rigid_bodies = rigid_bodies_ | std::views::transform([&](auto e) { return ps.rigid_body(e); }) |
+        .rigid_bodies = rigid_bodies_ | std::views::transform([&](auto e) { return ps[e]; }) |
                         std::views::filter([](const auto &e) { return !!e; }) |
                         std::views::transform([](const auto &e) { return e->description(); }) |
                         std::ranges::to<std::vector>(),
@@ -171,11 +171,11 @@ auto Entity::set_transform(const Transform &transform) -> void
     }
 
     rigid_bodies_ =
-        rigid_bodies_ | std::views::filter([&](auto e) { return !!ps.rigid_body(e); }) | std::ranges::to<std::vector>();
+        rigid_bodies_ | std::views::filter([&](auto e) { return !!ps[e]; }) | std::ranges::to<std::vector>();
 
     for (const auto handle : rigid_bodies_)
     {
-        ps.rigid_body(handle)->set_parent_transform(transform_);
+        ps[handle]->set_parent_transform(transform_);
     }
 
     if (camera_)
@@ -211,7 +211,7 @@ auto Entity::update_transforms(const Transform &local, const Transform &parent) 
 
     for (auto rb_handle : std::views::concat(rigid_bodies_, ray_intersect_rigid_bodies_))
     {
-        if (const auto &rb = ps.rigid_body(rb_handle); rb)
+        if (const auto &rb = ps[rb_handle]; rb)
         {
             rb->set_parent_transform(transform_);
         }

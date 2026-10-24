@@ -49,7 +49,7 @@ class Entity
 
     auto add_render_entities(std::span<const RenderEntityHandle> render_entities) -> void;
 
-    auto remove_render_entity(RenderEntityHandle handle) -> void //
+    auto remove(RenderEntityHandle handle) -> void //
         pre(std::ranges::contains(render_entities_, handle));
 
     auto transform() const -> const Transform &;

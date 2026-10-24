@@ -254,9 +254,9 @@ auto PhysicsSystem::create_rigid_body(const RigidBody::Description &description,
     return handle;
 }
 
-auto PhysicsSystem::remove_rigid_body(RigidBodyHandle handle) -> void
+auto PhysicsSystem::remove(RigidBodyHandle handle) -> void
 {
-    const auto &rb = rigid_body(handle);
+    const auto &rb = (*this)[handle];
     contract_assert(rb);
 
     physics_system_.GetBodyInterface().RemoveBody(rb->native_handle());
@@ -264,11 +264,11 @@ auto PhysicsSystem::remove_rigid_body(RigidBodyHandle handle) -> void
     rigid_bodies_.remove(handle);
 }
 
-auto PhysicsSystem::remove_rigid_bodies(std::span<RigidBodyHandle> handles) -> void
+auto PhysicsSystem::remove(std::span<RigidBodyHandle> handles) -> void
 {
     for (const auto handle : handles)
     {
-        remove_rigid_body(handle);
+        remove(handle);
     }
 }
 
@@ -280,14 +280,14 @@ auto PhysicsSystem::create_virtual_character_controller() -> VirtualCharacterCon
     return controller;
 }
 
-auto PhysicsSystem::remove_virtual_character_controller(VirtualCharacterControllerHandle handle) -> void
+auto PhysicsSystem::remove(VirtualCharacterControllerHandle handle) -> void
 {
     character_controllers_.remove(handle);
 }
 
-auto PhysicsSystem::duplicate_rigid_body(RigidBodyHandle handle) -> RigidBodyHandle
+auto PhysicsSystem::duplicate(RigidBodyHandle handle) -> RigidBodyHandle
 {
-    const auto &rb = rigid_body(handle);
+    const auto &rb = (*this)[handle];
     contract_assert(rb);
 
     const auto handle_pair = std::bit_cast<HandlePair>(rb->user_data());

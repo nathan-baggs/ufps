@@ -28,7 +28,7 @@ Enemy::Enemy(
     , hit_cooldown_{}
 {
     const auto &[ps] = services<PhysicsSystem>();
-    const auto controller = ps.virtual_character_controller(character_controller_handle_);
+    const auto controller = ps[character_controller_handle_];
     ensure(controller, "missing character controller");
 
     controller->set_position(transform().position);
@@ -48,7 +48,7 @@ auto Enemy::change_health(float delta) -> float
 auto Enemy::update(Duration delta) -> void
 {
     const auto &[ps] = services<PhysicsSystem>();
-    auto controller = ps.virtual_character_controller(character_controller_handle_);
+    auto controller = ps[character_controller_handle_];
     contract_assert(controller);
 
     auto transform = this->transform();

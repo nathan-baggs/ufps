@@ -214,7 +214,7 @@ auto DebugRenderer::post_render(Scene &scene, const Camera &camera) -> void
 
     if (highlight_rigid_body_)
     {
-        const auto rb = ps.rigid_body(highlight_rigid_body_);
+        const auto rb = ps[highlight_rigid_body_];
         contract_assert(rb);
         dl.push_aabb({.min = {-1.0f}, .max = {1.0f}}, rb->transform(), colours::magenta);
     }
@@ -1012,7 +1012,7 @@ auto DebugRenderer::draw_inspector(Scene &scene) -> void
 
                 if (to_delete)
                 {
-                    entity->remove_render_entity(to_delete);
+                    entity->remove(to_delete);
                 }
 
                 highlight_render_entity_ = to_highlight;
@@ -1077,12 +1077,12 @@ auto DebugRenderer::draw_inspector(Scene &scene) -> void
 
                 if (to_delete)
                 {
-                    service<PhysicsSystem>().remove_rigid_body(to_delete);
+                    service<PhysicsSystem>().remove(to_delete);
                 }
 
                 if (to_duplicate)
                 {
-                    const auto handle = ps.duplicate_rigid_body(to_duplicate);
+                    const auto handle = ps.duplicate(to_duplicate);
                     entity->add_rigid_body(handle);
                     selected_ = handle;
                 }
@@ -1350,7 +1350,7 @@ auto DebugRenderer::draw_gizmo(const Camera &camera) -> void
         }
         else if (auto *selected_rigid_body = std::get_if<RigidBodyHandle>(&selected_))
         {
-            if (auto rigid_body = ps.rigid_body(*selected_rigid_body); rigid_body)
+            if (auto rigid_body = ps[*selected_rigid_body]; rigid_body)
             {
                 auto &rb = *rigid_body;
 

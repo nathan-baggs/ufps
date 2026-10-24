@@ -349,8 +349,8 @@ constexpr auto Scene::remove(EntityHandle handle) -> void
     const auto entity = em[handle];
     contract_assert(entity);
 
-    ps.remove_rigid_bodies(entity->rigid_bodies());
-    ps.remove_rigid_bodies(entity->ray_intersect_rigid_bodies());
+    ps.remove(entity->rigid_bodies());
+    ps.remove(entity->ray_intersect_rigid_bodies());
 
     if (entity->camera())
     {

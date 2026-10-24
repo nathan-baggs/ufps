@@ -579,7 +579,7 @@ auto Game::update() -> bool
         {
             if (intersection->distance < max_distance)
             {
-                const auto rb = ps.rigid_body(intersection->body);
+                const auto rb = ps[intersection->body];
                 const auto hit_enemy = rb && rb->object_layer() == ObjectLayer::ENEMIES;
 
                 if (!hit_enemy)
@@ -612,7 +612,7 @@ auto Game::update() -> bool
         {
             fire_cone_colour = colours::yellow;
 
-            const auto rb = ps.rigid_body(gun_ray_intersection->body);
+            const auto rb = ps[gun_ray_intersection->body];
             if (rb && rb->object_layer() == ObjectLayer::ENEMIES)
             {
                 fire_cone_colour = colours::red;

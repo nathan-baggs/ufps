@@ -116,7 +116,7 @@ auto PlayerActor::update(Duration delta) -> void
     pitch_ += mouse_delta;
     yaw_ -= input_map_.delta_x;
 
-    auto character_controller = ps.virtual_character_controller(character_controller_handle_);
+    auto character_controller = ps[character_controller_handle_];
     contract_assert(character_controller);
 
     character_controller->set_walk_direction(walk_direction(input_map_, *camera));

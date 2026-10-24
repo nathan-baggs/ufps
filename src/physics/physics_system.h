@@ -55,19 +55,19 @@ class PhysicsSystem : public ::JPH::ContactListener
 
     auto create_rigid_body(const RigidBody::Description &description, EntityHandle entity) -> RigidBodyHandle;
 
-    auto remove_rigid_body(RigidBodyHandle handle) -> void;
+    auto remove(RigidBodyHandle handle) -> void;
 
-    auto remove_rigid_bodies(std::span<RigidBodyHandle> handles) -> void;
+    auto remove(std::span<RigidBodyHandle> handles) -> void;
 
     auto create_virtual_character_controller() -> VirtualCharacterControllerHandle;
 
-    auto remove_virtual_character_controller(VirtualCharacterControllerHandle handle) -> void;
+    auto remove(VirtualCharacterControllerHandle handle) -> void;
 
-    auto duplicate_rigid_body(RigidBodyHandle handle) -> RigidBodyHandle;
+    auto duplicate(RigidBodyHandle handle) -> RigidBodyHandle;
 
-    constexpr auto rigid_body(this auto &&self, RigidBodyHandle handle);
+    auto operator[](this auto &&self, RigidBodyHandle);
 
-    constexpr auto virtual_character_controller(this auto &&self, VirtualCharacterControllerHandle handle);
+    auto operator[](this auto &&self, VirtualCharacterControllerHandle);
 
     auto update() -> void;
 
@@ -92,12 +92,12 @@ class PhysicsSystem : public ::JPH::ContactListener
     std::unordered_map<MeshView, ::JPH::Ref<::JPH::Shape>> mesh_shape_cache_;
 };
 
-constexpr auto PhysicsSystem::rigid_body(this auto &&self, RigidBodyHandle handle)
+auto PhysicsSystem::operator[](this auto &&self, RigidBodyHandle handle)
 {
     return self.rigid_bodies_[handle];
 }
 
-constexpr auto PhysicsSystem::virtual_character_controller(this auto &&self, VirtualCharacterControllerHandle handle)
+auto PhysicsSystem::operator[](this auto &&self, VirtualCharacterControllerHandle handle)
 {
     return self.character_controllers_[handle];
 }
