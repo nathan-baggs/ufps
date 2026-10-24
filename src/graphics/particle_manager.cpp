@@ -30,13 +30,8 @@ auto ParticleManager::spawn_sparks(const Vector3 &position, const Vector3 &veloc
     }
 }
 
-auto ParticleManager::particles() const -> std::span<const Particle>
-{
-    return particles_;
-}
 
-auto ParticleManager::particles() -> std::span<Particle>
-{
-    return particles_;
+        }
+    }
 }
 }

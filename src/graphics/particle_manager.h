@@ -23,8 +23,12 @@ class ParticleManager
 
     auto spawn_sparks(const Vector3 &position, const Vector3 &velocity) -> void;
 
-    auto particles() const -> std::span<const Particle>;
-    auto particles() -> std::span<Particle>;
+    template <class Self>
+    auto particles(this Self &&self)
+    {
+        using SpanType = std::conditional_t<std::is_const_v<std::remove_reference_t<Self>>, const Particle, Particle>;
+        return std::span<SpanType>(self.particles_);
+    }
 
   private:
     std::vector<Particle> particles_;
