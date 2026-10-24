@@ -2,17 +2,51 @@
 
 #include <ranges>
 
+#include "core/camera_manager.h"
 #include "core/clock.h"
+#include "core/entity_manager.h"
+#include "core/render_entity_manager.h"
+#include "core/scene.h"
 #include "core/service_locator.h"
 #include "game/enemy.h"
+#include "graphics/window.h"
 #include "physics/physics_system.h"
 
 namespace ufps
 {
-auto EnemyManager::despawn(EnemyHandle handle) -> void
+
+auto EnemyManager::spawn(
+    const Transform &transform,
+    float health,
+    PlayerActor *player,
+    Scene &scene,
+    const Window &window) -> EnemyHandle
+{
+    const auto &[ps, cm, em, rem] = services<PhysicsSystem, CameraManager, EntityManager, RenderEntityManager>();
+
+    const auto enemy_camera_handle = cm.insert(
+        {{},
+         std::numbers::pi_v<float> / 4.0f,
+         static_cast<float>(window.window_width()),
+         static_cast<float>(window.window_height()),
+         0.1f,
+         100.0f});
+    const auto enemy_entity = em.insert({"enemy", rem["cube"], transform});
+    em[enemy_entity]->set_camera(enemy_camera_handle);
+    em[enemy_entity]->set_ray_intersect_rigid_bodies(
+        ps.create_meshes(BroadPhaseLayer::STATIC, ObjectLayer::ENEMIES, enemy_entity));
+    scene.add(enemy_entity);
+
+    return enemies_.emplace(enemy_entity, health, ps.create_virtual_character_controller(), player);
+}
+
+auto EnemyManager::despawn(EnemyHandle handle, Scene &scene) -> void
 {
     const auto enemy = enemies_[handle];
     contract_assert(enemy);
+
+    const auto entity_handle = enemy->entity();
+    scene.remove(entity_handle);
 
     auto &ps = service<PhysicsSystem>();
     ps.remove(enemy->character_controller());

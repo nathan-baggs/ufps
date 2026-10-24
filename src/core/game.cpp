@@ -444,20 +444,7 @@ auto Game::load_scene() -> void
     current_actor_ = player_actor_.get();
 
     const auto enemy_transform = Transform{{0.0f, 2.0f, -10.0f}, {0.5f, 2.0f, 0.5f}, {}};
-    const auto enemy_camera_handle = cm.insert(
-        {{},
-         std::numbers::pi_v<float> / 4.0f,
-         static_cast<float>(window_.window_width()),
-         static_cast<float>(window_.window_height()),
-         0.1f,
-         100.0f});
-    const auto enemy_entity = em.insert({"enemy", rem["cube"], enemy_transform});
-    em[enemy_entity]->set_camera(enemy_camera_handle);
-    em[enemy_entity]->set_ray_intersect_rigid_bodies(
-        ps.create_meshes(BroadPhaseLayer::STATIC, ObjectLayer::ENEMIES, enemy_entity));
-    scene_->add(enemy_entity);
-
-    enemy_manager_.spawn(enemy_entity, 100.0f, ps.create_virtual_character_controller(), player_actor_.get());
+    enemy_manager_.spawn(enemy_transform, 100.0f, player_actor_.get(), *scene_, window_);
 
     renderer_ = std::make_unique<DebugRenderer>(window_, *player_actor_);
 
@@ -537,14 +524,7 @@ auto Game::pump_events() -> bool
 
 auto Game::update() -> bool
 {
-    const auto &[ps, pm, am, dl, cm, em, rem] = services<
-        PhysicsSystem,
-        ParticleManager,
-        AudioManager,
-        DebugLayer,
-        CameraManager,
-        EntityManager,
-        RenderEntityManager>();
+    const auto &[ps, pm, am, dl] = services<PhysicsSystem, ParticleManager, AudioManager, DebugLayer>();
 
     current_actor_->update(delta_);
 
@@ -633,33 +613,14 @@ auto Game::update() -> bool
         const auto dead_enemies = enemy_manager_.yield_dead_enemies();
         for (const auto enemy_handle : dead_enemies)
         {
-            const auto enemy = enemy_manager_[enemy_handle];
-            contract_assert(enemy);
-
-            enemy_manager_.despawn(enemy_handle);
-
-            const auto entity_handle = enemy->entity();
-            scene_->remove(entity_handle);
+            enemy_manager_.despawn(enemy_handle, *scene_);
 
             for (auto i = 0; i < 1; i++)
             {
                 const auto enemy_transform = Transform{
                     {random::rand_real(-30.0f, 30.0f), 2.0f, random::rand_real(-30.0f, 30.0f)}, {0.5f, 2.0f, 0.5f}, {}};
-                const auto enemy_camera_handle = cm.insert(
-                    {{},
-                     std::numbers::pi_v<float> / 4.0f,
-                     static_cast<float>(window_.window_width()),
-                     static_cast<float>(window_.window_height()),
-                     0.1f,
-                     100.0f});
-                const auto enemy_entity = em.insert({"enemy", rem["cube"], enemy_transform});
-                em[enemy_entity]->set_camera(enemy_camera_handle);
-                em[enemy_entity]->set_ray_intersect_rigid_bodies(
-                    ps.create_meshes(BroadPhaseLayer::STATIC, ObjectLayer::ENEMIES, enemy_entity));
-                scene_->add(enemy_entity);
 
-                enemy_manager_.spawn(
-                    enemy_entity, 100.0f, ps.create_virtual_character_controller(), player_actor_.get());
+                enemy_manager_.spawn(enemy_transform, 100.0f, player_actor_.get(), *scene_, window_);
             }
         }
     }
