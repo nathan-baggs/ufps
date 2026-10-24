@@ -28,6 +28,7 @@
 #include "events/key_event.h"
 #include "events/mouse_button_event.h"
 #include "events/mouse_event.h"
+#include "events/mouse_wheel_event.h"
 #include "game/enemy.h"
 #include "game/enemy_manager.h"
 #include "graphics/colour.h"
@@ -507,6 +508,10 @@ auto Game::pump_events() -> bool
                 {
                     input_map_.mouse_down = arg.state() == MouseButtonState::DOWN;
                     renderer_->add_mouse_event(arg);
+                }
+                else if constexpr (std::same_as<T, ufps::MouseWheelEvent>)
+                {
+                    renderer_->add_mouse_wheel_event(arg);
                 }
             },
             *event);

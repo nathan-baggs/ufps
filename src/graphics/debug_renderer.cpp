@@ -409,6 +409,12 @@ auto DebugRenderer::add_key_event(const KeyEvent &evt) -> void
     }
 }
 
+auto DebugRenderer::add_mouse_wheel_event(const MouseWheelEvent &evt) -> void
+{
+    auto &io = ::ImGui::GetIO();
+    io.AddMouseWheelEvent(0.0f, evt.delta_y());
+}
+
 auto DebugRenderer::set_enabled(bool enabled) -> void
 {
     enabled_ = enabled;

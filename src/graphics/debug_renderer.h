@@ -12,6 +12,7 @@
 #include "core/scene.h"
 #include "events/key_event.h"
 #include "events/mouse_button_event.h"
+#include "events/mouse_wheel_event.h"
 #include "graphics/line_data.h"
 #include "graphics/point_light.h"
 #include "graphics/renderer.h"
@@ -30,6 +31,7 @@ class DebugRenderer : public Renderer
 
     auto add_mouse_event(const MouseButtonEvent &evt) -> void;
     auto add_key_event(const KeyEvent &evt) -> void;
+    auto add_mouse_wheel_event(const MouseWheelEvent &evt) -> void;
 
     auto set_enabled(bool enabled) -> void;
 
