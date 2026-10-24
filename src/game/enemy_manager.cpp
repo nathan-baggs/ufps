@@ -31,7 +31,7 @@ auto EnemyManager::spawn(
          static_cast<float>(window.window_height()),
          0.1f,
          100.0f});
-    const auto enemy_entity = em.insert({"enemy", rem["cube"], transform});
+    const auto enemy_entity = em.insert({"enemy", EntityType::DYNAMIC, rem["cube"], transform});
     em[enemy_entity]->set_camera(enemy_camera_handle);
     em[enemy_entity]->set_ray_intersect_rigid_bodies(
         ps.create_meshes(BroadPhaseLayer::STATIC, ObjectLayer::ENEMIES, enemy_entity));

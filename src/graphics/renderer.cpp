@@ -132,7 +132,7 @@ auto create_render_target(
 
 auto create_sprite() -> ufps::Entity
 {
-    return {"post_process_sprite", ufps::service<ufps::RenderEntityManager>()["sprite"], {}};
+    return {"post_process_sprite", ufps::EntityType::STATIC, ufps::service<ufps::RenderEntityManager>()["sprite"], {}};
 }
 
 auto create_ssao_noise_texture(const ufps::Sampler &sampler) -> std::uint64_t
@@ -187,13 +187,15 @@ namespace ufps
 Renderer::Renderer(const Window &window)
     : window_{window}
     , dummy_vao_{0u, [](auto e) { ::glDeleteVertexArrays(1u, &e); }}
-    , command_buffer_{"gbuffer_command_buffer"}
+    , static_command_buffer_{"gbuffer_static_command_buffer"}
+    , dynamic_command_buffer_{"gbuffer_dynamic_command_buffer"}
     , post_processing_command_buffer_{"post_processing_command_buffer"}
     , gun_command_buffer_{"gun_command_buffer"}
     , post_process_sprite_{create_sprite()}
     , camera_buffer_{sizeof(CameraData), "camera_buffer"}
     , light_buffer_{1zu, "light_buffer"}
-    , object_data_buffer_{sizeof(ObjectData), "object_data_buffer"}
+    , static_object_data_buffer_{sizeof(ObjectData), "static_object_data_buffer"}
+    , dynamic_object_data_buffer_{sizeof(ObjectData), "dynamic_object_data_buffer"}
     , gun_object_data_buffer_{sizeof(ObjectData), "gun_object_data_buffer"}
     , luminance_histogram_buffer_{sizeof(std::uint32_t) * 256, "luminance_histogram_buffer"}
     , average_luminance_buffer_{sizeof(float), "average_luminance_buffer"}
@@ -396,7 +398,8 @@ auto Renderer::render(Scene &scene, Duration delta) -> void
 
     camera_buffer_.write(camera->data_view(), 0zu);
 
-    execute_gbuffer_pass(scene);
+    execute_gbuffer_pass(scene, EntityType::STATIC, true);
+    execute_gbuffer_pass(scene, EntityType::DYNAMIC, false);
     execute_decal_pass(scene);
     execute_lighting_pass(scene);
 
@@ -428,11 +431,11 @@ auto Renderer::render(Scene &scene, Duration delta) -> void
 
     post_render(scene, *camera);
 
-    command_buffer_.advance();
+    dynamic_command_buffer_.advance();
     gun_command_buffer_.advance();
     camera_buffer_.advance();
     light_buffer_.advance();
-    object_data_buffer_.advance();
+    dynamic_object_data_buffer_.advance();
     gun_object_data_buffer_.advance();
 }
 
@@ -496,10 +499,14 @@ auto Renderer::create_program(
     return ufps::Program{compute_shader, program_name};
 }
 
-auto Renderer::execute_gbuffer_pass(Scene &scene) -> void
+auto Renderer::execute_gbuffer_pass(Scene &scene, EntityType type, bool clear) -> void
 {
     gbuffer_rt_.fb.bind();
-    ::glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    if (clear)
+    {
+        ::glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    }
 
     ::glDepthRange(0.1f, 1.0f);
 
@@ -515,59 +522,102 @@ auto Renderer::execute_gbuffer_pass(Scene &scene) -> void
         sizeof(CameraData));
     ::glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffer_handle);
 
-    const auto command_count = command_buffer_.build(scene);
-    ::glBindBuffer(GL_DRAW_INDIRECT_BUFFER, command_buffer_.native_handle());
+    // gross hack to track the command count if we're not rebuilding it this frame, both static storage for consistency
+    static auto dynamic_command_count = 0u;
+    static auto static_command_count = 0u;
 
     auto object_data = std::vector<ObjectData>{};
 
     auto &&[em, rem] = services<EntityManager, RenderEntityManager>();
 
-    for (auto entity_handle : scene.entities())
+    if (type == EntityType::DYNAMIC || scene.check_and_reset_static_dirty())
     {
-        const auto entity = em[entity_handle];
+        const auto get_entities = [&]
+        { return type == EntityType::DYNAMIC ? scene.dynamic_entities() : scene.static_entities(); };
 
-        if (!entity)
+        for (auto entity_handle : get_entities())
         {
-            continue;
+            const auto entity = em[entity_handle];
+
+            if (!entity)
+            {
+                continue;
+            }
+
+            object_data.append_range(
+                entity->render_entities() |
+                std::views::transform(
+                    [&](auto e)
+                    {
+                        auto sub_entity = rem[e];
+                        contract_assert(sub_entity);
+
+                        return ObjectData{
+                            .model = entity->transform(),
+                            .albedo_texture_index = sub_entity->albedo_texture_bindless_handle(),
+                            .normal_texture_index = sub_entity->normal_texture_bindless_handle(),
+                            .specular_texture_index = sub_entity->specular_texture_bindless_handle(),
+                            .glossiness_texture_index = sub_entity->glossiness_texture_bindless_handle(),
+                            .emissive_texture_index = sub_entity->emissive_texture_bindless_handle(),
+                            .emissive_strength = entity->emissive_strength(),
+                        };
+                    }));
         }
 
-        object_data.append_range(
-            entity->render_entities() |
-            std::views::transform(
-                [&](auto e)
-                {
-                    auto sub_entity = rem[e];
-                    contract_assert(sub_entity);
+        if (type == EntityType::DYNAMIC)
+        {
+            resize_gpu_buffer(object_data, dynamic_object_data_buffer_);
+            dynamic_object_data_buffer_.write(std::as_bytes(std::span{object_data.data(), object_data.size()}), 0zu);
 
-                    return ObjectData{
-                        .model = entity->transform(),
-                        .albedo_texture_index = sub_entity->albedo_texture_bindless_handle(),
-                        .normal_texture_index = sub_entity->normal_texture_bindless_handle(),
-                        .specular_texture_index = sub_entity->specular_texture_bindless_handle(),
-                        .glossiness_texture_index = sub_entity->glossiness_texture_bindless_handle(),
-                        .emissive_texture_index = sub_entity->emissive_texture_bindless_handle(),
-                        .emissive_strength = entity->emissive_strength(),
-                    };
-                }));
+            dynamic_command_count = dynamic_command_buffer_.build(scene, type);
+        }
+        else
+        {
+            resize_gpu_buffer(object_data, static_object_data_buffer_);
+            static_object_data_buffer_.write(std::as_bytes(std::span{object_data.data(), object_data.size()}), 0zu);
+
+            static_command_count = static_command_buffer_.build(scene, type);
+        }
     }
 
     gbuffer_program_.set_uniform(0zu, 1.0f);
 
-    resize_gpu_buffer(object_data, object_data_buffer_);
-    object_data_buffer_.write(std::as_bytes(std::span{object_data.data(), object_data.size()}), 0zu);
-    ::glBindBufferRange(
-        GL_SHADER_STORAGE_BUFFER,
-        2,
-        object_data_buffer_.native_handle(),
-        object_data_buffer_.frame_offset_bytes(),
-        object_data_buffer_.size());
+    if (type == EntityType::DYNAMIC)
+    {
+        ::glBindBuffer(GL_DRAW_INDIRECT_BUFFER, dynamic_command_buffer_.native_handle());
 
-    ::glMultiDrawElementsIndirect(
-        GL_TRIANGLES,
-        GL_UNSIGNED_INT,
-        reinterpret_cast<const void *>(command_buffer_.offset_bytes()),
-        command_count,
-        0);
+        ::glBindBufferRange(
+            GL_SHADER_STORAGE_BUFFER,
+            2,
+            dynamic_object_data_buffer_.native_handle(),
+            dynamic_object_data_buffer_.frame_offset_bytes(),
+            dynamic_object_data_buffer_.size());
+
+        ::glMultiDrawElementsIndirect(
+            GL_TRIANGLES,
+            GL_UNSIGNED_INT,
+            reinterpret_cast<const void *>(dynamic_command_buffer_.offset_bytes()),
+            dynamic_command_count,
+            0);
+    }
+    else
+    {
+        ::glBindBuffer(GL_DRAW_INDIRECT_BUFFER, static_command_buffer_.native_handle());
+
+        ::glBindBufferRange(
+            GL_SHADER_STORAGE_BUFFER,
+            2,
+            static_object_data_buffer_.native_handle(),
+            0,
+            static_object_data_buffer_.size());
+
+        ::glMultiDrawElementsIndirect(
+            GL_TRIANGLES,
+            GL_UNSIGNED_INT,
+            reinterpret_cast<const void *>(static_command_buffer_.offset_bytes()),
+            static_command_count,
+            0);
+    }
 }
 
 auto Renderer::execute_decal_pass(Scene &scene) -> void

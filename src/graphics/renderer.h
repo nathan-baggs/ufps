@@ -58,13 +58,15 @@ class Renderer
 
     const Window &window_;
     AutoRelease<::GLuint> dummy_vao_;
-    CommandBuffer command_buffer_;
+    CommandBuffer static_command_buffer_;
+    CommandBuffer dynamic_command_buffer_;
     CommandBuffer post_processing_command_buffer_;
     CommandBuffer gun_command_buffer_;
     Entity post_process_sprite_;
     MultiBuffer<PersistentBuffer> camera_buffer_;
     MultiBuffer<PersistentBuffer> light_buffer_;
-    MultiBuffer<PersistentBuffer> object_data_buffer_;
+    Buffer static_object_data_buffer_;
+    MultiBuffer<PersistentBuffer> dynamic_object_data_buffer_;
     MultiBuffer<PersistentBuffer> gun_object_data_buffer_;
     Buffer luminance_histogram_buffer_;
     Buffer average_luminance_buffer_;
@@ -103,7 +105,7 @@ class Renderer
     Program debug_light_program_;
 
   private:
-    auto execute_gbuffer_pass(Scene &scene) -> void;
+    auto execute_gbuffer_pass(Scene &scene, EntityType type, bool clear) -> void;
     auto execute_decal_pass(Scene &scene) -> void;
     auto execute_gun_gbuffer_pass(Scene &scene) -> void;
     auto execute_lighting_pass(Scene &scene) -> void;

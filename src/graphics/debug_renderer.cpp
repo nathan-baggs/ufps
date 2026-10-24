@@ -225,7 +225,7 @@ auto DebugRenderer::post_render(Scene &scene, const Camera &camera) -> void
         dl.push_cube(light_transform, light.colour);
     }
 
-    for (const auto entity_handle : scene.entities())
+    for (const auto entity_handle : scene.all_entities())
     {
         const auto entity = em[entity_handle];
         if (!entity)
@@ -319,7 +319,7 @@ auto DebugRenderer::post_render(Scene &scene, const Camera &camera) -> void
             }
         }
 
-        for (const auto entity_handle : scene.entities())
+        for (const auto entity_handle : scene.all_entities())
         {
             const auto entity = em[entity_handle];
             if (!entity)
@@ -530,8 +530,8 @@ auto DebugRenderer::draw_scene(Scene &scene, const Camera &camera) -> void
 
         if (::ImGui::Button("Add Entity"))
         {
-            static auto counter = std::ranges::size(scene.entities());
-            const auto handle = em.insert({std::format("entity_{}", counter++), {}, {}});
+            static auto counter = std::ranges::size(scene.all_entities());
+            const auto handle = em.insert({std::format("entity_{}", counter++), EntityType::STATIC, {}, {}});
             scene.add(handle);
             selected_ = handle;
         }
@@ -542,7 +542,7 @@ auto DebugRenderer::draw_scene(Scene &scene, const Camera &camera) -> void
         create_debug_controller("camera_view", camera.data().view);
 
         ::ImGui::Text("entities");
-        const auto entities = scene.entities() |
+        const auto entities = scene.all_entities() |
                               std::views::transform(
                                   [&](const auto &e)
                                   {
@@ -841,7 +841,8 @@ auto DebugRenderer::draw_inspector(Scene &scene) -> void
             if (::ImGui::Button("Add Child Entity"))
             {
                 static auto counter = 0zu;
-                const auto handle = em.insert({std::format("{}_child_{}", entity->name(), counter++), {}, {}});
+                const auto handle =
+                    em.insert({std::format("{}_child_{}", entity->name(), counter++), EntityType::STATIC, {}, {}});
 
                 entity->add_child(handle);
                 scene.add(handle);
@@ -908,7 +909,8 @@ auto DebugRenderer::draw_inspector(Scene &scene) -> void
                     static int counter = 0;
 
                     const auto name = std::format("{}_copy_{}", child->name(), counter++);
-                    const auto handle = em.insert({name, child->render_entities(), child->transform()});
+                    const auto handle =
+                        em.insert({name, EntityType::STATIC, child->render_entities(), child->transform()});
                     scene.add(handle);
                     entity->add_child(handle);
                     selected_ = handle;

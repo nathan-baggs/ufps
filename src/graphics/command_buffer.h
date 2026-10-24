@@ -15,7 +15,7 @@ class CommandBuffer
 {
   public:
     CommandBuffer(std::string_view name);
-    auto build(const Scene &scene) -> std::uint32_t;
+    auto build(const Scene &scene, EntityType type) -> std::uint32_t;
     auto build(const Entity &entity) -> std::uint32_t;
     auto native_handle() const -> ::GLuint;
     auto advance() -> void;
