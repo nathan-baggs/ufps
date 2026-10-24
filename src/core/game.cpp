@@ -446,7 +446,7 @@ auto Game::load_scene() -> void
 
     const auto enemy_transform = Transform{{0.0f, 2.0f, -10.0f}, {0.5f, 2.0f, 0.5f}, {}};
     const auto enemy_camera_handle = cm.insert(
-        {enemy_transform,
+        {{},
          std::numbers::pi_v<float> / 4.0f,
          static_cast<float>(window_.window_width()),
          static_cast<float>(window_.window_height()),
@@ -648,7 +648,7 @@ auto Game::update() -> bool
                 const auto enemy_transform = Transform{
                     {random::rand_real(-30.0f, 30.0f), 2.0f, random::rand_real(-30.0f, 30.0f)}, {0.5f, 2.0f, 0.5f}, {}};
                 const auto enemy_camera_handle = cm.insert(
-                    {enemy_transform,
+                    {{},
                      std::numbers::pi_v<float> / 4.0f,
                      static_cast<float>(window_.window_width()),
                      static_cast<float>(window_.window_height()),

@@ -130,7 +130,7 @@ auto PlayerActor::update(Duration delta) -> void
         Transform{character_controller->position(), {1.0f}, Quaternion(yaw_, pitch_ - final_recoil, 0.0f)};
     new_transform.position.y = transform.position.y;
 
-    player->set_transform(new_transform);
+    set_transform(new_transform);
 
     bullets_fired_ = gun_.update_bullets(delta, input_map_, *camera);
 }
