@@ -6,20 +6,22 @@
 #include "core/entity.h"
 #include "core/sparse_set.h"
 #include "game/enemy.h"
+#include "maths/transform.h"
 
 namespace ufps
 {
 
+class PlayerActor;
+class Scene;
+class Window;
+
 class EnemyManager
 {
   public:
-    template <class... Args>
-    auto spawn(Args &&...args) -> EnemyHandle
-    {
-        return enemies_.emplace(std::forward<Args>(args)...);
-    }
+    auto spawn(const Transform &transform, float health, PlayerActor *player, Scene &scene, const Window &window)
+        -> EnemyHandle;
 
-    auto despawn(EnemyHandle handle) -> void;
+    auto despawn(EnemyHandle handle, Scene &scene) -> void;
 
     auto yield_dead_enemies() -> std::vector<EnemyHandle>;
 
