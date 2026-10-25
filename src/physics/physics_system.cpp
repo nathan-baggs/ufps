@@ -117,7 +117,7 @@ PhysicsSystem::PhysicsSystem(DebugRenderMode debug_render_mode)
         object_vs_broad_phase_layer_filter_,
         object_layer_pair_filter_);
 
-    physics_system_.SetGravity({0.0f, -9.8f, 0.0f});
+    physics_system_.SetGravity({0.0f, -4.5f, 0.0f});
     physics_system_.SetContactListener(this);
 }
 
