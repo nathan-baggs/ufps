@@ -67,6 +67,7 @@ auto Enemy::update(Duration delta) -> void
         hit_cooldown_ -= delta;
     }
 
+    walk_direction.y = 0.0f;
     controller->set_walk_direction(walk_direction);
 }
 
