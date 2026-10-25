@@ -306,10 +306,12 @@ auto PhysicsSystem::update() -> void
     physics_system_.Update(1.0f / 60.f, 1, &temp_allocator_, &job_system_);
 }
 
-auto PhysicsSystem::draw_debug() -> void
+auto PhysicsSystem::draw_debug(const Vector3 &position) -> void
 {
     if (debug_renderer_)
     {
+        debug_renderer_->SetCameraPos(to_jolt(position));
+
         static const auto settings = ::JPH::BodyManager::DrawSettings{};
         physics_system_.DrawBodies(
             settings, std::addressof(*debug_renderer_), std::addressof(ignore_layer_draw_filter_));

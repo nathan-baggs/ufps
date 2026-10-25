@@ -71,7 +71,7 @@ class PhysicsSystem : public ::JPH::ContactListener
 
     auto update() -> void;
 
-    auto draw_debug() -> void;
+    auto draw_debug(const Vector3 &position) -> void;
 
     auto cast_ray(const Ray &ray) const -> std::optional<IntersectionResult>;
 

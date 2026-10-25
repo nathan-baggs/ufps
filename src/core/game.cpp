@@ -538,7 +538,10 @@ auto Game::update() -> bool
         ps.update();
     }
 
-    ps.draw_debug();
+    if (debug_mode_)
+    {
+        ps.draw_debug(current_actor_->transform().position);
+    }
 
     const auto bullets_fired = player_actor_->yield_bullets_fired();
 
@@ -620,7 +623,7 @@ auto Game::update() -> bool
         {
             enemy_manager_.despawn(enemy_handle, *scene_);
 
-            for (auto i = 0; i < 1; i++)
+            for (auto i = 0; i < 5; i++)
             {
                 const auto enemy_transform = Transform{
                     {random::rand_real(-30.0f, 30.0f), 2.0f, random::rand_real(-30.0f, 30.0f)}, {0.5f, 2.0f, 0.5f}, {}};
