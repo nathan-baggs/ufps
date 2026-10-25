@@ -2,8 +2,10 @@
 
 #include <chrono>
 
+#include "core/clock.h"
 #include "core/sparse_set.h"
 #include "maths/quaternion.h"
+#include "maths/spring.h"
 #include "maths/vector3.h"
 #include "physics/jolt.h"
 #include "physics/physics_debug_renderer.h"
@@ -24,6 +26,8 @@ class VirtualCharacterController : public ::JPH::CharacterContactListener
     auto update(std::chrono::milliseconds delta, const Vector3 &gravity) -> void;
 
     auto set_walk_direction(const Vector3 &walk_direction) -> void;
+
+    auto jump() -> void;
 
     auto debug_draw(PhysicsDebugRenderer &renderer) -> void;
 
@@ -51,6 +55,7 @@ class VirtualCharacterController : public ::JPH::CharacterContactListener
     ::JPH::Ref<::JPH::CharacterVirtual> character_;
     CharacterControllerCollisionObjectLayer object_layer_;
     Vector3 walk_direction_;
+    bool do_jump_;
 };
 
 inline auto swap(VirtualCharacterController &a, VirtualCharacterController &b) noexcept -> void

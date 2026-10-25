@@ -119,16 +119,20 @@ auto PlayerActor::update(Duration delta) -> void
     auto character_controller = ps[character_controller_handle_];
     contract_assert(character_controller);
 
+    if (input_map_.is_set(Key::SPACE))
+    {
+        character_controller->jump();
+    }
+
     character_controller->set_walk_direction(walk_direction(input_map_, *camera));
 
     auto player = em[entity_];
     contract_assert(player);
 
-    const auto &transform = player->transform();
+    static constexpr auto capsule_offset = Vector3{0.0f, 1.0f, 0.0f};
 
-    auto new_transform =
-        Transform{character_controller->position(), {1.0f}, Quaternion(yaw_, pitch_ - final_recoil, 0.0f)};
-    new_transform.position.y = transform.position.y;
+    auto new_transform = Transform{
+        character_controller->position() + capsule_offset, {1.0f}, Quaternion(yaw_, pitch_ - final_recoil, 0.0f)};
 
     set_transform(new_transform);
 

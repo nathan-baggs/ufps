@@ -1,7 +1,9 @@
 #include "physics/virtual_character_controller.h"
 
+#include <chrono>
 #include <ranges>
 
+#include "maths/spring.h"
 #include "maths/vector3.h"
 #include "physics/jolt.h"
 #include "physics/physics_layers.h"
@@ -16,6 +18,7 @@ VirtualCharacterController::VirtualCharacterController(::JPH::PhysicsSystem *ps)
     , character_{}
     , object_layer_{}
     , walk_direction_{}
+    , do_jump_{false}
 {
     shape_ = ::JPH::RotatedTranslatedShapeSettings(
                  ::JPH::Vec3(0, 0.5f * 1.35f + 0.3f, 0),
@@ -47,6 +50,7 @@ VirtualCharacterController::VirtualCharacterController(VirtualCharacterControlle
     , character_{std::move(other.character_)}
     , object_layer_{}
     , walk_direction_{other.walk_direction_}
+    , do_jump_{other.do_jump_}
 {
     character_->SetListener(this);
 }
@@ -59,9 +63,20 @@ auto VirtualCharacterController::update(std::chrono::milliseconds delta, const V
 
     constexpr auto speed = 1.2f;
     auto new_velocity = walk_direction_ * speed;
-    new_velocity += gravity * jolt_delta;
 
+    auto velocity_y_adj = 0.0f;
+    if (std::exchange(do_jump_, false))
+    {
+        velocity_y_adj = 10.0f;
+    }
+
+    const auto current_linear_velocity = character_->GetLinearVelocity();
+
+    new_velocity.y = current_linear_velocity.GetY() + velocity_y_adj;
+    new_velocity += gravity * jolt_delta;
     character_->SetLinearVelocity(to_jolt(new_velocity));
+
+    log::debug("up: {} gravity: {}", to_native(character_->GetUp()), to_native(ps_->GetGravity()));
 
     character_->Update(
         jolt_delta,
@@ -76,6 +91,11 @@ auto VirtualCharacterController::update(std::chrono::milliseconds delta, const V
 auto VirtualCharacterController::set_walk_direction(const Vector3 &walk_direction) -> void
 {
     walk_direction_ = walk_direction;
+}
+
+auto VirtualCharacterController::jump() -> void
+{
+    do_jump_ = character_->GetGroundState() == ::JPH::CharacterVirtual::EGroundState::OnGround;
 }
 
 auto VirtualCharacterController::debug_draw(PhysicsDebugRenderer &renderer) -> void
