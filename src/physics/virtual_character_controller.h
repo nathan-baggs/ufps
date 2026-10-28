@@ -33,6 +33,10 @@ class VirtualCharacterController : public ::JPH::CharacterContactListener
 
     auto in_air() const -> bool;
 
+    auto jump_strength() const -> float;
+
+    auto set_jump_strength(float jump_strength) -> void;
+
     auto debug_draw(PhysicsDebugRenderer &renderer) -> void;
 
     auto position() const -> Vector3;
@@ -60,6 +64,7 @@ class VirtualCharacterController : public ::JPH::CharacterContactListener
     CharacterControllerCollisionObjectLayer object_layer_;
     Vector3 walk_direction_;
     bool do_jump_;
+    float jump_strength_;
 };
 
 inline auto swap(VirtualCharacterController &a, VirtualCharacterController &b) noexcept -> void

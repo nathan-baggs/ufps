@@ -8,6 +8,11 @@
 #include "physics/jolt.h"
 #include "physics/physics_layers.h"
 
+namespace
+{
+constexpr auto default_jump_strength = 5.0f;
+}
+
 namespace ufps
 {
 
@@ -19,6 +24,7 @@ VirtualCharacterController::VirtualCharacterController(::JPH::PhysicsSystem *ps)
     , object_layer_{}
     , walk_direction_{}
     , do_jump_{false}
+    , jump_strength_{default_jump_strength}
 {
     shape_ = ::JPH::RotatedTranslatedShapeSettings(
                  ::JPH::Vec3(0, 0.5f * 1.35f + 0.3f, 0),
@@ -51,6 +57,7 @@ VirtualCharacterController::VirtualCharacterController(VirtualCharacterControlle
     , object_layer_{}
     , walk_direction_{other.walk_direction_}
     , do_jump_{other.do_jump_}
+    , jump_strength_{other.jump_strength()}
 {
     character_->SetListener(this);
 }
@@ -67,7 +74,7 @@ auto VirtualCharacterController::update(std::chrono::milliseconds delta, const V
     auto velocity_y_adj = 0.0f;
     if (std::exchange(do_jump_, false))
     {
-        velocity_y_adj = 5.0f;
+        velocity_y_adj = jump_strength_;
     }
 
     const auto current_linear_velocity = character_->GetLinearVelocity();
@@ -109,6 +116,16 @@ auto VirtualCharacterController::in_air() const -> bool
     return character_->GetGroundState() == ::JPH::CharacterVirtual::EGroundState::InAir;
 }
 
+auto VirtualCharacterController::jump_strength() const -> float
+{
+    return jump_strength_;
+}
+
+auto VirtualCharacterController::set_jump_strength(float jump_strength) -> void
+{
+    jump_strength_ = jump_strength;
+}
+
 auto VirtualCharacterController::debug_draw(PhysicsDebugRenderer &renderer) -> void
 {
     character_->GetShape()->Draw(
@@ -142,6 +159,7 @@ auto VirtualCharacterController::swap(VirtualCharacterController &other) noexcep
     std::ranges::swap(inner_shape_, other.inner_shape_);
     std::ranges::swap(character_, other.character_);
     std::ranges::swap(walk_direction_, other.walk_direction_);
+    std::ranges::swap(jump_strength_, other.jump_strength_);
 }
 
 auto VirtualCharacterController::OnContactAdded(
