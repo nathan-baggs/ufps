@@ -31,6 +31,7 @@
 #include "events/mouse_wheel_event.h"
 #include "game/enemy.h"
 #include "game/enemy_manager.h"
+#include "game/nav_mesh.h"
 #include "graphics/colour.h"
 #include "graphics/debug_layer.h"
 #include "graphics/debug_renderer.h"
@@ -614,6 +615,10 @@ auto Game::update() -> bool
     dl.push_cone(max_fire_cone, colours::magenta, true, DebugLayerType::DEFAULT);
     dl.push_cone(max_fire_cone, colours::magenta, false, DebugLayerType::DEBUG);
 
+    static auto test_nav_mesh = NavMesh{};
+    dl.push_nav_mesh(test_nav_mesh, DebugLayerType::DEFAULT);
+    dl.push_nav_mesh(test_nav_mesh, DebugLayerType::DEBUG);
+
     if (!debug_mode_)
     {
         enemy_manager_.update(delta_);
@@ -623,10 +628,16 @@ auto Game::update() -> bool
         {
             enemy_manager_.despawn(enemy_handle, *scene_);
 
-            for (auto i = 0; i < 5; i++)
+            for (auto i = 0; i < 1; i++)
             {
-                const auto enemy_transform = Transform{
+                auto enemy_transform = Transform{
                     {random::rand_real(-30.0f, 30.0f), 2.0f, random::rand_real(-30.0f, 30.0f)}, {0.5f, 2.0f, 0.5f}, {}};
+
+                while (Vector3::distance(enemy_transform.position, player_actor_->transform().position) < 5.0f)
+                {
+                    enemy_transform.position = {
+                        random::rand_real(-30.0f, 30.0f), 2.0f, random::rand_real(-30.0f, 30.0f)};
+                }
 
                 enemy_manager_.spawn(enemy_transform, 100.0f, player_actor_.get(), *scene_, window_);
             }
