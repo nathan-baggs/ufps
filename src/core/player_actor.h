@@ -27,11 +27,16 @@ class PlayerActor : public Actor
     ~PlayerActor() override = default;
 
     auto gun() const -> const Gun &;
+
     auto set_gun(Gun gun) -> void;
 
     auto update(Duration delta) -> void override;
 
     auto yield_bullets_fired() -> std::vector<Ray>;
+
+    auto jump_strength() const -> float;
+
+    auto set_jump_strength(float jump_strength) -> void;
 
   private:
     EntityHandle gun_handle_;

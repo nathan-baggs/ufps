@@ -26,7 +26,9 @@ class Actor
     auto &camera(this auto &&self);
 
     auto transform() const -> Transform;
+
     auto set_transform(const Transform &transform) -> void;
+
     auto translate(const Vector3 &delta) -> void;
 
     auto entity() const -> EntityHandle;

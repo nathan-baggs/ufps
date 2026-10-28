@@ -146,4 +146,24 @@ auto PlayerActor::yield_bullets_fired() -> std::vector<Ray>
     return tmp;
 }
 
+auto PlayerActor::jump_strength() const -> float
+{
+    const auto &[ps] = services<PhysicsSystem>();
+
+    auto character_controller = ps[character_controller_handle_];
+    contract_assert(character_controller);
+
+    return character_controller->jump_strength();
+}
+
+auto PlayerActor::set_jump_strength(float jump_strength) -> void
+{
+    const auto &[ps] = services<PhysicsSystem>();
+
+    auto character_controller = ps[character_controller_handle_];
+    contract_assert(character_controller);
+
+    return character_controller->set_jump_strength(jump_strength);
+}
+
 }
