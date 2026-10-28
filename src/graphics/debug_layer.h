@@ -2,6 +2,7 @@
 
 #include "concurrency/concurrent_queue.h"
 #include "core/camera.h"
+#include "game/nav_mesh.h"
 #include "graphics/colour.h"
 #include "graphics/line_data.h"
 #include "maths/aabb.h"
@@ -50,6 +51,8 @@ class DebugLayer
         const Colour &colour,
         bool cap_only = false,
         DebugLayerType type = DebugLayerType::DEBUG) -> void;
+
+    auto push_nav_mesh(const NavMesh &nav_mesh, DebugLayerType type = DebugLayerType::DEBUG) -> void;
 
     auto yield_lines(DebugLayerType type) -> std::queue<LineData>;
 

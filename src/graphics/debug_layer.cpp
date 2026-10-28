@@ -7,6 +7,7 @@
 #include "concurrency/concurrent_queue.h"
 #include "graphics/colour.h"
 #include "graphics/line_data.h"
+#include "maths/aabb.h"
 #include "maths/matrix3.h"
 #include "maths/vector3.h"
 #include "utils/exception.h"
@@ -186,6 +187,23 @@ auto DebugLayer::push_cone(const Cone &cone, const Colour &colour, bool cap_only
         if (!cap_only)
         {
             push_line(start, cone.origin, colour, type);
+        }
+    }
+}
+
+auto DebugLayer::push_nav_mesh(const NavMesh &nav_mesh, DebugLayerType type) -> void
+{
+    constexpr static auto line_offset = Vector3{0.0f, 0.5f, 0.0f};
+
+    const auto nodes = nav_mesh.nodes();
+
+    for (const auto &[index, node] : std::views::enumerate(nodes))
+    {
+        push_aabb(node.box, {node.position, {1.0f}, {}}, colours::blue, type);
+
+        for (const auto edge : nav_mesh.edges(index))
+        {
+            push_line(node.position + line_offset, nodes[edge].position + line_offset, colours::dark_pink, type);
         }
     }
 }
