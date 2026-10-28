@@ -29,6 +29,10 @@ class VirtualCharacterController : public ::JPH::CharacterContactListener
 
     auto jump() -> void;
 
+    auto on_ground() const -> bool;
+
+    auto in_air() const -> bool;
+
     auto debug_draw(PhysicsDebugRenderer &renderer) -> void;
 
     auto position() const -> Vector3;

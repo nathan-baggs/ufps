@@ -67,16 +67,17 @@ auto VirtualCharacterController::update(std::chrono::milliseconds delta, const V
     auto velocity_y_adj = 0.0f;
     if (std::exchange(do_jump_, false))
     {
-        velocity_y_adj = 10.0f;
+        velocity_y_adj = 5.0f;
     }
 
     const auto current_linear_velocity = character_->GetLinearVelocity();
 
     new_velocity.y = current_linear_velocity.GetY() + velocity_y_adj;
-    new_velocity += gravity * jolt_delta;
+    if (in_air())
+    {
+        new_velocity += gravity * jolt_delta;
+    }
     character_->SetLinearVelocity(to_jolt(new_velocity));
-
-    log::debug("up: {} gravity: {}", to_native(character_->GetUp()), to_native(ps_->GetGravity()));
 
     character_->Update(
         jolt_delta,
@@ -95,7 +96,17 @@ auto VirtualCharacterController::set_walk_direction(const Vector3 &walk_directio
 
 auto VirtualCharacterController::jump() -> void
 {
-    do_jump_ = character_->GetGroundState() == ::JPH::CharacterVirtual::EGroundState::OnGround;
+    do_jump_ = on_ground();
+}
+
+auto VirtualCharacterController::on_ground() const -> bool
+{
+    return character_->GetGroundState() == ::JPH::CharacterVirtual::EGroundState::OnGround;
+}
+
+auto VirtualCharacterController::in_air() const -> bool
+{
+    return character_->GetGroundState() == ::JPH::CharacterVirtual::EGroundState::InAir;
 }
 
 auto VirtualCharacterController::debug_draw(PhysicsDebugRenderer &renderer) -> void
