@@ -77,6 +77,10 @@ class PhysicsSystem : public ::JPH::ContactListener
 
     auto debug_renderer() -> std::optional<PhysicsDebugRenderer &>;
 
+    auto gravity() const -> Vector3;
+
+    auto set_gravity(const Vector3 &gravity) -> void;
+
   private:
     SimpleBroadPhaseLayer broad_phase_layer_;
     SimpleObjectVsBroadPhaseLayerFilter object_vs_broad_phase_layer_filter_;

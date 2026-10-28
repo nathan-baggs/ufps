@@ -361,4 +361,14 @@ auto PhysicsSystem::debug_renderer() -> std::optional<PhysicsDebugRenderer &>
     return debug_renderer_.transform([](auto &e) -> decltype(auto) { return e; });
 }
 
+auto PhysicsSystem::gravity() const -> Vector3
+{
+    return to_native(physics_system_.GetGravity());
+}
+
+auto PhysicsSystem::set_gravity(const Vector3 &gravity) -> void
+{
+    physics_system_.SetGravity(to_jolt(gravity));
+}
+
 }
