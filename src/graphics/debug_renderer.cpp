@@ -519,7 +519,7 @@ auto DebugRenderer::draw_post_processing_window(Scene &scene) -> void
 
 auto DebugRenderer::draw_scene(Scene &scene, const Camera &camera) -> void
 {
-    auto &em = service<EntityManager>();
+    const auto &[em, ps] = services<EntityManager, PhysicsSystem>();
 
     if (::ImGui::Begin("Scene"))
     {
@@ -532,6 +532,15 @@ auto DebugRenderer::draw_scene(Scene &scene, const Camera &camera) -> void
             auto out = std::ofstream("scene.yaml");
 
             out << *scene_yaml;
+        }
+
+        auto gravity = ps.gravity();
+        auto gravity_y = BoundedFloat<-10.0f, 0.0f>(gravity.y);
+
+        if (create_debug_controller("gravity", gravity_y))
+        {
+            gravity.y = gravity_y;
+            ps.set_gravity(gravity);
         }
 
         if (::ImGui::Button("Add Entity"))
@@ -1510,6 +1519,12 @@ auto DebugRenderer::draw_player_info() -> void
         {
             desc.bob_settle_time = std::chrono::milliseconds{bob_settle_time};
             player_actor_.set_gun(Gun{desc});
+        }
+
+        auto jump_strength = BoundedFloat<0.0f, 10.0f>(player_actor_.jump_strength());
+        if (create_debug_controller("jump_strength", jump_strength))
+        {
+            player_actor_.set_jump_strength(jump_strength);
         }
 
         ::ImGui::PopID();
