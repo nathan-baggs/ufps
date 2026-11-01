@@ -1,5 +1,6 @@
 #include "game/nav_mesh.h"
 
+#include <contracts>
 #include <ranges>
 
 #include "core/entity_manager.h"
@@ -14,7 +15,7 @@ NavMesh::NavMesh()
     const auto &[em] = services<EntityManager>();
 
     nodes_ = em.data() | //
-             std::views::filter([](const auto &e) { return e.name().starts_with("floor"); }) |
+             std::views::filter([](const auto &e) { return e.name().starts_with("floor") && e.name() != "floor"; }) |
              std::views::transform(
                  [](const auto &e)
                  {
@@ -32,9 +33,35 @@ NavMesh::NavMesh()
                  }) |
              std::ranges::to<std::vector>();
 
-    for (auto i = 0zu; i < std::ranges::size(nodes_); ++i)
+    const auto width = static_cast<int>(std::sqrt(std::ranges::size(nodes_)));
+    log::debug("width: {} count: {}", width, std::ranges::size(nodes_));
+
+    static int index_range[] = {-1, 0, 1};
+
+    for (auto x = 0; x < width; ++x)
     {
-        edges_[i] = {0zu};
+        for (auto y = 0; y < width; ++y)
+        {
+            const auto index = x + (y * width);
+
+            for (const auto &pair : std::views::cartesian_product(index_range, index_range))
+            {
+                const auto &[dx, dy] = pair;
+
+                if (dx == 0 && dy == 0)
+                {
+                    continue;
+                }
+
+                const auto next_x = x + dx;
+                const auto next_y = y + dy;
+
+                if (std::clamp(next_x, 0, width - 1) == next_x && std::clamp(next_y, 0, width - 1) == next_y)
+                {
+                    edges_[index].push_back(next_x + (next_y * width));
+                }
+            }
+        }
     }
 }
 
