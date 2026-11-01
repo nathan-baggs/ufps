@@ -181,6 +181,29 @@ auto DebugLayer::push_nav_mesh(const NavMesh &nav_mesh, DebugLayerType type) -> 
     }
 }
 
+auto DebugLayer::push_route(std::span<const Node> nodes, DebugLayerType type) -> void
+{
+    auto edge_lines = std::vector<LineData>{};
+    edge_lines.reserve(std::ranges::size(nodes) * 2zu);
+
+    static const auto offset = Vector3{0.0f, 4.0f, 0.0f};
+
+    for (auto i = 0zu; i < std::ranges::size(nodes) - 1zu; ++i)
+    {
+        edge_lines.emplace_back(nodes[i].position + offset, colours::red);
+        edge_lines.emplace_back(nodes[i + 1zu].position + offset, colours::red);
+    }
+
+    if (type == DebugLayerType::DEBUG)
+    {
+        debug_lines_queue_.push_range(edge_lines);
+    }
+    else
+    {
+        default_lines_queue_.push_range(edge_lines);
+    }
+}
+
 auto DebugLayer::yield_lines(DebugLayerType type) -> std::queue<LineData>
 {
     switch (type)
