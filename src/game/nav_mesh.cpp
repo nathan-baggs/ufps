@@ -18,9 +18,16 @@ NavMesh::NavMesh()
              std::views::transform(
                  [](const auto &e)
                  {
+                     auto half_adj = (e.aabb().max + e.aabb().min) * 0.5f;
+                     half_adj.y = 0.0f;
+
+                     auto box = e.aabb();
+                     box.min -= half_adj;
+                     box.max -= half_adj;
+
                      return Node{
-                         .box = e.aabb(),
-                         .position = e.transform().position,
+                         .box = box,
+                         .position = e.transform().position + half_adj,
                      };
                  }) |
              std::ranges::to<std::vector>();
