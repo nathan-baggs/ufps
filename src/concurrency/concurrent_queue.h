@@ -53,6 +53,21 @@ class ConcurrentQueue
         q_.push(std::forward<T>(obj));
     }
 
+    auto push(auto &&...objs) -> void
+    {
+        const auto lock = std::scoped_lock{lock_};
+        size_ += sizeof...(objs);
+        (q_.push(std::forward<T>(objs)), ...);
+    }
+
+    auto push_range(std::span<T> objs)
+    {
+        const auto lock = std::scoped_lock{lock_};
+        size_ += std::ranges::size(objs);
+
+        q_.push_range(objs);
+    }
+
     auto empty() const -> bool
     {
         return size_ == 0u;
