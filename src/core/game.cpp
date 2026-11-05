@@ -619,8 +619,10 @@ auto Game::update() -> bool
     dl.push_nav_mesh(test_nav_mesh, DebugLayerType::DEFAULT);
     dl.push_nav_mesh(test_nav_mesh, DebugLayerType::DEBUG);
 
-    static auto route = test_nav_mesh.route(0zu, 370zu);
-    dl.push_route(route, DebugLayerType::DEFAULT);
+    if (const auto route = test_nav_mesh.route(0zu, 370zu); route)
+    {
+        dl.push_route(*route, DebugLayerType::DEFAULT);
+    }
 
     if (!debug_mode_)
     {
