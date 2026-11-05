@@ -121,4 +121,13 @@ class CharacterControllerCollisionObjectLayer : public ::JPH::ObjectLayerFilter
     }
 };
 
+class StaticBroadPhaseLayerFilter : public ::JPH::BroadPhaseLayerFilter
+{
+  public:
+    auto ShouldCollide(::JPH::BroadPhaseLayer layer) const -> bool override
+    {
+        return BroadPhaseLayer{layer.GetValue()} == BroadPhaseLayer::STATIC;
+    }
+};
+
 }
