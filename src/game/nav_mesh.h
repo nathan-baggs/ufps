@@ -2,6 +2,7 @@
 
 #include <contracts>
 #include <cstddef>
+#include <optional>
 #include <ranges>
 #include <span>
 #include <unordered_map>
@@ -29,10 +30,7 @@ class NavMesh
     auto edges(std::size_t node_index) const -> std::span<const std::size_t> //
         pre(node_index < std::ranges::size(nodes_));
 
-    auto route(std::size_t start_node_index, std::size_t end_node_index) -> std::vector<Node> //
-        pre(start_node_index < std::ranges::size(nodes_))                                     //
-        pre(end_node_index < std::ranges::size(nodes_))                                       //
-        post(r : std::ranges::size(r) > 2zu);
+    auto route(std::size_t start_node_index, std::size_t end_node_index) -> std::optional<std::vector<Node>>;
 
   private:
     std::vector<Node> nodes_;

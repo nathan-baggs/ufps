@@ -1,19 +1,63 @@
 #include "game/nav_mesh.h"
 
+#include <algorithm>
 #include <contracts>
 #include <cstddef>
 #include <numeric>
+#include <optional>
 #include <queue>
 #include <ranges>
 #include <unordered_map>
 #include <unordered_set>
+#include <vector>
 
 #include "core/entity_manager.h"
 #include "core/service_locator.h"
 #include "maths/vector3.h"
+#include "physics/physics_system.h"
+
+namespace
+{
+
+auto simplify_route(std::vector<ufps::Node> route) -> std::vector<ufps::Node> //
+    pre(std::ranges::size(route) >= 2zu)
+{
+    if (std::ranges::size(route) == 2zu)
+    {
+        return route;
+    }
+
+    constexpr static auto sweep_radius = 0.3f;
+    constexpr static auto offset = ufps::Vector3{0.0f, 1.0f, 0.0f};
+    const auto &[ps] = ufps::services<ufps::PhysicsSystem>();
+
+    auto simple = std::vector{route.front()};
+
+    auto last = std::ranges::cend(route) - 1zu;
+    auto begin = std::ranges::cbegin(route);
+
+    while (begin != std::ranges::cend(route) - 1zu)
+    {
+        if (ps.sweep(begin->position + offset, last->position + offset, sweep_radius))
+        {
+            --last;
+        }
+        else
+        {
+            simple.push_back(*last);
+            begin = last;
+            last = std::ranges::cend(route) - 1zu;
+        }
+    }
+
+    return simple;
+}
+
+}
 
 namespace ufps
 {
+
 NavMesh::NavMesh()
     : nodes_{}
     , edges_{}
@@ -81,7 +125,7 @@ auto NavMesh::edges(std::size_t node_index) const -> std::span<const std::size_t
     return edges_.find(node_index)->second;
 }
 
-auto NavMesh::route(std::size_t start_node_index, std::size_t end_node_index) -> std::vector<Node>
+auto NavMesh::route(std::size_t start_node_index, std::size_t end_node_index) -> std::optional<std::vector<Node>>
 {
     struct AStar : Node
     {
@@ -109,6 +153,10 @@ auto NavMesh::route(std::size_t start_node_index, std::size_t end_node_index) ->
     auto g = std::unordered_map<std::size_t, float>{{start_node_index, 0.0f}};
     auto came_from = std::unordered_map<std::size_t, std::size_t>{};
 
+    constexpr static auto sweep_radius = 0.3f;
+    constexpr static auto offset = Vector3{0.0f, 1.0f, 0.0f};
+    const auto &[ps] = ufps::services<ufps::PhysicsSystem>();
+
     while (!std::ranges::empty(q))
     {
         const auto current = q.top();
@@ -127,12 +175,17 @@ auto NavMesh::route(std::size_t start_node_index, std::size_t end_node_index) ->
 
             std::ranges::reverse(path);
 
-            return path;
+            return std::ranges::size(path) < 2zu ? std::nullopt : std::make_optional(simplify_route(std::move(path)));
         }
 
         for (const auto &neighbour : edges_[current.index])
         {
-            const auto tentative_g = g[current.index] + Vector3::distance(current.position, nodes_[neighbour].position);
+            auto tentative_g = g[current.index] + Vector3::distance(current.position, nodes_[neighbour].position);
+
+            if (ps.sweep(current.position + offset, nodes_[neighbour].position + offset, sweep_radius))
+            {
+                tentative_g = std::numeric_limits<float>::infinity();
+            }
 
             const auto neighbour_g_find = g.find(neighbour);
             const auto neighbour_g = neighbour_g_find == std::ranges::cend(g) ? std::numeric_limits<float>::infinity()
@@ -154,6 +207,6 @@ auto NavMesh::route(std::size_t start_node_index, std::size_t end_node_index) ->
         }
     }
 
-    return {};
+    return std::nullopt;
 }
 }
