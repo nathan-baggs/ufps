@@ -97,6 +97,7 @@ PhysicsSystem::PhysicsSystem(DebugRenderMode debug_render_mode)
     , object_layer_pair_filter_{}
     , cast_ray_layer_filter_{}
     , ignore_layer_draw_filter_{ObjectLayer::LEVEL_GEOMETRY}
+    , static_broad_phase_layer_filter_{}
     , temp_allocator_{10u * 1024u * 1024u}
     , job_system_{::JPH::cMaxPhysicsJobs, ::JPH::cMaxPhysicsBarriers, static_cast<int>(std::thread::hardware_concurrency() - 1zu)}
     , physics_system_{}
@@ -369,6 +370,23 @@ auto PhysicsSystem::gravity() const -> Vector3
 auto PhysicsSystem::set_gravity(const Vector3 &gravity) -> void
 {
     physics_system_.SetGravity(to_jolt(gravity));
+}
+
+auto PhysicsSystem::sweep(const Vector3 &start, const Vector3 &end, float sphere_radius) const -> bool
+{
+    const auto sphere = ::JPH::SphereShape{sphere_radius};
+    const auto displacement = end - start;
+
+    const auto cast = ::JPH::RShapeCast::sFromWorldTransform(
+        &sphere, ::JPH::Vec3::sReplicate(1.0f), ::JPH::RMat44::sTranslation(to_jolt(start)), to_jolt(displacement));
+
+    const auto settings = ::JPH::ShapeCastSettings{};
+    auto collector = ::JPH::ClosestHitCollisionCollector<::JPH::CastShapeCollector>{};
+
+    physics_system_.GetNarrowPhaseQuery().CastShape(
+        cast, settings, ::JPH::RVec3::sZero(), collector, static_broad_phase_layer_filter_);
+
+    return collector.HadHit();
 }
 
 }
