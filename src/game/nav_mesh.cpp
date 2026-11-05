@@ -94,7 +94,7 @@ auto NavMesh::route(std::size_t start_node_index, std::size_t end_node_index) ->
 
         auto operator<(const AStar &other) const -> bool
         {
-            return f < other.f;
+            return f > other.f;
         }
 
         float f;
