@@ -13,6 +13,9 @@
 #include "utils/error.h"
 #include "utils/formatter.h"
 #include "utils/log.h"
+#include "utils/time_logger.h"
+
+using namespace std::literals;
 
 namespace
 {
@@ -49,6 +52,8 @@ auto init(const std::filesystem::path &path)
 template <class T>
 auto load(const std::filesystem::path &path)
 {
+    const auto time_logger = ufps::TimeLogger{std::format("loading: {}", path), 1s};
+
     static_assert(sizeof(typename T::value_type) == 1);
 
     const auto &[handle, mapping, map_view] = init(path);

@@ -214,7 +214,7 @@ auto DebugRenderer::post_render(Scene &scene, const Camera &camera) -> void
 
     if (highlight_rigid_body_)
     {
-        const auto rb = ps.rigid_body(highlight_rigid_body_);
+        const auto rb = ps[highlight_rigid_body_];
         contract_assert(rb);
         dl.push_aabb({.min = {-1.0f}, .max = {1.0f}}, rb->transform(), colours::magenta);
     }
@@ -225,7 +225,7 @@ auto DebugRenderer::post_render(Scene &scene, const Camera &camera) -> void
         dl.push_cube(light_transform, light.colour);
     }
 
-    for (const auto entity_handle : scene.entities())
+    for (const auto entity_handle : scene.all_entities())
     {
         const auto entity = em[entity_handle];
         if (!entity)
@@ -273,7 +273,7 @@ auto DebugRenderer::post_render(Scene &scene, const Camera &camera) -> void
     draw_render_targets();
     draw_metrics();
     draw_inspector(scene);
-    draw_gizmo(camera);
+    draw_gizmo(scene, camera);
     draw_player_info();
 
     static auto first = false;
@@ -319,7 +319,7 @@ auto DebugRenderer::post_render(Scene &scene, const Camera &camera) -> void
             }
         }
 
-        for (const auto entity_handle : scene.entities())
+        for (const auto entity_handle : scene.all_entities())
         {
             const auto entity = em[entity_handle];
             if (!entity)
@@ -409,6 +409,12 @@ auto DebugRenderer::add_key_event(const KeyEvent &evt) -> void
     }
 }
 
+auto DebugRenderer::add_mouse_wheel_event(const MouseWheelEvent &evt) -> void
+{
+    auto &io = ::ImGui::GetIO();
+    io.AddMouseWheelEvent(0.0f, evt.delta_y());
+}
+
 auto DebugRenderer::set_enabled(bool enabled) -> void
 {
     enabled_ = enabled;
@@ -417,6 +423,8 @@ auto DebugRenderer::set_enabled(bool enabled) -> void
 
 auto DebugRenderer::draw_post_processing_window(Scene &scene) -> void
 {
+    auto &options = scene.post_processing_options();
+
     if (::ImGui::Begin("Post Processing"))
     {
         ::ImGui::PushID("post_processing");
@@ -427,13 +435,13 @@ auto DebugRenderer::draw_post_processing_window(Scene &scene) -> void
         {
             ::ImGui::PushID("tone_map_options");
 
-            create_debug_controller("max_brightness", scene.tone_map_options().max_brightness);
-            create_debug_controller("contrast", scene.tone_map_options().contrast);
-            create_debug_controller("linear_section_start", scene.tone_map_options().linear_section_start);
-            create_debug_controller("linear_section_length", scene.tone_map_options().linear_section_length);
-            create_debug_controller("black_tightness", scene.tone_map_options().black_tightness);
-            create_debug_controller("pedestal", scene.tone_map_options().pedestal);
-            create_debug_controller("gamma", scene.tone_map_options().gamma);
+            create_debug_controller("max_brightness", options.tone_map_options.max_brightness);
+            create_debug_controller("contrast", options.tone_map_options.contrast);
+            create_debug_controller("linear_section_start", options.tone_map_options.linear_section_start);
+            create_debug_controller("linear_section_length", options.tone_map_options.linear_section_length);
+            create_debug_controller("black_tightness", options.tone_map_options.black_tightness);
+            create_debug_controller("pedestal", options.tone_map_options.pedestal);
+            create_debug_controller("gamma", options.tone_map_options.gamma);
 
             ::ImGui::PopID();
         }
@@ -442,11 +450,11 @@ auto DebugRenderer::draw_post_processing_window(Scene &scene) -> void
         {
             ::ImGui::PushID("ssao_options");
 
-            ::ImGui::Checkbox("enabled", std::addressof(scene.ssao_options().enabled));
-            create_debug_controller("sample_count", scene.ssao_options().sample_count);
-            create_debug_controller("radius", scene.ssao_options().radius);
-            create_debug_controller("bias", scene.ssao_options().bias);
-            create_debug_controller("power", scene.ssao_options().power);
+            ::ImGui::Checkbox("enabled", std::addressof(options.ssao_options.enabled));
+            create_debug_controller("sample_count", options.ssao_options.sample_count);
+            create_debug_controller("radius", options.ssao_options.radius);
+            create_debug_controller("bias", options.ssao_options.bias);
+            create_debug_controller("power", options.ssao_options.power);
 
             ::ImGui::PopID();
         }
@@ -455,9 +463,9 @@ auto DebugRenderer::draw_post_processing_window(Scene &scene) -> void
         {
             ::ImGui::PushID("bloom_options");
 
-            create_debug_controller("filter_radius", scene.bloom_options().filter_radius);
-            create_debug_controller("mix_amount", scene.bloom_options().mix_amount);
-            create_debug_controller("threshold", scene.bloom_options().threshold);
+            create_debug_controller("filter_radius", options.bloom_options.filter_radius);
+            create_debug_controller("mix_amount", options.bloom_options.mix_amount);
+            create_debug_controller("threshold", options.bloom_options.threshold);
 
             ::ImGui::PopID();
         }
@@ -466,8 +474,8 @@ auto DebugRenderer::draw_post_processing_window(Scene &scene) -> void
         {
             ::ImGui::PushID("fog_options");
 
-            create_debug_controller("colour", scene.fog_options().colour);
-            create_debug_controller("density", scene.fog_options().density);
+            create_debug_controller("colour", options.fog_options.colour);
+            create_debug_controller("density", options.fog_options.density);
 
             ::ImGui::PopID();
         }
@@ -476,10 +484,10 @@ auto DebugRenderer::draw_post_processing_window(Scene &scene) -> void
         {
             ::ImGui::PushID("chromatic_aberration_options");
 
-            create_debug_controller("red", scene.chromatic_aberration_options().red_offset);
-            create_debug_controller("green", scene.chromatic_aberration_options().green_offset);
-            create_debug_controller("blue", scene.chromatic_aberration_options().blue_offset);
-            create_debug_controller("strength", scene.chromatic_aberration_options().strength);
+            create_debug_controller("red", options.chromatic_aberration_options.red_offset);
+            create_debug_controller("green", options.chromatic_aberration_options.green_offset);
+            create_debug_controller("blue", options.chromatic_aberration_options.blue_offset);
+            create_debug_controller("strength", options.chromatic_aberration_options.strength);
 
             ::ImGui::PopID();
         }
@@ -488,9 +496,9 @@ auto DebugRenderer::draw_post_processing_window(Scene &scene) -> void
         {
             ::ImGui::PushID("vignette_options");
 
-            create_debug_controller("colour", scene.vignette_options().colour);
-            create_debug_controller("strength", scene.vignette_options().strength);
-            create_debug_controller("feather", scene.vignette_options().feather);
+            create_debug_controller("colour", options.vignette_options.colour);
+            create_debug_controller("strength", options.vignette_options.strength);
+            create_debug_controller("feather", options.vignette_options.feather);
 
             ::ImGui::PopID();
         }
@@ -499,7 +507,7 @@ auto DebugRenderer::draw_post_processing_window(Scene &scene) -> void
         {
             ::ImGui::PushID("film_grain_options");
 
-            create_debug_controller("strength", scene.film_grain_options().strength);
+            create_debug_controller("strength", options.film_grain_options.strength);
 
             ::ImGui::PopID();
         }
@@ -511,7 +519,7 @@ auto DebugRenderer::draw_post_processing_window(Scene &scene) -> void
 
 auto DebugRenderer::draw_scene(Scene &scene, const Camera &camera) -> void
 {
-    auto &em = service<EntityManager>();
+    const auto &[em, ps] = services<EntityManager, PhysicsSystem>();
 
     if (::ImGui::Begin("Scene"))
     {
@@ -526,10 +534,19 @@ auto DebugRenderer::draw_scene(Scene &scene, const Camera &camera) -> void
             out << *scene_yaml;
         }
 
+        auto gravity = ps.gravity();
+        auto gravity_y = BoundedFloat<-10.0f, 0.0f>(gravity.y);
+
+        if (create_debug_controller("gravity", gravity_y))
+        {
+            gravity.y = gravity_y;
+            ps.set_gravity(gravity);
+        }
+
         if (::ImGui::Button("Add Entity"))
         {
-            static auto counter = std::ranges::size(scene.entities());
-            const auto handle = em.insert({std::format("entity_{}", counter++), {}, {}});
+            static auto counter = std::ranges::size(scene.all_entities());
+            const auto handle = em.insert({std::format("entity_{}", counter++), EntityType::STATIC, {}, {}});
             scene.add(handle);
             selected_ = handle;
         }
@@ -540,7 +557,7 @@ auto DebugRenderer::draw_scene(Scene &scene, const Camera &camera) -> void
         create_debug_controller("camera_view", camera.data().view);
 
         ::ImGui::Text("entities");
-        const auto entities = scene.entities() |
+        const auto entities = scene.all_entities() |
                               std::views::transform(
                                   [&](const auto &e)
                                   {
@@ -839,7 +856,8 @@ auto DebugRenderer::draw_inspector(Scene &scene) -> void
             if (::ImGui::Button("Add Child Entity"))
             {
                 static auto counter = 0zu;
-                const auto handle = em.insert({std::format("{}_child_{}", entity->name(), counter++), {}, {}});
+                const auto handle =
+                    em.insert({std::format("{}_child_{}", entity->name(), counter++), EntityType::STATIC, {}, {}});
 
                 entity->add_child(handle);
                 scene.add(handle);
@@ -906,7 +924,8 @@ auto DebugRenderer::draw_inspector(Scene &scene) -> void
                     static int counter = 0;
 
                     const auto name = std::format("{}_copy_{}", child->name(), counter++);
-                    const auto handle = em.insert({name, child->render_entities(), child->transform()});
+                    const auto handle =
+                        em.insert({name, EntityType::STATIC, child->render_entities(), child->transform()});
                     scene.add(handle);
                     entity->add_child(handle);
                     selected_ = handle;
@@ -925,6 +944,7 @@ auto DebugRenderer::draw_inspector(Scene &scene) -> void
                     if (::ImGui::Selectable(name.c_str(), false))
                     {
                         entity->add_render_entities(rem[name]);
+                        scene.set_is_static_dirty();
                     }
                 }
 
@@ -1012,7 +1032,7 @@ auto DebugRenderer::draw_inspector(Scene &scene) -> void
 
                 if (to_delete)
                 {
-                    entity->remove_render_entity(to_delete);
+                    entity->remove(to_delete);
                 }
 
                 highlight_render_entity_ = to_highlight;
@@ -1077,12 +1097,12 @@ auto DebugRenderer::draw_inspector(Scene &scene) -> void
 
                 if (to_delete)
                 {
-                    service<PhysicsSystem>().remove_rigid_body(to_delete);
+                    service<PhysicsSystem>().remove(to_delete);
                 }
 
                 if (to_duplicate)
                 {
-                    const auto handle = ps.duplicate_rigid_body(to_duplicate);
+                    const auto handle = ps.duplicate(to_duplicate);
                     entity->add_rigid_body(handle);
                     selected_ = handle;
                 }
@@ -1288,7 +1308,7 @@ auto DebugRenderer::draw_inspector(Scene &scene) -> void
     }
 }
 
-auto DebugRenderer::draw_gizmo(const Camera &camera) -> void
+auto DebugRenderer::draw_gizmo(Scene &scene, const Camera &camera) -> void
 {
     const auto &[em, ps, lm, cm] = services<EntityManager, PhysicsSystem, LightManager, CameraManager>();
 
@@ -1322,6 +1342,7 @@ auto DebugRenderer::draw_gizmo(const Camera &camera) -> void
                 const auto local = inverse_parent * world_matrix;
 
                 entity->set_transform(local);
+                scene.set_is_static_dirty();
             }
         }
         else if (auto *selected_light = std::get_if<LightHandle>(&selected_))
@@ -1350,7 +1371,7 @@ auto DebugRenderer::draw_gizmo(const Camera &camera) -> void
         }
         else if (auto *selected_rigid_body = std::get_if<RigidBodyHandle>(&selected_))
         {
-            if (auto rigid_body = ps.rigid_body(*selected_rigid_body); rigid_body)
+            if (auto rigid_body = ps[*selected_rigid_body]; rigid_body)
             {
                 auto &rb = *rigid_body;
 
@@ -1498,6 +1519,12 @@ auto DebugRenderer::draw_player_info() -> void
         {
             desc.bob_settle_time = std::chrono::milliseconds{bob_settle_time};
             player_actor_.set_gun(Gun{desc});
+        }
+
+        auto jump_strength = BoundedFloat<0.0f, 10.0f>(player_actor_.jump_strength());
+        if (create_debug_controller("jump_strength", jump_strength))
+        {
+            player_actor_.set_jump_strength(jump_strength);
         }
 
         ::ImGui::PopID();

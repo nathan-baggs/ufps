@@ -23,6 +23,7 @@
 #include "utils/error.h"
 #include "utils/exception.h"
 #include "utils/formatter.h"
+#include "utils/log.h"
 
 namespace
 {
@@ -98,6 +99,12 @@ auto CALLBACK window_proc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam) -> 
                     static_cast<float>(GET_X_LPARAM(lParam)),
                     static_cast<float>(GET_Y_LPARAM(lParam)),
                     ufps::MouseButtonState::DOWN});
+            break;
+        }
+        case WM_MOUSEWHEEL:
+        {
+            g_event_queue.emplace(
+                ufps::MouseWheelEvent{static_cast<float>(GET_WHEEL_DELTA_WPARAM(wParam)) / WHEEL_DELTA});
             break;
         }
     };

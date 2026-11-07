@@ -4,11 +4,13 @@
 
 #include "core/actor.h"
 #include "core/clock.h"
+#include "core/entity_manager.h"
 #include "core/flycam_actor.h"
 #include "core/player_actor.h"
 #include "core/scene.h"
 #include "core/service_locator.h"
 #include "events/input_map.h"
+#include "game/enemy_manager.h"
 #include "graphics/debug_renderer.h"
 #include "graphics/sampler.h"
 #include "graphics/window.h"
@@ -46,6 +48,7 @@ class Game
     bool debug_mode_;
     std::size_t allocation_tracker_;
     std::unique_ptr<Services> services_;
+    EnemyManager enemy_manager_;
 };
 
 }

@@ -1,17 +1,30 @@
 #include "physics/virtual_character_controller.h"
 
+#include <chrono>
+#include <ranges>
+
+#include "maths/spring.h"
 #include "maths/vector3.h"
 #include "physics/jolt.h"
 #include "physics/physics_layers.h"
 
+namespace
+{
+constexpr auto default_jump_strength = 5.0f;
+}
+
 namespace ufps
 {
 
-VirtualCharacterController::VirtualCharacterController(::JPH::PhysicsSystem &ps)
+VirtualCharacterController::VirtualCharacterController(::JPH::PhysicsSystem *ps)
     : ps_{ps}
     , shape_{}
+    , inner_shape_{}
     , character_{}
+    , object_layer_{}
     , walk_direction_{}
+    , do_jump_{false}
+    , jump_strength_{default_jump_strength}
 {
     shape_ = ::JPH::RotatedTranslatedShapeSettings(
                  ::JPH::Vec3(0, 0.5f * 1.35f + 0.3f, 0),
@@ -31,29 +44,53 @@ VirtualCharacterController::VirtualCharacterController(::JPH::PhysicsSystem &ps)
     settings->mShape = shape_;
     settings->mInnerBodyShape = inner_shape_;
     settings->mInnerBodyLayer = static_cast<::JPH::ObjectLayer>(ObjectLayer::PLAYER);
-    character_ =
-        new ::JPH::CharacterVirtual(settings, ::JPH::Vec3::sZero(), ::JPH::Quat::sIdentity(), 0, std::addressof(ps));
+    character_ = new ::JPH::CharacterVirtual(settings, ::JPH::Vec3::sZero(), ::JPH::Quat::sIdentity(), 0, ps_);
 
+    character_->SetListener(this);
+}
+
+VirtualCharacterController::VirtualCharacterController(VirtualCharacterController &&other) noexcept
+    : ps_{other.ps_}
+    , shape_{std::move(other.shape_)}
+    , inner_shape_{std::move(other.inner_shape_)}
+    , character_{std::move(other.character_)}
+    , object_layer_{}
+    , walk_direction_{other.walk_direction_}
+    , do_jump_{other.do_jump_}
+    , jump_strength_{other.jump_strength()}
+{
     character_->SetListener(this);
 }
 
 auto VirtualCharacterController::update(std::chrono::milliseconds delta, const Vector3 &gravity) -> void
 {
-    static auto temp_allocator = ::JPH::TempAllocatorImpl{10zu * 1024zu * 1024zu};
+    thread_local auto temp_allocator = ::JPH::TempAllocatorImpl{10zu * 1024zu * 1024zu};
 
     const auto jolt_delta = 1.0f / delta.count();
 
     constexpr auto speed = 1.2f;
     auto new_velocity = walk_direction_ * speed;
-    new_velocity += gravity * jolt_delta;
 
+    auto velocity_y_adj = 0.0f;
+    if (std::exchange(do_jump_, false))
+    {
+        velocity_y_adj = jump_strength_;
+    }
+
+    const auto current_linear_velocity = character_->GetLinearVelocity();
+
+    new_velocity.y = current_linear_velocity.GetY() + velocity_y_adj;
+    if (in_air())
+    {
+        new_velocity += gravity * jolt_delta;
+    }
     character_->SetLinearVelocity(to_jolt(new_velocity));
 
     character_->Update(
         jolt_delta,
-        -character_->GetUp() * ps_.GetGravity().Length(),
-        ps_.GetDefaultBroadPhaseLayerFilter(static_cast<::JPH::ObjectLayer>(ObjectLayer::PLAYER)),
-        ps_.GetDefaultLayerFilter(static_cast<::JPH::ObjectLayer>(ObjectLayer::PLAYER)),
+        -character_->GetUp() * ps_->GetGravity().Length(),
+        ps_->GetDefaultBroadPhaseLayerFilter(static_cast<::JPH::ObjectLayer>(ObjectLayer::PLAYER)),
+        object_layer_,
         {},
         {},
         temp_allocator);
@@ -62,6 +99,31 @@ auto VirtualCharacterController::update(std::chrono::milliseconds delta, const V
 auto VirtualCharacterController::set_walk_direction(const Vector3 &walk_direction) -> void
 {
     walk_direction_ = walk_direction;
+}
+
+auto VirtualCharacterController::jump() -> void
+{
+    do_jump_ = on_ground();
+}
+
+auto VirtualCharacterController::on_ground() const -> bool
+{
+    return character_->GetGroundState() == ::JPH::CharacterVirtual::EGroundState::OnGround;
+}
+
+auto VirtualCharacterController::in_air() const -> bool
+{
+    return character_->GetGroundState() == ::JPH::CharacterVirtual::EGroundState::InAir;
+}
+
+auto VirtualCharacterController::jump_strength() const -> float
+{
+    return jump_strength_;
+}
+
+auto VirtualCharacterController::set_jump_strength(float jump_strength) -> void
+{
+    jump_strength_ = jump_strength;
 }
 
 auto VirtualCharacterController::debug_draw(PhysicsDebugRenderer &renderer) -> void
@@ -80,9 +142,24 @@ auto VirtualCharacterController::position() const -> Vector3
     return to_native(character_->GetPosition());
 }
 
+auto VirtualCharacterController::set_position(const Vector3 &position) -> void
+{
+    character_->SetPosition(to_jolt(position));
+}
+
 auto VirtualCharacterController::rotation() const -> Quaternion
 {
     return to_native(character_->GetRotation());
+}
+
+auto VirtualCharacterController::swap(VirtualCharacterController &other) noexcept -> void
+{
+    std::ranges::swap(ps_, other.ps_);
+    std::ranges::swap(shape_, other.shape_);
+    std::ranges::swap(inner_shape_, other.inner_shape_);
+    std::ranges::swap(character_, other.character_);
+    std::ranges::swap(walk_direction_, other.walk_direction_);
+    std::ranges::swap(jump_strength_, other.jump_strength_);
 }
 
 auto VirtualCharacterController::OnContactAdded(

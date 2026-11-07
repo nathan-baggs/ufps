@@ -65,15 +65,24 @@ void main()
     float depth = length(frag_pos - eye);
     float occlusion = texture(u_ssao_texture, in_uv).r;
 
-    float ssao_scale = texture(u_normal_texture, in_uv).w;
+    vec4 normal_data = texture(u_normal_texture, in_uv);
+    float ssao_scale = normal_data.w;
+    float has_geometry = step(0.001, dot(normal_data.xyz, normal_data.xyz));
 
-    in_colour *= (0.4 / max(average, 0.0001));
-    in_colour *= max(occlusion, (1.0f - ssao_scale));
-    in_colour = fog(depth, in_colour);
+    if (has_geometry > 0.0f)
+    {
+        in_colour *= (0.4 / max(average, 0.0001));
+        in_colour *= max(occlusion, (1.0f - ssao_scale));
+        in_colour = fog(depth, in_colour);
 
-    vec3 tone_mapped_colour = uchimura(in_colour, u_P, u_a, u_m, u_l, u_c, u_b);
+        vec3 tone_mapped_colour = uchimura(in_colour, u_P, u_a, u_m, u_l, u_c, u_b);
 
-    vec3 gamma_corrected = pow(tone_mapped_colour, vec3(1.0 / u_gamma));
+        vec3 gamma_corrected = pow(tone_mapped_colour, vec3(1.0 / u_gamma));
 
-    out_colour = vec4(gamma_corrected, 1.0);
+        out_colour = vec4(gamma_corrected, 1.0);
+    }
+    else
+    {
+        out_colour = vec4(0.18, 0.35, 0.65, 1.0);
+    }
 }

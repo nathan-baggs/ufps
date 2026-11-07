@@ -259,12 +259,21 @@ TEST(sparse_set, data)
     s.emplace(20);
     s.emplace(200);
 
-    const auto data = s.data();
+    auto data = s.data();
+    static_assert(std::same_as<decltype(data), std::span<int>>);
 
     ASSERT_EQ(std::ranges::size(data), 3zu);
     ASSERT_EQ(data[0], 2);
     ASSERT_EQ(data[1], 20);
     ASSERT_EQ(data[2], 200);
+}
+
+TEST(sparse_set, data_const)
+{
+    const auto s = ufps::SparseSet<int>{};
+    auto data = s.data();
+
+    static_assert(std::same_as<decltype(data), std::span<const int>>);
 }
 
 TEST(sparse_set, reuse_handle)

@@ -12,6 +12,4 @@ class EntityManager : public StorageManager<Entity>
     using handle_type = StorageManager<Entity>::handle_type;
 };
 
-using EntityHandle = EntityManager::handle_type;
-
 }
