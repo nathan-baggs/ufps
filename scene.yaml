@@ -97,6 +97,10 @@ Description:
         children:
           - floor
           - walls
+          - block0
+          - block1
+          - block2
+          - block3
         camera: ~
         light: ~
         can_intersect_ray: false
@@ -540,6 +544,5642 @@ Description:
         camera: ~
         light: ~
         can_intersect_ray: false
+    - Description:
+        name: block0
+        type: STATIC
+        emissive_strength: 1
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: -9
+                y: 0
+                z: -9
+            scale:
+              Vector3:
+                x: 1
+                y: 1
+                z: 1
+            rotation:
+              Quaternion:
+                x: 0
+                y: 0
+                z: 0
+                w: 1
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: 3.4028235e+38
+                y: 3.4028235e+38
+                z: 3.4028235e+38
+            max:
+              Vector3:
+                x: -3.4028235e+38
+                y: -3.4028235e+38
+                z: -3.4028235e+38
+        rigid_bodies:
+          - Description:
+              local_transform:
+                - 6
+                - 0
+                - 0
+                - 0
+                - 0
+                - 1.5
+                - 0
+                - 0
+                - 0
+                - 0
+                - 6
+                - 0
+                - 3.0
+                - 1.5
+                - 6.0
+                - 1
+              applied_scale:
+                Vector3:
+                  x: 6
+                  y: 1.5
+                  z: 6
+              broad_phase_layer: STATIC
+              object_layer: WORLD_COLLIDERS
+        render_entities: ~
+        children:
+          - block0_cap0
+          - block0_cap1
+          - block0_cap2
+          - block0_cap3
+          - block0_cap4
+          - block0_cap5
+          - block0_cap6
+          - block0_cap7
+          - block0_cap8
+          - block0_cap9
+          - block0_cap10
+          - block0_cap11
+          - block0_cap12
+          - block0_cap13
+          - block0_cap14
+          - block0_cap15
+          - block0_side0
+          - block0_side1
+          - block0_side2
+          - block0_side3
+          - block0_side4
+          - block0_side5
+          - block0_side6
+          - block0_side7
+          - block0_side8
+          - block0_side9
+          - block0_side10
+          - block0_side11
+          - block0_side12
+          - block0_side13
+          - block0_side14
+          - block0_side15
+        camera: ~
+        light: ~
+        can_intersect_ray: false
+    - Description:
+        name: block0_cap0
+        type: STATIC
+        emissive_strength: 1
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: 0
+                y: 3
+                z: 0
+            scale:
+              Vector3:
+                x: 1
+                y: 1
+                z: 1
+            rotation:
+              Quaternion:
+                x: 0
+                y: 0
+                z: 0
+                w: 1
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: -3
+                y: -0.12034278
+                z: 0
+            max:
+              Vector3:
+                x: 0
+                y: 0.042849626
+                z: 3
+        rigid_bodies: ~
+        render_entities:
+          - SM_FloorPanel15_03_03
+        children: ~
+        camera: ~
+        light: ~
+        can_intersect_ray: true
+    - Description:
+        name: block0_cap1
+        type: STATIC
+        emissive_strength: 1
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: 3
+                y: 3
+                z: 0
+            scale:
+              Vector3:
+                x: 1
+                y: 1
+                z: 1
+            rotation:
+              Quaternion:
+                x: 0
+                y: 0
+                z: 0
+                w: 1
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: -3
+                y: -0.12034278
+                z: 0
+            max:
+              Vector3:
+                x: 0
+                y: 0.042849626
+                z: 3
+        rigid_bodies: ~
+        render_entities:
+          - SM_FloorPanel15_03_03
+        children: ~
+        camera: ~
+        light: ~
+        can_intersect_ray: true
+    - Description:
+        name: block0_cap2
+        type: STATIC
+        emissive_strength: 1
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: 6
+                y: 3
+                z: 0
+            scale:
+              Vector3:
+                x: 1
+                y: 1
+                z: 1
+            rotation:
+              Quaternion:
+                x: 0
+                y: 0
+                z: 0
+                w: 1
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: -3
+                y: -0.12034278
+                z: 0
+            max:
+              Vector3:
+                x: 0
+                y: 0.042849626
+                z: 3
+        rigid_bodies: ~
+        render_entities:
+          - SM_FloorPanel15_03_03
+        children: ~
+        camera: ~
+        light: ~
+        can_intersect_ray: true
+    - Description:
+        name: block0_cap3
+        type: STATIC
+        emissive_strength: 1
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: 9
+                y: 3
+                z: 0
+            scale:
+              Vector3:
+                x: 1
+                y: 1
+                z: 1
+            rotation:
+              Quaternion:
+                x: 0
+                y: 0
+                z: 0
+                w: 1
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: -3
+                y: -0.12034293
+                z: 0
+            max:
+              Vector3:
+                x: 0
+                y: 0.02752503
+                z: 3
+        rigid_bodies: ~
+        render_entities:
+          - SM_FloorPanel11_03_03
+        children: ~
+        camera: ~
+        light: ~
+        can_intersect_ray: true
+    - Description:
+        name: block0_cap4
+        type: STATIC
+        emissive_strength: 1
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: 0
+                y: 3
+                z: 3
+            scale:
+              Vector3:
+                x: 1
+                y: 1
+                z: 1
+            rotation:
+              Quaternion:
+                x: 0
+                y: 0
+                z: 0
+                w: 1
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: -3
+                y: -0.12034293
+                z: 0
+            max:
+              Vector3:
+                x: 0
+                y: 0.02752503
+                z: 3
+        rigid_bodies: ~
+        render_entities:
+          - SM_FloorPanel11_03_03
+        children: ~
+        camera: ~
+        light: ~
+        can_intersect_ray: true
+    - Description:
+        name: block0_cap5
+        type: STATIC
+        emissive_strength: 1
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: 3
+                y: 3
+                z: 3
+            scale:
+              Vector3:
+                x: 1
+                y: 1
+                z: 1
+            rotation:
+              Quaternion:
+                x: 0
+                y: 0
+                z: 0
+                w: 1
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: -3
+                y: -0.12034278
+                z: 0
+            max:
+              Vector3:
+                x: 0
+                y: 0.042849626
+                z: 3
+        rigid_bodies: ~
+        render_entities:
+          - SM_FloorPanel15_03_03
+        children: ~
+        camera: ~
+        light: ~
+        can_intersect_ray: true
+    - Description:
+        name: block0_cap6
+        type: STATIC
+        emissive_strength: 1
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: 6
+                y: 3
+                z: 3
+            scale:
+              Vector3:
+                x: 1
+                y: 1
+                z: 1
+            rotation:
+              Quaternion:
+                x: 0
+                y: 0
+                z: 0
+                w: 1
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: -3
+                y: -0.12034293
+                z: 0
+            max:
+              Vector3:
+                x: 0
+                y: 0.02752503
+                z: 3
+        rigid_bodies: ~
+        render_entities:
+          - SM_FloorPanel11_03_03
+        children: ~
+        camera: ~
+        light: ~
+        can_intersect_ray: true
+    - Description:
+        name: block0_cap7
+        type: STATIC
+        emissive_strength: 1
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: 9
+                y: 3
+                z: 3
+            scale:
+              Vector3:
+                x: 1
+                y: 1
+                z: 1
+            rotation:
+              Quaternion:
+                x: 0
+                y: 0
+                z: 0
+                w: 1
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: -3
+                y: -0.12034293
+                z: 0
+            max:
+              Vector3:
+                x: 0
+                y: 0.02752503
+                z: 3
+        rigid_bodies: ~
+        render_entities:
+          - SM_FloorPanel11_03_03
+        children: ~
+        camera: ~
+        light: ~
+        can_intersect_ray: true
+    - Description:
+        name: block0_cap8
+        type: STATIC
+        emissive_strength: 1
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: 0
+                y: 3
+                z: 6
+            scale:
+              Vector3:
+                x: 1
+                y: 1
+                z: 1
+            rotation:
+              Quaternion:
+                x: 0
+                y: 0
+                z: 0
+                w: 1
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: -3
+                y: -0.12034293
+                z: 0
+            max:
+              Vector3:
+                x: 0
+                y: 0.02752503
+                z: 3
+        rigid_bodies: ~
+        render_entities:
+          - SM_FloorPanel11_03_03
+        children: ~
+        camera: ~
+        light: ~
+        can_intersect_ray: true
+    - Description:
+        name: block0_cap9
+        type: STATIC
+        emissive_strength: 1
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: 3
+                y: 3
+                z: 6
+            scale:
+              Vector3:
+                x: 1
+                y: 1
+                z: 1
+            rotation:
+              Quaternion:
+                x: 0
+                y: 0
+                z: 0
+                w: 1
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: -3
+                y: -0.12034278
+                z: 0
+            max:
+              Vector3:
+                x: 0
+                y: 0.042849626
+                z: 3
+        rigid_bodies: ~
+        render_entities:
+          - SM_FloorPanel15_03_03
+        children: ~
+        camera: ~
+        light: ~
+        can_intersect_ray: true
+    - Description:
+        name: block0_cap10
+        type: STATIC
+        emissive_strength: 1
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: 6
+                y: 3
+                z: 6
+            scale:
+              Vector3:
+                x: 1
+                y: 1
+                z: 1
+            rotation:
+              Quaternion:
+                x: 0
+                y: 0
+                z: 0
+                w: 1
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: -3
+                y: -0.12034293
+                z: 0
+            max:
+              Vector3:
+                x: 0
+                y: 0.02752503
+                z: 3
+        rigid_bodies: ~
+        render_entities:
+          - SM_FloorPanel11_03_03
+        children: ~
+        camera: ~
+        light: ~
+        can_intersect_ray: true
+    - Description:
+        name: block0_cap11
+        type: STATIC
+        emissive_strength: 1
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: 9
+                y: 3
+                z: 6
+            scale:
+              Vector3:
+                x: 1
+                y: 1
+                z: 1
+            rotation:
+              Quaternion:
+                x: 0
+                y: 0
+                z: 0
+                w: 1
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: -3
+                y: -0.12034293
+                z: 0
+            max:
+              Vector3:
+                x: 0
+                y: 0.02752503
+                z: 3
+        rigid_bodies: ~
+        render_entities:
+          - SM_FloorPanel11_03_03
+        children: ~
+        camera: ~
+        light: ~
+        can_intersect_ray: true
+    - Description:
+        name: block0_cap12
+        type: STATIC
+        emissive_strength: 1
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: 0
+                y: 3
+                z: 9
+            scale:
+              Vector3:
+                x: 1
+                y: 1
+                z: 1
+            rotation:
+              Quaternion:
+                x: 0
+                y: 0
+                z: 0
+                w: 1
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: -3
+                y: -0.12034293
+                z: 0
+            max:
+              Vector3:
+                x: 0
+                y: 0.02752503
+                z: 3
+        rigid_bodies: ~
+        render_entities:
+          - SM_FloorPanel11_03_03
+        children: ~
+        camera: ~
+        light: ~
+        can_intersect_ray: true
+    - Description:
+        name: block0_cap13
+        type: STATIC
+        emissive_strength: 1
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: 3
+                y: 3
+                z: 9
+            scale:
+              Vector3:
+                x: 1
+                y: 1
+                z: 1
+            rotation:
+              Quaternion:
+                x: 0
+                y: 0
+                z: 0
+                w: 1
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: -3
+                y: -0.12034278
+                z: 0
+            max:
+              Vector3:
+                x: 0
+                y: 0.042849626
+                z: 3
+        rigid_bodies: ~
+        render_entities:
+          - SM_FloorPanel15_03_03
+        children: ~
+        camera: ~
+        light: ~
+        can_intersect_ray: true
+    - Description:
+        name: block0_cap14
+        type: STATIC
+        emissive_strength: 1
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: 6
+                y: 3
+                z: 9
+            scale:
+              Vector3:
+                x: 1
+                y: 1
+                z: 1
+            rotation:
+              Quaternion:
+                x: 0
+                y: 0
+                z: 0
+                w: 1
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: -3
+                y: -0.12034293
+                z: 0
+            max:
+              Vector3:
+                x: 0
+                y: 0.02752503
+                z: 3
+        rigid_bodies: ~
+        render_entities:
+          - SM_FloorPanel11_03_03
+        children: ~
+        camera: ~
+        light: ~
+        can_intersect_ray: true
+    - Description:
+        name: block0_cap15
+        type: STATIC
+        emissive_strength: 1
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: 9
+                y: 3
+                z: 9
+            scale:
+              Vector3:
+                x: 1
+                y: 1
+                z: 1
+            rotation:
+              Quaternion:
+                x: 0
+                y: 0
+                z: 0
+                w: 1
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: -3
+                y: -0.12034278
+                z: 0
+            max:
+              Vector3:
+                x: 0
+                y: 0.042849626
+                z: 3
+        rigid_bodies: ~
+        render_entities:
+          - SM_FloorPanel15_03_03
+        children: ~
+        camera: ~
+        light: ~
+        can_intersect_ray: true
+    - Description:
+        name: block0_side0
+        type: STATIC
+        emissive_strength: 1
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: 0
+                y: 0
+                z: 0
+            scale:
+              Vector3:
+                x: 1
+                y: 1
+                z: 1
+            rotation:
+              Quaternion:
+                x: -0.70710677
+                y: 0
+                z: 0
+                w: 0.70710677
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: -3
+                y: -0.12034293
+                z: 0
+            max:
+              Vector3:
+                x: 0
+                y: 0.02752503
+                z: 3
+        rigid_bodies: ~
+        render_entities:
+          - SM_FloorPanel11_03_03
+        children: ~
+        camera: ~
+        light: ~
+        can_intersect_ray: true
+    - Description:
+        name: block0_side1
+        type: STATIC
+        emissive_strength: 1
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: 3
+                y: 0
+                z: 0
+            scale:
+              Vector3:
+                x: 1
+                y: 1
+                z: 1
+            rotation:
+              Quaternion:
+                x: -0.70710677
+                y: 0
+                z: 0
+                w: 0.70710677
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: -3
+                y: -0.12034278
+                z: 0
+            max:
+              Vector3:
+                x: 0
+                y: 0.042849626
+                z: 3
+        rigid_bodies: ~
+        render_entities:
+          - SM_FloorPanel15_03_03
+        children: ~
+        camera: ~
+        light: ~
+        can_intersect_ray: true
+    - Description:
+        name: block0_side2
+        type: STATIC
+        emissive_strength: 1
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: 6
+                y: 0
+                z: 0
+            scale:
+              Vector3:
+                x: 1
+                y: 1
+                z: 1
+            rotation:
+              Quaternion:
+                x: -0.70710677
+                y: 0
+                z: 0
+                w: 0.70710677
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: -3
+                y: -0.12034293
+                z: 0
+            max:
+              Vector3:
+                x: 0
+                y: 0.02752503
+                z: 3
+        rigid_bodies: ~
+        render_entities:
+          - SM_FloorPanel11_03_03
+        children: ~
+        camera: ~
+        light: ~
+        can_intersect_ray: true
+    - Description:
+        name: block0_side3
+        type: STATIC
+        emissive_strength: 1
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: 9
+                y: 0
+                z: 0
+            scale:
+              Vector3:
+                x: 1
+                y: 1
+                z: 1
+            rotation:
+              Quaternion:
+                x: -0.70710677
+                y: 0
+                z: 0
+                w: 0.70710677
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: -3
+                y: -0.12034293
+                z: 0
+            max:
+              Vector3:
+                x: 0
+                y: 0.02752503
+                z: 3
+        rigid_bodies: ~
+        render_entities:
+          - SM_FloorPanel11_03_03
+        children: ~
+        camera: ~
+        light: ~
+        can_intersect_ray: true
+    - Description:
+        name: block0_side4
+        type: STATIC
+        emissive_strength: 1
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: 0
+                y: 3
+                z: 12
+            scale:
+              Vector3:
+                x: 1
+                y: 1
+                z: 1
+            rotation:
+              Quaternion:
+                x: 0.70710677
+                y: 0
+                z: 0
+                w: 0.70710677
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: -3
+                y: -0.12034278
+                z: 0
+            max:
+              Vector3:
+                x: 0
+                y: 0.042849626
+                z: 3
+        rigid_bodies: ~
+        render_entities:
+          - SM_FloorPanel15_03_03
+        children: ~
+        camera: ~
+        light: ~
+        can_intersect_ray: true
+    - Description:
+        name: block0_side5
+        type: STATIC
+        emissive_strength: 1
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: 3
+                y: 3
+                z: 12
+            scale:
+              Vector3:
+                x: 1
+                y: 1
+                z: 1
+            rotation:
+              Quaternion:
+                x: 0.70710677
+                y: 0
+                z: 0
+                w: 0.70710677
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: -3
+                y: -0.12034293
+                z: 0
+            max:
+              Vector3:
+                x: 0
+                y: 0.02752503
+                z: 3
+        rigid_bodies: ~
+        render_entities:
+          - SM_FloorPanel11_03_03
+        children: ~
+        camera: ~
+        light: ~
+        can_intersect_ray: true
+    - Description:
+        name: block0_side6
+        type: STATIC
+        emissive_strength: 1
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: 6
+                y: 3
+                z: 12
+            scale:
+              Vector3:
+                x: 1
+                y: 1
+                z: 1
+            rotation:
+              Quaternion:
+                x: 0.70710677
+                y: 0
+                z: 0
+                w: 0.70710677
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: -3
+                y: -0.12034278
+                z: 0
+            max:
+              Vector3:
+                x: 0
+                y: 0.042849626
+                z: 3
+        rigid_bodies: ~
+        render_entities:
+          - SM_FloorPanel15_03_03
+        children: ~
+        camera: ~
+        light: ~
+        can_intersect_ray: true
+    - Description:
+        name: block0_side7
+        type: STATIC
+        emissive_strength: 1
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: 9
+                y: 3
+                z: 12
+            scale:
+              Vector3:
+                x: 1
+                y: 1
+                z: 1
+            rotation:
+              Quaternion:
+                x: 0.70710677
+                y: 0
+                z: 0
+                w: 0.70710677
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: -3
+                y: -0.12034293
+                z: 0
+            max:
+              Vector3:
+                x: 0
+                y: 0.02752503
+                z: 3
+        rigid_bodies: ~
+        render_entities:
+          - SM_FloorPanel11_03_03
+        children: ~
+        camera: ~
+        light: ~
+        can_intersect_ray: true
+    - Description:
+        name: block0_side8
+        type: STATIC
+        emissive_strength: 1
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: -3
+                y: 3
+                z: 0
+            scale:
+              Vector3:
+                x: 1
+                y: 1
+                z: 1
+            rotation:
+              Quaternion:
+                x: 0
+                y: 0
+                z: 0.70710677
+                w: 0.70710677
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: -3
+                y: -0.12034293
+                z: 0
+            max:
+              Vector3:
+                x: 0
+                y: 0.02752503
+                z: 3
+        rigid_bodies: ~
+        render_entities:
+          - SM_FloorPanel11_03_03
+        children: ~
+        camera: ~
+        light: ~
+        can_intersect_ray: true
+    - Description:
+        name: block0_side9
+        type: STATIC
+        emissive_strength: 1
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: -3
+                y: 3
+                z: 3
+            scale:
+              Vector3:
+                x: 1
+                y: 1
+                z: 1
+            rotation:
+              Quaternion:
+                x: 0
+                y: 0
+                z: 0.70710677
+                w: 0.70710677
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: -3
+                y: -0.12034293
+                z: 0
+            max:
+              Vector3:
+                x: 0
+                y: 0.02752503
+                z: 3
+        rigid_bodies: ~
+        render_entities:
+          - SM_FloorPanel11_03_03
+        children: ~
+        camera: ~
+        light: ~
+        can_intersect_ray: true
+    - Description:
+        name: block0_side10
+        type: STATIC
+        emissive_strength: 1
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: -3
+                y: 3
+                z: 6
+            scale:
+              Vector3:
+                x: 1
+                y: 1
+                z: 1
+            rotation:
+              Quaternion:
+                x: 0
+                y: 0
+                z: 0.70710677
+                w: 0.70710677
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: -3
+                y: -0.12034293
+                z: 0
+            max:
+              Vector3:
+                x: 0
+                y: 0.02752503
+                z: 3
+        rigid_bodies: ~
+        render_entities:
+          - SM_FloorPanel11_03_03
+        children: ~
+        camera: ~
+        light: ~
+        can_intersect_ray: true
+    - Description:
+        name: block0_side11
+        type: STATIC
+        emissive_strength: 1
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: -3
+                y: 3
+                z: 9
+            scale:
+              Vector3:
+                x: 1
+                y: 1
+                z: 1
+            rotation:
+              Quaternion:
+                x: 0
+                y: 0
+                z: 0.70710677
+                w: 0.70710677
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: -3
+                y: -0.12034293
+                z: 0
+            max:
+              Vector3:
+                x: 0
+                y: 0.02752503
+                z: 3
+        rigid_bodies: ~
+        render_entities:
+          - SM_FloorPanel11_03_03
+        children: ~
+        camera: ~
+        light: ~
+        can_intersect_ray: true
+    - Description:
+        name: block0_side12
+        type: STATIC
+        emissive_strength: 1
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: 9
+                y: 0
+                z: 0
+            scale:
+              Vector3:
+                x: 1
+                y: 1
+                z: 1
+            rotation:
+              Quaternion:
+                x: 0
+                y: 0
+                z: -0.70710677
+                w: 0.70710677
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: -3
+                y: -0.12034278
+                z: 0
+            max:
+              Vector3:
+                x: 0
+                y: 0.042849626
+                z: 3
+        rigid_bodies: ~
+        render_entities:
+          - SM_FloorPanel15_03_03
+        children: ~
+        camera: ~
+        light: ~
+        can_intersect_ray: true
+    - Description:
+        name: block0_side13
+        type: STATIC
+        emissive_strength: 1
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: 9
+                y: 0
+                z: 3
+            scale:
+              Vector3:
+                x: 1
+                y: 1
+                z: 1
+            rotation:
+              Quaternion:
+                x: 0
+                y: 0
+                z: -0.70710677
+                w: 0.70710677
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: -3
+                y: -0.12034293
+                z: 0
+            max:
+              Vector3:
+                x: 0
+                y: 0.02752503
+                z: 3
+        rigid_bodies: ~
+        render_entities:
+          - SM_FloorPanel11_03_03
+        children: ~
+        camera: ~
+        light: ~
+        can_intersect_ray: true
+    - Description:
+        name: block0_side14
+        type: STATIC
+        emissive_strength: 1
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: 9
+                y: 0
+                z: 6
+            scale:
+              Vector3:
+                x: 1
+                y: 1
+                z: 1
+            rotation:
+              Quaternion:
+                x: 0
+                y: 0
+                z: -0.70710677
+                w: 0.70710677
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: -3
+                y: -0.12034278
+                z: 0
+            max:
+              Vector3:
+                x: 0
+                y: 0.042849626
+                z: 3
+        rigid_bodies: ~
+        render_entities:
+          - SM_FloorPanel15_03_03
+        children: ~
+        camera: ~
+        light: ~
+        can_intersect_ray: true
+    - Description:
+        name: block0_side15
+        type: STATIC
+        emissive_strength: 1
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: 9
+                y: 0
+                z: 9
+            scale:
+              Vector3:
+                x: 1
+                y: 1
+                z: 1
+            rotation:
+              Quaternion:
+                x: 0
+                y: 0
+                z: -0.70710677
+                w: 0.70710677
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: -3
+                y: -0.12034293
+                z: 0
+            max:
+              Vector3:
+                x: 0
+                y: 0.02752503
+                z: 3
+        rigid_bodies: ~
+        render_entities:
+          - SM_FloorPanel11_03_03
+        children: ~
+        camera: ~
+        light: ~
+        can_intersect_ray: true
+    - Description:
+        name: block1
+        type: STATIC
+        emissive_strength: 1
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: 36
+                y: 0
+                z: -9
+            scale:
+              Vector3:
+                x: 1
+                y: 1
+                z: 1
+            rotation:
+              Quaternion:
+                x: 0
+                y: 0
+                z: 0
+                w: 1
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: 3.4028235e+38
+                y: 3.4028235e+38
+                z: 3.4028235e+38
+            max:
+              Vector3:
+                x: -3.4028235e+38
+                y: -3.4028235e+38
+                z: -3.4028235e+38
+        rigid_bodies:
+          - Description:
+              local_transform:
+                - 6
+                - 0
+                - 0
+                - 0
+                - 0
+                - 1.5
+                - 0
+                - 0
+                - 0
+                - 0
+                - 6
+                - 0
+                - -6.0
+                - 1.5
+                - 6.0
+                - 1
+              applied_scale:
+                Vector3:
+                  x: 6
+                  y: 1.5
+                  z: 6
+              broad_phase_layer: STATIC
+              object_layer: WORLD_COLLIDERS
+        render_entities: ~
+        children:
+          - block1_cap0
+          - block1_cap1
+          - block1_cap2
+          - block1_cap3
+          - block1_cap4
+          - block1_cap5
+          - block1_cap6
+          - block1_cap7
+          - block1_cap8
+          - block1_cap9
+          - block1_cap10
+          - block1_cap11
+          - block1_cap12
+          - block1_cap13
+          - block1_cap14
+          - block1_cap15
+          - block1_side0
+          - block1_side1
+          - block1_side2
+          - block1_side3
+          - block1_side4
+          - block1_side5
+          - block1_side6
+          - block1_side7
+          - block1_side8
+          - block1_side9
+          - block1_side10
+          - block1_side11
+          - block1_side12
+          - block1_side13
+          - block1_side14
+          - block1_side15
+        camera: ~
+        light: ~
+        can_intersect_ray: false
+    - Description:
+        name: block1_cap0
+        type: STATIC
+        emissive_strength: 1
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: 0
+                y: 3
+                z: 0
+            scale:
+              Vector3:
+                x: 1
+                y: 1
+                z: 1
+            rotation:
+              Quaternion:
+                x: 0
+                y: 0
+                z: 0
+                w: 1
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: -3
+                y: -0.12034293
+                z: 0
+            max:
+              Vector3:
+                x: 0
+                y: 0.02752503
+                z: 3
+        rigid_bodies: ~
+        render_entities:
+          - SM_FloorPanel11_03_03
+        children: ~
+        camera: ~
+        light: ~
+        can_intersect_ray: true
+    - Description:
+        name: block1_cap1
+        type: STATIC
+        emissive_strength: 1
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: -3
+                y: 3
+                z: 0
+            scale:
+              Vector3:
+                x: 1
+                y: 1
+                z: 1
+            rotation:
+              Quaternion:
+                x: 0
+                y: 0
+                z: 0
+                w: 1
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: -3
+                y: -0.12034293
+                z: 0
+            max:
+              Vector3:
+                x: 0
+                y: 0.02752503
+                z: 3
+        rigid_bodies: ~
+        render_entities:
+          - SM_FloorPanel11_03_03
+        children: ~
+        camera: ~
+        light: ~
+        can_intersect_ray: true
+    - Description:
+        name: block1_cap2
+        type: STATIC
+        emissive_strength: 1
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: -6
+                y: 3
+                z: 0
+            scale:
+              Vector3:
+                x: 1
+                y: 1
+                z: 1
+            rotation:
+              Quaternion:
+                x: 0
+                y: 0
+                z: 0
+                w: 1
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: -3
+                y: -0.12034293
+                z: 0
+            max:
+              Vector3:
+                x: 0
+                y: 0.02752503
+                z: 3
+        rigid_bodies: ~
+        render_entities:
+          - SM_FloorPanel11_03_03
+        children: ~
+        camera: ~
+        light: ~
+        can_intersect_ray: true
+    - Description:
+        name: block1_cap3
+        type: STATIC
+        emissive_strength: 1
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: -9
+                y: 3
+                z: 0
+            scale:
+              Vector3:
+                x: 1
+                y: 1
+                z: 1
+            rotation:
+              Quaternion:
+                x: 0
+                y: 0
+                z: 0
+                w: 1
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: -3
+                y: -0.12034293
+                z: 0
+            max:
+              Vector3:
+                x: 0
+                y: 0.02752503
+                z: 3
+        rigid_bodies: ~
+        render_entities:
+          - SM_FloorPanel11_03_03
+        children: ~
+        camera: ~
+        light: ~
+        can_intersect_ray: true
+    - Description:
+        name: block1_cap4
+        type: STATIC
+        emissive_strength: 1
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: 0
+                y: 3
+                z: 3
+            scale:
+              Vector3:
+                x: 1
+                y: 1
+                z: 1
+            rotation:
+              Quaternion:
+                x: 0
+                y: 0
+                z: 0
+                w: 1
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: -3
+                y: -0.12034278
+                z: 0
+            max:
+              Vector3:
+                x: 0
+                y: 0.042849626
+                z: 3
+        rigid_bodies: ~
+        render_entities:
+          - SM_FloorPanel15_03_03
+        children: ~
+        camera: ~
+        light: ~
+        can_intersect_ray: true
+    - Description:
+        name: block1_cap5
+        type: STATIC
+        emissive_strength: 1
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: -3
+                y: 3
+                z: 3
+            scale:
+              Vector3:
+                x: 1
+                y: 1
+                z: 1
+            rotation:
+              Quaternion:
+                x: 0
+                y: 0
+                z: 0
+                w: 1
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: -3
+                y: -0.12034278
+                z: 0
+            max:
+              Vector3:
+                x: 0
+                y: 0.042849626
+                z: 3
+        rigid_bodies: ~
+        render_entities:
+          - SM_FloorPanel15_03_03
+        children: ~
+        camera: ~
+        light: ~
+        can_intersect_ray: true
+    - Description:
+        name: block1_cap6
+        type: STATIC
+        emissive_strength: 1
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: -6
+                y: 3
+                z: 3
+            scale:
+              Vector3:
+                x: 1
+                y: 1
+                z: 1
+            rotation:
+              Quaternion:
+                x: 0
+                y: 0
+                z: 0
+                w: 1
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: -3
+                y: -0.12034293
+                z: 0
+            max:
+              Vector3:
+                x: 0
+                y: 0.02752503
+                z: 3
+        rigid_bodies: ~
+        render_entities:
+          - SM_FloorPanel11_03_03
+        children: ~
+        camera: ~
+        light: ~
+        can_intersect_ray: true
+    - Description:
+        name: block1_cap7
+        type: STATIC
+        emissive_strength: 1
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: -9
+                y: 3
+                z: 3
+            scale:
+              Vector3:
+                x: 1
+                y: 1
+                z: 1
+            rotation:
+              Quaternion:
+                x: 0
+                y: 0
+                z: 0
+                w: 1
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: -3
+                y: -0.12034278
+                z: 0
+            max:
+              Vector3:
+                x: 0
+                y: 0.042849626
+                z: 3
+        rigid_bodies: ~
+        render_entities:
+          - SM_FloorPanel15_03_03
+        children: ~
+        camera: ~
+        light: ~
+        can_intersect_ray: true
+    - Description:
+        name: block1_cap8
+        type: STATIC
+        emissive_strength: 1
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: 0
+                y: 3
+                z: 6
+            scale:
+              Vector3:
+                x: 1
+                y: 1
+                z: 1
+            rotation:
+              Quaternion:
+                x: 0
+                y: 0
+                z: 0
+                w: 1
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: -3
+                y: -0.12034278
+                z: 0
+            max:
+              Vector3:
+                x: 0
+                y: 0.042849626
+                z: 3
+        rigid_bodies: ~
+        render_entities:
+          - SM_FloorPanel15_03_03
+        children: ~
+        camera: ~
+        light: ~
+        can_intersect_ray: true
+    - Description:
+        name: block1_cap9
+        type: STATIC
+        emissive_strength: 1
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: -3
+                y: 3
+                z: 6
+            scale:
+              Vector3:
+                x: 1
+                y: 1
+                z: 1
+            rotation:
+              Quaternion:
+                x: 0
+                y: 0
+                z: 0
+                w: 1
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: -3
+                y: -0.12034293
+                z: 0
+            max:
+              Vector3:
+                x: 0
+                y: 0.02752503
+                z: 3
+        rigid_bodies: ~
+        render_entities:
+          - SM_FloorPanel11_03_03
+        children: ~
+        camera: ~
+        light: ~
+        can_intersect_ray: true
+    - Description:
+        name: block1_cap10
+        type: STATIC
+        emissive_strength: 1
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: -6
+                y: 3
+                z: 6
+            scale:
+              Vector3:
+                x: 1
+                y: 1
+                z: 1
+            rotation:
+              Quaternion:
+                x: 0
+                y: 0
+                z: 0
+                w: 1
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: -3
+                y: -0.12034293
+                z: 0
+            max:
+              Vector3:
+                x: 0
+                y: 0.02752503
+                z: 3
+        rigid_bodies: ~
+        render_entities:
+          - SM_FloorPanel11_03_03
+        children: ~
+        camera: ~
+        light: ~
+        can_intersect_ray: true
+    - Description:
+        name: block1_cap11
+        type: STATIC
+        emissive_strength: 1
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: -9
+                y: 3
+                z: 6
+            scale:
+              Vector3:
+                x: 1
+                y: 1
+                z: 1
+            rotation:
+              Quaternion:
+                x: 0
+                y: 0
+                z: 0
+                w: 1
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: -3
+                y: -0.12034293
+                z: 0
+            max:
+              Vector3:
+                x: 0
+                y: 0.02752503
+                z: 3
+        rigid_bodies: ~
+        render_entities:
+          - SM_FloorPanel11_03_03
+        children: ~
+        camera: ~
+        light: ~
+        can_intersect_ray: true
+    - Description:
+        name: block1_cap12
+        type: STATIC
+        emissive_strength: 1
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: 0
+                y: 3
+                z: 9
+            scale:
+              Vector3:
+                x: 1
+                y: 1
+                z: 1
+            rotation:
+              Quaternion:
+                x: 0
+                y: 0
+                z: 0
+                w: 1
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: -3
+                y: -0.12034278
+                z: 0
+            max:
+              Vector3:
+                x: 0
+                y: 0.042849626
+                z: 3
+        rigid_bodies: ~
+        render_entities:
+          - SM_FloorPanel15_03_03
+        children: ~
+        camera: ~
+        light: ~
+        can_intersect_ray: true
+    - Description:
+        name: block1_cap13
+        type: STATIC
+        emissive_strength: 1
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: -3
+                y: 3
+                z: 9
+            scale:
+              Vector3:
+                x: 1
+                y: 1
+                z: 1
+            rotation:
+              Quaternion:
+                x: 0
+                y: 0
+                z: 0
+                w: 1
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: -3
+                y: -0.12034293
+                z: 0
+            max:
+              Vector3:
+                x: 0
+                y: 0.02752503
+                z: 3
+        rigid_bodies: ~
+        render_entities:
+          - SM_FloorPanel11_03_03
+        children: ~
+        camera: ~
+        light: ~
+        can_intersect_ray: true
+    - Description:
+        name: block1_cap14
+        type: STATIC
+        emissive_strength: 1
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: -6
+                y: 3
+                z: 9
+            scale:
+              Vector3:
+                x: 1
+                y: 1
+                z: 1
+            rotation:
+              Quaternion:
+                x: 0
+                y: 0
+                z: 0
+                w: 1
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: -3
+                y: -0.12034293
+                z: 0
+            max:
+              Vector3:
+                x: 0
+                y: 0.02752503
+                z: 3
+        rigid_bodies: ~
+        render_entities:
+          - SM_FloorPanel11_03_03
+        children: ~
+        camera: ~
+        light: ~
+        can_intersect_ray: true
+    - Description:
+        name: block1_cap15
+        type: STATIC
+        emissive_strength: 1
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: -9
+                y: 3
+                z: 9
+            scale:
+              Vector3:
+                x: 1
+                y: 1
+                z: 1
+            rotation:
+              Quaternion:
+                x: 0
+                y: 0
+                z: 0
+                w: 1
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: -3
+                y: -0.12034293
+                z: 0
+            max:
+              Vector3:
+                x: 0
+                y: 0.02752503
+                z: 3
+        rigid_bodies: ~
+        render_entities:
+          - SM_FloorPanel11_03_03
+        children: ~
+        camera: ~
+        light: ~
+        can_intersect_ray: true
+    - Description:
+        name: block1_side0
+        type: STATIC
+        emissive_strength: 1
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: -9
+                y: 0
+                z: 0
+            scale:
+              Vector3:
+                x: 1
+                y: 1
+                z: 1
+            rotation:
+              Quaternion:
+                x: -0.70710677
+                y: 0
+                z: 0
+                w: 0.70710677
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: -3
+                y: -0.12034278
+                z: 0
+            max:
+              Vector3:
+                x: 0
+                y: 0.042849626
+                z: 3
+        rigid_bodies: ~
+        render_entities:
+          - SM_FloorPanel15_03_03
+        children: ~
+        camera: ~
+        light: ~
+        can_intersect_ray: true
+    - Description:
+        name: block1_side1
+        type: STATIC
+        emissive_strength: 1
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: -6
+                y: 0
+                z: 0
+            scale:
+              Vector3:
+                x: 1
+                y: 1
+                z: 1
+            rotation:
+              Quaternion:
+                x: -0.70710677
+                y: 0
+                z: 0
+                w: 0.70710677
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: -3
+                y: -0.12034278
+                z: 0
+            max:
+              Vector3:
+                x: 0
+                y: 0.042849626
+                z: 3
+        rigid_bodies: ~
+        render_entities:
+          - SM_FloorPanel15_03_03
+        children: ~
+        camera: ~
+        light: ~
+        can_intersect_ray: true
+    - Description:
+        name: block1_side2
+        type: STATIC
+        emissive_strength: 1
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: -3
+                y: 0
+                z: 0
+            scale:
+              Vector3:
+                x: 1
+                y: 1
+                z: 1
+            rotation:
+              Quaternion:
+                x: -0.70710677
+                y: 0
+                z: 0
+                w: 0.70710677
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: -3
+                y: -0.12034278
+                z: 0
+            max:
+              Vector3:
+                x: 0
+                y: 0.042849626
+                z: 3
+        rigid_bodies: ~
+        render_entities:
+          - SM_FloorPanel15_03_03
+        children: ~
+        camera: ~
+        light: ~
+        can_intersect_ray: true
+    - Description:
+        name: block1_side3
+        type: STATIC
+        emissive_strength: 1
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: 0
+                y: 0
+                z: 0
+            scale:
+              Vector3:
+                x: 1
+                y: 1
+                z: 1
+            rotation:
+              Quaternion:
+                x: -0.70710677
+                y: 0
+                z: 0
+                w: 0.70710677
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: -3
+                y: -0.12034278
+                z: 0
+            max:
+              Vector3:
+                x: 0
+                y: 0.042849626
+                z: 3
+        rigid_bodies: ~
+        render_entities:
+          - SM_FloorPanel15_03_03
+        children: ~
+        camera: ~
+        light: ~
+        can_intersect_ray: true
+    - Description:
+        name: block1_side4
+        type: STATIC
+        emissive_strength: 1
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: -9
+                y: 3
+                z: 12
+            scale:
+              Vector3:
+                x: 1
+                y: 1
+                z: 1
+            rotation:
+              Quaternion:
+                x: 0.70710677
+                y: 0
+                z: 0
+                w: 0.70710677
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: -3
+                y: -0.12034278
+                z: 0
+            max:
+              Vector3:
+                x: 0
+                y: 0.042849626
+                z: 3
+        rigid_bodies: ~
+        render_entities:
+          - SM_FloorPanel15_03_03
+        children: ~
+        camera: ~
+        light: ~
+        can_intersect_ray: true
+    - Description:
+        name: block1_side5
+        type: STATIC
+        emissive_strength: 1
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: -6
+                y: 3
+                z: 12
+            scale:
+              Vector3:
+                x: 1
+                y: 1
+                z: 1
+            rotation:
+              Quaternion:
+                x: 0.70710677
+                y: 0
+                z: 0
+                w: 0.70710677
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: -3
+                y: -0.12034293
+                z: 0
+            max:
+              Vector3:
+                x: 0
+                y: 0.02752503
+                z: 3
+        rigid_bodies: ~
+        render_entities:
+          - SM_FloorPanel11_03_03
+        children: ~
+        camera: ~
+        light: ~
+        can_intersect_ray: true
+    - Description:
+        name: block1_side6
+        type: STATIC
+        emissive_strength: 1
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: -3
+                y: 3
+                z: 12
+            scale:
+              Vector3:
+                x: 1
+                y: 1
+                z: 1
+            rotation:
+              Quaternion:
+                x: 0.70710677
+                y: 0
+                z: 0
+                w: 0.70710677
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: -3
+                y: -0.12034278
+                z: 0
+            max:
+              Vector3:
+                x: 0
+                y: 0.042849626
+                z: 3
+        rigid_bodies: ~
+        render_entities:
+          - SM_FloorPanel15_03_03
+        children: ~
+        camera: ~
+        light: ~
+        can_intersect_ray: true
+    - Description:
+        name: block1_side7
+        type: STATIC
+        emissive_strength: 1
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: 0
+                y: 3
+                z: 12
+            scale:
+              Vector3:
+                x: 1
+                y: 1
+                z: 1
+            rotation:
+              Quaternion:
+                x: 0.70710677
+                y: 0
+                z: 0
+                w: 0.70710677
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: -3
+                y: -0.12034278
+                z: 0
+            max:
+              Vector3:
+                x: 0
+                y: 0.042849626
+                z: 3
+        rigid_bodies: ~
+        render_entities:
+          - SM_FloorPanel15_03_03
+        children: ~
+        camera: ~
+        light: ~
+        can_intersect_ray: true
+    - Description:
+        name: block1_side8
+        type: STATIC
+        emissive_strength: 1
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: -12
+                y: 3
+                z: 0
+            scale:
+              Vector3:
+                x: 1
+                y: 1
+                z: 1
+            rotation:
+              Quaternion:
+                x: 0
+                y: 0
+                z: 0.70710677
+                w: 0.70710677
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: -3
+                y: -0.12034278
+                z: 0
+            max:
+              Vector3:
+                x: 0
+                y: 0.042849626
+                z: 3
+        rigid_bodies: ~
+        render_entities:
+          - SM_FloorPanel15_03_03
+        children: ~
+        camera: ~
+        light: ~
+        can_intersect_ray: true
+    - Description:
+        name: block1_side9
+        type: STATIC
+        emissive_strength: 1
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: -12
+                y: 3
+                z: 3
+            scale:
+              Vector3:
+                x: 1
+                y: 1
+                z: 1
+            rotation:
+              Quaternion:
+                x: 0
+                y: 0
+                z: 0.70710677
+                w: 0.70710677
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: -3
+                y: -0.12034293
+                z: 0
+            max:
+              Vector3:
+                x: 0
+                y: 0.02752503
+                z: 3
+        rigid_bodies: ~
+        render_entities:
+          - SM_FloorPanel11_03_03
+        children: ~
+        camera: ~
+        light: ~
+        can_intersect_ray: true
+    - Description:
+        name: block1_side10
+        type: STATIC
+        emissive_strength: 1
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: -12
+                y: 3
+                z: 6
+            scale:
+              Vector3:
+                x: 1
+                y: 1
+                z: 1
+            rotation:
+              Quaternion:
+                x: 0
+                y: 0
+                z: 0.70710677
+                w: 0.70710677
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: -3
+                y: -0.12034293
+                z: 0
+            max:
+              Vector3:
+                x: 0
+                y: 0.02752503
+                z: 3
+        rigid_bodies: ~
+        render_entities:
+          - SM_FloorPanel11_03_03
+        children: ~
+        camera: ~
+        light: ~
+        can_intersect_ray: true
+    - Description:
+        name: block1_side11
+        type: STATIC
+        emissive_strength: 1
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: -12
+                y: 3
+                z: 9
+            scale:
+              Vector3:
+                x: 1
+                y: 1
+                z: 1
+            rotation:
+              Quaternion:
+                x: 0
+                y: 0
+                z: 0.70710677
+                w: 0.70710677
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: -3
+                y: -0.12034293
+                z: 0
+            max:
+              Vector3:
+                x: 0
+                y: 0.02752503
+                z: 3
+        rigid_bodies: ~
+        render_entities:
+          - SM_FloorPanel11_03_03
+        children: ~
+        camera: ~
+        light: ~
+        can_intersect_ray: true
+    - Description:
+        name: block1_side12
+        type: STATIC
+        emissive_strength: 1
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: 0
+                y: 0
+                z: 0
+            scale:
+              Vector3:
+                x: 1
+                y: 1
+                z: 1
+            rotation:
+              Quaternion:
+                x: 0
+                y: 0
+                z: -0.70710677
+                w: 0.70710677
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: -3
+                y: -0.12034293
+                z: 0
+            max:
+              Vector3:
+                x: 0
+                y: 0.02752503
+                z: 3
+        rigid_bodies: ~
+        render_entities:
+          - SM_FloorPanel11_03_03
+        children: ~
+        camera: ~
+        light: ~
+        can_intersect_ray: true
+    - Description:
+        name: block1_side13
+        type: STATIC
+        emissive_strength: 1
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: 0
+                y: 0
+                z: 3
+            scale:
+              Vector3:
+                x: 1
+                y: 1
+                z: 1
+            rotation:
+              Quaternion:
+                x: 0
+                y: 0
+                z: -0.70710677
+                w: 0.70710677
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: -3
+                y: -0.12034293
+                z: 0
+            max:
+              Vector3:
+                x: 0
+                y: 0.02752503
+                z: 3
+        rigid_bodies: ~
+        render_entities:
+          - SM_FloorPanel11_03_03
+        children: ~
+        camera: ~
+        light: ~
+        can_intersect_ray: true
+    - Description:
+        name: block1_side14
+        type: STATIC
+        emissive_strength: 1
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: 0
+                y: 0
+                z: 6
+            scale:
+              Vector3:
+                x: 1
+                y: 1
+                z: 1
+            rotation:
+              Quaternion:
+                x: 0
+                y: 0
+                z: -0.70710677
+                w: 0.70710677
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: -3
+                y: -0.12034293
+                z: 0
+            max:
+              Vector3:
+                x: 0
+                y: 0.02752503
+                z: 3
+        rigid_bodies: ~
+        render_entities:
+          - SM_FloorPanel11_03_03
+        children: ~
+        camera: ~
+        light: ~
+        can_intersect_ray: true
+    - Description:
+        name: block1_side15
+        type: STATIC
+        emissive_strength: 1
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: 0
+                y: 0
+                z: 9
+            scale:
+              Vector3:
+                x: 1
+                y: 1
+                z: 1
+            rotation:
+              Quaternion:
+                x: 0
+                y: 0
+                z: -0.70710677
+                w: 0.70710677
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: -3
+                y: -0.12034278
+                z: 0
+            max:
+              Vector3:
+                x: 0
+                y: 0.042849626
+                z: 3
+        rigid_bodies: ~
+        render_entities:
+          - SM_FloorPanel15_03_03
+        children: ~
+        camera: ~
+        light: ~
+        can_intersect_ray: true
+    - Description:
+        name: block2
+        type: STATIC
+        emissive_strength: 1
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: -9
+                y: 0
+                z: 36
+            scale:
+              Vector3:
+                x: 1
+                y: 1
+                z: 1
+            rotation:
+              Quaternion:
+                x: 0
+                y: 0
+                z: 0
+                w: 1
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: 3.4028235e+38
+                y: 3.4028235e+38
+                z: 3.4028235e+38
+            max:
+              Vector3:
+                x: -3.4028235e+38
+                y: -3.4028235e+38
+                z: -3.4028235e+38
+        rigid_bodies:
+          - Description:
+              local_transform:
+                - 6
+                - 0
+                - 0
+                - 0
+                - 0
+                - 1.5
+                - 0
+                - 0
+                - 0
+                - 0
+                - 6
+                - 0
+                - 3.0
+                - 1.5
+                - -3.0
+                - 1
+              applied_scale:
+                Vector3:
+                  x: 6
+                  y: 1.5
+                  z: 6
+              broad_phase_layer: STATIC
+              object_layer: WORLD_COLLIDERS
+        render_entities: ~
+        children:
+          - block2_cap0
+          - block2_cap1
+          - block2_cap2
+          - block2_cap3
+          - block2_cap4
+          - block2_cap5
+          - block2_cap6
+          - block2_cap7
+          - block2_cap8
+          - block2_cap9
+          - block2_cap10
+          - block2_cap11
+          - block2_cap12
+          - block2_cap13
+          - block2_cap14
+          - block2_cap15
+          - block2_side0
+          - block2_side1
+          - block2_side2
+          - block2_side3
+          - block2_side4
+          - block2_side5
+          - block2_side6
+          - block2_side7
+          - block2_side8
+          - block2_side9
+          - block2_side10
+          - block2_side11
+          - block2_side12
+          - block2_side13
+          - block2_side14
+          - block2_side15
+        camera: ~
+        light: ~
+        can_intersect_ray: false
+    - Description:
+        name: block2_cap0
+        type: STATIC
+        emissive_strength: 1
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: 0
+                y: 3
+                z: 0
+            scale:
+              Vector3:
+                x: 1
+                y: 1
+                z: 1
+            rotation:
+              Quaternion:
+                x: 0
+                y: 0
+                z: 0
+                w: 1
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: -3
+                y: -0.12034293
+                z: 0
+            max:
+              Vector3:
+                x: 0
+                y: 0.02752503
+                z: 3
+        rigid_bodies: ~
+        render_entities:
+          - SM_FloorPanel11_03_03
+        children: ~
+        camera: ~
+        light: ~
+        can_intersect_ray: true
+    - Description:
+        name: block2_cap1
+        type: STATIC
+        emissive_strength: 1
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: 3
+                y: 3
+                z: 0
+            scale:
+              Vector3:
+                x: 1
+                y: 1
+                z: 1
+            rotation:
+              Quaternion:
+                x: 0
+                y: 0
+                z: 0
+                w: 1
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: -3
+                y: -0.12034278
+                z: 0
+            max:
+              Vector3:
+                x: 0
+                y: 0.042849626
+                z: 3
+        rigid_bodies: ~
+        render_entities:
+          - SM_FloorPanel15_03_03
+        children: ~
+        camera: ~
+        light: ~
+        can_intersect_ray: true
+    - Description:
+        name: block2_cap2
+        type: STATIC
+        emissive_strength: 1
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: 6
+                y: 3
+                z: 0
+            scale:
+              Vector3:
+                x: 1
+                y: 1
+                z: 1
+            rotation:
+              Quaternion:
+                x: 0
+                y: 0
+                z: 0
+                w: 1
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: -3
+                y: -0.12034293
+                z: 0
+            max:
+              Vector3:
+                x: 0
+                y: 0.02752503
+                z: 3
+        rigid_bodies: ~
+        render_entities:
+          - SM_FloorPanel11_03_03
+        children: ~
+        camera: ~
+        light: ~
+        can_intersect_ray: true
+    - Description:
+        name: block2_cap3
+        type: STATIC
+        emissive_strength: 1
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: 9
+                y: 3
+                z: 0
+            scale:
+              Vector3:
+                x: 1
+                y: 1
+                z: 1
+            rotation:
+              Quaternion:
+                x: 0
+                y: 0
+                z: 0
+                w: 1
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: -3
+                y: -0.12034278
+                z: 0
+            max:
+              Vector3:
+                x: 0
+                y: 0.042849626
+                z: 3
+        rigid_bodies: ~
+        render_entities:
+          - SM_FloorPanel15_03_03
+        children: ~
+        camera: ~
+        light: ~
+        can_intersect_ray: true
+    - Description:
+        name: block2_cap4
+        type: STATIC
+        emissive_strength: 1
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: 0
+                y: 3
+                z: -3
+            scale:
+              Vector3:
+                x: 1
+                y: 1
+                z: 1
+            rotation:
+              Quaternion:
+                x: 0
+                y: 0
+                z: 0
+                w: 1
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: -3
+                y: -0.12034293
+                z: 0
+            max:
+              Vector3:
+                x: 0
+                y: 0.02752503
+                z: 3
+        rigid_bodies: ~
+        render_entities:
+          - SM_FloorPanel11_03_03
+        children: ~
+        camera: ~
+        light: ~
+        can_intersect_ray: true
+    - Description:
+        name: block2_cap5
+        type: STATIC
+        emissive_strength: 1
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: 3
+                y: 3
+                z: -3
+            scale:
+              Vector3:
+                x: 1
+                y: 1
+                z: 1
+            rotation:
+              Quaternion:
+                x: 0
+                y: 0
+                z: 0
+                w: 1
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: -3
+                y: -0.12034278
+                z: 0
+            max:
+              Vector3:
+                x: 0
+                y: 0.042849626
+                z: 3
+        rigid_bodies: ~
+        render_entities:
+          - SM_FloorPanel15_03_03
+        children: ~
+        camera: ~
+        light: ~
+        can_intersect_ray: true
+    - Description:
+        name: block2_cap6
+        type: STATIC
+        emissive_strength: 1
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: 6
+                y: 3
+                z: -3
+            scale:
+              Vector3:
+                x: 1
+                y: 1
+                z: 1
+            rotation:
+              Quaternion:
+                x: 0
+                y: 0
+                z: 0
+                w: 1
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: -3
+                y: -0.12034293
+                z: 0
+            max:
+              Vector3:
+                x: 0
+                y: 0.02752503
+                z: 3
+        rigid_bodies: ~
+        render_entities:
+          - SM_FloorPanel11_03_03
+        children: ~
+        camera: ~
+        light: ~
+        can_intersect_ray: true
+    - Description:
+        name: block2_cap7
+        type: STATIC
+        emissive_strength: 1
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: 9
+                y: 3
+                z: -3
+            scale:
+              Vector3:
+                x: 1
+                y: 1
+                z: 1
+            rotation:
+              Quaternion:
+                x: 0
+                y: 0
+                z: 0
+                w: 1
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: -3
+                y: -0.12034293
+                z: 0
+            max:
+              Vector3:
+                x: 0
+                y: 0.02752503
+                z: 3
+        rigid_bodies: ~
+        render_entities:
+          - SM_FloorPanel11_03_03
+        children: ~
+        camera: ~
+        light: ~
+        can_intersect_ray: true
+    - Description:
+        name: block2_cap8
+        type: STATIC
+        emissive_strength: 1
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: 0
+                y: 3
+                z: -6
+            scale:
+              Vector3:
+                x: 1
+                y: 1
+                z: 1
+            rotation:
+              Quaternion:
+                x: 0
+                y: 0
+                z: 0
+                w: 1
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: -3
+                y: -0.12034293
+                z: 0
+            max:
+              Vector3:
+                x: 0
+                y: 0.02752503
+                z: 3
+        rigid_bodies: ~
+        render_entities:
+          - SM_FloorPanel11_03_03
+        children: ~
+        camera: ~
+        light: ~
+        can_intersect_ray: true
+    - Description:
+        name: block2_cap9
+        type: STATIC
+        emissive_strength: 1
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: 3
+                y: 3
+                z: -6
+            scale:
+              Vector3:
+                x: 1
+                y: 1
+                z: 1
+            rotation:
+              Quaternion:
+                x: 0
+                y: 0
+                z: 0
+                w: 1
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: -3
+                y: -0.12034278
+                z: 0
+            max:
+              Vector3:
+                x: 0
+                y: 0.042849626
+                z: 3
+        rigid_bodies: ~
+        render_entities:
+          - SM_FloorPanel15_03_03
+        children: ~
+        camera: ~
+        light: ~
+        can_intersect_ray: true
+    - Description:
+        name: block2_cap10
+        type: STATIC
+        emissive_strength: 1
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: 6
+                y: 3
+                z: -6
+            scale:
+              Vector3:
+                x: 1
+                y: 1
+                z: 1
+            rotation:
+              Quaternion:
+                x: 0
+                y: 0
+                z: 0
+                w: 1
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: -3
+                y: -0.12034278
+                z: 0
+            max:
+              Vector3:
+                x: 0
+                y: 0.042849626
+                z: 3
+        rigid_bodies: ~
+        render_entities:
+          - SM_FloorPanel15_03_03
+        children: ~
+        camera: ~
+        light: ~
+        can_intersect_ray: true
+    - Description:
+        name: block2_cap11
+        type: STATIC
+        emissive_strength: 1
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: 9
+                y: 3
+                z: -6
+            scale:
+              Vector3:
+                x: 1
+                y: 1
+                z: 1
+            rotation:
+              Quaternion:
+                x: 0
+                y: 0
+                z: 0
+                w: 1
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: -3
+                y: -0.12034278
+                z: 0
+            max:
+              Vector3:
+                x: 0
+                y: 0.042849626
+                z: 3
+        rigid_bodies: ~
+        render_entities:
+          - SM_FloorPanel15_03_03
+        children: ~
+        camera: ~
+        light: ~
+        can_intersect_ray: true
+    - Description:
+        name: block2_cap12
+        type: STATIC
+        emissive_strength: 1
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: 0
+                y: 3
+                z: -9
+            scale:
+              Vector3:
+                x: 1
+                y: 1
+                z: 1
+            rotation:
+              Quaternion:
+                x: 0
+                y: 0
+                z: 0
+                w: 1
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: -3
+                y: -0.12034293
+                z: 0
+            max:
+              Vector3:
+                x: 0
+                y: 0.02752503
+                z: 3
+        rigid_bodies: ~
+        render_entities:
+          - SM_FloorPanel11_03_03
+        children: ~
+        camera: ~
+        light: ~
+        can_intersect_ray: true
+    - Description:
+        name: block2_cap13
+        type: STATIC
+        emissive_strength: 1
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: 3
+                y: 3
+                z: -9
+            scale:
+              Vector3:
+                x: 1
+                y: 1
+                z: 1
+            rotation:
+              Quaternion:
+                x: 0
+                y: 0
+                z: 0
+                w: 1
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: -3
+                y: -0.12034278
+                z: 0
+            max:
+              Vector3:
+                x: 0
+                y: 0.042849626
+                z: 3
+        rigid_bodies: ~
+        render_entities:
+          - SM_FloorPanel15_03_03
+        children: ~
+        camera: ~
+        light: ~
+        can_intersect_ray: true
+    - Description:
+        name: block2_cap14
+        type: STATIC
+        emissive_strength: 1
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: 6
+                y: 3
+                z: -9
+            scale:
+              Vector3:
+                x: 1
+                y: 1
+                z: 1
+            rotation:
+              Quaternion:
+                x: 0
+                y: 0
+                z: 0
+                w: 1
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: -3
+                y: -0.12034278
+                z: 0
+            max:
+              Vector3:
+                x: 0
+                y: 0.042849626
+                z: 3
+        rigid_bodies: ~
+        render_entities:
+          - SM_FloorPanel15_03_03
+        children: ~
+        camera: ~
+        light: ~
+        can_intersect_ray: true
+    - Description:
+        name: block2_cap15
+        type: STATIC
+        emissive_strength: 1
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: 9
+                y: 3
+                z: -9
+            scale:
+              Vector3:
+                x: 1
+                y: 1
+                z: 1
+            rotation:
+              Quaternion:
+                x: 0
+                y: 0
+                z: 0
+                w: 1
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: -3
+                y: -0.12034278
+                z: 0
+            max:
+              Vector3:
+                x: 0
+                y: 0.042849626
+                z: 3
+        rigid_bodies: ~
+        render_entities:
+          - SM_FloorPanel15_03_03
+        children: ~
+        camera: ~
+        light: ~
+        can_intersect_ray: true
+    - Description:
+        name: block2_side0
+        type: STATIC
+        emissive_strength: 1
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: 0
+                y: 0
+                z: -9
+            scale:
+              Vector3:
+                x: 1
+                y: 1
+                z: 1
+            rotation:
+              Quaternion:
+                x: -0.70710677
+                y: 0
+                z: 0
+                w: 0.70710677
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: -3
+                y: -0.12034293
+                z: 0
+            max:
+              Vector3:
+                x: 0
+                y: 0.02752503
+                z: 3
+        rigid_bodies: ~
+        render_entities:
+          - SM_FloorPanel11_03_03
+        children: ~
+        camera: ~
+        light: ~
+        can_intersect_ray: true
+    - Description:
+        name: block2_side1
+        type: STATIC
+        emissive_strength: 1
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: 3
+                y: 0
+                z: -9
+            scale:
+              Vector3:
+                x: 1
+                y: 1
+                z: 1
+            rotation:
+              Quaternion:
+                x: -0.70710677
+                y: 0
+                z: 0
+                w: 0.70710677
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: -3
+                y: -0.12034293
+                z: 0
+            max:
+              Vector3:
+                x: 0
+                y: 0.02752503
+                z: 3
+        rigid_bodies: ~
+        render_entities:
+          - SM_FloorPanel11_03_03
+        children: ~
+        camera: ~
+        light: ~
+        can_intersect_ray: true
+    - Description:
+        name: block2_side2
+        type: STATIC
+        emissive_strength: 1
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: 6
+                y: 0
+                z: -9
+            scale:
+              Vector3:
+                x: 1
+                y: 1
+                z: 1
+            rotation:
+              Quaternion:
+                x: -0.70710677
+                y: 0
+                z: 0
+                w: 0.70710677
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: -3
+                y: -0.12034293
+                z: 0
+            max:
+              Vector3:
+                x: 0
+                y: 0.02752503
+                z: 3
+        rigid_bodies: ~
+        render_entities:
+          - SM_FloorPanel11_03_03
+        children: ~
+        camera: ~
+        light: ~
+        can_intersect_ray: true
+    - Description:
+        name: block2_side3
+        type: STATIC
+        emissive_strength: 1
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: 9
+                y: 0
+                z: -9
+            scale:
+              Vector3:
+                x: 1
+                y: 1
+                z: 1
+            rotation:
+              Quaternion:
+                x: -0.70710677
+                y: 0
+                z: 0
+                w: 0.70710677
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: -3
+                y: -0.12034293
+                z: 0
+            max:
+              Vector3:
+                x: 0
+                y: 0.02752503
+                z: 3
+        rigid_bodies: ~
+        render_entities:
+          - SM_FloorPanel11_03_03
+        children: ~
+        camera: ~
+        light: ~
+        can_intersect_ray: true
+    - Description:
+        name: block2_side4
+        type: STATIC
+        emissive_strength: 1
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: 0
+                y: 3
+                z: 3
+            scale:
+              Vector3:
+                x: 1
+                y: 1
+                z: 1
+            rotation:
+              Quaternion:
+                x: 0.70710677
+                y: 0
+                z: 0
+                w: 0.70710677
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: -3
+                y: -0.12034278
+                z: 0
+            max:
+              Vector3:
+                x: 0
+                y: 0.042849626
+                z: 3
+        rigid_bodies: ~
+        render_entities:
+          - SM_FloorPanel15_03_03
+        children: ~
+        camera: ~
+        light: ~
+        can_intersect_ray: true
+    - Description:
+        name: block2_side5
+        type: STATIC
+        emissive_strength: 1
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: 3
+                y: 3
+                z: 3
+            scale:
+              Vector3:
+                x: 1
+                y: 1
+                z: 1
+            rotation:
+              Quaternion:
+                x: 0.70710677
+                y: 0
+                z: 0
+                w: 0.70710677
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: -3
+                y: -0.12034278
+                z: 0
+            max:
+              Vector3:
+                x: 0
+                y: 0.042849626
+                z: 3
+        rigid_bodies: ~
+        render_entities:
+          - SM_FloorPanel15_03_03
+        children: ~
+        camera: ~
+        light: ~
+        can_intersect_ray: true
+    - Description:
+        name: block2_side6
+        type: STATIC
+        emissive_strength: 1
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: 6
+                y: 3
+                z: 3
+            scale:
+              Vector3:
+                x: 1
+                y: 1
+                z: 1
+            rotation:
+              Quaternion:
+                x: 0.70710677
+                y: 0
+                z: 0
+                w: 0.70710677
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: -3
+                y: -0.12034293
+                z: 0
+            max:
+              Vector3:
+                x: 0
+                y: 0.02752503
+                z: 3
+        rigid_bodies: ~
+        render_entities:
+          - SM_FloorPanel11_03_03
+        children: ~
+        camera: ~
+        light: ~
+        can_intersect_ray: true
+    - Description:
+        name: block2_side7
+        type: STATIC
+        emissive_strength: 1
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: 9
+                y: 3
+                z: 3
+            scale:
+              Vector3:
+                x: 1
+                y: 1
+                z: 1
+            rotation:
+              Quaternion:
+                x: 0.70710677
+                y: 0
+                z: 0
+                w: 0.70710677
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: -3
+                y: -0.12034278
+                z: 0
+            max:
+              Vector3:
+                x: 0
+                y: 0.042849626
+                z: 3
+        rigid_bodies: ~
+        render_entities:
+          - SM_FloorPanel15_03_03
+        children: ~
+        camera: ~
+        light: ~
+        can_intersect_ray: true
+    - Description:
+        name: block2_side8
+        type: STATIC
+        emissive_strength: 1
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: -3
+                y: 3
+                z: -9
+            scale:
+              Vector3:
+                x: 1
+                y: 1
+                z: 1
+            rotation:
+              Quaternion:
+                x: 0
+                y: 0
+                z: 0.70710677
+                w: 0.70710677
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: -3
+                y: -0.12034293
+                z: 0
+            max:
+              Vector3:
+                x: 0
+                y: 0.02752503
+                z: 3
+        rigid_bodies: ~
+        render_entities:
+          - SM_FloorPanel11_03_03
+        children: ~
+        camera: ~
+        light: ~
+        can_intersect_ray: true
+    - Description:
+        name: block2_side9
+        type: STATIC
+        emissive_strength: 1
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: -3
+                y: 3
+                z: -6
+            scale:
+              Vector3:
+                x: 1
+                y: 1
+                z: 1
+            rotation:
+              Quaternion:
+                x: 0
+                y: 0
+                z: 0.70710677
+                w: 0.70710677
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: -3
+                y: -0.12034278
+                z: 0
+            max:
+              Vector3:
+                x: 0
+                y: 0.042849626
+                z: 3
+        rigid_bodies: ~
+        render_entities:
+          - SM_FloorPanel15_03_03
+        children: ~
+        camera: ~
+        light: ~
+        can_intersect_ray: true
+    - Description:
+        name: block2_side10
+        type: STATIC
+        emissive_strength: 1
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: -3
+                y: 3
+                z: -3
+            scale:
+              Vector3:
+                x: 1
+                y: 1
+                z: 1
+            rotation:
+              Quaternion:
+                x: 0
+                y: 0
+                z: 0.70710677
+                w: 0.70710677
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: -3
+                y: -0.12034278
+                z: 0
+            max:
+              Vector3:
+                x: 0
+                y: 0.042849626
+                z: 3
+        rigid_bodies: ~
+        render_entities:
+          - SM_FloorPanel15_03_03
+        children: ~
+        camera: ~
+        light: ~
+        can_intersect_ray: true
+    - Description:
+        name: block2_side11
+        type: STATIC
+        emissive_strength: 1
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: -3
+                y: 3
+                z: 0
+            scale:
+              Vector3:
+                x: 1
+                y: 1
+                z: 1
+            rotation:
+              Quaternion:
+                x: 0
+                y: 0
+                z: 0.70710677
+                w: 0.70710677
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: -3
+                y: -0.12034293
+                z: 0
+            max:
+              Vector3:
+                x: 0
+                y: 0.02752503
+                z: 3
+        rigid_bodies: ~
+        render_entities:
+          - SM_FloorPanel11_03_03
+        children: ~
+        camera: ~
+        light: ~
+        can_intersect_ray: true
+    - Description:
+        name: block2_side12
+        type: STATIC
+        emissive_strength: 1
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: 9
+                y: 0
+                z: -9
+            scale:
+              Vector3:
+                x: 1
+                y: 1
+                z: 1
+            rotation:
+              Quaternion:
+                x: 0
+                y: 0
+                z: -0.70710677
+                w: 0.70710677
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: -3
+                y: -0.12034278
+                z: 0
+            max:
+              Vector3:
+                x: 0
+                y: 0.042849626
+                z: 3
+        rigid_bodies: ~
+        render_entities:
+          - SM_FloorPanel15_03_03
+        children: ~
+        camera: ~
+        light: ~
+        can_intersect_ray: true
+    - Description:
+        name: block2_side13
+        type: STATIC
+        emissive_strength: 1
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: 9
+                y: 0
+                z: -6
+            scale:
+              Vector3:
+                x: 1
+                y: 1
+                z: 1
+            rotation:
+              Quaternion:
+                x: 0
+                y: 0
+                z: -0.70710677
+                w: 0.70710677
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: -3
+                y: -0.12034278
+                z: 0
+            max:
+              Vector3:
+                x: 0
+                y: 0.042849626
+                z: 3
+        rigid_bodies: ~
+        render_entities:
+          - SM_FloorPanel15_03_03
+        children: ~
+        camera: ~
+        light: ~
+        can_intersect_ray: true
+    - Description:
+        name: block2_side14
+        type: STATIC
+        emissive_strength: 1
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: 9
+                y: 0
+                z: -3
+            scale:
+              Vector3:
+                x: 1
+                y: 1
+                z: 1
+            rotation:
+              Quaternion:
+                x: 0
+                y: 0
+                z: -0.70710677
+                w: 0.70710677
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: -3
+                y: -0.12034278
+                z: 0
+            max:
+              Vector3:
+                x: 0
+                y: 0.042849626
+                z: 3
+        rigid_bodies: ~
+        render_entities:
+          - SM_FloorPanel15_03_03
+        children: ~
+        camera: ~
+        light: ~
+        can_intersect_ray: true
+    - Description:
+        name: block2_side15
+        type: STATIC
+        emissive_strength: 1
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: 9
+                y: 0
+                z: 0
+            scale:
+              Vector3:
+                x: 1
+                y: 1
+                z: 1
+            rotation:
+              Quaternion:
+                x: 0
+                y: 0
+                z: -0.70710677
+                w: 0.70710677
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: -3
+                y: -0.12034293
+                z: 0
+            max:
+              Vector3:
+                x: 0
+                y: 0.02752503
+                z: 3
+        rigid_bodies: ~
+        render_entities:
+          - SM_FloorPanel11_03_03
+        children: ~
+        camera: ~
+        light: ~
+        can_intersect_ray: true
+    - Description:
+        name: block3
+        type: STATIC
+        emissive_strength: 1
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: 36
+                y: 0
+                z: 36
+            scale:
+              Vector3:
+                x: 1
+                y: 1
+                z: 1
+            rotation:
+              Quaternion:
+                x: 0
+                y: 0
+                z: 0
+                w: 1
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: 3.4028235e+38
+                y: 3.4028235e+38
+                z: 3.4028235e+38
+            max:
+              Vector3:
+                x: -3.4028235e+38
+                y: -3.4028235e+38
+                z: -3.4028235e+38
+        rigid_bodies:
+          - Description:
+              local_transform:
+                - 6
+                - 0
+                - 0
+                - 0
+                - 0
+                - 1.5
+                - 0
+                - 0
+                - 0
+                - 0
+                - 6
+                - 0
+                - -6.0
+                - 1.5
+                - -3.0
+                - 1
+              applied_scale:
+                Vector3:
+                  x: 6
+                  y: 1.5
+                  z: 6
+              broad_phase_layer: STATIC
+              object_layer: WORLD_COLLIDERS
+        render_entities: ~
+        children:
+          - block3_cap0
+          - block3_cap1
+          - block3_cap2
+          - block3_cap3
+          - block3_cap4
+          - block3_cap5
+          - block3_cap6
+          - block3_cap7
+          - block3_cap8
+          - block3_cap9
+          - block3_cap10
+          - block3_cap11
+          - block3_cap12
+          - block3_cap13
+          - block3_cap14
+          - block3_cap15
+          - block3_side0
+          - block3_side1
+          - block3_side2
+          - block3_side3
+          - block3_side4
+          - block3_side5
+          - block3_side6
+          - block3_side7
+          - block3_side8
+          - block3_side9
+          - block3_side10
+          - block3_side11
+          - block3_side12
+          - block3_side13
+          - block3_side14
+          - block3_side15
+        camera: ~
+        light: ~
+        can_intersect_ray: false
+    - Description:
+        name: block3_cap0
+        type: STATIC
+        emissive_strength: 1
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: 0
+                y: 3
+                z: 0
+            scale:
+              Vector3:
+                x: 1
+                y: 1
+                z: 1
+            rotation:
+              Quaternion:
+                x: 0
+                y: 0
+                z: 0
+                w: 1
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: -3
+                y: -0.12034293
+                z: 0
+            max:
+              Vector3:
+                x: 0
+                y: 0.02752503
+                z: 3
+        rigid_bodies: ~
+        render_entities:
+          - SM_FloorPanel11_03_03
+        children: ~
+        camera: ~
+        light: ~
+        can_intersect_ray: true
+    - Description:
+        name: block3_cap1
+        type: STATIC
+        emissive_strength: 1
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: -3
+                y: 3
+                z: 0
+            scale:
+              Vector3:
+                x: 1
+                y: 1
+                z: 1
+            rotation:
+              Quaternion:
+                x: 0
+                y: 0
+                z: 0
+                w: 1
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: -3
+                y: -0.12034293
+                z: 0
+            max:
+              Vector3:
+                x: 0
+                y: 0.02752503
+                z: 3
+        rigid_bodies: ~
+        render_entities:
+          - SM_FloorPanel11_03_03
+        children: ~
+        camera: ~
+        light: ~
+        can_intersect_ray: true
+    - Description:
+        name: block3_cap2
+        type: STATIC
+        emissive_strength: 1
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: -6
+                y: 3
+                z: 0
+            scale:
+              Vector3:
+                x: 1
+                y: 1
+                z: 1
+            rotation:
+              Quaternion:
+                x: 0
+                y: 0
+                z: 0
+                w: 1
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: -3
+                y: -0.12034293
+                z: 0
+            max:
+              Vector3:
+                x: 0
+                y: 0.02752503
+                z: 3
+        rigid_bodies: ~
+        render_entities:
+          - SM_FloorPanel11_03_03
+        children: ~
+        camera: ~
+        light: ~
+        can_intersect_ray: true
+    - Description:
+        name: block3_cap3
+        type: STATIC
+        emissive_strength: 1
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: -9
+                y: 3
+                z: 0
+            scale:
+              Vector3:
+                x: 1
+                y: 1
+                z: 1
+            rotation:
+              Quaternion:
+                x: 0
+                y: 0
+                z: 0
+                w: 1
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: -3
+                y: -0.12034293
+                z: 0
+            max:
+              Vector3:
+                x: 0
+                y: 0.02752503
+                z: 3
+        rigid_bodies: ~
+        render_entities:
+          - SM_FloorPanel11_03_03
+        children: ~
+        camera: ~
+        light: ~
+        can_intersect_ray: true
+    - Description:
+        name: block3_cap4
+        type: STATIC
+        emissive_strength: 1
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: 0
+                y: 3
+                z: -3
+            scale:
+              Vector3:
+                x: 1
+                y: 1
+                z: 1
+            rotation:
+              Quaternion:
+                x: 0
+                y: 0
+                z: 0
+                w: 1
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: -3
+                y: -0.12034293
+                z: 0
+            max:
+              Vector3:
+                x: 0
+                y: 0.02752503
+                z: 3
+        rigid_bodies: ~
+        render_entities:
+          - SM_FloorPanel11_03_03
+        children: ~
+        camera: ~
+        light: ~
+        can_intersect_ray: true
+    - Description:
+        name: block3_cap5
+        type: STATIC
+        emissive_strength: 1
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: -3
+                y: 3
+                z: -3
+            scale:
+              Vector3:
+                x: 1
+                y: 1
+                z: 1
+            rotation:
+              Quaternion:
+                x: 0
+                y: 0
+                z: 0
+                w: 1
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: -3
+                y: -0.12034293
+                z: 0
+            max:
+              Vector3:
+                x: 0
+                y: 0.02752503
+                z: 3
+        rigid_bodies: ~
+        render_entities:
+          - SM_FloorPanel11_03_03
+        children: ~
+        camera: ~
+        light: ~
+        can_intersect_ray: true
+    - Description:
+        name: block3_cap6
+        type: STATIC
+        emissive_strength: 1
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: -6
+                y: 3
+                z: -3
+            scale:
+              Vector3:
+                x: 1
+                y: 1
+                z: 1
+            rotation:
+              Quaternion:
+                x: 0
+                y: 0
+                z: 0
+                w: 1
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: -3
+                y: -0.12034278
+                z: 0
+            max:
+              Vector3:
+                x: 0
+                y: 0.042849626
+                z: 3
+        rigid_bodies: ~
+        render_entities:
+          - SM_FloorPanel15_03_03
+        children: ~
+        camera: ~
+        light: ~
+        can_intersect_ray: true
+    - Description:
+        name: block3_cap7
+        type: STATIC
+        emissive_strength: 1
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: -9
+                y: 3
+                z: -3
+            scale:
+              Vector3:
+                x: 1
+                y: 1
+                z: 1
+            rotation:
+              Quaternion:
+                x: 0
+                y: 0
+                z: 0
+                w: 1
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: -3
+                y: -0.12034278
+                z: 0
+            max:
+              Vector3:
+                x: 0
+                y: 0.042849626
+                z: 3
+        rigid_bodies: ~
+        render_entities:
+          - SM_FloorPanel15_03_03
+        children: ~
+        camera: ~
+        light: ~
+        can_intersect_ray: true
+    - Description:
+        name: block3_cap8
+        type: STATIC
+        emissive_strength: 1
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: 0
+                y: 3
+                z: -6
+            scale:
+              Vector3:
+                x: 1
+                y: 1
+                z: 1
+            rotation:
+              Quaternion:
+                x: 0
+                y: 0
+                z: 0
+                w: 1
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: -3
+                y: -0.12034278
+                z: 0
+            max:
+              Vector3:
+                x: 0
+                y: 0.042849626
+                z: 3
+        rigid_bodies: ~
+        render_entities:
+          - SM_FloorPanel15_03_03
+        children: ~
+        camera: ~
+        light: ~
+        can_intersect_ray: true
+    - Description:
+        name: block3_cap9
+        type: STATIC
+        emissive_strength: 1
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: -3
+                y: 3
+                z: -6
+            scale:
+              Vector3:
+                x: 1
+                y: 1
+                z: 1
+            rotation:
+              Quaternion:
+                x: 0
+                y: 0
+                z: 0
+                w: 1
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: -3
+                y: -0.12034278
+                z: 0
+            max:
+              Vector3:
+                x: 0
+                y: 0.042849626
+                z: 3
+        rigid_bodies: ~
+        render_entities:
+          - SM_FloorPanel15_03_03
+        children: ~
+        camera: ~
+        light: ~
+        can_intersect_ray: true
+    - Description:
+        name: block3_cap10
+        type: STATIC
+        emissive_strength: 1
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: -6
+                y: 3
+                z: -6
+            scale:
+              Vector3:
+                x: 1
+                y: 1
+                z: 1
+            rotation:
+              Quaternion:
+                x: 0
+                y: 0
+                z: 0
+                w: 1
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: -3
+                y: -0.12034293
+                z: 0
+            max:
+              Vector3:
+                x: 0
+                y: 0.02752503
+                z: 3
+        rigid_bodies: ~
+        render_entities:
+          - SM_FloorPanel11_03_03
+        children: ~
+        camera: ~
+        light: ~
+        can_intersect_ray: true
+    - Description:
+        name: block3_cap11
+        type: STATIC
+        emissive_strength: 1
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: -9
+                y: 3
+                z: -6
+            scale:
+              Vector3:
+                x: 1
+                y: 1
+                z: 1
+            rotation:
+              Quaternion:
+                x: 0
+                y: 0
+                z: 0
+                w: 1
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: -3
+                y: -0.12034293
+                z: 0
+            max:
+              Vector3:
+                x: 0
+                y: 0.02752503
+                z: 3
+        rigid_bodies: ~
+        render_entities:
+          - SM_FloorPanel11_03_03
+        children: ~
+        camera: ~
+        light: ~
+        can_intersect_ray: true
+    - Description:
+        name: block3_cap12
+        type: STATIC
+        emissive_strength: 1
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: 0
+                y: 3
+                z: -9
+            scale:
+              Vector3:
+                x: 1
+                y: 1
+                z: 1
+            rotation:
+              Quaternion:
+                x: 0
+                y: 0
+                z: 0
+                w: 1
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: -3
+                y: -0.12034278
+                z: 0
+            max:
+              Vector3:
+                x: 0
+                y: 0.042849626
+                z: 3
+        rigid_bodies: ~
+        render_entities:
+          - SM_FloorPanel15_03_03
+        children: ~
+        camera: ~
+        light: ~
+        can_intersect_ray: true
+    - Description:
+        name: block3_cap13
+        type: STATIC
+        emissive_strength: 1
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: -3
+                y: 3
+                z: -9
+            scale:
+              Vector3:
+                x: 1
+                y: 1
+                z: 1
+            rotation:
+              Quaternion:
+                x: 0
+                y: 0
+                z: 0
+                w: 1
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: -3
+                y: -0.12034278
+                z: 0
+            max:
+              Vector3:
+                x: 0
+                y: 0.042849626
+                z: 3
+        rigid_bodies: ~
+        render_entities:
+          - SM_FloorPanel15_03_03
+        children: ~
+        camera: ~
+        light: ~
+        can_intersect_ray: true
+    - Description:
+        name: block3_cap14
+        type: STATIC
+        emissive_strength: 1
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: -6
+                y: 3
+                z: -9
+            scale:
+              Vector3:
+                x: 1
+                y: 1
+                z: 1
+            rotation:
+              Quaternion:
+                x: 0
+                y: 0
+                z: 0
+                w: 1
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: -3
+                y: -0.12034293
+                z: 0
+            max:
+              Vector3:
+                x: 0
+                y: 0.02752503
+                z: 3
+        rigid_bodies: ~
+        render_entities:
+          - SM_FloorPanel11_03_03
+        children: ~
+        camera: ~
+        light: ~
+        can_intersect_ray: true
+    - Description:
+        name: block3_cap15
+        type: STATIC
+        emissive_strength: 1
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: -9
+                y: 3
+                z: -9
+            scale:
+              Vector3:
+                x: 1
+                y: 1
+                z: 1
+            rotation:
+              Quaternion:
+                x: 0
+                y: 0
+                z: 0
+                w: 1
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: -3
+                y: -0.12034278
+                z: 0
+            max:
+              Vector3:
+                x: 0
+                y: 0.042849626
+                z: 3
+        rigid_bodies: ~
+        render_entities:
+          - SM_FloorPanel15_03_03
+        children: ~
+        camera: ~
+        light: ~
+        can_intersect_ray: true
+    - Description:
+        name: block3_side0
+        type: STATIC
+        emissive_strength: 1
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: -9
+                y: 0
+                z: -9
+            scale:
+              Vector3:
+                x: 1
+                y: 1
+                z: 1
+            rotation:
+              Quaternion:
+                x: -0.70710677
+                y: 0
+                z: 0
+                w: 0.70710677
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: -3
+                y: -0.12034293
+                z: 0
+            max:
+              Vector3:
+                x: 0
+                y: 0.02752503
+                z: 3
+        rigid_bodies: ~
+        render_entities:
+          - SM_FloorPanel11_03_03
+        children: ~
+        camera: ~
+        light: ~
+        can_intersect_ray: true
+    - Description:
+        name: block3_side1
+        type: STATIC
+        emissive_strength: 1
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: -6
+                y: 0
+                z: -9
+            scale:
+              Vector3:
+                x: 1
+                y: 1
+                z: 1
+            rotation:
+              Quaternion:
+                x: -0.70710677
+                y: 0
+                z: 0
+                w: 0.70710677
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: -3
+                y: -0.12034293
+                z: 0
+            max:
+              Vector3:
+                x: 0
+                y: 0.02752503
+                z: 3
+        rigid_bodies: ~
+        render_entities:
+          - SM_FloorPanel11_03_03
+        children: ~
+        camera: ~
+        light: ~
+        can_intersect_ray: true
+    - Description:
+        name: block3_side2
+        type: STATIC
+        emissive_strength: 1
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: -3
+                y: 0
+                z: -9
+            scale:
+              Vector3:
+                x: 1
+                y: 1
+                z: 1
+            rotation:
+              Quaternion:
+                x: -0.70710677
+                y: 0
+                z: 0
+                w: 0.70710677
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: -3
+                y: -0.12034293
+                z: 0
+            max:
+              Vector3:
+                x: 0
+                y: 0.02752503
+                z: 3
+        rigid_bodies: ~
+        render_entities:
+          - SM_FloorPanel11_03_03
+        children: ~
+        camera: ~
+        light: ~
+        can_intersect_ray: true
+    - Description:
+        name: block3_side3
+        type: STATIC
+        emissive_strength: 1
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: 0
+                y: 0
+                z: -9
+            scale:
+              Vector3:
+                x: 1
+                y: 1
+                z: 1
+            rotation:
+              Quaternion:
+                x: -0.70710677
+                y: 0
+                z: 0
+                w: 0.70710677
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: -3
+                y: -0.12034278
+                z: 0
+            max:
+              Vector3:
+                x: 0
+                y: 0.042849626
+                z: 3
+        rigid_bodies: ~
+        render_entities:
+          - SM_FloorPanel15_03_03
+        children: ~
+        camera: ~
+        light: ~
+        can_intersect_ray: true
+    - Description:
+        name: block3_side4
+        type: STATIC
+        emissive_strength: 1
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: -9
+                y: 3
+                z: 3
+            scale:
+              Vector3:
+                x: 1
+                y: 1
+                z: 1
+            rotation:
+              Quaternion:
+                x: 0.70710677
+                y: 0
+                z: 0
+                w: 0.70710677
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: -3
+                y: -0.12034278
+                z: 0
+            max:
+              Vector3:
+                x: 0
+                y: 0.042849626
+                z: 3
+        rigid_bodies: ~
+        render_entities:
+          - SM_FloorPanel15_03_03
+        children: ~
+        camera: ~
+        light: ~
+        can_intersect_ray: true
+    - Description:
+        name: block3_side5
+        type: STATIC
+        emissive_strength: 1
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: -6
+                y: 3
+                z: 3
+            scale:
+              Vector3:
+                x: 1
+                y: 1
+                z: 1
+            rotation:
+              Quaternion:
+                x: 0.70710677
+                y: 0
+                z: 0
+                w: 0.70710677
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: -3
+                y: -0.12034278
+                z: 0
+            max:
+              Vector3:
+                x: 0
+                y: 0.042849626
+                z: 3
+        rigid_bodies: ~
+        render_entities:
+          - SM_FloorPanel15_03_03
+        children: ~
+        camera: ~
+        light: ~
+        can_intersect_ray: true
+    - Description:
+        name: block3_side6
+        type: STATIC
+        emissive_strength: 1
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: -3
+                y: 3
+                z: 3
+            scale:
+              Vector3:
+                x: 1
+                y: 1
+                z: 1
+            rotation:
+              Quaternion:
+                x: 0.70710677
+                y: 0
+                z: 0
+                w: 0.70710677
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: -3
+                y: -0.12034293
+                z: 0
+            max:
+              Vector3:
+                x: 0
+                y: 0.02752503
+                z: 3
+        rigid_bodies: ~
+        render_entities:
+          - SM_FloorPanel11_03_03
+        children: ~
+        camera: ~
+        light: ~
+        can_intersect_ray: true
+    - Description:
+        name: block3_side7
+        type: STATIC
+        emissive_strength: 1
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: 0
+                y: 3
+                z: 3
+            scale:
+              Vector3:
+                x: 1
+                y: 1
+                z: 1
+            rotation:
+              Quaternion:
+                x: 0.70710677
+                y: 0
+                z: 0
+                w: 0.70710677
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: -3
+                y: -0.12034278
+                z: 0
+            max:
+              Vector3:
+                x: 0
+                y: 0.042849626
+                z: 3
+        rigid_bodies: ~
+        render_entities:
+          - SM_FloorPanel15_03_03
+        children: ~
+        camera: ~
+        light: ~
+        can_intersect_ray: true
+    - Description:
+        name: block3_side8
+        type: STATIC
+        emissive_strength: 1
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: -12
+                y: 3
+                z: -9
+            scale:
+              Vector3:
+                x: 1
+                y: 1
+                z: 1
+            rotation:
+              Quaternion:
+                x: 0
+                y: 0
+                z: 0.70710677
+                w: 0.70710677
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: -3
+                y: -0.12034293
+                z: 0
+            max:
+              Vector3:
+                x: 0
+                y: 0.02752503
+                z: 3
+        rigid_bodies: ~
+        render_entities:
+          - SM_FloorPanel11_03_03
+        children: ~
+        camera: ~
+        light: ~
+        can_intersect_ray: true
+    - Description:
+        name: block3_side9
+        type: STATIC
+        emissive_strength: 1
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: -12
+                y: 3
+                z: -6
+            scale:
+              Vector3:
+                x: 1
+                y: 1
+                z: 1
+            rotation:
+              Quaternion:
+                x: 0
+                y: 0
+                z: 0.70710677
+                w: 0.70710677
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: -3
+                y: -0.12034278
+                z: 0
+            max:
+              Vector3:
+                x: 0
+                y: 0.042849626
+                z: 3
+        rigid_bodies: ~
+        render_entities:
+          - SM_FloorPanel15_03_03
+        children: ~
+        camera: ~
+        light: ~
+        can_intersect_ray: true
+    - Description:
+        name: block3_side10
+        type: STATIC
+        emissive_strength: 1
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: -12
+                y: 3
+                z: -3
+            scale:
+              Vector3:
+                x: 1
+                y: 1
+                z: 1
+            rotation:
+              Quaternion:
+                x: 0
+                y: 0
+                z: 0.70710677
+                w: 0.70710677
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: -3
+                y: -0.12034293
+                z: 0
+            max:
+              Vector3:
+                x: 0
+                y: 0.02752503
+                z: 3
+        rigid_bodies: ~
+        render_entities:
+          - SM_FloorPanel11_03_03
+        children: ~
+        camera: ~
+        light: ~
+        can_intersect_ray: true
+    - Description:
+        name: block3_side11
+        type: STATIC
+        emissive_strength: 1
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: -12
+                y: 3
+                z: 0
+            scale:
+              Vector3:
+                x: 1
+                y: 1
+                z: 1
+            rotation:
+              Quaternion:
+                x: 0
+                y: 0
+                z: 0.70710677
+                w: 0.70710677
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: -3
+                y: -0.12034293
+                z: 0
+            max:
+              Vector3:
+                x: 0
+                y: 0.02752503
+                z: 3
+        rigid_bodies: ~
+        render_entities:
+          - SM_FloorPanel11_03_03
+        children: ~
+        camera: ~
+        light: ~
+        can_intersect_ray: true
+    - Description:
+        name: block3_side12
+        type: STATIC
+        emissive_strength: 1
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: 0
+                y: 0
+                z: -9
+            scale:
+              Vector3:
+                x: 1
+                y: 1
+                z: 1
+            rotation:
+              Quaternion:
+                x: 0
+                y: 0
+                z: -0.70710677
+                w: 0.70710677
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: -3
+                y: -0.12034278
+                z: 0
+            max:
+              Vector3:
+                x: 0
+                y: 0.042849626
+                z: 3
+        rigid_bodies: ~
+        render_entities:
+          - SM_FloorPanel15_03_03
+        children: ~
+        camera: ~
+        light: ~
+        can_intersect_ray: true
+    - Description:
+        name: block3_side13
+        type: STATIC
+        emissive_strength: 1
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: 0
+                y: 0
+                z: -6
+            scale:
+              Vector3:
+                x: 1
+                y: 1
+                z: 1
+            rotation:
+              Quaternion:
+                x: 0
+                y: 0
+                z: -0.70710677
+                w: 0.70710677
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: -3
+                y: -0.12034293
+                z: 0
+            max:
+              Vector3:
+                x: 0
+                y: 0.02752503
+                z: 3
+        rigid_bodies: ~
+        render_entities:
+          - SM_FloorPanel11_03_03
+        children: ~
+        camera: ~
+        light: ~
+        can_intersect_ray: true
+    - Description:
+        name: block3_side14
+        type: STATIC
+        emissive_strength: 1
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: 0
+                y: 0
+                z: -3
+            scale:
+              Vector3:
+                x: 1
+                y: 1
+                z: 1
+            rotation:
+              Quaternion:
+                x: 0
+                y: 0
+                z: -0.70710677
+                w: 0.70710677
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: -3
+                y: -0.12034278
+                z: 0
+            max:
+              Vector3:
+                x: 0
+                y: 0.042849626
+                z: 3
+        rigid_bodies: ~
+        render_entities:
+          - SM_FloorPanel15_03_03
+        children: ~
+        camera: ~
+        light: ~
+        can_intersect_ray: true
+    - Description:
+        name: block3_side15
+        type: STATIC
+        emissive_strength: 1
+        transform:
+          Transform:
+            position:
+              Vector3:
+                x: 0
+                y: 0
+                z: 0
+            scale:
+              Vector3:
+                x: 1
+                y: 1
+                z: 1
+            rotation:
+              Quaternion:
+                x: 0
+                y: 0
+                z: -0.70710677
+                w: 0.70710677
+        aabb:
+          AABB:
+            min:
+              Vector3:
+                x: -3
+                y: -0.12034293
+                z: 0
+            max:
+              Vector3:
+                x: 0
+                y: 0.02752503
+                z: 3
+        rigid_bodies: ~
+        render_entities:
+          - SM_FloorPanel11_03_03
+        children: ~
+        camera: ~
+        light: ~
+        can_intersect_ray: true
     - Description:
         name: flycam
         type: STATIC
