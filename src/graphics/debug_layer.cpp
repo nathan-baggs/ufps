@@ -181,12 +181,12 @@ auto DebugLayer::push_nav_mesh(const NavMesh &nav_mesh, DebugLayerType type) -> 
     }
 }
 
-auto DebugLayer::push_route(std::span<const NavMesh::Node> nodes, DebugLayerType type) -> void
+auto DebugLayer::push_route(std::span<const NavMesh::Node> nodes, float y_offset, DebugLayerType type) -> void
 {
     auto edge_lines = std::vector<LineData>{};
     edge_lines.reserve(std::ranges::size(nodes) * 2zu);
 
-    static const auto offset = Vector3{0.0f, 4.0f, 0.0f};
+    static const auto offset = Vector3{0.0f, y_offset, 0.0f};
 
     for (auto i = 0zu; i < std::ranges::size(nodes) - 1zu; ++i)
     {

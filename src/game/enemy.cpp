@@ -104,8 +104,8 @@ auto Enemy::update(Duration) -> void
     walk_direction.y = 0.0f;
     controller->set_walk_direction(walk_direction);
 
-    dl.push_route(current_route_, DebugLayerType::DEBUG);
-    dl.push_route(current_route_, DebugLayerType::DEFAULT);
+    dl.push_route(route_, transform.position.y, DebugLayerType::DEFAULT);
+    dl.push_route(route_, transform.position.y, DebugLayerType::DEBUG);
 
     if (Vector3::distance(transform.position, current_route_.front().position) < 0.1f)
     {
