@@ -22,6 +22,8 @@ class Enemy : public Actor
     enum class State
     {
         ROAMING,
+        AGRO,
+        FLEE,
     };
 
   public:

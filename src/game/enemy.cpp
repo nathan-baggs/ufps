@@ -92,30 +92,58 @@ auto Enemy::update(Duration) -> void
     transform.position = controller->position();
     set_transform(transform);
 
-    if (std::ranges::empty(current_route_))
+    switch (state_)
     {
-        route_ = random_route(transform.position);
-        current_route_ = route_;
+        using enum State;
+
+        case FLEE:
+        case ROAMING:
+        {
+            if (std::ranges::empty(current_route_))
+            {
+                route_ = random_route(transform.position);
+                current_route_ = route_;
+            }
+
+            contract_assert(!std::ranges::empty(current_route_));
+
+            auto walk_direction = Vector3::normalise(current_route_.front().position - transform.position);
+            walk_direction.y = 0.0f;
+            controller->set_walk_direction(walk_direction);
+
+            dl.push_route(route_, transform.position.y, DebugLayerType::DEFAULT);
+            dl.push_route(route_, transform.position.y, DebugLayerType::DEBUG);
+
+            if (Vector3::distance(transform.position, current_route_.front().position) < 0.1f)
+            {
+                current_route_ = current_route_.subspan(1zu);
+            }
+            break;
+        };
+        case AGRO:
+        {
+            auto walk_direction = Vector3::normalise(player_->transform().position - transform.position);
+            walk_direction.y = 0.0f;
+            controller->set_walk_direction(walk_direction);
+
+            break;
+        }
     }
 
-    contract_assert(!std::ranges::empty(current_route_));
-
-    auto walk_direction = Vector3::normalise(current_route_.front().position - transform.position);
-    walk_direction.y = 0.0f;
-    controller->set_walk_direction(walk_direction);
-
-    dl.push_route(route_, transform.position.y, DebugLayerType::DEFAULT);
-    dl.push_route(route_, transform.position.y, DebugLayerType::DEBUG);
-
-    if (Vector3::distance(transform.position, current_route_.front().position) < 0.1f)
+    if (health_ <= 0.25f * max_health_)
     {
-        current_route_ = current_route_.subspan(1zu);
+        state_ = State::FLEE;
     }
 }
 
 auto Enemy::hit(const Ray &, const IntersectionResult &) -> void
 {
     health_ -= 10.0f;
+
+    if (state_ == State::ROAMING)
+    {
+        state_ = State::AGRO;
+    }
 }
 
 Enemy::operator bool() const
