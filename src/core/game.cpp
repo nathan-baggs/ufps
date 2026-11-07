@@ -615,15 +615,6 @@ auto Game::update() -> bool
     dl.push_cone(max_fire_cone, colours::magenta, true, DebugLayerType::DEFAULT);
     dl.push_cone(max_fire_cone, colours::magenta, false, DebugLayerType::DEBUG);
 
-    static auto test_nav_mesh = NavMesh{};
-    dl.push_nav_mesh(test_nav_mesh, DebugLayerType::DEFAULT);
-    dl.push_nav_mesh(test_nav_mesh, DebugLayerType::DEBUG);
-
-    if (const auto route = test_nav_mesh.route(0zu, 370zu); route)
-    {
-        dl.push_route(*route, DebugLayerType::DEFAULT);
-    }
-
     if (!debug_mode_)
     {
         enemy_manager_.update(delta_);
