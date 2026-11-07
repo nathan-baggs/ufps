@@ -104,7 +104,7 @@ PhysicsSystem::PhysicsSystem(DebugRenderMode debug_render_mode)
     , debug_renderer_{debug_render_mode == DebugRenderMode::ON ? std::make_optional<PhysicsDebugRenderer>() : std::nullopt}
     , mesh_shape_cache_{}
 {
-    constexpr auto max_bodies = 2048u;
+    constexpr auto max_bodies = 4096u;
     constexpr auto num_body_mutexes = 0u;
     constexpr auto max_body_pairs = 1024u;
     constexpr auto max_contact_constraints = 1024u;
@@ -152,6 +152,7 @@ auto PhysicsSystem::create_box(
     auto &interface = physics_system_.GetBodyInterface();
 
     const auto body_id = interface.CreateAndAddBody(body_settings, to_activation(broad_phase_layer));
+    contract_assert(!body_id.IsInvalid());
 
     auto rb = rigid_bodies_.emplace(body_id, std::addressof(interface), broad_phase_layer, object_layer);
 
@@ -228,6 +229,7 @@ auto PhysicsSystem::create_meshes(
         auto &interface = physics_system_.GetBodyInterface();
 
         const auto body_id = interface.CreateAndAddBody(body_settings, to_activation(broad_phase_layer));
+        contract_assert(!body_id.IsInvalid());
 
         auto rb = rigid_bodies_.emplace(body_id, std::addressof(interface), broad_phase_layer, object_layer);
 
