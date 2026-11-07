@@ -11,6 +11,7 @@
 #include "core/entity.h"
 #include "core/entity_manager.h"
 #include "core/light_manager.h"
+#include "core/post_processing_options.h"
 #include "core/render_entity.h"
 #include "core/render_entity_manager.h"
 #include "core/service_locator.h"
@@ -20,7 +21,6 @@
 #include "graphics/mesh_manager.h"
 #include "graphics/point_light.h"
 #include "graphics/texture_manager.h"
-#include "maths/bounded_number.h"
 #include "maths/matrix4.h"
 #include "maths/ray.h"
 #include "maths/transform.h"
@@ -35,357 +35,69 @@
 namespace ufps
 {
 
-struct ToneMapOptions
-{
-    BoundedFloat<0.0f, 100.0f> max_brightness = 5.0f;
-    BoundedFloat<0.0f, 50.0f> contrast = 1.0f;
-    BoundedFloat<0.0f, 1.0f> linear_section_start = 0.3f;
-    BoundedFloat<0.0f, 1.0f> linear_section_length = 0.5f;
-    BoundedFloat<0.0f, 3.0f> black_tightness = 0.0f;
-    BoundedFloat<0.0f, 1.0f> pedestal = 0.0f;
-    BoundedFloat<0.0f, 5.0f> gamma = 2.2f;
-};
-
-struct SSAOOptions
-{
-    bool enabled = true;
-    BoundedUint32<1u, 64u> sample_count = 64u;
-    BoundedFloat<0.1f, 2.0f> radius = 0.75f;
-    BoundedFloat<0.01f, 0.1f> bias = 0.025f;
-    BoundedFloat<1.0f, 4.0f> power = 2.0f;
-};
-
-struct ExposureOptions
-{
-    BoundedFloat<-10.0f, 10.0f> min_log_luminance = -3.0f;
-    BoundedFloat<-10.0f, 10.0f> max_log_luminance = 1.0f;
-};
-
-struct FogOptions
-{
-    Colour colour = colours::black;
-    BoundedFloat<0.0f, 0.2f> density = 0.005f;
-};
-
-struct ChromaticAberrationOptions
-{
-    BoundedFloat<-0.1f, 0.1f> red_offset = 0.009f;
-    BoundedFloat<-0.1f, 0.1f> green_offset = 0.006f;
-    BoundedFloat<-0.1f, 0.1f> blue_offset = -0.006f;
-    BoundedFloat<0.0f, 1.0f> strength = 0.5f;
-};
-
-struct VignetteOptions
-{
-    Colour colour = colours::black;
-    BoundedFloat<0.0f, 1.0f> strength = 0.5f;
-    BoundedFloat<0.0f, 1.0f> feather = 0.1f;
-};
-
-struct FilmGrainOptions
-{
-    BoundedFloat<0.0f, 1.0f> strength = 0.01f;
-};
-
-struct BloomOptions
-{
-    BoundedFloat<0.0f, 0.1f> filter_radius = 0.005f;
-    BoundedFloat<0.0f, 1.0f> mix_amount = 0.04f;
-    BoundedFloat<0.0f, 10.0f> threshold = 1.0f;
-};
-
 class Scene
 {
   public:
     struct Description
     {
-        ToneMapOptions tone_map_options;
-        SSAOOptions ssao_options;
-        ExposureOptions exposure_options;
-        FogOptions fog_options;
-        ChromaticAberrationOptions chromatic_aberration_options;
-        VignetteOptions vignette_options;
-        FilmGrainOptions film_grain_options;
-        BloomOptions bloom_options;
+        PostProcessingOptions post_processing_options;
         Colour ambient;
         std::vector<Entity::Description> entities;
     };
 
-    constexpr Scene(const Description &description);
+    Scene(const Description &description);
 
-    constexpr auto add(EntityHandle handle) -> void;
+    auto add(EntityHandle handle) -> void;
 
-    constexpr auto entities() const -> std::span<const EntityHandle>;
+    auto static_entities() const -> std::span<const EntityHandle>;
 
-    constexpr auto gun() const -> EntityHandle;
+    auto dynamic_entities() const -> std::span<const EntityHandle>;
 
-    constexpr auto &ambient_light(this auto &&self);
+    auto all_entities() const;
 
-    constexpr auto &tone_map_options(this auto &&self);
+    auto gun() const -> EntityHandle;
 
-    constexpr auto &ssao_options(this auto &&self);
+    auto &ambient_light(this auto &&self);
 
-    constexpr auto &exposure_options(this auto &&self);
+    auto &post_processing_options(this auto &&self);
 
-    constexpr auto &fog_options(this auto &&self);
+    auto description() -> Description;
 
-    constexpr auto &chromatic_aberration_options(this auto &&self);
+    auto remove(EntityHandle handle) -> void;
 
-    constexpr auto &vignette_options(this auto &&self);
+    auto decals() const -> std::span<const Decal>;
 
-    constexpr auto &film_grain_options(this auto &&self);
+    auto add_decal(const Transform &transform, std::string_view decal_texture) -> void;
 
-    constexpr auto &bloom_options(this auto &&self);
+    auto check_and_reset_static_dirty() -> bool;
 
-    constexpr auto description(this auto &&self) -> Description;
-
-    constexpr auto remove(EntityHandle handle) -> void;
-
-    constexpr auto decals() const -> std::span<const Decal>;
-
-    constexpr auto add_decal(const Transform &transform, std::string_view decal_texture) -> void;
+    auto set_is_static_dirty() -> void;
 
   private:
-    std::vector<EntityHandle> entities_;
+    PostProcessingOptions post_processing_options_;
+    std::vector<EntityHandle> static_entities_;
+    std::vector<EntityHandle> dynamic_entities_;
     EntityHandle gun_;
     Colour ambient_;
-    ToneMapOptions tone_map_options_;
-    SSAOOptions ssao_options_;
-    ExposureOptions exposure_options_;
-    FogOptions fog_options_;
-    ChromaticAberrationOptions chromatic_aberration_options_;
-    VignetteOptions vignette_options_;
-    FilmGrainOptions film_grain_options_;
-    BloomOptions bloom_options_;
     std::vector<Decal> decals_;
     std::vector<Decal>::iterator next_decal_;
     bool decals_full_;
+    bool is_static_dirty_;
 };
 
-constexpr Scene::Scene(const Description &description)
-    : entities_{}
-    , gun_{}
-    , ambient_{description.ambient}
-    , tone_map_options_{description.tone_map_options}
-    , ssao_options_{description.ssao_options}
-    , exposure_options_{description.exposure_options}
-    , fog_options_{description.fog_options}
-    , chromatic_aberration_options_{description.chromatic_aberration_options}
-    , vignette_options_{description.vignette_options}
-    , film_grain_options_{description.film_grain_options}
-    , bloom_options_{description.bloom_options}
-    , decals_{100zu}
-    , next_decal_{std::ranges::begin(decals_)}
-    , decals_full_{false}
-{
-    auto &&[em, rem, ps, lm, cm] =
-        services<EntityManager, RenderEntityManager, PhysicsSystem, LightManager, CameraManager>();
-
-    auto lookup = StringMap<EntityHandle>{};
-
-    for (const auto &entity_description : description.entities)
-    {
-        const auto new_entity_handle = em.insert({entity_description.name, {}, entity_description.transform});
-
-        auto new_entity = em[new_entity_handle];
-        new_entity->set_emissive_strength(entity_description.emissive_strength);
-
-        for (const auto &group_name : entity_description.render_entities)
-        {
-            new_entity->add_render_entities(rem[group_name]);
-        }
-
-        for (const auto &rb_description : entity_description.rigid_bodies)
-        {
-            log::debug("rb");
-            const auto rb = ps.create_rigid_body(rb_description, new_entity_handle);
-            new_entity->add_rigid_body(rb);
-        }
-
-        if (entity_description.can_intersect_ray)
-        {
-            new_entity->set_ray_intersect_rigid_bodies(
-                ps.create_meshes(BroadPhaseLayer::STATIC, ObjectLayer::LEVEL_GEOMETRY, new_entity_handle));
-        }
-
-        if (entity_description.camera)
-        {
-            const auto camera_handle = cm.insert(*entity_description.camera);
-            new_entity->set_camera(camera_handle);
-        }
-
-        if (entity_description.light)
-        {
-            const auto light_handle = lm.insert(*entity_description.light);
-            new_entity->set_light(light_handle);
-        }
-
-        if (new_entity->name() == "gun")
-        {
-            gun_ = new_entity_handle;
-        }
-        else
-        {
-            add(new_entity_handle);
-        }
-
-        lookup[entity_description.name] = new_entity_handle;
-    }
-
-    for (const auto &entity_description : description.entities)
-    {
-        const auto &entity = lookup[entity_description.name];
-
-        for (const auto &child : entity_description.children)
-        {
-            if (em[entity]->name() == "player" && child == "gun" && gun_)
-            {
-                em[entity]->add_child(gun_);
-                continue;
-            }
-
-            const auto child_handle = lookup.find(child);
-            ensure(child_handle != std::ranges::cend(lookup), "child {} not found", child);
-
-            em[entity]->add_child(child_handle->second);
-        }
-    }
-}
-
-constexpr auto Scene::add(EntityHandle handle) -> void
-{
-    entities_.push_back(handle);
-}
-
-constexpr auto Scene::entities() const -> std::span<const EntityHandle>
-{
-    return entities_;
-}
-
-constexpr auto Scene::gun() const -> EntityHandle
-{
-    return gun_;
-}
-
-constexpr auto &Scene::ambient_light(this auto &&self)
+auto &Scene::ambient_light(this auto &&self)
 {
     return self.ambient_;
 }
 
-constexpr auto &Scene::tone_map_options(this auto &&self)
+auto &Scene::post_processing_options(this auto &&self)
 {
-    return self.tone_map_options_;
+    return self.post_processing_options_;
 }
 
-constexpr auto &Scene::ssao_options(this auto &&self)
+inline auto Scene::all_entities() const
 {
-    return self.ssao_options_;
-}
-
-constexpr auto &Scene::exposure_options(this auto &&self)
-{
-    return self.exposure_options_;
-}
-
-constexpr auto &Scene::fog_options(this auto &&self)
-{
-    return self.fog_options_;
-}
-
-constexpr auto &Scene::chromatic_aberration_options(this auto &&self)
-{
-    return self.chromatic_aberration_options_;
-}
-
-constexpr auto &Scene::vignette_options(this auto &&self)
-{
-    return self.vignette_options_;
-}
-
-constexpr auto &Scene::film_grain_options(this auto &&self)
-{
-    return self.film_grain_options_;
-}
-
-constexpr auto &Scene::bloom_options(this auto &&self)
-{
-    return self.bloom_options_;
-}
-
-constexpr auto Scene::description(this auto &&self) -> Description
-{
-    const auto &[em, cm] = services<EntityManager, CameraManager>();
-
-    auto entities = self.entities_ | std::views::filter([&](auto &e) { return !!em[e]; }) |
-                    std::views::transform([&](auto e) { return em[e]->description(); }) |
-                    std::ranges::to<std::vector>();
-
-    if (const auto gun = em[self.gun_]; gun)
-    {
-        entities.push_back(gun->description());
-    }
-
-    return {
-        .tone_map_options = self.tone_map_options_,
-        .ssao_options = self.ssao_options_,
-        .exposure_options = self.exposure_options_,
-        .fog_options = self.fog_options_,
-        .chromatic_aberration_options = self.chromatic_aberration_options_,
-        .vignette_options = self.vignette_options_,
-        .film_grain_options = self.film_grain_options_,
-        .bloom_options = self.bloom_options_,
-        .ambient = self.ambient_,
-        .entities = std::move(entities),
-    };
-}
-
-constexpr auto Scene::remove(EntityHandle handle) -> void
-{
-    const auto iter = std::ranges::find(entities_, handle);
-    expect(iter != std::ranges::cend(entities_), "entity not found");
-
-    entities_.erase(iter);
-}
-
-constexpr auto Scene::decals() const -> std::span<const Decal>
-{
-    const auto begin = std::ranges::cbegin(decals_);
-    const auto end = decals_full_ ? std::ranges::cend(decals_) : next_decal_;
-
-    return {begin, end};
-}
-
-constexpr auto Scene::add_decal(const Transform &transform, std::string_view decal_texture) -> void
-{
-    const auto &tm = service<TextureManager>();
-
-    const auto mat = Matrix4{transform};
-    const auto pos = transform.position;
-    const auto normal = Vector3::normalise({mat[4], mat[5], mat[6]});
-
-    if (std::ranges::none_of(
-            decals_,
-            [pos, normal](const auto &mat)
-            {
-                const auto decal_pos = Vector3{mat[12], mat[13], mat[14]};
-                const auto decal_normal = Vector3::normalise({mat[4], mat[5], mat[6]});
-
-                const auto distance = Vector3::distance(pos, decal_pos);
-                const auto normal_alignment = Vector3::dot(normal, decal_normal);
-
-                return distance < 0.01f && normal_alignment > 0.95f;
-            },
-            &Decal::transform))
-    {
-        *next_decal_ = Decal{transform, tm.bindless_handle(decal_texture)};
-        ++next_decal_;
-
-        if (next_decal_ == std::ranges::cend(decals_))
-        {
-            decals_full_ = true;
-            next_decal_ = std::ranges::begin(decals_);
-        }
-    }
+    return std::views::concat(static_entities(), dynamic_entities());
 }
 
 }

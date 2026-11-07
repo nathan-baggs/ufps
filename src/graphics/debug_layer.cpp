@@ -2,11 +2,13 @@
 
 #include <cmath>
 #include <inplace_vector>
+#include <memory>
 #include <ranges>
 
 #include "concurrency/concurrent_queue.h"
 #include "graphics/colour.h"
 #include "graphics/line_data.h"
+#include "maths/aabb.h"
 #include "maths/matrix3.h"
 #include "maths/vector3.h"
 #include "utils/exception.h"
@@ -25,14 +27,8 @@ auto DebugLayer::push_line(
     {
         using enum DebugLayerType;
 
-        case DEFAULT:
-            default_lines_queue_.push({start, colour});
-            default_lines_queue_.push({end, colour});
-            break;
-        case DEBUG:
-            debug_lines_queue_.push({start, colour});
-            debug_lines_queue_.push({end, colour});
-            break;
+        case DEFAULT: default_lines_queue_.push(LineData{start, colour}, LineData{end, colour}); break;
+        case DEBUG: debug_lines_queue_.push(LineData{start, colour}, LineData{end, colour}); break;
     }
 }
 
@@ -49,68 +45,33 @@ auto DebugLayer::push_cube(const Transform &transform, const Colour &colour, Deb
 auto DebugLayer::push_aabb(const AABB &aabb, const Transform &transform, const Colour &colour, DebugLayerType type)
     -> void
 {
-    push_line(
-        transform * ufps::Vector4{aabb.max.x, aabb.max.y, aabb.max.z, 1.0f},
-        transform * ufps::Vector4{aabb.min.x, aabb.max.y, aabb.max.z, 1.0f},
-        colour,
-        type);
-    push_line(
-        transform * ufps::Vector4{aabb.min.x, aabb.max.y, aabb.max.z, 1.0f},
-        transform * ufps::Vector4{aabb.min.x, aabb.max.y, aabb.min.z, 1.0f},
-        colour,
-        type);
-    push_line(
-        transform * ufps::Vector4{aabb.min.x, aabb.max.y, aabb.min.z, 1.0f},
-        transform * ufps::Vector4{aabb.max.x, aabb.max.y, aabb.min.z, 1.0f},
-        colour,
-        type);
-    push_line(
-        transform * ufps::Vector4{aabb.max.x, aabb.max.y, aabb.min.z, 1.0f},
-        transform * ufps::Vector4{aabb.max.x, aabb.max.y, aabb.max.z, 1.0f},
-        colour,
-        type);
+    auto *q = type == DebugLayerType::DEBUG ? std::addressof(debug_lines_queue_) : std::addressof(default_lines_queue_);
 
-    push_line(
-        transform * ufps::Vector4{aabb.max.x, aabb.max.y, aabb.max.z, 1.0f},
-        transform * ufps::Vector4{aabb.max.x, aabb.min.y, aabb.max.z, 1.0f},
-        colour,
-        type);
-    push_line(
-        transform * ufps::Vector4{aabb.min.x, aabb.max.y, aabb.max.z, 1.0f},
-        transform * ufps::Vector4{aabb.min.x, aabb.min.y, aabb.max.z, 1.0f},
-        colour,
-        type);
-    push_line(
-        transform * ufps::Vector4{aabb.min.x, aabb.max.y, aabb.min.z, 1.0f},
-        transform * ufps::Vector4{aabb.min.x, aabb.min.y, aabb.min.z, 1.0f},
-        colour,
-        type);
-    push_line(
-        transform * ufps::Vector4{aabb.max.x, aabb.max.y, aabb.min.z, 1.0f},
-        transform * ufps::Vector4{aabb.max.x, aabb.min.y, aabb.min.z, 1.0f},
-        colour,
-        type);
-
-    push_line(
-        transform * ufps::Vector4{aabb.max.x, aabb.min.y, aabb.max.z, 1.0f},
-        transform * ufps::Vector4{aabb.min.x, aabb.min.y, aabb.max.z, 1.0f},
-        colour,
-        type);
-    push_line(
-        transform * ufps::Vector4{aabb.min.x, aabb.min.y, aabb.max.z, 1.0f},
-        transform * ufps::Vector4{aabb.min.x, aabb.min.y, aabb.min.z, 1.0f},
-        colour,
-        type);
-    push_line(
-        transform * ufps::Vector4{aabb.min.x, aabb.min.y, aabb.min.z, 1.0f},
-        transform * ufps::Vector4{aabb.max.x, aabb.min.y, aabb.min.z, 1.0f},
-        colour,
-        type);
-    push_line(
-        transform * ufps::Vector4{aabb.max.x, aabb.min.y, aabb.min.z, 1.0f},
-        transform * ufps::Vector4{aabb.max.x, aabb.min.y, aabb.max.z, 1.0f},
-        colour,
-        type);
+    q->push(
+        LineData{transform * ufps::Vector4{aabb.max.x, aabb.max.y, aabb.max.z, 1.0f}, colour},
+        LineData{transform * ufps::Vector4{aabb.min.x, aabb.max.y, aabb.max.z, 1.0f}, colour},
+        LineData{transform * ufps::Vector4{aabb.min.x, aabb.max.y, aabb.max.z, 1.0f}, colour},
+        LineData{transform * ufps::Vector4{aabb.min.x, aabb.max.y, aabb.min.z, 1.0f}, colour},
+        LineData{transform * ufps::Vector4{aabb.min.x, aabb.max.y, aabb.min.z, 1.0f}, colour},
+        LineData{transform * ufps::Vector4{aabb.max.x, aabb.max.y, aabb.min.z, 1.0f}, colour},
+        LineData{transform * ufps::Vector4{aabb.max.x, aabb.max.y, aabb.min.z, 1.0f}, colour},
+        LineData{transform * ufps::Vector4{aabb.max.x, aabb.max.y, aabb.max.z, 1.0f}, colour},
+        LineData{transform * ufps::Vector4{aabb.max.x, aabb.max.y, aabb.max.z, 1.0f}, colour},
+        LineData{transform * ufps::Vector4{aabb.max.x, aabb.min.y, aabb.max.z, 1.0f}, colour},
+        LineData{transform * ufps::Vector4{aabb.min.x, aabb.max.y, aabb.max.z, 1.0f}, colour},
+        LineData{transform * ufps::Vector4{aabb.min.x, aabb.min.y, aabb.max.z, 1.0f}, colour},
+        LineData{transform * ufps::Vector4{aabb.min.x, aabb.max.y, aabb.min.z, 1.0f}, colour},
+        LineData{transform * ufps::Vector4{aabb.min.x, aabb.min.y, aabb.min.z, 1.0f}, colour},
+        LineData{transform * ufps::Vector4{aabb.max.x, aabb.max.y, aabb.min.z, 1.0f}, colour},
+        LineData{transform * ufps::Vector4{aabb.max.x, aabb.min.y, aabb.min.z, 1.0f}, colour},
+        LineData{transform * ufps::Vector4{aabb.max.x, aabb.min.y, aabb.max.z, 1.0f}, colour},
+        LineData{transform * ufps::Vector4{aabb.min.x, aabb.min.y, aabb.max.z, 1.0f}, colour},
+        LineData{transform * ufps::Vector4{aabb.min.x, aabb.min.y, aabb.max.z, 1.0f}, colour},
+        LineData{transform * ufps::Vector4{aabb.min.x, aabb.min.y, aabb.min.z, 1.0f}, colour},
+        LineData{transform * ufps::Vector4{aabb.min.x, aabb.min.y, aabb.min.z, 1.0f}, colour},
+        LineData{transform * ufps::Vector4{aabb.max.x, aabb.min.y, aabb.min.z, 1.0f}, colour},
+        LineData{transform * ufps::Vector4{aabb.max.x, aabb.min.y, aabb.min.z, 1.0f}, colour},
+        LineData{transform * ufps::Vector4{aabb.max.x, aabb.min.y, aabb.max.z, 1.0f}, colour});
 }
 
 auto DebugLayer::push_frustrum(const Camera &camera, const Colour &colour, DebugLayerType type) -> void
@@ -190,6 +151,59 @@ auto DebugLayer::push_cone(const Cone &cone, const Colour &colour, bool cap_only
     }
 }
 
+auto DebugLayer::push_nav_mesh(const NavMesh &nav_mesh, DebugLayerType type) -> void
+{
+    constexpr static auto line_offset = Vector3{0.0f, 0.5f, 0.0f};
+
+    const auto nodes = nav_mesh.nodes();
+
+    auto edge_lines = std::vector<LineData>{};
+    edge_lines.reserve(std::ranges::size(nodes) * 16u);
+
+    for (const auto &[index, node] : std::views::enumerate(nodes))
+    {
+        push_aabb(node.box, {node.position, {1.0f}, {}}, colours::blue, type);
+
+        for (const auto edge : nav_mesh.edges(index))
+        {
+            edge_lines.emplace_back(node.position + line_offset, colours::dark_pink);
+            edge_lines.emplace_back(nodes[edge].position + line_offset, colours::dark_pink);
+        }
+    }
+
+    if (type == DebugLayerType::DEBUG)
+    {
+        debug_lines_queue_.push_range(edge_lines);
+    }
+    else
+    {
+        default_lines_queue_.push_range(edge_lines);
+    }
+}
+
+auto DebugLayer::push_route(std::span<const NavMesh::Node> nodes, float y_offset, DebugLayerType type) -> void
+{
+    auto edge_lines = std::vector<LineData>{};
+    edge_lines.reserve(std::ranges::size(nodes) * 2zu);
+
+    static const auto offset = Vector3{0.0f, y_offset, 0.0f};
+
+    for (auto i = 0zu; i < std::ranges::size(nodes) - 1zu; ++i)
+    {
+        edge_lines.emplace_back(nodes[i].position + offset, colours::red);
+        edge_lines.emplace_back(nodes[i + 1zu].position + offset, colours::red);
+    }
+
+    if (type == DebugLayerType::DEBUG)
+    {
+        debug_lines_queue_.push_range(edge_lines);
+    }
+    else
+    {
+        default_lines_queue_.push_range(edge_lines);
+    }
+}
+
 auto DebugLayer::yield_lines(DebugLayerType type) -> std::queue<LineData>
 {
     switch (type)
@@ -215,5 +229,4 @@ auto DebugLayer::yield_cubes(DebugLayerType type) -> std::queue<CubeData>
 
     throw Exception("unknown type: {}", type);
 }
-
 }

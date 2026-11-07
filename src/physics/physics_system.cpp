@@ -7,10 +7,6 @@
 #include <ranges>
 #include <string_view>
 
-#include "Jolt/Math/Float3.h"
-#include "Jolt/Physics/Body/BodyLock.h"
-#include "Jolt/Physics/Collision/Shape/MeshShape.h"
-#include "Jolt/Physics/Collision/Shape/Shape.h"
 #include "core/entity.h"
 #include "core/entity_manager.h"
 #include "core/service_locator.h"
@@ -101,14 +97,14 @@ PhysicsSystem::PhysicsSystem(DebugRenderMode debug_render_mode)
     , object_layer_pair_filter_{}
     , cast_ray_layer_filter_{}
     , ignore_layer_draw_filter_{ObjectLayer::LEVEL_GEOMETRY}
+    , static_broad_phase_layer_filter_{}
     , temp_allocator_{10u * 1024u * 1024u}
     , job_system_{::JPH::cMaxPhysicsJobs, ::JPH::cMaxPhysicsBarriers, static_cast<int>(std::thread::hardware_concurrency() - 1zu)}
     , physics_system_{}
     , debug_renderer_{debug_render_mode == DebugRenderMode::ON ? std::make_optional<PhysicsDebugRenderer>() : std::nullopt}
-    , player_controller_{}
     , mesh_shape_cache_{}
 {
-    constexpr auto max_bodies = 2048u;
+    constexpr auto max_bodies = 4096u;
     constexpr auto num_body_mutexes = 0u;
     constexpr auto max_body_pairs = 1024u;
     constexpr auto max_contact_constraints = 1024u;
@@ -122,10 +118,8 @@ PhysicsSystem::PhysicsSystem(DebugRenderMode debug_render_mode)
         object_vs_broad_phase_layer_filter_,
         object_layer_pair_filter_);
 
-    physics_system_.SetGravity({0.0f, -9.8f, 0.0f});
+    physics_system_.SetGravity({0.0f, -2.5f, 0.0f});
     physics_system_.SetContactListener(this);
-
-    player_controller_ = std::make_unique<VirtualCharacterController>(physics_system_);
 }
 
 auto PhysicsSystem::create_box(
@@ -158,6 +152,7 @@ auto PhysicsSystem::create_box(
     auto &interface = physics_system_.GetBodyInterface();
 
     const auto body_id = interface.CreateAndAddBody(body_settings, to_activation(broad_phase_layer));
+    contract_assert(!body_id.IsInvalid());
 
     auto rb = rigid_bodies_.emplace(body_id, std::addressof(interface), broad_phase_layer, object_layer);
 
@@ -167,6 +162,8 @@ auto PhysicsSystem::create_box(
     const auto user_data = std::bit_cast<std::uint64_t>(handle_pair);
 
     interface.SetUserData(body_id, user_data);
+
+    physics_system_.OptimizeBroadPhase();
 
     return rb;
 }
@@ -232,6 +229,7 @@ auto PhysicsSystem::create_meshes(
         auto &interface = physics_system_.GetBodyInterface();
 
         const auto body_id = interface.CreateAndAddBody(body_settings, to_activation(broad_phase_layer));
+        contract_assert(!body_id.IsInvalid());
 
         auto rb = rigid_bodies_.emplace(body_id, std::addressof(interface), broad_phase_layer, object_layer);
 
@@ -259,9 +257,9 @@ auto PhysicsSystem::create_rigid_body(const RigidBody::Description &description,
     return handle;
 }
 
-auto PhysicsSystem::remove_rigid_body(RigidBodyHandle handle) -> void
+auto PhysicsSystem::remove(RigidBodyHandle handle) -> void
 {
-    const auto &rb = rigid_body(handle);
+    const auto &rb = (*this)[handle];
     contract_assert(rb);
 
     physics_system_.GetBodyInterface().RemoveBody(rb->native_handle());
@@ -269,9 +267,30 @@ auto PhysicsSystem::remove_rigid_body(RigidBodyHandle handle) -> void
     rigid_bodies_.remove(handle);
 }
 
-auto PhysicsSystem::duplicate_rigid_body(RigidBodyHandle handle) -> RigidBodyHandle
+auto PhysicsSystem::remove(std::span<RigidBodyHandle> handles) -> void
 {
-    const auto &rb = rigid_body(handle);
+    for (const auto handle : handles)
+    {
+        remove(handle);
+    }
+}
+
+auto PhysicsSystem::create_virtual_character_controller() -> VirtualCharacterControllerHandle
+{
+    auto controller = character_controllers_.emplace(std::addressof(physics_system_));
+    physics_system_.OptimizeBroadPhase();
+
+    return controller;
+}
+
+auto PhysicsSystem::remove(VirtualCharacterControllerHandle handle) -> void
+{
+    character_controllers_.remove(handle);
+}
+
+auto PhysicsSystem::duplicate(RigidBodyHandle handle) -> RigidBodyHandle
+{
+    const auto &rb = (*this)[handle];
     contract_assert(rb);
 
     const auto handle_pair = std::bit_cast<HandlePair>(rb->user_data());
@@ -282,15 +301,28 @@ auto PhysicsSystem::duplicate_rigid_body(RigidBodyHandle handle) -> RigidBodyHan
 
 auto PhysicsSystem::update() -> void
 {
-    player_controller_->update(16ms, to_native(physics_system_.GetGravity()));
-    physics_system_.Update(1.0f / 60.f, 1, &temp_allocator_, &job_system_);
+    for (auto &controller : character_controllers_.data())
+    {
+        controller.update(16ms, to_native(physics_system_.GetGravity()));
+    }
 
+    physics_system_.Update(1.0f / 60.f, 1, &temp_allocator_, &job_system_);
+}
+
+auto PhysicsSystem::draw_debug(const Vector3 &position) -> void
+{
     if (debug_renderer_)
     {
+        debug_renderer_->SetCameraPos(to_jolt(position));
+
         static const auto settings = ::JPH::BodyManager::DrawSettings{};
         physics_system_.DrawBodies(
             settings, std::addressof(*debug_renderer_), std::addressof(ignore_layer_draw_filter_));
-        player_controller_->debug_draw(*debug_renderer_);
+
+        for (auto &controller : character_controllers_.data())
+        {
+            controller.debug_draw(*debug_renderer_);
+        }
     }
 }
 
@@ -332,8 +364,31 @@ auto PhysicsSystem::debug_renderer() -> std::optional<PhysicsDebugRenderer &>
     return debug_renderer_.transform([](auto &e) -> decltype(auto) { return e; });
 }
 
-auto PhysicsSystem::player_controller() -> VirtualCharacterController &
+auto PhysicsSystem::gravity() const -> Vector3
 {
-    return *player_controller_;
+    return to_native(physics_system_.GetGravity());
 }
+
+auto PhysicsSystem::set_gravity(const Vector3 &gravity) -> void
+{
+    physics_system_.SetGravity(to_jolt(gravity));
+}
+
+auto PhysicsSystem::sweep(const Vector3 &start, const Vector3 &end, float sphere_radius) const -> bool
+{
+    const auto sphere = ::JPH::SphereShape{sphere_radius};
+    const auto displacement = end - start;
+
+    const auto cast = ::JPH::RShapeCast::sFromWorldTransform(
+        &sphere, ::JPH::Vec3::sReplicate(1.0f), ::JPH::RMat44::sTranslation(to_jolt(start)), to_jolt(displacement));
+
+    const auto settings = ::JPH::ShapeCastSettings{};
+    auto collector = ::JPH::ClosestHitCollisionCollector<::JPH::CastShapeCollector>{};
+
+    physics_system_.GetNarrowPhaseQuery().CastShape(
+        cast, settings, ::JPH::RVec3::sZero(), collector, static_broad_phase_layer_filter_);
+
+    return collector.HadHit();
+}
+
 }

@@ -64,13 +64,13 @@ PlayerActor::PlayerActor(
     EntityHandle gun_handle,
     Gun gun,
     const InputMap &input_map,
-    VirtualCharacterController &character_controller,
+    VirtualCharacterControllerHandle character_controller_handle,
     Scene &scene)
     : Actor{entity}
     , gun_handle_{gun_handle}
     , gun_{std::move(gun)}
     , input_map_{input_map}
-    , character_controller_{character_controller}
+    , character_controller_handle_{character_controller_handle}
     , scene_{scene}
     , walk_sound_timer_{}
     , yaw_{std::numbers::pi_v<float>}
@@ -116,18 +116,25 @@ auto PlayerActor::update(Duration delta) -> void
     pitch_ += mouse_delta;
     yaw_ -= input_map_.delta_x;
 
-    character_controller_.set_walk_direction(walk_direction(input_map_, *camera));
+    auto character_controller = ps[character_controller_handle_];
+    contract_assert(character_controller);
+
+    if (input_map_.is_set(Key::SPACE))
+    {
+        character_controller->jump();
+    }
+
+    character_controller->set_walk_direction(walk_direction(input_map_, *camera));
 
     auto player = em[entity_];
     contract_assert(player);
 
-    const auto &transform = player->transform();
+    static constexpr auto capsule_offset = Vector3{0.0f, 1.0f, 0.0f};
 
-    auto new_transform =
-        Transform{character_controller_.position(), {1.0f}, Quaternion(yaw_, pitch_ - final_recoil, 0.0f)};
-    new_transform.position.y = transform.position.y;
+    auto new_transform = Transform{
+        character_controller->position() + capsule_offset, {1.0f}, Quaternion(yaw_, pitch_ - final_recoil, 0.0f)};
 
-    player->set_transform(new_transform);
+    set_transform(new_transform);
 
     bullets_fired_ = gun_.update_bullets(delta, input_map_, *camera);
 }
@@ -137,6 +144,26 @@ auto PlayerActor::yield_bullets_fired() -> std::vector<Ray>
     auto tmp = std::vector<Ray>{};
     std::ranges::swap(tmp, bullets_fired_);
     return tmp;
+}
+
+auto PlayerActor::jump_strength() const -> float
+{
+    const auto &[ps] = services<PhysicsSystem>();
+
+    auto character_controller = ps[character_controller_handle_];
+    contract_assert(character_controller);
+
+    return character_controller->jump_strength();
+}
+
+auto PlayerActor::set_jump_strength(float jump_strength) -> void
+{
+    const auto &[ps] = services<PhysicsSystem>();
+
+    auto character_controller = ps[character_controller_handle_];
+    contract_assert(character_controller);
+
+    return character_controller->set_jump_strength(jump_strength);
 }
 
 }

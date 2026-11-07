@@ -41,6 +41,7 @@ enum class Key
     F1 = VK_F1,
     DEL = VK_DELETE,
     BACKSPACE = VK_BACK,
+    TAB = VK_TAB,
 };
 
 enum class KeyState

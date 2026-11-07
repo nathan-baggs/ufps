@@ -5,7 +5,6 @@
 
 #include "core/camera.h"
 #include "core/sparse_set.h"
-#include "graphics/particle_manager.h"
 #include "utils/error.h"
 
 namespace ufps
@@ -24,6 +23,7 @@ class DebugLayer;
 class AudioManager;
 class ParticleManager;
 class ResourceLoader;
+class EnemyManager;
 
 using CameraHandle = SparseSet<Camera>::handle_type;
 
@@ -54,26 +54,26 @@ inline auto set_service(Services *services) //
     pre(impl::g_services == nullptr)        //
     post(impl::g_services != nullptr)
 {
-    expect(!impl::g_services, "services already set");
     impl::g_services = services;
 }
 
 template <class T>
-auto service() -> T &
+auto service() -> T &     //
+    pre(impl::g_services) //
 {
-    expect(!!impl::g_services, "g_services not set");
     return *std::get<std::unique_ptr<T>>(*impl::g_services);
 }
 
 template <>
-inline auto service<CameraHandle>() -> CameraHandle &
+inline auto service<CameraHandle>() -> CameraHandle & //
+    pre(impl::g_services)
 {
-    expect(!!impl::g_services, "g_services not set");
     return std::get<CameraHandle>(*impl::g_services);
 }
 
 template <class... Ts>
-auto services() -> std::tuple<Ts &...>
+auto services() -> std::tuple<Ts &...> //
+    pre(impl::g_services)
 {
     return std::tuple<Ts &...>{service<Ts>()...};
 }

@@ -22,22 +22,27 @@ class PlayerActor : public Actor
         EntityHandle gun_entity,
         Gun gun,
         const InputMap &input_map,
-        VirtualCharacterController &character_controller,
+        VirtualCharacterControllerHandle character_controller_handle,
         Scene &scene);
     ~PlayerActor() override = default;
 
     auto gun() const -> const Gun &;
+
     auto set_gun(Gun gun) -> void;
 
     auto update(Duration delta) -> void override;
 
     auto yield_bullets_fired() -> std::vector<Ray>;
 
+    auto jump_strength() const -> float;
+
+    auto set_jump_strength(float jump_strength) -> void;
+
   private:
     EntityHandle gun_handle_;
     Gun gun_;
     const InputMap &input_map_;
-    VirtualCharacterController &character_controller_;
+    VirtualCharacterControllerHandle character_controller_handle_;
     Scene &scene_;
     Duration walk_sound_timer_;
     float yaw_;

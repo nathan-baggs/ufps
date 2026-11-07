@@ -1,10 +1,12 @@
 target_sources(ufpslib PRIVATE
+  actor.cpp
   contract_violation_handler.cpp
   entity.cpp
   flycam_actor.cpp
   game.cpp
   gun.cpp
   player_actor.cpp
+  scene.cpp
 )
 
 

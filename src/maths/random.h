@@ -7,6 +7,7 @@
 #include <random>
 #include <ranges>
 
+#include "maths/cone.h"
 #include "maths/matrix3.h"
 #include "maths/vector3.h"
 
@@ -62,6 +63,12 @@ class Random
         return Vector3::normalise(rotate_mat * local);
     }
 
+    auto rand_vector3(const Cone &cone) -> Vector3
+    {
+        const auto length = cone.extent.length();
+        return rand_vector3(Vector3::normalise(cone.extent), cone.theta) * length;
+    }
+
   private:
     std::mt19937 generator_;
 };
@@ -96,6 +103,11 @@ const auto &rand_element(T &&elements)
 inline auto rand_vector3(const Vector3 &normal, float cone_half_angle) -> Vector3
 {
     return instance().rand_vector3(normal, cone_half_angle);
+}
+
+inline auto rand_vector3(const Cone &cone) -> Vector3
+{
+    return instance().rand_vector3(cone);
 }
 
 }

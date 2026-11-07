@@ -1,6 +1,7 @@
 #include "core/game.h"
 
 #include <memory>
+#include <numbers>
 #include <ranges>
 #include <sstream>
 #include <variant>
@@ -14,6 +15,7 @@
 #include "core/camera.h"
 #include "core/camera_manager.h"
 #include "core/clock.h"
+#include "core/entity_manager.h"
 #include "core/flycam_actor.h"
 #include "core/light_manager.h"
 #include "core/manifest_descriptions.h"
@@ -26,6 +28,10 @@
 #include "events/key_event.h"
 #include "events/mouse_button_event.h"
 #include "events/mouse_event.h"
+#include "events/mouse_wheel_event.h"
+#include "game/enemy.h"
+#include "game/enemy_manager.h"
+#include "game/nav_mesh.h"
 #include "graphics/colour.h"
 #include "graphics/debug_layer.h"
 #include "graphics/debug_renderer.h"
@@ -41,6 +47,7 @@
 #include "maths/cone.h"
 #include "maths/random.h"
 #include "maths/ray.h"
+#include "maths/transform.h"
 #include "maths/vector3.h"
 #include "memory/metrics.h"
 #include "physics/physics_system.h"
@@ -198,19 +205,30 @@ auto load_render_entity_manager()
         rem.register_group(name, std::move(render_entities));
     }
 
-    mm.load("cube", std::vector{ufps::shapes::cube()});
+    const auto cube_mesh_views = mm.load("cube", std::vector{ufps::shapes::cube()});
+    rem.register_group(
+        "cube",
+        {{"cube",
+          cube_mesh_views.front(),
+          tm.bindless_handle("textures\\default_Normal.dds"),
+          tm.bindless_handle("textures\\default_Normal.dds"),
+          tm.bindless_handle("textures\\default_Metallic.dds"),
+          tm.bindless_handle("textures\\default_AO.dds"),
+          tm.bindless_handle("textures\\default_Roughness.dds"),
+          tm.bindless_handle("textures\\default_Emissive.dds")}});
+
     const auto mesh_views = mm.load("sprite", std::vector{ufps::shapes::sprite()});
 
     rem.register_group(
         "sprite",
         {{"sprite",
           mesh_views.front(),
-          tm.texture_index("textures\\default_BaseColor.dds"),
-          tm.texture_index("textures\\default_Normal.dds"),
-          tm.texture_index("textures\\default_Metallic.dds"),
-          tm.texture_index("textures\\default_AO.dds"),
-          tm.texture_index("textures\\default_Roughness.dds"),
-          tm.texture_index("textures\\default_Emissive.dds")}});
+          tm.bindless_handle("textures\\default_BaseColor.dds"),
+          tm.bindless_handle("textures\\default_Normal.dds"),
+          tm.bindless_handle("textures\\default_Metallic.dds"),
+          tm.bindless_handle("textures\\default_AO.dds"),
+          tm.bindless_handle("textures\\default_Roughness.dds"),
+          tm.bindless_handle("textures\\default_Emissive.dds")}});
 }
 
 auto load_scene_description() -> ufps::Scene::Description
@@ -315,6 +333,7 @@ Game::Game()
     , debug_mode_{false}
     , allocation_tracker_{}
     , services_{create_services()}
+    , enemy_manager_{}
 {
     load_all_textures(default_sampler_);
     load_render_entity_manager();
@@ -338,7 +357,7 @@ Game::~Game()
             std::views::transform([](const auto &p) { return std::make_pair(std::get<1>(p), std::get<0>(p)); }) |
             std::ranges::to<std::map<std::size_t, StackTraceBuffer, std::greater<std::size_t>>>();
 
-        for (auto &data : sorted_data | std::views::take(2))
+        for (auto &data : sorted_data)
         {
             auto &stack = const_cast<StackTraceBuffer &>(std::get<1>(data));
             auto &counter = std::get<0>(data);
@@ -377,8 +396,14 @@ auto Game::run() -> void
 
 auto Game::load_scene() -> void
 {
-    const auto &[rl, am, lm, em, ps] =
-        services<ResourceLoader, AudioManager, LightManager, EntityManager, PhysicsSystem>();
+    const auto &[rl, am, lm, em, ps, rem, cm] = services<
+        ResourceLoader,
+        AudioManager,
+        LightManager,
+        EntityManager,
+        PhysicsSystem,
+        RenderEntityManager,
+        CameraManager>();
 
     scene_ = std::make_unique<Scene>(load_scene_description());
 
@@ -407,13 +432,21 @@ auto Game::load_scene() -> void
     auto player_entity_handle = std::ranges::find_if(entity_handles, [&](auto e) { return em[e]->name() == "player"; });
     ensure(player_entity_handle != std::ranges::cend(entity_handles), "no player in scene");
     player_actor_ = std::make_unique<PlayerActor>(
-        *player_entity_handle, scene_->gun(), std::move(gun), input_map_, ps.player_controller(), *scene_);
+        *player_entity_handle,
+        scene_->gun(),
+        std::move(gun),
+        input_map_,
+        ps.create_virtual_character_controller(),
+        *scene_);
 
     auto flycam_entity_handle = std::ranges::find_if(entity_handles, [&](auto e) { return em[e]->name() == "flycam"; });
     ensure(flycam_entity_handle != std::ranges::cend(entity_handles), "no flycam in scene");
     flycam_actor_ = std::make_unique<FlyCamActor>(*flycam_entity_handle, input_map_);
 
     current_actor_ = player_actor_.get();
+
+    const auto enemy_transform = Transform{{0.0f, 2.0f, -10.0f}, {0.5f, 2.0f, 0.5f}, {}};
+    enemy_manager_.spawn(enemy_transform, 100.0f, player_actor_.get(), *scene_, window_);
 
     renderer_ = std::make_unique<DebugRenderer>(window_, *player_actor_);
 
@@ -450,7 +483,7 @@ auto Game::pump_events() -> bool
                         ufps::log::info("stopping");
                         quit_key_pressed = true;
                     }
-                    if (arg == ufps::KeyEvent{ufps::Key::F1, ufps::KeyState::DOWN})
+                    if (arg == ufps::KeyEvent{ufps::Key::TAB, ufps::KeyState::DOWN})
                     {
                         debug_mode_ = !debug_mode_;
                         ::ShowCursor(debug_mode_);
@@ -477,6 +510,10 @@ auto Game::pump_events() -> bool
                     input_map_.mouse_down = arg.state() == MouseButtonState::DOWN;
                     renderer_->add_mouse_event(arg);
                 }
+                else if constexpr (std::same_as<T, ufps::MouseWheelEvent>)
+                {
+                    renderer_->add_mouse_wheel_event(arg);
+                }
             },
             *event);
 
@@ -496,7 +533,16 @@ auto Game::update() -> bool
     const auto &[ps, pm, am, dl] = services<PhysicsSystem, ParticleManager, AudioManager, DebugLayer>();
 
     current_actor_->update(delta_);
-    ps.update();
+
+    if (!debug_mode_)
+    {
+        ps.update();
+    }
+
+    if (debug_mode_)
+    {
+        ps.draw_debug(current_actor_->transform().position);
+    }
 
     const auto bullets_fired = player_actor_->yield_bullets_fired();
 
@@ -520,25 +566,29 @@ auto Game::update() -> bool
         {
             if (intersection->distance < max_distance)
             {
-                scene_->add_decal(
-                    {intersection->position,
-                     {0.05f, 0.01f, 0.05f},
-                     Quaternion{{0.0f, 1.0f, 0.0f}, intersection->normal} *
-                         Quaternion{{0.0f, 1.0f, 0.0f}, random::rand_real(0.0f, 2.0f * std::numbers::pi_v<float>)}},
-                    random::rand_element(textures));
+                const auto rb = ps[intersection->body];
+                const auto hit_enemy = rb && rb->object_layer() == ObjectLayer::ENEMIES;
 
-                pm.spawn_sparks(intersection->position, intersection->normal * Vector3{2.0f});
-                for (auto i = 0; i < 10; ++i)
+                if (!hit_enemy)
                 {
-                    pm.spawn_sparks(
-                        intersection->position,
-                        intersection->normal +
-                            Vector3{
-                                random::rand_real(-0.5f, 0.5f),
-                                random::rand_real(-0.5f, 0.5f),
-                                random::rand_real(-0.5f, 0.5f)} *
-                                Vector3{2.0f});
+                    scene_->add_decal(
+                        {intersection->position,
+                         {0.05f, 0.01f, 0.05f},
+                         Quaternion{{0.0f, 1.0f, 0.0f}, intersection->normal} *
+                             Quaternion{{0.0f, 1.0f, 0.0f}, random::rand_real(0.0f, 2.0f * std::numbers::pi_v<float>)}},
+                        random::rand_element(textures));
                 }
+                else
+                {
+                    if (const auto enemy = enemy_manager_[intersection->entity]; enemy)
+                    {
+                        enemy->hit(bullet_ray, *intersection);
+                    }
+                }
+
+                pm.spawn_sparks(
+                    {.origin = intersection->position, .extent = intersection->normal * Vector3{2.0f}, .theta = 0.5f},
+                    10u);
             }
         }
     }
@@ -548,6 +598,13 @@ auto Game::update() -> bool
         if (gun_ray_intersection->distance <= max_distance)
         {
             fire_cone_colour = colours::yellow;
+
+            const auto rb = ps[gun_ray_intersection->body];
+            if (rb && rb->object_layer() == ObjectLayer::ENEMIES)
+            {
+                fire_cone_colour = colours::red;
+            }
+
             fire_cone.extent = Vector3::normalise(fire_cone.extent) * Vector3{gun_ray_intersection->distance * 0.99f};
             max_fire_cone.extent = fire_cone.extent;
         }
@@ -557,6 +614,31 @@ auto Game::update() -> bool
     dl.push_cone(fire_cone, fire_cone_colour, false, DebugLayerType::DEBUG);
     dl.push_cone(max_fire_cone, colours::magenta, true, DebugLayerType::DEFAULT);
     dl.push_cone(max_fire_cone, colours::magenta, false, DebugLayerType::DEBUG);
+
+    if (!debug_mode_)
+    {
+        enemy_manager_.update(delta_);
+
+        const auto dead_enemies = enemy_manager_.yield_dead_enemies();
+        for (const auto enemy_handle : dead_enemies)
+        {
+            enemy_manager_.despawn(enemy_handle, *scene_);
+
+            for (auto i = 0; i < 1; i++)
+            {
+                auto enemy_transform = Transform{
+                    {random::rand_real(-30.0f, 30.0f), 2.0f, random::rand_real(-30.0f, 30.0f)}, {0.5f, 2.0f, 0.5f}, {}};
+
+                while (Vector3::distance(enemy_transform.position, player_actor_->transform().position) < 5.0f)
+                {
+                    enemy_transform.position = {
+                        random::rand_real(-30.0f, 30.0f), 2.0f, random::rand_real(-30.0f, 30.0f)};
+                }
+
+                enemy_manager_.spawn(enemy_transform, 100.0f, player_actor_.get(), *scene_, window_);
+            }
+        }
+    }
 
     return true;
 }

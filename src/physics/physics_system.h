@@ -55,19 +55,33 @@ class PhysicsSystem : public ::JPH::ContactListener
 
     auto create_rigid_body(const RigidBody::Description &description, EntityHandle entity) -> RigidBodyHandle;
 
-    auto remove_rigid_body(RigidBodyHandle handle) -> void;
+    auto remove(RigidBodyHandle handle) -> void;
 
-    auto duplicate_rigid_body(RigidBodyHandle handle) -> RigidBodyHandle;
+    auto remove(std::span<RigidBodyHandle> handles) -> void;
 
-    constexpr auto rigid_body(this auto &&self, RigidBodyHandle handle);
+    auto create_virtual_character_controller() -> VirtualCharacterControllerHandle;
+
+    auto remove(VirtualCharacterControllerHandle handle) -> void;
+
+    auto duplicate(RigidBodyHandle handle) -> RigidBodyHandle;
+
+    auto operator[](this auto &&self, RigidBodyHandle);
+
+    auto operator[](this auto &&self, VirtualCharacterControllerHandle);
 
     auto update() -> void;
+
+    auto draw_debug(const Vector3 &position) -> void;
 
     auto cast_ray(const Ray &ray) const -> std::optional<IntersectionResult>;
 
     auto debug_renderer() -> std::optional<PhysicsDebugRenderer &>;
 
-    auto player_controller() -> VirtualCharacterController &;
+    auto gravity() const -> Vector3;
+
+    auto set_gravity(const Vector3 &gravity) -> void;
+
+    auto sweep(const Vector3 &start, const Vector3 &end, float sphere_radius) const -> bool;
 
   private:
     SimpleBroadPhaseLayer broad_phase_layer_;
@@ -75,18 +89,24 @@ class PhysicsSystem : public ::JPH::ContactListener
     SimpleObjectLayerPairFilter object_layer_pair_filter_;
     CastRayObjectLayerFilter cast_ray_layer_filter_;
     IgnoreLayerDrawFilter ignore_layer_draw_filter_;
+    StaticBroadPhaseLayerFilter static_broad_phase_layer_filter_;
     ::JPH::TempAllocatorImpl temp_allocator_;
     ::JPH::JobSystemThreadPool job_system_;
     ::JPH::PhysicsSystem physics_system_;
     SparseSet<RigidBody> rigid_bodies_;
+    SparseSet<VirtualCharacterController> character_controllers_;
     std::optional<PhysicsDebugRenderer> debug_renderer_;
-    std::unique_ptr<VirtualCharacterController> player_controller_;
     std::unordered_map<MeshView, ::JPH::Ref<::JPH::Shape>> mesh_shape_cache_;
 };
 
-constexpr auto PhysicsSystem::rigid_body(this auto &&self, RigidBodyHandle handle)
+auto PhysicsSystem::operator[](this auto &&self, RigidBodyHandle handle)
 {
     return self.rigid_bodies_[handle];
+}
+
+auto PhysicsSystem::operator[](this auto &&self, VirtualCharacterControllerHandle handle)
+{
+    return self.character_controllers_[handle];
 }
 
 }

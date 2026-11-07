@@ -41,6 +41,7 @@ class RigidBody
     auto description() const -> Description;
     auto native_handle() const -> ::JPH::BodyID;
     auto user_data() const -> std::uint64_t;
+    auto object_layer() const -> ObjectLayer;
 
   private:
     auto update_transforms(const Transform &local, const Transform &parent) -> void;

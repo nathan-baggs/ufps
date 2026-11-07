@@ -14,7 +14,13 @@ namespace ufps
 {
 
 PersistentBuffer::PersistentBuffer(std::size_t size, std::string_view name)
-    : buffer_{0u, [](auto buffer) { ::glUnmapNamedBuffer(buffer); ::glDeleteBuffers(1, &buffer); }}
+    : buffer_{
+          0u,
+          [](auto buffer)
+          {
+              ::glUnmapNamedBuffer(buffer);
+              ::glDeleteBuffers(1, &buffer);
+          }}
     , size_{size}
     , name_{name}
 {
@@ -28,7 +34,7 @@ PersistentBuffer::PersistentBuffer(std::size_t size, std::string_view name)
 
 auto PersistentBuffer::write(DataBufferView data, std::size_t offset) const -> void
 {
-    expect(size_ >= data.size_bytes() + offset, "buffer too small");
+    expect(size_ >= data.size_bytes() + offset, "buffer too small {} < {} + {}", size_, data.size_bytes(), offset);
     std::memcpy(reinterpret_cast<std::byte *>(map_) + offset, data.data(), data.size_bytes());
 }
 

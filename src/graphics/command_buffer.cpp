@@ -1,5 +1,6 @@
 #include "graphics/command_buffer.h"
 
+#include <GL/gl.h>
 #include <cstddef>
 #include <cstdint>
 #include <format>
@@ -7,6 +8,7 @@
 #include <span>
 #include <string>
 
+#include "core/entity.h"
 #include "core/entity_manager.h"
 #include "core/render_entity_manager.h"
 #include "core/scene.h"
@@ -38,11 +40,20 @@ CommandBuffer::CommandBuffer(std::string_view name)
 {
 }
 
-auto CommandBuffer::build(const Scene &scene) -> std::uint32_t
+auto CommandBuffer::build(const Scene &scene, EntityType type) -> std::uint32_t
 {
     auto &&[em, rem] = services<EntityManager, RenderEntityManager>();
 
-    const auto command = scene.entities() | std::views::filter([&](auto e) { return !!em[e]; }) |
+    const auto get_entities = [&]
+    {
+        if (type == EntityType::DYNAMIC)
+        {
+            return scene.dynamic_entities();
+        }
+        return scene.static_entities();
+    };
+
+    const auto command = get_entities() | std::views::filter([&](auto e) { return !!em[e]; }) |
                          std::views::transform([&](auto e) { return em[e]->render_entities(); }) | std::views::join |
                          std::views::transform(
                              [&](auto e)
@@ -63,6 +74,13 @@ auto CommandBuffer::build(const Scene &scene) -> std::uint32_t
         DataBufferView{reinterpret_cast<const std::byte *>(command.data()), command.size() * sizeof(IndirectCommand)};
 
     resize_gpu_buffer(command, command_buffer_);
+
+    // CommandBuffer uses a multi buffer internally, which we dont need nor advance for static objects
+    // updating a static command buffer is rare so just force a sync and write to the first slot
+    if (type == EntityType::STATIC)
+    {
+        ::glFinish();
+    }
 
     command_buffer_.write(command_view, 0u);
 

@@ -12,6 +12,7 @@
 #include "core/scene.h"
 #include "events/key_event.h"
 #include "events/mouse_button_event.h"
+#include "events/mouse_wheel_event.h"
 #include "graphics/line_data.h"
 #include "graphics/point_light.h"
 #include "graphics/renderer.h"
@@ -30,6 +31,7 @@ class DebugRenderer : public Renderer
 
     auto add_mouse_event(const MouseButtonEvent &evt) -> void;
     auto add_key_event(const KeyEvent &evt) -> void;
+    auto add_mouse_wheel_event(const MouseWheelEvent &evt) -> void;
 
     auto set_enabled(bool enabled) -> void;
 
@@ -44,7 +46,7 @@ class DebugRenderer : public Renderer
     auto draw_render_targets() -> void;
     auto draw_metrics() -> void;
     auto draw_inspector(Scene &scene) -> void;
-    auto draw_gizmo(const Camera &camera) -> void;
+    auto draw_gizmo(Scene &scene, const Camera &camera) -> void;
     auto draw_player_info() -> void;
 
     using SelectedType = std::variant<std::monostate, EntityHandle, LightHandle, RigidBodyHandle, CameraHandle>;
