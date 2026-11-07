@@ -54,7 +54,7 @@ class DebugLayer
 
     auto push_nav_mesh(const NavMesh &nav_mesh, DebugLayerType type = DebugLayerType::DEBUG) -> void;
 
-    auto push_route(std::span<const Node> nodes, DebugLayerType type = DebugLayerType::DEBUG) -> void;
+    auto push_route(std::span<const NavMesh::Node> nodes, DebugLayerType type = DebugLayerType::DEBUG) -> void;
 
     auto yield_lines(DebugLayerType type) -> std::queue<LineData>;
 

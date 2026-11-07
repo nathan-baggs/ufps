@@ -14,15 +14,15 @@
 namespace ufps
 {
 
-struct Node
-{
-    AABB box;
-    Vector3 position;
-};
-
 class NavMesh
 {
   public:
+    struct Node
+    {
+        AABB box;
+        Vector3 position;
+    };
+
     NavMesh();
 
     auto nodes() const -> std::span<const Node>;

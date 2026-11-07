@@ -181,7 +181,7 @@ auto DebugLayer::push_nav_mesh(const NavMesh &nav_mesh, DebugLayerType type) -> 
     }
 }
 
-auto DebugLayer::push_route(std::span<const Node> nodes, DebugLayerType type) -> void
+auto DebugLayer::push_route(std::span<const NavMesh::Node> nodes, DebugLayerType type) -> void
 {
     auto edge_lines = std::vector<LineData>{};
     edge_lines.reserve(std::ranges::size(nodes) * 2zu);

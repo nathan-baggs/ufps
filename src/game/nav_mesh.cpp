@@ -19,7 +19,7 @@
 namespace
 {
 
-auto simplify_route(std::vector<ufps::Node> route) -> std::vector<ufps::Node> //
+auto simplify_route(std::vector<ufps::NavMesh::Node> route) -> std::vector<ufps::NavMesh::Node> //
     pre(std::ranges::size(route) >= 2zu)
 {
     if (std::ranges::size(route) == 2zu)
