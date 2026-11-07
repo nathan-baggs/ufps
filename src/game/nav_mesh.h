@@ -32,6 +32,8 @@ class NavMesh
 
     auto route(std::size_t start_node_index, std::size_t end_node_index) -> std::optional<std::vector<Node>>;
 
+    auto node(const Vector3 &position) const -> std::optional<std::size_t>;
+
   private:
     std::vector<Node> nodes_;
     std::unordered_map<std::size_t, std::vector<std::size_t>> edges_;

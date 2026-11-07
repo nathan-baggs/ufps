@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <contracts>
 #include <cstddef>
+#include <iterator>
 #include <numeric>
 #include <optional>
 #include <queue>
@@ -208,5 +209,22 @@ auto NavMesh::route(std::size_t start_node_index, std::size_t end_node_index) ->
     }
 
     return std::nullopt;
+}
+
+auto NavMesh::node(const Vector3 &position) const -> std::optional<std::size_t>
+{
+    const auto find_node = std::ranges::find_if(
+        nodes_,
+        [&](const auto &e)
+        {
+            const auto world_min = e.box.min + e.position;
+            const auto world_max = e.box.max + e.position;
+            return position.x <= world_max.x && position.x >= world_min.x && position.z <= world_max.z &&
+                   position.z >= world_min.z;
+        });
+
+    return find_node == std::ranges::cend(nodes_)
+               ? std::nullopt
+               : std::make_optional(std::ranges::distance(std::ranges::cbegin(nodes_), find_node));
 }
 }
