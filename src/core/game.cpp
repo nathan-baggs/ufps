@@ -445,7 +445,7 @@ auto Game::load_scene() -> void
 
     current_actor_ = player_actor_.get();
 
-    const auto enemy_transform = Transform{{0.0f, 2.0f, -10.0f}, {0.5f, 2.0f, 0.5f}, {}};
+    const auto enemy_transform = Transform{{0.0f, 2.0f, -10.0f}, {1.0f}, {}};
     enemy_manager_.spawn(enemy_transform, 100.0f, player_actor_.get(), *scene_, window_);
 
     renderer_ = std::make_unique<DebugRenderer>(window_, *player_actor_);

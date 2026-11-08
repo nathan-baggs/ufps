@@ -26,11 +26,15 @@ auto random_route(const ufps::Vector3 &start) -> std::vector<ufps::NavMesh::Node
     const auto start_index = g_nav_mesh->node(start);
     contract_assert(start_index);
 
-    const auto end_index = g_nav_mesh->node(ufps::random::rand_element(g_nav_mesh->nodes()).position);
-    contract_assert(end_index);
+    auto route = std::optional<std::vector<ufps::NavMesh::Node>>{};
 
-    const auto route = g_nav_mesh->route(*start_index, *end_index);
-    contract_assert(route);
+    while (!route)
+    {
+        const auto end_index = g_nav_mesh->node(ufps::random::rand_element(g_nav_mesh->nodes()).position);
+        contract_assert(end_index);
+
+        route = g_nav_mesh->route(*start_index, *end_index);
+    }
 
     return *route;
 }
