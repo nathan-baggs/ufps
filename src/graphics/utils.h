@@ -6,7 +6,6 @@
 #include <tuple>
 #include <vector>
 
-#include "graphics/model_data.h"
 #include "graphics/opengl.h"
 #include "graphics/texture_data.h"
 #include "graphics/vertex_data.h"

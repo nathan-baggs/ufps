@@ -19,7 +19,6 @@
 #include <assimp/vector3.h>
 
 #include "graphics/mesh_data.h"
-#include "graphics/model_data.h"
 #include "graphics/utils.h"
 #include "utils/data_buffer.h"
 #include "utils/error.h"
@@ -64,7 +63,7 @@ auto to_native(const ::aiVector3D &v) -> ufps::Vector3
 
 }
 
-auto load_model(ufps::DataBufferView model_data) -> std::tuple<std::string, std::vector<ufps::ModelData>>
+auto load_model(ufps::DataBufferView model_data) -> std::tuple<std::string, std::vector<ModelData>>
 {
     [[maybe_unused]] static auto *logger = []
     {
@@ -89,7 +88,7 @@ auto load_model(ufps::DataBufferView model_data) -> std::tuple<std::string, std:
     const auto materials = std::span<::aiMaterial *>(scene->mMaterials, scene->mMaterials + scene->mNumMaterials);
     ufps::log::info("found {} meshes, {} materials", std::ranges::size(loaded_meshes), std::ranges::size(materials));
 
-    auto models = std::vector<ufps::ModelData>{};
+    auto models = std::vector<ModelData>{};
 
     for (const auto &[index, mesh] : loaded_meshes | std::views::enumerate)
     {
