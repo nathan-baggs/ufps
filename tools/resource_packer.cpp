@@ -15,6 +15,8 @@
 #include "utils/exception.h"
 #include "utils/log.h"
 
+#include "assimp_loader.h"
+
 using namespace std::literals;
 
 namespace
@@ -91,7 +93,7 @@ auto main(int argc, char **argv) -> int
             for (const auto &m : models)
             {
                 ufps::log::debug("found model resource: {}", m);
-                auto [name, sub_models] = ufps::load_model(resource_loader.load_data_buffer(m));
+                auto [name, sub_models] = load_model(resource_loader.load_data_buffer(m));
 
                 if (sub_models.empty())
                 {

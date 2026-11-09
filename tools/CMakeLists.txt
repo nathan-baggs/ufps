@@ -1,4 +1,5 @@
 add_executable(resource_packer
+  assimp_loader.cpp
   resource_packer.cpp
 )
 
@@ -20,5 +21,6 @@ target_compile_options(resource_packer PRIVATE
 )
 
 target_link_libraries(resource_packer
+   assimp
    ufpslib
 )
