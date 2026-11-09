@@ -86,31 +86,6 @@ auto channels_to_format(int num_channels, bool is_srgb) -> ufps::TextureFormat
     throw ufps::Exception("unsupported channel count: {}", num_channels);
 }
 
-auto get_texture_filename(::aiMaterial const *material, const std::set<::aiTextureType> types)
-    -> std::optional<std::string>
-{
-    for (const auto type : types)
-    {
-        if (material->GetTextureCount(type) != 1)
-        {
-            continue;
-        }
-
-        auto path_str = ::aiString{};
-        material->GetTexture(type, 0u, &path_str);
-
-        const auto path = std::filesystem::path{path_str.C_Str()};
-        if (std::ranges::empty(path))
-        {
-            continue;
-        }
-
-        return std::format("textures\\{}.dds", path.filename().stem().native_encoded_string());
-    }
-
-    return std::nullopt;
-}
-
 auto to_native_format(::DXGI_FORMAT format) -> ufps::TextureFormat
 {
     switch (format)
@@ -281,12 +256,6 @@ auto load_model(DataBufferView model_data) -> std::tuple<std::string, std::vecto
                     .vertices = vertices(positions, normals, tangents, bitangents, uvs),
                     .indices = std::move(indices),
                 },
-            .albedo = get_texture_filename(material, {::aiTextureType_BASE_COLOR, ::aiTextureType_DIFFUSE}),
-            .normal = get_texture_filename(material, {::aiTextureType_NORMAL_CAMERA, ::aiTextureType_NORMALS}),
-            .specular = get_texture_filename(material, {::aiTextureType_METALNESS}),
-            .ao = get_texture_filename(material, {::aiTextureType_AMBIENT_OCCLUSION}),
-            .glossiness = get_texture_filename(material, {::aiTextureType_DIFFUSE_ROUGHNESS}),
-            .emissive = get_texture_filename(material, {::aiTextureType_EMISSION_COLOR, ::aiTextureType_EMISSIVE}),
         });
     }
 
