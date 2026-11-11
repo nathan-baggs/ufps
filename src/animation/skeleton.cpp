@@ -39,6 +39,11 @@ auto Skeleton::node(std::size_t index) const -> const Node &
     return nodes_[index];
 }
 
+auto Skeleton::nodes() const -> std::span<const Node>
+{
+    return nodes_;
+}
+
 auto Skeleton::validate() const -> bool
 {
     if (std::ranges::empty(nodes_))

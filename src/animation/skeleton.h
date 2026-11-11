@@ -42,6 +42,8 @@ class Skeleton
     auto node(std::size_t index) const -> const Node & //
         pre(index < std::ranges::size(nodes_));
 
+    auto nodes() const -> std::span<const Node>;
+
     auto validate() const -> bool;
 
     auto to_string() const -> std::string;
