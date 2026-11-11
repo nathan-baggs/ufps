@@ -1,6 +1,12 @@
 #version 460 core
 #extension GL_ARB_bindless_texture : require
 
+struct Weight
+{
+    uint bone_index;
+    float weight;
+};
+
 struct VertexData
 {
     float position[3];
@@ -8,6 +14,7 @@ struct VertexData
     float tangent[3];
     float bitangent[3];
     float uv[2];
+    Weight weights[4];
 };
 
 layout(binding = 0, std430) readonly buffer vertices {

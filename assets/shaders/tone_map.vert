@@ -1,5 +1,11 @@
 #version 460 core
 
+struct Weight
+{
+    uint bone_index;
+    float weight;
+};
+
 struct VertexData
 {
     float position[3];
@@ -7,6 +13,7 @@ struct VertexData
     float tangent[3];
     float bitangent[3];
     float uv[2];
+    Weight weight[4];
 };
 
 layout(binding = 0, std430) readonly buffer vertices {
