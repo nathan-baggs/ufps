@@ -11,11 +11,11 @@ namespace ufps::shapes
 inline auto cube() -> MeshData
 {
     const Vector3 positions[] = {
-        {-1.0f, -1.0f, 1.0f}, {1.0f, -1.0f, 1.0f},   {1.0f, 1.0f, 1.0f},   {-1.0f, 1.0f, 1.0f},   {1.0f, -1.0f, -1.0f},
-        {-1.0f, -1.0f, -1.0f}, {-1.0f, 1.0f, -1.0f},   {1.0f, 1.0f, -1.0f}, {-1.0f, -1.0f, -1.0f}, {-1.0f, -1.0f, 1.0f},
-        {-1.0f, 1.0f, 1.0f},  {-1.0f, 1.0f, -1.0f},  {1.0f, -1.0f, 1.0f}, {1.0f, -1.0f, -1.0f},   {1.0f, 1.0f, -1.0f},
-        {1.0f, 1.0f, 1.0f},  {-1.0f, 1.0f, 1.0f},   {1.0f, 1.0f, 1.0f},   {1.0f, 1.0f, -1.0f},   {-1.0f, 1.0f, -1.0f},
-        {-1.0f, -1.0f, 1.0f}, {-1.0f, -1.0f, -1.0f}, {1.0f, -1.0f, -1.0f}, {1.0f, -1.0f, 1.0f},
+        {-1.0f, -1.0f, 1.0f},  {1.0f, -1.0f, 1.0f},   {1.0f, 1.0f, 1.0f},   {-1.0f, 1.0f, 1.0f},   {1.0f, -1.0f, -1.0f},
+        {-1.0f, -1.0f, -1.0f}, {-1.0f, 1.0f, -1.0f},  {1.0f, 1.0f, -1.0f},  {-1.0f, -1.0f, -1.0f}, {-1.0f, -1.0f, 1.0f},
+        {-1.0f, 1.0f, 1.0f},   {-1.0f, 1.0f, -1.0f},  {1.0f, -1.0f, 1.0f},  {1.0f, -1.0f, -1.0f},  {1.0f, 1.0f, -1.0f},
+        {1.0f, 1.0f, 1.0f},    {-1.0f, 1.0f, 1.0f},   {1.0f, 1.0f, 1.0f},   {1.0f, 1.0f, -1.0f},   {-1.0f, 1.0f, -1.0f},
+        {-1.0f, -1.0f, 1.0f},  {-1.0f, -1.0f, -1.0f}, {1.0f, -1.0f, -1.0f}, {1.0f, -1.0f, 1.0f},
     };
 
     const Vector3 normals[] = {{0.0f, 0.0f, 1.0f},  {0.0f, 0.0f, 1.0f},  {0.0f, 0.0f, 1.0f},  {0.0f, 0.0f, 1.0f},
@@ -36,7 +36,10 @@ inline auto cube() -> MeshData
         12, 13, 14, 14, 15, 12, 16, 17, 18, 18, 19, 16, 20, 21, 22, 22, 23, 20,
     };
 
-    auto vs = MeshData{.vertices = vertices(positions, normals, normals, normals, uvs), .indices = std::move(indices)};
+    auto weights = std::vector<std::array<Weight, 4zu>>(std::ranges::size(positions));
+
+    auto vs = MeshData{
+        .vertices = vertices(positions, normals, normals, normals, uvs, weights), .indices = std::move(indices)};
 
     for (const auto &indices : std::views::chunk(vs.indices, 3))
     {
@@ -80,7 +83,10 @@ inline auto sprite() -> MeshData
 
     auto indices = std::vector<std::uint32_t>{0, 1, 2, 0, 2, 3};
 
-    return {.vertices = vertices(positions, positions, positions, positions, uvs), .indices = std::move(indices)};
+    auto weights = std::vector<std::array<Weight, 4zu>>(std::ranges::size(positions));
+
+    return {
+        .vertices = vertices(positions, positions, positions, positions, uvs, weights), .indices = std::move(indices)};
 }
 
 }
