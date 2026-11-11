@@ -1,11 +1,13 @@
 #include <filesystem>
 #include <fstream>
 #include <ranges>
+#include <span>
 #include <unordered_map>
 #include <unordered_set>
 
 #include <yaml-cpp/yaml.h>
 
+#include "animation/skeleton.h"
 #include "core/manifest_descriptions.h"
 #include "graphics/utils.h"
 #include "resources/file_resource_loader.h"
@@ -36,6 +38,25 @@ struct ModelTextures
 {
     std::unordered_map<std::string, std::vector<Textures>> models;
 };
+
+template <class T>
+auto write_blob(const T &data, const std::filesystem::path &output_blobs_dir, std::string_view file_name) -> void
+{
+    const auto compressed_data =
+        ufps::compress(std::as_bytes(std::span(std::ranges::data(data), std::ranges::size(data))));
+    ufps::ensure(compressed_data);
+
+    const auto data_path = output_blobs_dir / file_name;
+    auto data_file = std::ofstream{data_path, std::ios::binary};
+    data_file.write(reinterpret_cast<const char *>(compressed_data->data()), compressed_data->size());
+
+    ufps::log::info(
+        "wrote {}, data: {} objects: {} bytes, compression ratio: {:.2f}%",
+        data_path,
+        compressed_data->size(),
+        compressed_data->size() * sizeof(T),
+        100.0f * compressed_data->size() / (data.size() * sizeof(T)));
+}
 
 }
 
@@ -73,6 +94,8 @@ auto main(int argc, char **argv) -> int
         auto vertex_data = std::vector<ufps::VertexData>{};
         auto index_data = std::vector<std::uint32_t>{};
 
+        auto skeleton_data = std::vector<ufps::Skeleton::Node>{};
+
         auto texture_names = std::unordered_set<std::string>{
             "textures\\default_BaseColor.dds",
             "textures\\default_Normal.dds",
@@ -87,174 +110,149 @@ auto main(int argc, char **argv) -> int
             "textures\\spark.dds",
         };
 
+        auto model_manifest = ufps::ModelManifestDescription{};
+        auto texture_manifest = ufps::TextureManifestDescription{};
+        auto skeleton_manifest = ufps::SkeletonManifestDescription{};
+
+        for (const auto &m : models)
         {
-            auto manifest = ufps::ModelManifestDescription{};
+            ufps::log::debug("found model resource: {}", m);
+            auto [name, sub_models] =
+                load_model(resource_loader.load_data_buffer(m), std::filesystem::path{m}.stem().display_string());
 
-            for (const auto &m : models)
+            if (sub_models.empty())
             {
-                ufps::log::debug("found model resource: {}", m);
-                auto [name, sub_models] = load_model(resource_loader.load_data_buffer(m));
-
-                if (sub_models.empty())
-                {
-                    ufps::log::warn("model {} has no submodels, skipping", name);
-                    continue;
-                }
-
-                manifest.models[name] =
-                    std::views::enumerate(sub_models) |
-                    std::views::transform(
-                        [&](const auto &e)
-                        {
-                            const auto &[index, model] = e;
-
-                            const auto &mesh_data = model.mesh_data;
-                            const auto vertex_count = mesh_data.vertices.size();
-                            const auto index_count = mesh_data.indices.size();
-
-                            const auto &textures = model_textures->models.find(name);
-
-                            auto albedo_name = "textures\\default_BaseColor.dds"s;
-                            auto normal_name = "textures\\default_Normal.dds"s;
-                            auto specular_name = "textures\\default_Metallic.dds"s;
-                            auto ao_name = "textures\\default_AO.dds"s;
-                            auto glossiness_name = "textures\\default_Roughness.dds"s;
-                            auto emissive_name = "textures\\default_Emissive.dds"s;
-
-                            if (textures != std::ranges::cend(model_textures->models))
-                            {
-                                ufps::log::debug("{}", index);
-                                albedo_name = textures->second[index].albedo_texture;
-                                normal_name = textures->second[index].normal_texture;
-                                specular_name = textures->second[index].specular_texture;
-                                ao_name = textures->second[index].ao_texture;
-                                glossiness_name = textures->second[index].glossiness_texture;
-                                emissive_name = textures->second[index].emissive_texture;
-                            }
-
-                            texture_names.insert(albedo_name);
-                            texture_names.insert(normal_name);
-                            texture_names.insert(specular_name);
-                            texture_names.insert(ao_name);
-                            texture_names.insert(glossiness_name);
-                            texture_names.insert(emissive_name);
-
-                            const auto res = ufps::ModelManifest{
-                                .mesh_view =
-                                    {
-                                        .index_offset = static_cast<std::uint32_t>(index_offset),
-                                        .index_count = static_cast<std::uint32_t>(mesh_data.indices.size()),
-                                        .vertex_offset = static_cast<std::uint32_t>(vertex_offset),
-                                        .vertex_count = static_cast<std::uint32_t>(mesh_data.vertices.size()),
-                                    },
-                                .albedo_texture = albedo_name,
-                                .normal_texture = normal_name,
-                                .specular_texture = specular_name,
-                                .ao_texture = ao_name,
-                                .glossiness_texture = glossiness_name,
-                                .emissive_texture = emissive_name,
-                            };
-
-                            vertex_data.append_range(mesh_data.vertices);
-                            index_data.append_range(mesh_data.indices);
-
-                            vertex_offset += vertex_count;
-                            index_offset += index_count;
-
-                            return res;
-                        }) |
-                    std::ranges::to<std::vector>();
+                ufps::log::warn("model {} has no submodels, skipping", name);
+                continue;
             }
 
-            const auto manifest_path = output_configs_dir / "model_manifest.yaml";
-            auto manifest_file = std::ofstream{manifest_path};
-            manifest_file << *ufps::yaml::serialise(manifest);
+            for (const auto &[_, skeleton] : sub_models)
+            {
+                if (skeleton)
+                {
+                    ufps::log::debug("skeleton {}", skeleton->name());
+                    const auto nodes = skeleton->nodes();
+                    skeleton_manifest.skeletons[skeleton->name()] = ufps::SkeletonManifest{
+                        .offset = std::ranges::size(skeleton_data),
+                        .size = std::ranges::size(nodes),
+                    };
+                    skeleton_data.append_range(nodes);
+                }
+            }
+
+            model_manifest.models[name] =
+                std::views::enumerate(sub_models) |
+                std::views::transform(
+                    [&](const auto &e)
+                    {
+                        const auto &[index, model] = e;
+
+                        const auto &mesh_data = model.mesh_data;
+                        const auto vertex_count = mesh_data.vertices.size();
+                        const auto index_count = mesh_data.indices.size();
+
+                        const auto &textures = model_textures->models.find(name);
+
+                        auto albedo_name = "textures\\default_BaseColor.dds"s;
+                        auto normal_name = "textures\\default_Normal.dds"s;
+                        auto specular_name = "textures\\default_Metallic.dds"s;
+                        auto ao_name = "textures\\default_AO.dds"s;
+                        auto glossiness_name = "textures\\default_Roughness.dds"s;
+                        auto emissive_name = "textures\\default_Emissive.dds"s;
+
+                        if (textures != std::ranges::cend(model_textures->models))
+                        {
+                            ufps::log::debug("{}", index);
+                            albedo_name = textures->second[index].albedo_texture;
+                            normal_name = textures->second[index].normal_texture;
+                            specular_name = textures->second[index].specular_texture;
+                            ao_name = textures->second[index].ao_texture;
+                            glossiness_name = textures->second[index].glossiness_texture;
+                            emissive_name = textures->second[index].emissive_texture;
+                        }
+
+                        texture_names.insert(albedo_name);
+                        texture_names.insert(normal_name);
+                        texture_names.insert(specular_name);
+                        texture_names.insert(ao_name);
+                        texture_names.insert(glossiness_name);
+                        texture_names.insert(emissive_name);
+
+                        const auto res = ufps::ModelManifest{
+                            .mesh_view =
+                                {
+                                    .index_offset = static_cast<std::uint32_t>(index_offset),
+                                    .index_count = static_cast<std::uint32_t>(mesh_data.indices.size()),
+                                    .vertex_offset = static_cast<std::uint32_t>(vertex_offset),
+                                    .vertex_count = static_cast<std::uint32_t>(mesh_data.vertices.size()),
+                                },
+                            .albedo_texture = albedo_name,
+                            .normal_texture = normal_name,
+                            .specular_texture = specular_name,
+                            .ao_texture = ao_name,
+                            .glossiness_texture = glossiness_name,
+                            .emissive_texture = emissive_name,
+                        };
+
+                        vertex_data.append_range(mesh_data.vertices);
+                        index_data.append_range(mesh_data.indices);
+
+                        vertex_offset += vertex_count;
+                        index_offset += index_count;
+
+                        return res;
+                    }) |
+                std::ranges::to<std::vector>();
         }
+
+        const auto model_manifest_path = output_configs_dir / "model_manifest.yaml";
+        auto model_manifest_file = std::ofstream{model_manifest_path};
+        model_manifest_file << *ufps::yaml::serialise(model_manifest);
+
+        const auto skeleton_manifest_path = output_configs_dir / "skeleton_manifest.yaml";
+        auto skeleton_manifest_file = std::ofstream{skeleton_manifest_path};
+        skeleton_manifest_file << *ufps::yaml::serialise(skeleton_manifest);
 
         ufps::log::info("finished packing models, packing textures");
         auto texture_blob = ufps::DataBuffer{};
 
+        auto offset = 0zu;
+
+        for (const auto &t : texture_names)
         {
-            auto manifest = ufps::TextureManifestDescription{};
+            ufps::log::debug("packing texture: {}", t);
 
-            auto offset = 0zu;
-
-            for (const auto &t : texture_names)
+            try
             {
-                ufps::log::debug("packing texture: {}", t);
+                const auto texture_data = resource_loader.load_data_buffer(t);
+                const auto size = texture_data.size();
 
-                try
-                {
-                    const auto texture_data = resource_loader.load_data_buffer(t);
-                    const auto size = texture_data.size();
+                texture_blob.append_range(std::as_bytes(std::span{texture_data.data(), size}));
 
-                    texture_blob.append_range(std::as_bytes(std::span{texture_data.data(), size}));
+                texture_manifest.textures[t] = {
+                    .offset = static_cast<std::uint32_t>(offset),
+                    .size = static_cast<std::uint32_t>(size),
+                    .is_srgb = t.contains("BaseColor"),
+                };
 
-                    manifest.textures[t] = {
-                        .offset = static_cast<std::uint32_t>(offset),
-                        .size = static_cast<std::uint32_t>(size),
-                        .is_srgb = t.contains("BaseColor"),
-                    };
-
-                    offset += size;
-                }
-                catch (ufps::Exception &e)
-                {
-                    ufps::log::warn("missing texture: {}", t);
-                }
+                offset += size;
             }
-
-            const auto manifest_path = output_configs_dir / "texture_manifest.yaml";
-            auto manifest_file = std::ofstream{manifest_path};
-
-            manifest_file << *ufps::yaml::serialise(manifest);
+            catch (ufps::Exception &e)
+            {
+                ufps::log::warn("missing texture: {}", t);
+            }
         }
+
+        const auto texture_manifest_path = output_configs_dir / "texture_manifest.yaml";
+        auto texture_manifest_file = std::ofstream{texture_manifest_path};
+        texture_manifest_file << *ufps::yaml::serialise(texture_manifest);
 
         ufps::log::info("finished packing textures, writing to disk");
 
-        const auto compressed_vertex_data =
-            ufps::compress(std::as_bytes(std::span{vertex_data.data(), vertex_data.size()}));
-        ufps::ensure(compressed_vertex_data);
-
-        const auto vertex_data_path = output_blobs_dir / "vertex_data.bin";
-        auto vertex_data_file = std::ofstream{vertex_data_path, std::ios::binary};
-        vertex_data_file.write(
-            reinterpret_cast<const char *>(compressed_vertex_data->data()), compressed_vertex_data->size());
-
-        ufps::log::info(
-            "wrote vertex data: {} vertices, {} bytes, compression ratio: {:.2f}%",
-            compressed_vertex_data->size(),
-            compressed_vertex_data->size() * sizeof(ufps::VertexData),
-            100.0f * compressed_vertex_data->size() / (vertex_data.size() * sizeof(ufps::VertexData)));
-
-        const auto compressed_index_data =
-            ufps::compress(std::as_bytes(std::span{index_data.data(), index_data.size()}));
-        ufps::ensure(compressed_index_data);
-
-        const auto index_data_path = output_blobs_dir / "index_data.bin";
-        auto index_data_file = std::ofstream{index_data_path, std::ios::binary};
-        index_data_file.write(
-            reinterpret_cast<const char *>(compressed_index_data->data()), compressed_index_data->size());
-
-        ufps::log::info(
-            "wrote index data: {} indices, {} bytes, compression ratio: {:.2f}%",
-            compressed_index_data->size(),
-            compressed_index_data->size() * sizeof(std::uint32_t),
-            100.0f * compressed_index_data->size() / (index_data.size() * sizeof(std::uint32_t)));
-
-        const auto compressed_texture_blob = ufps::compress(texture_blob);
-        ufps::ensure(compressed_texture_blob);
-
-        const auto texture_blob_path = output_blobs_dir / "texture_data.bin";
-        auto texture_blob_file = std::ofstream{texture_blob_path, std::ios::binary};
-        texture_blob_file.write(
-            reinterpret_cast<const char *>(compressed_texture_blob->data()), compressed_texture_blob->size());
-
-        ufps::log::info(
-            "wrote texture blob: {} textures, {} bytes, compression ratio: {:.2f}%",
-            texture_names.size(),
-            compressed_texture_blob->size(),
-            100.0f * compressed_texture_blob->size() / texture_blob.size());
+        write_blob(vertex_data, output_blobs_dir, "vertex_data.bin");
+        write_blob(index_data, output_blobs_dir, "index_data.bin");
+        write_blob(texture_blob, output_blobs_dir, "texture_data.bin");
+        write_blob(skeleton_data, output_blobs_dir, "skeleton_data.bin");
     }
     catch (const ufps::Exception &e)
     {

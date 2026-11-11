@@ -2,6 +2,7 @@
 
 #include <vector>
 
+#include "animation/skeleton.h"
 #include "graphics/mesh_view.h"
 #include "utils/string_map.h"
 
@@ -35,4 +36,16 @@ struct TextureManifestDescription
 {
     StringMap<TextureManifest> textures;
 };
+
+struct SkeletonManifest
+{
+    std::size_t offset;
+    std::size_t size;
+};
+
+struct SkeletonManifestDescription
+{
+    StringMap<SkeletonManifest> skeletons;
+};
+
 }
