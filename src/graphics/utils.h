@@ -21,15 +21,6 @@ concept IsBuffer = requires(T t, DataBufferView data, std::size_t offset) {
     { t.name() } -> std::convertible_to<std::string_view>;
 };
 
-template <class... Args>
-constexpr auto vertices(Args &&...args) -> std::vector<ufps::VertexData>
-{
-    return std::views::zip_transform(
-               []<class... A>(A &&...a) { return ufps::VertexData{std::forward<A>(a)...}; },
-               std::forward<Args>(args)...) |
-           std::ranges::to<std::vector>();
-}
-
 template <class T, IsBuffer Buffer>
 auto resize_gpu_buffer(const std::vector<T> &cpu_buffer, Buffer &gpu_buffer)
 {

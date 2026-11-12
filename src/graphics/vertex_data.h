@@ -1,6 +1,10 @@
 #pragma once
 
 #include <array>
+#include <cstdint>
+#include <ranges>
+#include <utility>
+#include <vector>
 
 #include "maths/vector3.h"
 
@@ -32,5 +36,14 @@ struct VertexData
 static_assert(
     sizeof(VertexData) == sizeof(float) * 3 + sizeof(float) * 3 + sizeof(float) * 3 + sizeof(float) * 3 +
                               sizeof(float) * 2 + sizeof(Weight) * 4);
+
+template <class... Args>
+constexpr auto vertices(Args &&...args) -> std::vector<ufps::VertexData>
+{
+    return std::views::zip_transform(
+               []<class... A>(A &&...a) { return ufps::VertexData{std::forward<A>(a)...}; },
+               std::forward<Args>(args)...) |
+           std::ranges::to<std::vector>();
+}
 
 }
