@@ -5,6 +5,7 @@ CMakeFiles/
 CMakeScripts/
 *.cmake
 build/
+build-host/
 release/
 xcode_build/
 *.swp
@@ -21,6 +22,7 @@ compile_commands.json
 log
 Testing/*
 sysroot
+sysroot-linux/
 .clangd
 imgui.ini
 .gdbinit

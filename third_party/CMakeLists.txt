@@ -1,24 +1,26 @@
 set(CMAKE_DISABLE_PRECOMPILE_HEADERS ON)
 
-include(ExternalProject)
+if(NOT UFPS_RESOURCE_PACKER_ONLY)
+  include(ExternalProject)
 
-add_subdirectory(googletest EXCLUDE_FROM_ALL)
+  add_subdirectory(googletest EXCLUDE_FROM_ALL)
 
-add_library(imguilib STATIC
-  imgui/imgui.cpp
-  imgui/backends/imgui_impl_opengl3.cpp
-  imgui/backends/imgui_impl_win32.cpp
-  imgui/imgui_demo.cpp
-  imgui/imgui_draw.cpp
-  imgui/imgui_tables.cpp
-  imgui/imgui_widgets.cpp
+  add_library(imguilib STATIC
+    imgui/imgui.cpp
+    imgui/backends/imgui_impl_opengl3.cpp
+    imgui/backends/imgui_impl_win32.cpp
+    imgui/imgui_demo.cpp
+    imgui/imgui_draw.cpp
+    imgui/imgui_tables.cpp
+    imgui/imgui_widgets.cpp
 
-  ImGuizmo/ImGuizmo.cpp
-)
-target_include_directories(imguilib PUBLIC imgui ImGuizmo)
+    ImGuizmo/ImGuizmo.cpp
+  )
+  target_include_directories(imguilib PUBLIC imgui ImGuizmo)
 
-add_library(stblib INTERFACE)
-target_include_directories(stblib INTERFACE stb)
+  add_library(stblib INTERFACE)
+  target_include_directories(stblib INTERFACE stb)
+endif()
 
 set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)
 set(ASSIMP_BUILD_ASSIMP_TOOLS OFF CACHE BOOL "" FORCE)
@@ -50,32 +52,34 @@ target_compile_options(libzstd_static PRIVATE
     "$<$<CONFIG:Debug>:-O3>"
 )
 
-set(BACKTRACE_PREFIX "${CMAKE_CURRENT_BINARY_DIR}/libbacktrace")
-set(BACKTRACE_INSTALL_DIR "${BACKTRACE_PREFIX}/install")
-file(TO_CMAKE_PATH "${BACKTRACE_INSTALL_DIR}" BACKTRACE_INSTALL_DIR)
-set(BACKTRACE_LIB_PATH "${BACKTRACE_INSTALL_DIR}/lib/libbacktrace.a")
-file(MAKE_DIRECTORY "${BACKTRACE_INSTALL_DIR}/include")
-ExternalProject_Add(
-    libbacktrace_build
-    SOURCE_DIR        "${CMAKE_CURRENT_SOURCE_DIR}/libbacktrace"
-    PREFIX            "${BACKTRACE_PREFIX}"
-    UPDATE_COMMAND    ""
-    BUILD_BYPRODUCTS  "${BACKTRACE_LIB_PATH}"
-    CONFIGURE_COMMAND <SOURCE_DIR>/configure 
-                      "--prefix=${BACKTRACE_INSTALL_DIR}" 
-                      --with-pic
-                      --host=x86_64-w64-mingw32
-                      "CC=${CMAKE_C_COMPILER}"
-                      "CXX=${CMAKE_CXX_COMPILER}"
-    BUILD_COMMAND     make
-    INSTALL_COMMAND   make install
-)
-add_library(libbacktrace INTERFACE)
-add_dependencies(libbacktrace libbacktrace_build)
-target_include_directories(libbacktrace INTERFACE "${BACKTRACE_INSTALL_DIR}/include")
-target_link_libraries(libbacktrace INTERFACE "${BACKTRACE_LIB_PATH}")
-
-set(PROFILER_IN_DEBUG_AND_RELEASE OFF CACHE BOOL "" FORCE)
-add_subdirectory(JoltPhysics/Build)
-
-set(CMAKE_DISABLE_PRECOMPILE_HEADERS OFF)
+if(NOT UFPS_RESOURCE_PACKER_ONLY)
+  set(BACKTRACE_PREFIX "${CMAKE_CURRENT_BINARY_DIR}/libbacktrace")
+  set(BACKTRACE_INSTALL_DIR "${BACKTRACE_PREFIX}/install")
+  file(TO_CMAKE_PATH "${BACKTRACE_INSTALL_DIR}" BACKTRACE_INSTALL_DIR)
+  set(BACKTRACE_LIB_PATH "${BACKTRACE_INSTALL_DIR}/lib/libbacktrace.a")
+  file(MAKE_DIRECTORY "${BACKTRACE_INSTALL_DIR}/include")
+  ExternalProject_Add(
+      libbacktrace_build
+      SOURCE_DIR        "${CMAKE_CURRENT_SOURCE_DIR}/libbacktrace"
+      PREFIX            "${BACKTRACE_PREFIX}"
+      UPDATE_COMMAND    ""
+      BUILD_BYPRODUCTS  "${BACKTRACE_LIB_PATH}"
+      CONFIGURE_COMMAND <SOURCE_DIR>/configure 
+                        "--prefix=${BACKTRACE_INSTALL_DIR}" 
+                        --with-pic
+                        --host=x86_64-w64-mingw32
+                        "CC=${CMAKE_C_COMPILER}"
+                        "CXX=${CMAKE_CXX_COMPILER}"
+      BUILD_COMMAND     make
+      INSTALL_COMMAND   make install
+  )
+  add_library(libbacktrace INTERFACE)
+  add_dependencies(libbacktrace libbacktrace_build)
+  target_include_directories(libbacktrace INTERFACE "${BACKTRACE_INSTALL_DIR}/include")
+  target_link_libraries(libbacktrace INTERFACE "${BACKTRACE_LIB_PATH}")
+  
+  set(PROFILER_IN_DEBUG_AND_RELEASE OFF CACHE BOOL "" FORCE)
+  add_subdirectory(JoltPhysics/Build)
+  
+  set(CMAKE_DISABLE_PRECOMPILE_HEADERS OFF)
+endif()

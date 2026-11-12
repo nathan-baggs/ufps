@@ -1,4 +1,4 @@
-.PHONY: docker-image config config-ci build run tests sysroot clean clean-cache
+.PHONY: docker-image config config-ci build run resources tests sysroot sysroot-linux clean clean-cache
 
 DOCKER_CCACHE := -e CCACHE_DIR=/ccache -e CCACHE_MAXSIZE=50G -v ufps-ccache:/ccache
 
@@ -20,8 +20,10 @@ run: build
 run-stream: build
 	~/.local/bin/run_game.sh
 
-resources: build
-	./build/tools/Debug/resource_packer.exe ./build/ ./assets ./secret-assets
+resources:
+	docker run --rm -u $(shell id -u):$(shell id -g) -v "$(PWD)":"$(PWD)" -w "$(PWD)" $(DOCKER_CCACHE) custom-mingw64 cmake -S . -B build-host -DUFPS_RESOURCE_PACKER_ONLY=ON -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ -G "Ninja Multi-Config"
+	docker run --rm -u $(shell id -u):$(shell id -g) -v "$(PWD)":"$(PWD)" -w "$(PWD)" $(DOCKER_CCACHE) custom-mingw64 cmake --build build-host --config Debug --target resource_packer
+	docker run --rm -u $(shell id -u):$(shell id -g) -v "$(PWD)":"$(PWD)" -w "$(PWD)" $(DOCKER_CCACHE) custom-mingw64 ./build-host/tools/Debug/resource_packer ./build/ ./assets ./secret-assets
 
 tests: build
 	./build/tests/Debug/unit_tests.exe --gtest_color=yes
@@ -37,11 +39,20 @@ ci:
 	$(MAKE) tests
 	$(MAKE) pack
 
-sysroot:
+sysroot: sysroot-linux
 	docker run --rm -v "$(PWD)/sysroot":/out custom-mingw64 bash -c "cp -r /usr/local/x86_64-w64-mingw32/include /out/ && cp -r /usr/local/x86_64-w64-mingw32/include/c++ /out/ || true"
+
+sysroot-linux:
+	docker run --rm -v "$(PWD)/sysroot-linux":/out custom-mingw64 bash -eu -c '\
+		version="$$(g++ -dumpfullversion)"; \
+		target="$$(g++ -dumpmachine)"; \
+		mkdir -p /out/c++ /out/c++-target /out/include; \
+		cp -a "/usr/local/include/c++/$$version/." /out/c++/; \
+		cp -a "/usr/local/include/c++/$$version/$$target/." /out/c++-target/; \
+		cp -a /usr/include/. /out/include/'
 
 clean-cache:
 	docker run --rm -v ufps-ccache:/ccache custom-mingw64 ccache --clear
 
 clean:
-	rm -rf build
+	rm -rf build build-host

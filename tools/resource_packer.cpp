@@ -9,7 +9,6 @@
 
 #include "animation/skeleton.h"
 #include "core/manifest_descriptions.h"
-#include "graphics/utils.h"
 #include "resources/file_resource_loader.h"
 #include "serialisation/yaml_serialiser.h"
 #include "utils/compress.h"

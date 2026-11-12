@@ -16,7 +16,7 @@ RUN set -ex \
     && apt-get update \
     && DEBIAN_FRONTEND=noninteractive apt-get upgrade --no-install-recommends -y \
     && DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y \
-    ca-certificates gcc g++ zlib1g-dev libssl-dev libgmp-dev libmpfr-dev \
+    ca-certificates gcc g++ binutils libc6-dev linux-libc-dev zlib1g-dev libssl-dev libgmp-dev libmpfr-dev \
     libmpc-dev libisl-dev libssl3 libgmp10 libmpfr6 libmpc3 libisl23 \
     xz-utils ninja-build texinfo meson gnupg bzip2 patch gperf bison \
     file flex make yasm wget zip git jq curl python3 ccache
@@ -118,7 +118,7 @@ RUN cd gcc \
     && make -j`nproc` \
     && make install \
     && cd .. \
-    && rm -r gcc gcc-${GCC_VERSION} \
+    && rm -r gcc \
     && rm -r mingw-w64 mingw-w64-mingw-w64
 
 RUN wget -q https://github.com/Kitware/CMake/releases/download/v${CMAKE_VERSION}/cmake-${CMAKE_VERSION}.tar.gz -O - | tar -xz \
@@ -157,7 +157,50 @@ RUN wget -q https://github.com/llvm/llvm-project/releases/download/llvmorg-${LLV
     && cd .. \
     && rm -r llvm-project-${LLVM_VERSION}.src
 
+# Build native Linux GCC from the same sources as the MinGW cross-compiler.
+RUN mkdir gcc-linux \
+    && cd gcc-linux \
+    && ../gcc-${GCC_VERSION}/configure \
+        --prefix=/usr/local \
+        --enable-languages=c,c++ \
+        --enable-shared \
+        --enable-static \
+        --enable-threads=posix \
+        --with-system-zlib \
+        --enable-libgomp \
+        --enable-libatomic \
+        --enable-graphite \
+        --disable-bootstrap \
+        --disable-multilib \
+        --disable-libstdcxx-pch \
+        --disable-libstdcxx-debug \
+        --disable-nls \
+        --disable-werror \
+    && make -j`nproc` \
+    && make install \
+    && cd .. \
+    && rm -r gcc-linux gcc-${GCC_VERSION} \
+    && ln -sf gcc /usr/local/bin/cc \
+    && ln -sf g++ /usr/local/bin/c++ \
+    && printf '%s\n' /usr/local/lib64 /usr/local/lib > /etc/ld.so.conf.d/gcc.conf \
+    && ldconfig
+
 RUN apt-get remove --purge -y file gcc g++ zlib1g-dev libssl-dev libgmp-dev libmpfr-dev libmpc-dev libisl-dev \
     && apt-key adv --fetch-keys https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2404/x86_64/3bf863cc.pub \
     && echo "deb https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2404/x86_64/ /" > /etc/apt/sources.list.d/cuda.list \
     && apt-get update
+
+# Check both targets after removing the distribution's bootstrap compilers.
+RUN set -eux \
+    && tmpdir="$(mktemp -d)" \
+    && printf '%s\n' '#include <stdio.h>' 'int main(void) { return puts("toolchain ok") < 0; }' > "${tmpdir}/smoke.c" \
+    && printf '%s\n' '#include <iostream>' '#include <string>' 'int main() { std::cout << std::string("toolchain ok") << std::endl; }' > "${tmpdir}/smoke.cpp" \
+    && gcc "${tmpdir}/smoke.c" -o "${tmpdir}/linux-c" \
+    && g++ -std=c++23 "${tmpdir}/smoke.cpp" -o "${tmpdir}/linux-cpp" \
+    && "${tmpdir}/linux-c" \
+    && "${tmpdir}/linux-cpp" \
+    && x86_64-w64-mingw32-gcc "${tmpdir}/smoke.c" -o "${tmpdir}/windows-c.exe" \
+    && x86_64-w64-mingw32-g++ -std=c++23 "${tmpdir}/smoke.cpp" -o "${tmpdir}/windows-cpp.exe" \
+    && test "$(head -c 2 "${tmpdir}/windows-c.exe")" = MZ \
+    && test "$(head -c 2 "${tmpdir}/windows-cpp.exe")" = MZ \
+    && rm -r "${tmpdir}"

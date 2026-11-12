@@ -21,10 +21,8 @@
 #include <assimp/scene.h>
 #include <assimp/vector3.h>
 
-#include "animation/bone.h"
 #include "animation/skeleton.h"
 #include "graphics/mesh_data.h"
-#include "graphics/utils.h"
 #include "graphics/vertex_data.h"
 #include "maths/matrix4.h"
 #include "maths/vector3.h"
