@@ -60,11 +60,11 @@ auto to_motion(ufps::BroadPhaseLayer layer) -> ::JPH::EMotionType
 auto jolt_trace(const char *fmt, ...) -> void
 {
     auto list = ::va_list{};
-    ::va_start(list, fmt);
+    va_start(list, fmt);
 
     auto buffer = std::array<char, 1024zu>{};
     const auto write_count = ::vsnprintf(buffer.data(), sizeof(buffer), fmt, list);
-    ::va_end(list);
+    va_end(list);
 
     ufps::ensure(write_count > 0, "failed to jolt trace");
 
