@@ -15,13 +15,13 @@ class StorageManager
 
     constexpr auto insert(T object) -> handle_type;
 
-    constexpr auto operator[](handle_type handle);
+    constexpr auto operator[](this auto &&self, handle_type handle);
 
     constexpr auto remove(handle_type handle) -> void;
 
     constexpr auto data();
 
-    constexpr auto handles();
+    constexpr auto handles() const;
 
   private:
     SparseSet<T> objects_;
@@ -35,9 +35,9 @@ constexpr auto StorageManager<T>::insert(T object) -> handle_type
 }
 
 template <class T>
-constexpr auto StorageManager<T>::operator[](handle_type handle)
+constexpr auto StorageManager<T>::operator[](this auto &&self, handle_type handle)
 {
-    return objects_[handle];
+    return self.objects_[handle];
 }
 
 template <class T>
@@ -53,7 +53,7 @@ constexpr auto StorageManager<T>::data()
 }
 
 template <class T>
-constexpr auto StorageManager<T>::handles()
+constexpr auto StorageManager<T>::handles() const
 {
     return objects_.handles();
 }
