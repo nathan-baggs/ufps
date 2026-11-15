@@ -108,10 +108,10 @@ struct SkeletonBuilder
     }
 };
 
-auto load_skeleton(const ::aiScene *scene, const ::aiMesh *mesh, std::string_view name)
+auto load_skeleton(const ::aiScene *scene, const ::aiMesh *mesh, std::string name)
     -> std::optional<std::tuple<ufps::Skeleton, VertexBoneMap>>
 {
-    ufps::log::debug("trying to load skeleton for: {}", name);
+    ufps::log::debug("trying to load skeleton: {}", name);
 
     auto stack = std::stack<std::tuple<const ::aiNode *, std::optional<std::size_t>>>{};
     stack.emplace(scene->mRootNode, std::nullopt);
@@ -149,7 +149,7 @@ auto load_skeleton(const ::aiScene *scene, const ::aiMesh *mesh, std::string_vie
         }
 
         nodes.push_back({
-            .name = std::string{name},
+            .name = name,
             .bind_local = to_native_mat(node->mTransformation),
             .inverse_bind = inverse_bind,
             .parent = parent,
@@ -167,8 +167,7 @@ auto load_skeleton(const ::aiScene *scene, const ::aiMesh *mesh, std::string_vie
 }
 }
 
-auto load_model(ufps::DataBufferView model_data, std::string_view name)
-    -> std::tuple<std::string, std::vector<ModelData>>
+auto load_model(ufps::DataBufferView model_data) -> std::tuple<std::string, std::vector<ModelData>>
 {
     [[maybe_unused]] static auto *logger = []
     {
@@ -191,11 +190,7 @@ auto load_model(ufps::DataBufferView model_data, std::string_view name)
 
     const auto loaded_meshes = std::span<::aiMesh *>(scene->mMeshes, scene->mMeshes + scene->mNumMeshes);
     const auto materials = std::span<::aiMaterial *>(scene->mMaterials, scene->mMaterials + scene->mNumMaterials);
-    ufps::log::info(
-        "found {} meshes, {} materials, in mesh: {}",
-        std::ranges::size(loaded_meshes),
-        std::ranges::size(materials),
-        name);
+    ufps::log::info("found {} meshes, {} materials", std::ranges::size(loaded_meshes), std::ranges::size(materials));
 
     auto models = std::vector<ModelData>{};
 
@@ -249,8 +244,7 @@ auto load_model(ufps::DataBufferView model_data, std::string_view name)
         auto weights = std::vector<std::array<ufps::Weight, 4zu>>(std::ranges::size(positions));
 
         auto skeleton = std::optional<ufps::Skeleton>{};
-        if (const auto skeleton_data = load_skeleton(scene, mesh, std::format("{}_{}", name, mesh->mName.C_Str()));
-            skeleton_data)
+        if (const auto skeleton_data = load_skeleton(scene, mesh, mesh->mName.C_Str()); skeleton_data)
         {
             const auto &[loaded_skeleton, vertex_bone_map] = *skeleton_data;
             skeleton = std::move(loaded_skeleton);

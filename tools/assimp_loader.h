@@ -21,5 +21,4 @@ struct ModelData
 
 using VertexBoneMap = std::unordered_map<std::size_t, std::inplace_vector<ufps::Weight, 4zu>>;
 
-auto load_model(ufps::DataBufferView model_data, std::string_view name)
-    -> std::tuple<std::string, std::vector<ModelData>>;
+auto load_model(ufps::DataBufferView model_data) -> std::tuple<std::string, std::vector<ModelData>>;

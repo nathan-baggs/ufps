@@ -116,8 +116,7 @@ auto main(int argc, char **argv) -> int
         for (const auto &m : models)
         {
             ufps::log::debug("found model resource: {}", m);
-            auto [name, sub_models] =
-                load_model(resource_loader.load_data_buffer(m), std::filesystem::path{m}.stem().display_string());
+            auto [name, sub_models] = load_model(resource_loader.load_data_buffer(m));
 
             if (sub_models.empty())
             {
