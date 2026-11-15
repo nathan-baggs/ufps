@@ -266,7 +266,7 @@ auto main(int argc, char **argv) -> int
     }
     catch (...)
     {
-        ufps::log::error("enknown error packing resources");
+        ufps::log::error("unknown error packing resources");
         return 1;
     }
 }
