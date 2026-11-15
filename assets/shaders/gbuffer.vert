@@ -42,6 +42,12 @@ layout(binding = 2, std430) readonly buffer objects {
     ObjectData object_data[];
 };
 
+layout(binding=3,std430) readonly buffer bones{
+    mat4 bone_palette[];
+}
+
+layout(location = 0) uniform float u_mask;
+
 vec3 get_position(uint index)
 {
     return vec3(
