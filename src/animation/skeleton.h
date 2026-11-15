@@ -34,6 +34,9 @@ class Skeleton
     Skeleton(std::string_view name, std::vector<Node> nodes) //
         post(validate());
 
+    Skeleton(std::string_view name, std::span<Node> nodes) //
+        post(validate());
+
     Skeleton(const Description &desc) //
         post(validate());
 

@@ -24,6 +24,12 @@ Skeleton::Skeleton(std::string_view name, std::vector<Node> nodes)
 {
 }
 
+Skeleton::Skeleton(std::string_view name, std::span<Node> nodes)
+    : name_{name}
+    , nodes_{std::ranges::cbegin(nodes), std::ranges::cend(nodes)}
+{
+}
+
 Skeleton::Skeleton(const Description &desc)
     : Skeleton{desc.name, desc.nodes}
 {
