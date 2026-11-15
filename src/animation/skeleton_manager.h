@@ -31,6 +31,8 @@ constexpr auto SkeletonManager::operator[](std::string_view name) const -> Skele
             {
                 return skl->name() == name;
             }
+
+            return false;
         });
 
     return skeleton == std::ranges::cend(hndls) ? SkeletonHandle{} : *skeleton;
