@@ -7,6 +7,8 @@
 #include <variant>
 #include <vector>
 
+#include "animation/skeleton.h"
+#include "animation/skeleton_manager.h"
 #include "audio/audio_manager.h"
 #include "concurrency/awaitable_manager.h"
 #include "concurrency/task.h"
@@ -130,7 +132,8 @@ auto create_services() -> std::unique_ptr<ufps::Services>
         std::make_unique<ufps::DebugLayer>(),
         std::make_unique<ufps::AudioManager>(*resource_loader),
         std::make_unique<ufps::ParticleManager>(),
-        std::move(resource_loader));
+        std::move(resource_loader),
+        std::make_unique<ufps::SkeletonManager>());
     ufps::set_service(services.release());
 
     return services;
@@ -229,6 +232,29 @@ auto load_render_entity_manager()
           tm.bindless_handle("textures\\default_AO.dds"),
           tm.bindless_handle("textures\\default_Roughness.dds"),
           tm.bindless_handle("textures\\default_Emissive.dds")}});
+}
+
+auto load_skeleton_manager() -> void
+{
+    const auto &[rl, sm] = ufps::services<ufps::ResourceLoader, ufps::SkeletonManager>();
+
+    const auto skeleton_manifest_str = rl.load_string("configs\\skeleton_manifest.yaml");
+    const auto skeleton_manifest = ufps::yaml::deserialise<ufps::SkeletonManifestDescription>(skeleton_manifest_str);
+    ufps::ensure(skeleton_manifest);
+
+    const auto skeleton_data_blob = ufps::decompress(rl.load_data_buffer("blobs\\skeleton_data.bin"));
+    const auto skeleton_data_str = std::string(
+        reinterpret_cast<const char *>(std::ranges::data(skeleton_data_blob)), std::ranges::size(skeleton_data_blob));
+    auto skeleton_nodes = ufps::yaml::deserialise<ufps::SkeletonNodeManifest>(skeleton_data_str);
+    ufps::ensure(skeleton_nodes);
+
+    for (const auto &[name, manifest] : skeleton_manifest->skeletons)
+    {
+        const auto &[offset, size] = manifest;
+        const auto current_nodes = std::span{std::ranges::data(skeleton_nodes->nodes) + offset, size};
+
+        sm.insert({name, current_nodes});
+    }
 }
 
 auto load_scene_description() -> ufps::Scene::Description
@@ -336,6 +362,7 @@ Game::Game()
     , enemy_manager_{}
 {
     load_all_textures(default_sampler_);
+    load_skeleton_manager();
     load_render_entity_manager();
 }
 
