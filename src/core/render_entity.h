@@ -2,12 +2,14 @@
 
 #include <algorithm>
 #include <cstdint>
+#include <ranges>
 
 #include "animation/skeleton_manager.h"
 #include "core/service_locator.h"
 #include "graphics/mesh_manager.h"
 #include "graphics/mesh_view.h"
 #include "maths/aabb.h"
+#include "maths/matrix4.h"
 
 namespace ufps
 {
@@ -70,6 +72,7 @@ class RenderEntity
     constexpr auto emissive_texture_bindless_handle() const -> std::uint64_t;
     constexpr auto aabb() const -> const AABB &;
     constexpr auto skeleton_handle() const -> SkeletonHandle;
+    constexpr auto update_bones() -> std::span<const Matrix4>;
 
   private:
     std::string group_name_;
@@ -82,6 +85,7 @@ class RenderEntity
     std::uint64_t emissive_texture_bindless_handle_;
     AABB aabb_;
     SkeletonHandle skeleton_handle_;
+    std::vector<Matrix4> bone_data_;
 };
 
 constexpr RenderEntity::RenderEntity(
@@ -155,6 +159,27 @@ constexpr auto RenderEntity::aabb() const -> const AABB &
 constexpr auto RenderEntity::skeleton_handle() const -> SkeletonHandle
 {
     return skeleton_handle_;
+}
+
+constexpr auto RenderEntity::update_bones() -> std::span<const Matrix4>
+{
+    const auto &[sm] = services<SkeletonManager>();
+
+    const auto skeleton = sm[skeleton_handle_];
+    contract_assert(skeleton);
+
+    if (std::ranges::size(bone_data_) != std::ranges::size(skeleton->nodes()))
+    {
+        bone_data_.resize(std::ranges::size(skeleton->nodes());
+    }
+
+    for (const auto &[index, node] : std::views::enumerate(skeleton->nodes()))
+    {
+        const auto parent_transform = node.parent ? bone_data_[*node.parent] : Matrix4{};
+        bone_data_[index] = parent_transform * node.bind_local * node.inverse_bind;
+    }
+
+    return bone_data_;
 }
 
 }
