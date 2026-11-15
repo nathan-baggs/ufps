@@ -24,6 +24,7 @@ class AudioManager;
 class ParticleManager;
 class ResourceLoader;
 class EnemyManager;
+class SkeletonManager;
 
 using CameraHandle = SparseSet<Camera>::handle_type;
 
@@ -41,7 +42,8 @@ using Services = std::tuple<
     std::unique_ptr<DebugLayer>,
     std::unique_ptr<AudioManager>,
     std::unique_ptr<ParticleManager>,
-    std::unique_ptr<ResourceLoader>>;
+    std::unique_ptr<ResourceLoader>,
+    std::unique_ptr<SkeletonManager>>;
 
 namespace impl
 {
