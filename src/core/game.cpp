@@ -174,8 +174,12 @@ auto load_render_entity_manager()
 {
     const auto time_logger = ufps::TimeLogger{};
 
-    auto &&[rem, mm, tm, rl] =
-        ufps::services<ufps::RenderEntityManager, ufps::MeshManager, ufps::TextureManager, ufps::ResourceLoader>();
+    auto &&[rem, mm, tm, rl, sm] = ufps::services<
+        ufps::RenderEntityManager,
+        ufps::MeshManager,
+        ufps::TextureManager,
+        ufps::ResourceLoader,
+        ufps::SkeletonManager>();
 
     const auto model_manifest_str = rl.load_string("configs\\model_manifest.yaml");
     const auto model_manifest = ufps::yaml::deserialise<ufps::ModelManifestDescription>(model_manifest_str);
@@ -202,7 +206,8 @@ auto load_render_entity_manager()
                  specular_index,
                  ao_index,
                  glossiness_index,
-                 emissive_index});
+                 emissive_index,
+                 sm[name]});
         }
 
         rem.register_group(name, std::move(render_entities));
