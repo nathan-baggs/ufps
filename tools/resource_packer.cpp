@@ -251,7 +251,13 @@ auto main(int argc, char **argv) -> int
         write_blob(vertex_data, output_blobs_dir, "vertex_data.bin");
         write_blob(index_data, output_blobs_dir, "index_data.bin");
         write_blob(texture_blob, output_blobs_dir, "texture_data.bin");
-        write_blob(skeleton_data, output_blobs_dir, "skeleton_data.bin");
+
+        const auto skeleton_data_str = ufps::yaml::serialise(
+            ufps::SkeletonNodeManifest{
+                .nodes = std::move(skeleton_data),
+            });
+        ufps::ensure(skeleton_data_str);
+        write_blob(*skeleton_data_str, output_blobs_dir, "skeleton_data.bin");
     }
     catch (const ufps::Exception &e)
     {

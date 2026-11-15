@@ -43,6 +43,11 @@ struct SkeletonManifest
     std::size_t size;
 };
 
+struct SkeletonNodeManifest
+{
+    std::vector<ufps::Skeleton::Node> nodes;
+};
+
 struct SkeletonManifestDescription
 {
     StringMap<SkeletonManifest> skeletons;
