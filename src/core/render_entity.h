@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <cstdint>
 
+#include "animation/skeleton_manager.h"
 #include "core/service_locator.h"
 #include "graphics/mesh_manager.h"
 #include "graphics/mesh_view.h"
@@ -56,7 +57,8 @@ class RenderEntity
         std::uint64_t specular_texture_bindless_handle,
         std::uint64_t ao_texture_bindless_handle,
         std::uint64_t glossiness_texture_bindless_handle,
-        std::uint64_t emissive_texture_bindless_handle);
+        std::uint64_t emissive_texture_bindless_handle,
+        SkeletonHandle skeleton_handle = {});
 
     constexpr auto group_name() const -> std::string_view;
     constexpr auto mesh_view() const -> MeshView;
@@ -67,6 +69,7 @@ class RenderEntity
     constexpr auto glossiness_texture_bindless_handle() const -> std::uint64_t;
     constexpr auto emissive_texture_bindless_handle() const -> std::uint64_t;
     constexpr auto aabb() const -> const AABB &;
+    constexpr auto skeleton_handle() const -> SkeletonHandle;
 
   private:
     std::string group_name_;
@@ -78,6 +81,7 @@ class RenderEntity
     std::uint64_t glossiness_texture_bindless_handle_;
     std::uint64_t emissive_texture_bindless_handle_;
     AABB aabb_;
+    SkeletonHandle skeleton_handle_;
 };
 
 constexpr RenderEntity::RenderEntity(
@@ -88,7 +92,8 @@ constexpr RenderEntity::RenderEntity(
     std::uint64_t specular_texture_bindless_handle,
     std::uint64_t ao_texture_bindless_handle,
     std::uint64_t glossiness_texture_bindless_handle,
-    std::uint64_t emissive_texture_bindless_handle)
+    std::uint64_t emissive_texture_bindless_handle,
+    SkeletonHandle skeleton_handle)
     : group_name_{std::move(group_name)}
     , mesh_view_{mesh_view}
     , albedo_texture_bindless_handle_{albedo_texture_bindless_handle}
@@ -98,6 +103,7 @@ constexpr RenderEntity::RenderEntity(
     , glossiness_texture_bindless_handle_{glossiness_texture_bindless_handle}
     , emissive_texture_bindless_handle_{emissive_texture_bindless_handle}
     , aabb_{impl::calculate_aabb(mesh_view_)}
+    , skeleton_handle_{skeleton_handle}
 {
 }
 
@@ -144,6 +150,11 @@ constexpr auto RenderEntity::emissive_texture_bindless_handle() const -> std::ui
 constexpr auto RenderEntity::aabb() const -> const AABB &
 {
     return aabb_;
+}
+
+constexpr auto RenderEntity::skeleton_handle() const -> SkeletonHandle
+{
+    return skeleton_handle_;
 }
 
 }
