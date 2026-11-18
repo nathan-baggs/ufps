@@ -43,7 +43,7 @@ layout(binding = 2, std430) readonly buffer objects {
     ObjectData object_data[];
 };
 
-layout(binding=3,std430) readonly buffer bones{
+layout(binding = 3, std430) readonly buffer bones {
     mat4 bone_palette[];
 };
 
