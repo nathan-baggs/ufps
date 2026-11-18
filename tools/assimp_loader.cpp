@@ -1,6 +1,7 @@
 #include "assimp_loader.h"
 
 #include <algorithm>
+#include <cctype>
 #include <cstdint>
 #include <optional>
 #include <ranges>
@@ -69,7 +70,7 @@ auto to_native(const ::aiVector3D &v) -> ufps::Vector3
 
 [[maybe_unused]] auto to_native_mat(const ::aiMatrix4x4 &v) -> ufps::Matrix4
 {
-    return std::bit_cast<ufps::Matrix4>(v);
+    return ufps::Matrix4::transpose(std::bit_cast<ufps::Matrix4>(v));
 }
 
 struct SkeletonBuilder
@@ -252,7 +253,15 @@ auto load_model(ufps::DataBufferView model_data) -> std::tuple<std::string, std:
             for (const auto &[vertex_index, bone_weights] : vertex_bone_map)
             {
                 contract_assert(vertex_index < std::ranges::size(weights));
-                std::ranges::copy(bone_weights, std::ranges::begin(weights[vertex_index]));
+                auto current_weights =
+                    std::span{std::ranges::data(weights[vertex_index]), std::ranges::size(weights[vertex_index])};
+
+                auto end = std::ranges::copy(bone_weights, std::ranges::begin(current_weights));
+                std::ranges::for_each(end.out, std::ranges::end(current_weights), [](auto &e) { e.weight = 0.0f; });
+
+                const auto total_weight = std::ranges::fold_left(
+                    current_weights, 0.0f, [](const auto a, const auto &b) { return a + b.weight; });
+                contract_assert(std::abs(total_weight - 1.0f) <= 0.0001f);
             }
         }
 
