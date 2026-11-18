@@ -560,6 +560,7 @@ auto Renderer::execute_gbuffer_pass(Scene &scene, EntityType type, bool clear) -
                             .glossiness_texture_index = sub_entity->glossiness_texture_bindless_handle(),
                             .emissive_texture_index = sub_entity->emissive_texture_bindless_handle(),
                             .emissive_strength = entity->emissive_strength(),
+                            .bone_offset = 0u,
                         };
                     }));
         }
@@ -718,6 +719,7 @@ auto Renderer::execute_gun_gbuffer_pass(Scene &scene) -> void
                                    .glossiness_texture_index = sub_entity->glossiness_texture_bindless_handle(),
                                    .emissive_texture_index = sub_entity->emissive_texture_bindless_handle(),
                                    .emissive_strength = gun->emissive_strength(),
+                                   .bone_offset = 0u,
                                };
                            }) |
                        std::ranges::to<std::vector>();

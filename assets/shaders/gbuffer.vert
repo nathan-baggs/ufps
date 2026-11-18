@@ -25,6 +25,7 @@ struct ObjectData
     uvec2 glossiness_bindless_handle;
     uvec2 emissive_bindless_handle;
     float emissive_strength;
+    uint bone_offset;
 };
 
 layout(binding = 0, std430) readonly buffer vertices {
@@ -44,7 +45,7 @@ layout(binding = 2, std430) readonly buffer objects {
 
 layout(binding=3,std430) readonly buffer bones{
     mat4 bone_palette[];
-}
+};
 
 layout(location = 0) uniform float u_mask;
 
