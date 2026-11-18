@@ -163,6 +163,11 @@ constexpr auto RenderEntity::skeleton_handle() const -> SkeletonHandle
 
 constexpr auto RenderEntity::update_bones() -> std::span<const Matrix4>
 {
+    if (!skeleton_handle_)
+    {
+        return {};
+    }
+
     const auto &[sm] = services<SkeletonManager>();
 
     const auto skeleton = sm[skeleton_handle_];
@@ -170,13 +175,17 @@ constexpr auto RenderEntity::update_bones() -> std::span<const Matrix4>
 
     if (std::ranges::size(bone_data_) != std::ranges::size(skeleton->nodes()))
     {
-        bone_data_.resize(std::ranges::size(skeleton->nodes());
+        bone_data_.resize(std::ranges::size(skeleton->nodes()));
     }
 
-    for (const auto &[index, node] : std::views::enumerate(skeleton->nodes()))
+    auto parent_transforms = std::vector<Matrix4>(std::ranges::size(bone_data_));
+    parent_transforms.front() = skeleton->nodes()[0zu].bind_local;
+    bone_data_[0zu] = parent_transforms[0zu] * skeleton->nodes()[0zu].inverse_bind;
+
+    for (const auto &[index, node] : std::views::enumerate(skeleton->nodes()) | std::views::drop(1zu))
     {
-        const auto parent_transform = node.parent ? bone_data_[*node.parent] : Matrix4{};
-        bone_data_[index] = parent_transform * node.bind_local * node.inverse_bind;
+        parent_transforms[index] = parent_transforms[*node.parent] * node.bind_local;
+        bone_data_[index] = parent_transforms[index] * node.inverse_bind;
     }
 
     return bone_data_;
