@@ -10,6 +10,7 @@
 #include <ranges>
 #include <span>
 #include <string_view>
+#include <vector>
 
 #include "core/camera.h"
 #include "core/camera_manager.h"
@@ -343,6 +344,7 @@ Renderer::Renderer(const Window &window)
           "shaders\\debug_light.frag",
           "debug_light_fragment_shader",
           "debug_light_program")}
+        , bone_buffer_{sizeof(Matrix4), "bone_data_buffer"}
 {
     post_processing_command_buffer_.build(post_process_sprite_);
 
@@ -530,6 +532,9 @@ auto Renderer::execute_gbuffer_pass(Scene &scene, EntityType type, bool clear) -
 
     auto &&[em, rem] = services<EntityManager, RenderEntityManager>();
 
+    auto current_frame_bone_data = std::vector<Matrix4>{{}};
+    auto current_frame_bone_offset = 1u;
+
     if (type == EntityType::DYNAMIC || scene.check_and_reset_static_dirty())
     {
         const auto get_entities = [&]
@@ -552,6 +557,15 @@ auto Renderer::execute_gbuffer_pass(Scene &scene, EntityType type, bool clear) -
                         auto sub_entity = rem[e];
                         contract_assert(sub_entity);
 
+                        auto bone_offset = 0u;
+
+                        if (const auto bone_data = sub_entity->update_bones(); !std::ranges::empty(bone_data))
+                        {
+                            bone_offset = current_frame_bone_offset;
+                            current_frame_bone_offset += std::ranges::size(bone_data);
+                            current_frame_bone_data.append_range(bone_data);
+                        }
+
                         return ObjectData{
                             .model = entity->transform(),
                             .albedo_texture_index = sub_entity->albedo_texture_bindless_handle(),
@@ -560,10 +574,15 @@ auto Renderer::execute_gbuffer_pass(Scene &scene, EntityType type, bool clear) -
                             .glossiness_texture_index = sub_entity->glossiness_texture_bindless_handle(),
                             .emissive_texture_index = sub_entity->emissive_texture_bindless_handle(),
                             .emissive_strength = entity->emissive_strength(),
-                            .bone_offset = 0u,
+                            .bone_offset = bone_offset,
                         };
                     }));
         }
+
+        resize_gpu_buffer(current_frame_bone_data, bone_buffer_);
+        auto bone_writer = BufferWriter{bone_buffer_};
+        bone_writer.write(
+            std::span{std::ranges::data(current_frame_bone_data), std::ranges::size(current_frame_bone_data)});
 
         if (type == EntityType::DYNAMIC)
         {
@@ -582,6 +601,13 @@ auto Renderer::execute_gbuffer_pass(Scene &scene, EntityType type, bool clear) -
     }
 
     gbuffer_program_.set_uniform(0zu, 1.0f);
+
+    ::glBindBufferRange(
+        GL_SHADER_STORAGE_BUFFER,
+        3,
+        bone_buffer_.native_handle(),
+        bone_buffer_.frame_offset_bytes(),
+        bone_buffer_.size());
 
     if (type == EntityType::DYNAMIC)
     {
@@ -734,6 +760,13 @@ auto Renderer::execute_gun_gbuffer_pass(Scene &scene) -> void
         gun_object_data_buffer_.native_handle(),
         gun_object_data_buffer_.frame_offset_bytes(),
         gun_object_data_buffer_.size());
+
+    ::glBindBufferRange(
+        GL_SHADER_STORAGE_BUFFER,
+        3,
+        bone_buffer_.native_handle(),
+        bone_buffer_.frame_offset_bytes(),
+        bone_buffer_.size());
 
     ::glMultiDrawElementsIndirect(
         GL_TRIANGLES,

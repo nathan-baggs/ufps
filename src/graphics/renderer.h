@@ -103,6 +103,7 @@ class Renderer
     Buffer debug_line_buffer_;
     Program debug_line_program_;
     Program debug_light_program_;
+    MultiBuffer<PersistentBuffer> bone_buffer_;
 
   private:
     auto execute_gbuffer_pass(Scene &scene, EntityType type, bool clear) -> void;
