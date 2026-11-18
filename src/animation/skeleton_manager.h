@@ -17,6 +17,8 @@ using SkeletonHandle = SparseSet<Skeleton>::handle_type;
 class SkeletonManager : public StorageManager<Skeleton>
 {
   public:
+    using StorageManager<Skeleton>::operator[];
+
     constexpr auto operator[](std::string_view name) const -> SkeletonHandle;
 };
 
