@@ -112,8 +112,6 @@ struct SkeletonBuilder
 auto load_skeleton(const ::aiScene *scene, const ::aiMesh *mesh, std::string name)
     -> std::optional<std::tuple<ufps::Skeleton, VertexBoneMap>>
 {
-    ufps::log::debug("trying to load skeleton: {}", name);
-
     auto stack = std::stack<std::tuple<const ::aiNode *, std::optional<std::size_t>>>{};
     stack.emplace(scene->mRootNode, std::nullopt);
 
@@ -129,8 +127,6 @@ auto load_skeleton(const ::aiScene *scene, const ::aiMesh *mesh, std::string nam
         stack.pop();
 
         auto node_name = std::string_view{node->mName.C_Str()};
-
-        ufps::log::debug("node: {}", node->mName.C_Str());
 
         auto bone = std::ranges::find_if(
             bone_lookup, [&](const auto *e) { return std::string_view{e->mName.C_Str()} == node_name; });
@@ -176,7 +172,6 @@ auto load_model(ufps::DataBufferView model_data) -> std::tuple<std::string, std:
         auto *logger = ::Assimp::DefaultLogger::get();
 
         logger->attachStream(new SimpleAssimpLogStream<ufps::log::Level::ERR>{}, ::Assimp::Logger::Err);
-        logger->attachStream(new SimpleAssimpLogStream<ufps::log::Level::WARN>{}, ::Assimp::Logger::Warn);
 
         return logger;
     }();
@@ -190,15 +185,10 @@ auto load_model(ufps::DataBufferView model_data) -> std::tuple<std::string, std:
     contract_assert(scene != nullptr);
 
     const auto loaded_meshes = std::span<::aiMesh *>(scene->mMeshes, scene->mMeshes + scene->mNumMeshes);
-    const auto materials = std::span<::aiMaterial *>(scene->mMaterials, scene->mMaterials + scene->mNumMaterials);
-    ufps::log::info("found {} meshes, {} materials", std::ranges::size(loaded_meshes), std::ranges::size(materials));
-
     auto models = std::vector<ModelData>{};
 
     for (const auto &[index, mesh] : loaded_meshes | std::views::enumerate)
     {
-        ufps::log::info("found mesh: {}", mesh->mName.C_Str());
-
         if (mesh->mMaterialIndex >= scene->mNumMaterials)
         {
             ufps::log::warn("mesh {} has invalid material index: {}", mesh->mName.C_Str(), index);
@@ -206,16 +196,6 @@ auto load_model(ufps::DataBufferView model_data) -> std::tuple<std::string, std:
         }
 
         const auto *material = scene->mMaterials[mesh->mMaterialIndex];
-
-        for (auto i = 0; i <= ::aiTextureType_GLTF_METALLIC_ROUGHNESS; ++i)
-        {
-            const auto count = material->GetTextureCount(static_cast<::aiTextureType>(i));
-            if (count >= 1)
-            {
-                ufps::log::debug("material {} has {} textures of type {}", material->GetName().C_Str(), count, i);
-            }
-        }
-
         const auto base_colour_count = material->GetTextureCount(::aiTextureType_BASE_COLOR);
         const auto diffuse_colour_count = material->GetTextureCount(::aiTextureType_DIFFUSE);
         if (base_colour_count != 1 && diffuse_colour_count != 1)

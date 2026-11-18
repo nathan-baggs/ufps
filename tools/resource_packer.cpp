@@ -115,7 +115,6 @@ auto main(int argc, char **argv) -> int
 
         for (const auto &m : models)
         {
-            ufps::log::debug("found model resource: {}", m);
             auto [name, sub_models] = load_model(resource_loader.load_data_buffer(m));
 
             if (sub_models.empty())
@@ -128,7 +127,6 @@ auto main(int argc, char **argv) -> int
             {
                 if (skeleton)
                 {
-                    ufps::log::debug("skeleton {}", skeleton->name());
                     const auto nodes = skeleton->nodes();
                     skeleton_manifest.skeletons[skeleton->name()] = ufps::SkeletonManifest{
                         .offset = std::ranges::size(skeleton_data),
@@ -160,7 +158,6 @@ auto main(int argc, char **argv) -> int
 
                         if (textures != std::ranges::cend(model_textures->models))
                         {
-                            ufps::log::debug("{}", index);
                             albedo_name = textures->second[index].albedo_texture;
                             normal_name = textures->second[index].normal_texture;
                             specular_name = textures->second[index].specular_texture;
