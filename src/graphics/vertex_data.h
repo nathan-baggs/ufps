@@ -20,7 +20,7 @@ struct UV
 struct Weight
 {
     std::uint32_t bone_index = 0zu;
-    float weight = 1.0f;
+    float weight = 0.25f;
 };
 
 struct VertexData

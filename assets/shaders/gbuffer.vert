@@ -51,10 +51,18 @@ layout(location = 0) uniform float u_mask;
 
 vec3 get_position(uint index)
 {
-    return vec3(
+    uint bone_offset =  object_data[gl_DrawID].bone_offset;
+
+    mat4 bone0 = bone_palette[bone_offset + data[index].weights[0].bone_index] * data[index].weights[0].weight;
+    mat4 bone1 = bone_palette[bone_offset + data[index].weights[1].bone_index] * data[index].weights[1].weight;
+    mat4 bone2 = bone_palette[bone_offset + data[index].weights[2].bone_index] * data[index].weights[2].weight;
+    mat4 bone3 = bone_palette[bone_offset + data[index].weights[3].bone_index] * data[index].weights[3].weight;
+
+    return ((bone0 + bone1 + bone2 + bone3) * vec4(
         data[index].position[0],
         data[index].position[1],
-        data[index].position[2]);
+        data[index].position[2],
+        1.0)).xyz;
 }
 
 vec3 get_normal(uint index)
