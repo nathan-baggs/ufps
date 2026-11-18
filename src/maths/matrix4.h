@@ -151,6 +151,8 @@ class Matrix4
 
     static constexpr auto invert(const Matrix4 &matrix) -> Matrix4;
 
+    static constexpr auto transpose(Matrix4 matrix) -> Matrix4;
+
     template <class Self>
     constexpr auto data(this Self &&self)
     {
@@ -345,6 +347,18 @@ constexpr auto Matrix4::invert(const Matrix4 &matrix) -> Matrix4
     }
 
     return result;
+}
+
+constexpr auto Matrix4::transpose(Matrix4 matrix) -> Matrix4
+{
+    std::ranges::swap(matrix[1zu], matrix[4zu]);
+    std::ranges::swap(matrix[2zu], matrix[8zu]);
+    std::ranges::swap(matrix[3zu], matrix[12zu]);
+    std::ranges::swap(matrix[6zu], matrix[9zu]);
+    std::ranges::swap(matrix[7zu], matrix[13zu]);
+    std::ranges::swap(matrix[11zu], matrix[14zu]);
+
+    return matrix;
 }
 
 constexpr auto operator*(const Matrix4 &m1, const Vector4 &v) -> Vector4
