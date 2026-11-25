@@ -6,6 +6,7 @@
 #include <cstring>
 #include <format>
 #include <fstream>
+#include <functional>
 #include <memory>
 #include <meta>
 #include <optional>
@@ -22,6 +23,7 @@
 #include <backends/imgui_impl_win32.h>
 #include <windows.h>
 
+#include "animation/skeleton_manager.h"
 #include "core/camera_manager.h"
 #include "core/entity_manager.h"
 #include "core/light_manager.h"
@@ -812,8 +814,14 @@ auto DebugRenderer::draw_inspector(Scene &scene) -> void
     {
         ::ImGui::Begin("Inspector");
 
-        const auto &[em, rem, ps, tm, lm, cm] =
-            services<EntityManager, RenderEntityManager, PhysicsSystem, TextureManager, LightManager, CameraManager>();
+        const auto &[em, rem, ps, tm, lm, cm, sm] = services<
+            EntityManager,
+            RenderEntityManager,
+            PhysicsSystem,
+            TextureManager,
+            LightManager,
+            CameraManager,
+            SkeletonManager>();
 
         if (auto *selected_entity = std::get_if<EntityHandle>(&selected_))
         {
@@ -1020,6 +1028,38 @@ auto DebugRenderer::draw_inspector(Scene &scene) -> void
                             ::ImVec2(64.0f, 64.0f),
                             ::ImVec2(0.0f, 1.0f),
                             ::ImVec2(1.0f, 0.0f));
+
+                        if (const auto skeleton = sm[render_entity->skeleton_handle()]; skeleton)
+                        {
+                            const auto nodes = skeleton->nodes();
+
+                            auto populate_children = std::copyable_function<void(std::size_t)>{};
+                            populate_children = [&](const std::size_t parent_index)
+                            {
+                                static const auto base_flags = ::ImGuiTreeNodeFlags_DrawLinesFull;
+
+                                if (::ImGui::TreeNodeEx(nodes[parent_index].name.c_str(), base_flags))
+                                {
+                                    auto children =
+                                        std::views::enumerate(nodes) |
+                                        std::views::filter([&](const auto &e)
+                                                           { return std::get<1>(e).parent == parent_index; });
+
+                                    for (const auto &[index, _] : children)
+                                    {
+                                        populate_children(index);
+                                    }
+
+                                    ::ImGui::TreePop();
+                                }
+                            };
+
+                            populate_children(0zu);
+                        }
+                        else
+                        {
+                            ::ImGui::Text("No Skeleton");
+                        }
 
                         ::ImGui::PopID();
                     }
