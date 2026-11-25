@@ -258,7 +258,7 @@ auto load_skeleton_manager() -> void
         const auto &[offset, size] = manifest;
         const auto current_nodes = std::span{std::ranges::data(skeleton_nodes->nodes) + offset, size};
 
-        sm.insert({name, current_nodes});
+        sm.insert({name, current_nodes, {}});
     }
 }
 
