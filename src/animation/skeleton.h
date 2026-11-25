@@ -7,7 +7,9 @@
 #include <string_view>
 #include <vector>
 
+#include "animation/animation.h"
 #include "maths/matrix4.h"
+#include "utils/string_map.h"
 
 namespace ufps
 {
@@ -25,19 +27,10 @@ class Skeleton
         auto to_string() const -> std::string;
     };
 
-    struct Description
-    {
-        std::string name;
-        std::vector<Node> nodes;
-    };
-
-    Skeleton(std::string_view name, std::vector<Node> nodes) //
+    Skeleton(std::string_view name, std::vector<Node> nodes, StringMap<Animation> animations) //
         post(validate());
 
-    Skeleton(std::string_view name, std::span<Node> nodes) //
-        post(validate());
-
-    Skeleton(const Description &desc) //
+    Skeleton(std::string_view name, std::span<Node> nodes, StringMap<Animation> animations) //
         post(validate());
 
     auto name() const -> std::string_view;
@@ -51,11 +44,16 @@ class Skeleton
 
     auto to_string() const -> std::string;
 
-    auto description() const -> Description;
+    auto animation(std::string_view name) const -> const Animation & //
+        pre(animations_.contains(name));
+
+    auto animation_names() const -> std::span<const std::string_view>;
 
   private:
     std::string name_;
     std::vector<Node> nodes_;
+    StringMap<Animation> animations_;
+    std::vector<std::string_view> animation_names_;
 };
 
 }

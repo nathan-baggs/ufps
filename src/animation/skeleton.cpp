@@ -7,8 +7,21 @@
 #include <string_view>
 #include <vector>
 
+#include "animation/animation.h"
 #include "maths/matrix4.h"
 #include "utils/formatter.h"
+#include "utils/string_map.h"
+
+namespace
+{
+
+auto extract_animation_names(const auto &animations) -> std::vector<std::string_view>
+{
+    return std::views::keys(animations) | std::views::transform([](const auto &e) { return std::string_view{e}; }) |
+           std::ranges::to<std::vector>();
+}
+
+}
 
 namespace ufps
 {
@@ -18,20 +31,19 @@ auto Skeleton::Node::to_string() const -> std::string
     return std::format("{} {}", name, parent.transform([](auto e) { return std::to_string(e); }).value_or("<no name>"));
 }
 
-Skeleton::Skeleton(std::string_view name, std::vector<Node> nodes)
+Skeleton::Skeleton(std::string_view name, std::vector<Node> nodes, StringMap<Animation> animations)
     : name_{name}
     , nodes_{std::move(nodes)}
+    , animations_{std::move(animations)}
+    , animation_names_{extract_animation_names(animations_)}
 {
 }
 
-Skeleton::Skeleton(std::string_view name, std::span<Node> nodes)
+Skeleton::Skeleton(std::string_view name, std::span<Node> nodes, StringMap<Animation> animations)
     : name_{name}
     , nodes_{std::ranges::cbegin(nodes), std::ranges::cend(nodes)}
-{
-}
-
-Skeleton::Skeleton(const Description &desc)
-    : Skeleton{desc.name, desc.nodes}
+    , animations_{std::move(animations)}
+    , animation_names_{extract_animation_names(animations_)}
 {
 }
 
@@ -85,11 +97,15 @@ auto Skeleton::to_string() const -> std::string
     return strm.str();
 }
 
-auto Skeleton::description() const -> Description
+auto Skeleton::animation(std::string_view name) const -> const Animation &
 {
-    return {
-        .name = name_,
-        .nodes = nodes_,
-    };
+    auto animation = animations_.find(name);
+    return animation->second;
 }
+
+auto Skeleton::animation_names() const -> std::span<const std::string_view>
+{
+    return animation_names_;
+}
+
 }

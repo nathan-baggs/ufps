@@ -9,6 +9,8 @@
 #include "animation/keyframe.h"
 #include "utils/string_map.h"
 
+namespace ufps
+{
 namespace impl
 {
 auto all_keyframes_equal_length(const auto &key_frame_data) -> bool
@@ -19,9 +21,6 @@ auto all_keyframes_equal_length(const auto &key_frame_data) -> bool
     return std::ranges::adjacent_find(vec_lengths, std::ranges::not_equal_to()) == std::ranges::cend(vec_lengths);
 }
 }
-
-namespace ufps
-{
 class Animation
 {
   public:
@@ -35,8 +34,11 @@ class Animation
     auto keyframes(std::string_view name) const -> std::span<const Keyframe> //
         pre(keyframe_data_.contains(name));
 
+    auto node_names() const -> std::span<const std::string_view>;
+
   private:
     std::string name_;
     StringMap<std::vector<Keyframe>> keyframe_data_;
+    std::vector<std::string_view> node_names_;
 };
 }
