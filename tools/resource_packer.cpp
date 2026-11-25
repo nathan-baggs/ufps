@@ -17,6 +17,7 @@
 #include "utils/log.h"
 
 #include "assimp_loader.h"
+#include "utils/string_map.h"
 
 using namespace std::literals;
 
@@ -127,11 +128,47 @@ auto main(int argc, char **argv) -> int
             {
                 if (skeleton)
                 {
+                    auto animations =
+                        skeleton->animation_names() |
+                        std::views::transform(
+                            [&](const auto e)
+                            {
+                                ufps::log::debug("animation name: {}", e);
+                                const auto &animation = skeleton->animation(e);
+                                auto keyframe_data =
+                                    animation.node_names() |
+                                    std::views::transform(
+                                        [&](const auto node_name)
+                                        {
+                                            return std::make_pair(
+                                                std::string{node_name},
+                                                animation.keyframes(node_name) |
+                                                    std::views::transform(
+                                                        [](const auto &kf)
+                                                        {
+                                                            return ufps::KeyframeManifest{
+                                                                .position = kf.transform.position,
+                                                                .rotation = kf.transform.rotation,
+                                                                .scale = kf.transform.scale,
+                                                            };
+                                                        }) |
+                                                    std::ranges::to<std::vector>());
+                                        }) |
+                                    std::ranges::to<ufps::StringMap<std::vector<ufps::KeyframeManifest>>>();
+
+                                return std::make_pair(
+                                    std::string{e},
+                                    ufps::AnimationManifest{
+                                        .keyframes = std::move(keyframe_data),
+                                    });
+                            }) |
+                        std::ranges::to<ufps::StringMap<ufps::AnimationManifest>>();
+
                     const auto nodes = skeleton->nodes();
                     skeleton_manifest.skeletons[skeleton->name()] = ufps::SkeletonManifest{
                         .offset = std::ranges::size(skeleton_data),
                         .size = std::ranges::size(nodes),
-                    };
+                        .animations = std::move(animations)};
                     skeleton_data.append_range(nodes);
                 }
             }

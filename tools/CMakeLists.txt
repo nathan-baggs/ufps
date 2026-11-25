@@ -26,6 +26,7 @@ if(UFPS_RESOURCE_PACKER_ONLY)
   target_sources(resource_packer PRIVATE
     file_resource_loader.cpp
     "${PROJECT_SOURCE_DIR}/src/utils/compress.cpp"
+    "${PROJECT_SOURCE_DIR}/src/animation/animation.cpp"
     "${PROJECT_SOURCE_DIR}/src/animation/skeleton.cpp"
   )
 

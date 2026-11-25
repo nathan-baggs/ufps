@@ -22,14 +22,19 @@
 #include <assimp/scene.h>
 #include <assimp/vector3.h>
 
+#include "animation/animation.h"
+#include "animation/keyframe.h"
 #include "animation/skeleton.h"
 #include "graphics/mesh_data.h"
 #include "graphics/vertex_data.h"
 #include "maths/matrix4.h"
+#include "maths/quaternion.h"
+#include "maths/transform.h"
 #include "maths/vector3.h"
 #include "utils/data_buffer.h"
 #include "utils/error.h"
 #include "utils/log.h"
+#include "utils/string_map.h"
 
 namespace
 {
@@ -68,7 +73,12 @@ auto to_native(const ::aiVector3D &v) -> ufps::Vector3
     return std::bit_cast<ufps::Vector3>(v);
 }
 
-[[maybe_unused]] auto to_native_mat(const ::aiMatrix4x4 &v) -> ufps::Matrix4
+auto to_native_quat(const ::aiQuaternion &v) -> ufps::Quaternion
+{
+    return std::bit_cast<ufps::Quaternion>(v);
+}
+
+auto to_native_mat(const ::aiMatrix4x4 &v) -> ufps::Matrix4
 {
     return ufps::Matrix4::transpose(std::bit_cast<ufps::Matrix4>(v));
 }
@@ -157,10 +167,54 @@ auto load_skeleton(const ::aiScene *scene, const ::aiMesh *mesh, std::string nam
             std::views::transform([index](const auto *e) { return std::make_tuple(e, index); }));
     } while (!std::ranges::empty(stack));
 
+    auto animations = ufps::StringMap<ufps::Animation>{};
+
+    const auto assimp_animations = std::span{scene->mAnimations, scene->mNumAnimations};
+    for (const auto *animation : assimp_animations)
+    {
+        ufps::log::debug("animation: {}", animation->mName.C_Str());
+
+        auto keyframe_data = ufps::Animation::KeyframeData{};
+        auto animation_name = std::string{animation->mName.C_Str()};
+
+        const auto channels = std::span{animation->mChannels, animation->mNumChannels};
+        for (const auto *channel : channels)
+        {
+            const auto name = std::string_view{channel->mNodeName.C_Str()};
+            const auto node = std::ranges::find(nodes, name, &ufps::Skeleton::Node::name);
+            contract_assert(node != std::ranges::cend(nodes));
+
+            if (channel->mNumPositionKeys != channel->mNumRotationKeys ||
+                channel->mNumPositionKeys != channel->mNumScalingKeys)
+            {
+                ufps::log::debug("skipping channel: {}::{}", animation_name, name);
+                continue;
+            }
+
+            auto keyframes =
+                std::views::zip_transform(
+                    [](const auto &pos, const auto &rot, const auto &scale)
+                    {
+                        return ufps::Keyframe{
+                            .transform = {to_native(pos.mValue), to_native(scale.mValue), to_native_quat(rot.mValue)},
+                        };
+                    },
+                    std::span{channel->mPositionKeys, channel->mNumPositionKeys},
+                    std::span{channel->mRotationKeys, channel->mNumRotationKeys},
+                    std::span{channel->mScalingKeys, channel->mNumScalingKeys}) |
+                std::ranges::to<std::vector>();
+
+            keyframe_data[std::string{name}] = std::move(keyframes);
+        }
+
+        animations.emplace(animation_name, ufps::Animation{animation_name, std::move(keyframe_data)});
+    }
+
     return std::ranges::empty(nodes)
                ? std::nullopt
                : std::make_optional(
-                     std::make_tuple(ufps::Skeleton{name, std::move(nodes)}, std::move(vertex_bone_map)));
+                     std::make_tuple(
+                         ufps::Skeleton{name, std::move(nodes), std::move(animations)}, std::move(vertex_bone_map)));
 }
 }
 
