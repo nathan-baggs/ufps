@@ -146,7 +146,7 @@ auto load_skeleton(const ::aiScene *scene, const ::aiMesh *mesh, std::string nam
         }
 
         nodes.push_back({
-            .name = name,
+            .name = std::string{node_name},
             .bind_local = to_native_mat(node->mTransformation),
             .inverse_bind = inverse_bind,
             .parent = parent,
