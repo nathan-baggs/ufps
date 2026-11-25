@@ -2,8 +2,11 @@
 
 #include <vector>
 
+#include "animation/animation.h"
 #include "animation/skeleton.h"
 #include "graphics/mesh_view.h"
+#include "maths/quaternion.h"
+#include "maths/vector3.h"
 #include "utils/string_map.h"
 
 namespace ufps
@@ -37,10 +40,23 @@ struct TextureManifestDescription
     StringMap<TextureManifest> textures;
 };
 
+struct KeyframeManifest
+{
+    Vector3 position;
+    Quaternion rotation;
+    Vector3 scale;
+};
+
+struct AnimationManifest
+{
+    StringMap<std::vector<KeyframeManifest>> keyframes;
+};
+
 struct SkeletonManifest
 {
     std::size_t offset;
     std::size_t size;
+    StringMap<AnimationManifest> animations;
 };
 
 struct SkeletonNodeManifest
